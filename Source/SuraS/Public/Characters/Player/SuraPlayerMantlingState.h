@@ -4,29 +4,37 @@
 
 #include "CoreMinimal.h"
 #include "Characters/Player/SuraPlayerBaseState.h"
-#include "SuraPlayerCrouchingState.generated.h"
+#include "SuraPlayerMantlingState.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SURAS_API USuraPlayerCrouchingState : public USuraPlayerBaseState
+class SURAS_API USuraPlayerMantlingState : public USuraPlayerBaseState
 {
 	GENERATED_BODY()
 
+	FTimerHandle MantleTimerHandle;
+
+	bool bShouldMantleUp;
+	bool bShouldMantleForward;
+
+	FVector StartLocation;
+	FVector TargetLocation;
+
+	FVector UpMantleTarget;
+
+	float UpMovementElapsedTime;
+	float ForwardMovementElapsedTime;
+
 public:
 
-	USuraPlayerCrouchingState();
+	USuraPlayerMantlingState();
 
 	virtual void EnterState(ASuraCharacterPlayer* Player) override;
 
 	virtual void UpdateState(ASuraCharacterPlayer* Player, float DeltaTime) override;
 
 	virtual void ExitState(ASuraCharacterPlayer* Player) override;
-
-	virtual void Move(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
-
-	virtual void Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
-
-	virtual void StartJumping(ASuraCharacterPlayer* Player) override;
+	
 };

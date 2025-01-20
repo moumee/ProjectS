@@ -4,19 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Characters/Player/SuraPlayerBaseState.h"
-#include "SuraPlayerDashImpulseState.generated.h"
+#include "SuraPlayerDashingState.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SURAS_API USuraPlayerDashImpulseState : public USuraPlayerBaseState
+class SURAS_API USuraPlayerDashingState : public USuraPlayerBaseState
 {
 	GENERATED_BODY()
 
 public:
 
-	USuraPlayerDashImpulseState();
+	USuraPlayerDashingState();
 
 	
 
@@ -24,9 +24,7 @@ public:
 
 	virtual void UpdateState(ASuraCharacterPlayer* Player, float DeltaTime) override;
 
-	virtual void Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
-	
+	virtual void ExitState(ASuraCharacterPlayer* Player) override;
 
-	
 	
 };
