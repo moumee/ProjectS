@@ -4,30 +4,29 @@
 
 #include "CoreMinimal.h"
 #include "Characters/Player/SuraPlayerBaseState.h"
-#include "SuraPlayerDashImpulseState.generated.h"
+#include "SuraPlayerCrouchingState.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SURAS_API USuraPlayerDashImpulseState : public USuraPlayerBaseState
+class SURAS_API USuraPlayerCrouchingState : public USuraPlayerBaseState
 {
 	GENERATED_BODY()
 
 public:
 
-	USuraPlayerDashImpulseState();
-
-	
+	USuraPlayerCrouchingState();
 
 	virtual void EnterState(ASuraCharacterPlayer* Player) override;
 
 	virtual void UpdateState(ASuraCharacterPlayer* Player, float DeltaTime) override;
 
-	virtual void Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
-	
-	
+	virtual void ExitState(ASuraCharacterPlayer* Player) override;
 
-	
-	
+	virtual void Move(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
+
+	virtual void Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
+
+	virtual void StartJumping(ASuraCharacterPlayer* Player) override;
 };

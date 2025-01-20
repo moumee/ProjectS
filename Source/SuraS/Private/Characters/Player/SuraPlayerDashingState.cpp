@@ -1,26 +1,27 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Characters/Player/SuraPlayerDashImpulseState.h"
+#include "Characters/Player/SuraPlayerDashingState.h"
 
 #include "ActorComponents/ACPlayerMovmentData.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
-#include "Characters/Player/SuraPlayerDashMovementState.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "Characters/Player/SuraPlayerRunningState.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
-USuraPlayerDashImpulseState::USuraPlayerDashImpulseState()
+USuraPlayerDashingState::USuraPlayerDashingState()
 {
-	StateDisplayName = "Dash Impulse";
+	StateDisplayName = "Dashing";
 }
 
-void USuraPlayerDashImpulseState::EnterState(ASuraCharacterPlayer* Player)
+void USuraPlayerDashingState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 
+	Player->DashesLeft--;
+	
 	for (int i = 0; i < Player->DashCooldowns.Num(); i++)
 	{
-		if (Player->DashCooldowns[i] == 0.f)
+		if (Player->DashCooldowns[i] == 0)
 		{
 			Player->DashCooldowns[i] = Player->GetPlayerMovementData()->GetDashCooldown();
 			break;
@@ -35,9 +36,17 @@ void USuraPlayerDashImpulseState::EnterState(ASuraCharacterPlayer* Player)
 
 	FVector DashImpulseDirection;
 	
-	if (Player->ForwardAxisInputValue >= 0.f && Player->RightAxisInputValue == 0.f)
+	if (Player->RightAxisInputValue == 0.f)
 	{
-		DashImpulseDirection = Player->GetControlRotation().Vector();
+		if (Player->ForwardAxisInputValue >= 0.f)
+		{
+			DashImpulseDirection = Player->GetControlRotation().Vector();
+		}
+		else
+		{
+			DashImpulseDirection = Player->GetControlRotation().Vector() * -1.f;
+		}
+		
 	}
 	else
 	{
@@ -50,7 +59,7 @@ void USuraPlayerDashImpulseState::EnterState(ASuraCharacterPlayer* Player)
 	Player->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	Player->GetCharacterMovement()->Velocity = DashImpulseDirection * DashImpulseSpeed;
 
-	GetWorld()->GetTimerManager().SetTimer(Player->DashImpulseTimerHandle, [Player]()
+	GetWorld()->GetTimerManager().SetTimer(Player->DashingTimerHandle, [Player]()
 	{
 		if (Player->GetCharacterMovement()->IsMovingOnGround())
 		{
@@ -59,25 +68,30 @@ void USuraPlayerDashImpulseState::EnterState(ASuraCharacterPlayer* Player)
 		else
 		{
 			Player->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+			if (Player->JumpsLeft > 0)
+			{
+				Player->JumpsLeft--;
+			}
+			
 		}
+		
 		const FVector CurrentVelocity = Player->GetCharacterMovement()->Velocity;
 		FVector ResetVelocity = CurrentVelocity.GetSafeNormal() * Player->GetCharacterMovement()->MaxWalkSpeed;
 		Player->GetCharacterMovement()->Velocity = ResetVelocity;
 		Player->GetCharacterMovement()->GroundFriction = Player->DefaultGroundFriction;
-		Player->ChangeState(Player->DashMovementState);
+		Player->ChangeState(Player->RunningState);
 	},DashImpulseDuration, false);
 	
 }
 
-void USuraPlayerDashImpulseState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
+void USuraPlayerDashingState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
 {
 	Super::UpdateState(Player, DeltaTime);
 }
 
-void USuraPlayerDashImpulseState::Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector)
+void USuraPlayerDashingState::ExitState(ASuraCharacterPlayer* Player)
 {
-	Super::Look(Player, InputVector);
+	Super::ExitState(Player);
 
-	Player->AddControllerPitchInput(InputVector.Y);
-	Player->AddControllerYawInput(InputVector.X);
 }
+
