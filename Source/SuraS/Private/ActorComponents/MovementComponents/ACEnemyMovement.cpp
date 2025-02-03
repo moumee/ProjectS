@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ActorComponents/WallRun/ACBaseWallRun.h"
+#include "ActorComponents/MovementComponents/ACEnemyMovement.h"
 
 // Sets default values for this component's properties
-UACBaseWallRun::UACBaseWallRun()
+UACEnemyMovement::UACEnemyMovement()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -15,7 +15,7 @@ UACBaseWallRun::UACBaseWallRun()
 
 
 // Called when the game starts
-void UACBaseWallRun::BeginPlay()
+void UACEnemyMovement::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -25,7 +25,7 @@ void UACBaseWallRun::BeginPlay()
 
 
 // Called every frame
-void UACBaseWallRun::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UACEnemyMovement::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 

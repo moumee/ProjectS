@@ -4,17 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "ACBaseWallRun.generated.h"
+#include "ACEnemyMovement.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SURAS_API UACBaseWallRun : public UActorComponent
+class SURAS_API UACEnemyMovement : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	UACBaseWallRun();
+	UACEnemyMovement();
 
 protected:
 	// Called when the game starts
