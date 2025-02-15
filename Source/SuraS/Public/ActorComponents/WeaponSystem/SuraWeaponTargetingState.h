@@ -4,18 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "SuraWeaponBaseState.h"
-#include "SuraWeaponReloadingState.generated.h"
+#include "SuraWeaponTargetingState.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SURAS_API USuraWeaponReloadingState : public USuraWeaponBaseState
+class SURAS_API USuraWeaponTargetingState : public USuraWeaponBaseState
 {
 	GENERATED_BODY()
 public:
-	USuraWeaponReloadingState();
-	~USuraWeaponReloadingState();
+	USuraWeaponTargetingState();
+	~USuraWeaponTargetingState();
 
 	virtual void EnterState(UACWeapon* Weapon) override;
 
