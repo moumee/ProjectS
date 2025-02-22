@@ -105,7 +105,8 @@ void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	if (Player->HasWeapon())
 	{
-		if (Player->GetWeaponSystemComponent()->GetCurrentWeapon()->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Charging)
+		if (Player->GetWeaponSystemComponent()->GetCurrentWeapon()->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Charging ||
+			Player->GetWeaponSystemComponent()->IsZoomIn())
 		{
 			Player->ChangeState(Player->WalkingState);
 			return;
