@@ -114,7 +114,7 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 		Player->GetActorLocation(),
 		Player->GetActorLocation() + Player->WallRunDirection * 55.f,
 		FQuat::Identity,
-		ECC_Visibility,
+		ECC_GameTraceChannel2,
 		FCollisionShape::MakeCapsule(34.f, Player->GetDefaultCapsuleHalfHeight()),
 		Params);
 
@@ -174,7 +174,7 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 		WallHit,
 		Player->GetActorLocation(),
 		LineTraceEnd,
-		ECC_Visibility,
+		ECC_GameTraceChannel2,
 		Params);
 
 	if (bWallHit && WallHit.IsValidBlockingHit())
