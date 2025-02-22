@@ -487,11 +487,11 @@ bool ASuraCharacterPlayer::ShouldEnterWallRunning(FVector& OutWallRunDirection, 
 	Params.AddIgnoredActor(this);
 	FHitResult LeftHit;
 	bool bLeftHit = GetWorld()->LineTraceSingleByChannel(LeftHit, GetActorLocation(),
-		GetActorLocation() + GetActorRightVector() * -55.f, ECC_Visibility, Params);
+		GetActorLocation() + GetActorRightVector() * -55.f, ECC_GameTraceChannel2, Params);
 	bool bLeftWallRunnable = false;
 	FHitResult RightHit;
 	bool bRightHit = GetWorld()->LineTraceSingleByChannel(RightHit, GetActorLocation(),
-		GetActorLocation() + GetActorRightVector() * 55.f, ECC_Visibility, Params);
+		GetActorLocation() + GetActorRightVector() * 55.f, ECC_GameTraceChannel2, Params);
 	bool bRightWallRunnable = false;
 
 	if (bLeftHit)
