@@ -13,7 +13,7 @@ EPlayerState USuraPlayerBaseState::GetStateType() const
 
 void USuraPlayerBaseState::EnterState(ASuraCharacterPlayer* Player)
 {
-	Player->ResetTriggeredBooleans();
+	
 }
 
 void USuraPlayerBaseState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)

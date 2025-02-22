@@ -121,7 +121,6 @@ void USuraPlayerCrouchingState::UpdateState(ASuraCharacterPlayer* Player, float 
 	if (Player->bJumpTriggered)
 	{
 		Player->PrimaryJump();
-		Player->DesiredGroundState = Player->WalkingState;
 		Player->ChangeState(Player->JumpingState);
 		return;
 		

@@ -6,11 +6,13 @@
 #include "ActorComponents/ACPlayerMovmentData.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
+#include "Characters/Player/SuraPlayerCrouchingState.h"
 #include "Characters/Player/SuraPlayerDashingState.h"
 #include "Characters/Player/SuraPlayerHangingState.h"
 #include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerMantlingState.h"
 #include "Characters/Player/SuraPlayerSlidingState.h"
+#include "Characters/Player/SuraPlayerWalkingState.h"
 #include "Characters/Player/SuraPlayerWallRunningState.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -163,16 +165,22 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		return;
 	}
 
-	if (Player->bLandedTriggered)
+	if (Player->bLandedTriggered || Player->GetCharacterMovement()->IsMovingOnGround())
 	{
 		Player->StartCamShake(Player->LandCamShake);
 		
 		if (Player->bCrouchTriggered)
 		{
-			Player->ChangeState(Player->SlidingState);
+			if (Player->GetPreviousGroundedState()->GetStateType() != EPlayerState::Sliding &&
+				Player->GetPreviousGroundedState()->GetStateType() != EPlayerState::Crouching)
+			{
+				Player->ChangeState(Player->SlidingState);
+				return;
+			}
+			Player->ChangeState(Player->CrouchingState);
 			return;
 		}
-		Player->ChangeState(Player->DesiredGroundState);
+		Player->ChangeState(Player->WalkingState);
 		return;
 	}
 
