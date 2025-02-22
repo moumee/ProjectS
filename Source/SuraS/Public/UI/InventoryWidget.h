@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "BaseUIWidget.h"
+#include "CustomGameInstance.h"
+#include "ActorComponents/WeaponSystem/WeaponData.h"
 #include "ActorComponents/WeaponSystem/WeaponName.h"
 #include "InventoryWidget.generated.h"
 
@@ -96,6 +98,9 @@ public:
 
 	void UpdateWeaponUI(FString WeaponNameStr);
 	void UnlockWeapon(FName WeaponName);
+
+	// 모든 무기 소유 불값을 false로 만드는 함수
+	void AllWeaponDiscard();
 	
 	/** 총기 UI 요소 맵 */
 	TMap<FString, FWeaponUI> WeaponUIElements;
@@ -137,4 +142,5 @@ private:
 
 	
 };
+
 
