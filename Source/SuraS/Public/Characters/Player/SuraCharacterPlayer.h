@@ -276,6 +276,7 @@ public:
 	float DefaultBrakingDecelerationWalking;
 	float DefaultBrakingDecelerationFalling;
 	float DefaultBrakingFriction;
+	float DefaultFallingLateralFriction;
 	float DefaultCameraFOV;
 	
 

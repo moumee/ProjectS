@@ -4,6 +4,7 @@
 #include "Characters/Player/SuraPlayerMantlingState.h"
 
 #include "Characters/Player/SuraCharacterPlayer.h"
+#include "Characters/Player/SuraPlayerWalkingState.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -62,7 +63,7 @@ void USuraPlayerMantlingState::UpdateState(ASuraCharacterPlayer* Player, float D
 		{
 			bShouldMantle = false;
 			Player->SetActorLocation(TargetLocation);
-			Player->ChangeState(Player->DesiredGroundState);
+			Player->ChangeState(Player->WalkingState);
 			return;
 		}
 	}

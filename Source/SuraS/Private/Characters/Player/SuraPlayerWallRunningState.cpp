@@ -66,7 +66,12 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 
 	if (Player->ForwardAxisInputValue <= 0.f)
 	{
-		Player->ChangeState(Player->FallingState);
+		if (Player->IsFallingDown())
+		{
+			Player->ChangeState(Player->FallingState);
+			return;
+		}
+		Player->ChangeState(Player->JumpingState);
 		return;
 	}
 
@@ -104,11 +109,13 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 
 	if (!bFrontWallFound)
 	{
-		bool bFrontWallHit = GetWorld()->LineTraceSingleByChannel(
+		bool bFrontWallHit = GetWorld()->SweepSingleByChannel(
 		FrontWallHit,
 		Player->GetActorLocation(),
-		Player->GetActorLocation() + Player->WallRunDirection * 75.f,
+		Player->GetActorLocation() + Player->WallRunDirection * 55.f,
+		FQuat::Identity,
 		ECC_Visibility,
+		FCollisionShape::MakeCapsule(34.f, Player->GetDefaultCapsuleHalfHeight()),
 		Params);
 
 		if (bFrontWallHit)

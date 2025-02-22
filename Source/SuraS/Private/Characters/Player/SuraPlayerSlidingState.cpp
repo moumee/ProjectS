@@ -30,10 +30,9 @@ void USuraPlayerSlidingState::EnterState(ASuraCharacterPlayer* Player)
 	Player->GetCharacterMovement()->BrakingDecelerationWalking = 0.f;
 	Player->SetBaseMovementSpeed(Player->GetPlayerMovementData()->GetWalkSpeed());
 
-	Player->DesiredGroundState = Player->SlidingState;
 
-
-	StartSpeed = Player->GetVelocity().Size() + Player->GetPlayerMovementData()->GetSlidingAdditionalSpeed();
+	StartSpeed = FMath::Max(Player->GetVelocity().Size() + Player->GetPlayerMovementData()->GetSlidingAdditionalSpeed(),
+		Player->GetPlayerMovementData()->GetRunSpeed());
 	CurrentSlideSpeed = StartSpeed;
 	CrouchSpeed = Player->GetPlayerMovementData()->GetCrouchSpeed();
 
@@ -98,7 +97,6 @@ void USuraPlayerSlidingState::UpdateState(ASuraCharacterPlayer* Player, float De
 				FVector::UpVector * Player->GetPlayerMovementData()->GetPrimaryJumpZSpeed();
 			Player->LaunchCharacter(JumpVector, false, true);
 		}
-		Player->DesiredGroundState = Player->RunningState;
 		Player->ChangeState(Player->JumpingState);
 		return;
 		

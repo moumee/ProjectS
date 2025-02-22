@@ -64,8 +64,6 @@ void USuraPlayerRunningState::EnterState(ASuraCharacterPlayer* Player)
 	default:
 		break;
 	}
-
-	Player->DesiredGroundState = Player->RunningState;
 }
 
 void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)

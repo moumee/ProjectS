@@ -93,6 +93,7 @@ void ASuraCharacterPlayer::BeginPlay()
 	DefaultBrakingFriction = GetCharacterMovement()->BrakingFriction;
 	DefaultBrakingDecelerationFalling = GetCharacterMovement()->BrakingDecelerationFalling;
 	DefaultBrakingDecelerationWalking = GetCharacterMovement()->BrakingDecelerationWalking;
+	DefaultFallingLateralFriction = GetCharacterMovement()->FallingLateralFriction;
 
 	DefaultCameraFOV = GetCamera()->FieldOfView;
 	
@@ -486,11 +487,11 @@ bool ASuraCharacterPlayer::ShouldEnterWallRunning(FVector& OutWallRunDirection, 
 	Params.AddIgnoredActor(this);
 	FHitResult LeftHit;
 	bool bLeftHit = GetWorld()->LineTraceSingleByChannel(LeftHit, GetActorLocation(),
-		GetActorLocation() + GetActorRightVector() * -45.f, ECC_Visibility, Params);
+		GetActorLocation() + GetActorRightVector() * -55.f, ECC_Visibility, Params);
 	bool bLeftWallRunnable = false;
 	FHitResult RightHit;
 	bool bRightHit = GetWorld()->LineTraceSingleByChannel(RightHit, GetActorLocation(),
-		GetActorLocation() + GetActorRightVector() * 45.f, ECC_Visibility, Params);
+		GetActorLocation() + GetActorRightVector() * 55.f, ECC_Visibility, Params);
 	bool bRightWallRunnable = false;
 
 	if (bLeftHit)
