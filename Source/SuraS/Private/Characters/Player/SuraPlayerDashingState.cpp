@@ -60,13 +60,9 @@ void USuraPlayerDashingState::EnterState(ASuraCharacterPlayer* Player)
 	}
 	else
 	{
-		DashDirection = (Player->GetActorForwardVector() * Player->ForwardAxisInputValue +
+		DashDirection = (Player->GetCamera()->GetForwardVector() * Player->ForwardAxisInputValue +
 			Player->GetActorRightVector() * Player->RightAxisInputValue).GetSafeNormal();
 		
-		if (Player->ForwardAxisInputValue < 0.f)
-		{
-			DashDirection.Z = Player->GetCamera()->GetForwardVector().Z * -1.f;
-		}
 	}
 	
 	DashImpulseSpeed = Player->GetPlayerMovementData()->GetDashImpulseSpeed();
