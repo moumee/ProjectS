@@ -71,10 +71,21 @@ FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
         SwitchToWeaponTab();  // Weapon 탭으로 돌아가기
         return FReply::Handled();  // 이벤트 처리 완료
     }
-    else if (InKeyEvent.GetKey() == EKeys::E)
+    if (InKeyEvent.GetKey() == EKeys::E)
     {
         SwitchToChipTab();  // Chip 탭으로 전환
         return FReply::Handled();  // 이벤트 처리 완료
+    }
+
+    if (InKeyEvent.GetKey() == EKeys::A)
+    {
+        SwitchPage(0); // A 키를 누르면 1페이지로 이동
+        return FReply::Handled();
+    }
+    if (InKeyEvent.GetKey() == EKeys::D)
+    {
+        SwitchPage(1); // D 키를 누르면 2페이지로 이동
+        return FReply::Handled();
     }
 
     // 키 입력 처리: I와 Tab 키를 눌러서 인벤토리 닫기
@@ -190,6 +201,14 @@ void UInventoryWidget::InitializeInventory()
                 UpdateWeaponUI(WeaponNameStr);
             }
         }
+    }
+}
+
+void UInventoryWidget::SwitchPage(int32 PageIndex)
+{
+    if (WeaponWidgetSwitcher)
+    {
+        WeaponWidgetSwitcher->SetActiveWidgetIndex(PageIndex);
     }
 }
 
