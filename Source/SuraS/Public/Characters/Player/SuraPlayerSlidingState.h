@@ -14,6 +14,8 @@ class SURAS_API USuraPlayerSlidingState : public USuraPlayerBaseState
 {
 	GENERATED_BODY()
 
+	FVector CachedSlopeDownwardDirection = FVector::ZeroVector;
+
 	FVector SlideDirection = FVector::ZeroVector;
 
 	float SlideDeltaSpeed;
@@ -23,6 +25,12 @@ class SURAS_API USuraPlayerSlidingState : public USuraPlayerBaseState
 	float CurrentSlideSpeed = 0.f;
 	
 	float CrouchSpeed = 0.f;
+
+	float SlideTransitionDelay = 0.8f;
+
+	float ElapsedTime = 0.f;
+
+	FVector TargetSlideDirection = FVector::ZeroVector;
 
 	UPROPERTY()
 	APlayerController* PlayerController;
