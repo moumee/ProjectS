@@ -121,8 +121,7 @@ void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	if (Player->bCrouchTriggered)
 	{
-		if (FMath::IsNearlyEqual(Player->GetBaseMovementSpeed(), Player->GetPlayerMovementData()->GetRunSpeed(), 10.f) &&
-			Player->FindFloorAngle() <= 0.1f)
+		if (FMath::IsNearlyEqual(Player->GetBaseMovementSpeed(), Player->GetPlayerMovementData()->GetRunSpeed(), 10.f))
 		{
 			Player->ChangeState(Player->SlidingState);
 			return;
