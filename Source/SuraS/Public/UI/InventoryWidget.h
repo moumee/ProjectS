@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "BaseUIWidget.h"
+#include "CustomGameInstance.h"
+#include "ActorComponents/WeaponSystem/WeaponData.h"
 #include "ActorComponents/WeaponSystem/WeaponName.h"
 #include "InventoryWidget.generated.h"
 
@@ -58,6 +60,9 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	UWidgetSwitcher* ContentSwitcher;
 
+	UPROPERTY(meta = (BindWidget), BlueprintReadWrite, Category = "Weapon UI")
+	UWidgetSwitcher* WeaponWidgetSwitcher;
+
 	/** 사운드 **/
 	// 탭 전환 효과음
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
@@ -66,7 +71,7 @@ protected:
 public:
 	// 위젯이 생성된 후 호출되는 함수
 	virtual void NativeConstruct() override;
-
+	
 	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
 	// 탭 전환 함수
@@ -90,12 +95,16 @@ public:
 	// WBP_Invnetory 초기화
 	void InitializeInventory();
 
+	void SwitchPage(int32 PageIndex);
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory")
 	UDataTable* DTWeapon;  // 블루프린트에서 데이터 테이블 할당
 
 	void UpdateWeaponUI(FString WeaponNameStr);
 	void UnlockWeapon(FName WeaponName);
+
+	// 모든 무기 소유 불값을 false로 만드는 함수
+	void AllWeaponDiscard();
 	
 	/** 총기 UI 요소 맵 */
 	TMap<FString, FWeaponUI> WeaponUIElements;
@@ -137,4 +146,5 @@ private:
 
 	
 };
+
 

@@ -8,6 +8,7 @@
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Kismet/GameplayStatics.h"
+#include "UI/CustomGameInstance.h"
 
 void UInventoryWidget::NativeConstruct()
 {
@@ -52,11 +53,10 @@ void UInventoryWidget::NativeConstruct()
         return;
     }
 
+    /** 이 주석 아래 코드들은 최초 초기화 시에만 호출됨 **/
     UE_LOG(LogTemp, Warning, TEXT("WBP_Inventory 생성됨"));
 
     InitializeInventory(); // UI 초기화
-
-
 
     // 초기화 완료 후 bIsInitialized를 true로 설정
     bIsInitialized = true;
@@ -71,10 +71,21 @@ FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
         SwitchToWeaponTab();  // Weapon 탭으로 돌아가기
         return FReply::Handled();  // 이벤트 처리 완료
     }
-    else if (InKeyEvent.GetKey() == EKeys::E)
+    if (InKeyEvent.GetKey() == EKeys::E)
     {
         SwitchToChipTab();  // Chip 탭으로 전환
         return FReply::Handled();  // 이벤트 처리 완료
+    }
+
+    if (InKeyEvent.GetKey() == EKeys::A)
+    {
+        SwitchPage(0); // A 키를 누르면 1페이지로 이동
+        return FReply::Handled();
+    }
+    if (InKeyEvent.GetKey() == EKeys::D)
+    {
+        SwitchPage(1); // D 키를 누르면 2페이지로 이동
+        return FReply::Handled();
     }
 
     // 키 입력 처리: I와 Tab 키를 눌러서 인벤토리 닫기
@@ -84,17 +95,9 @@ FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
         return FReply::Handled();
     }
 
-    if (InKeyEvent.GetKey() == EKeys::T)  // T 키를 눌렀을 때
+    if (InKeyEvent.GetKey() == EKeys::Delete)
     {
-        // 무기 언락 처리
-        // if (UACInventoryManager* InventoryManager = GetOwningPlayerPawn()->FindComponentByClass<UACInventoryManager>())
-        // {
-        //     InventoryManager->UnlockWeapon("Rifle","RifleName");  // 예시로 UnlockWeapon 함수 호출
-        //     GEngine->AddOnScreenDebugMessage(-1, 2.f , FColor::Red, TEXT("Weapon unlocked"));
-        // }
-        //UnlockWeapon(TEXT("Rifle"));
-    
-        return FReply::Handled();
+        AllWeaponDiscard();
     }
 
     return FReply::Handled();  // Tab 키 기본 동작 방지
@@ -160,6 +163,12 @@ void UInventoryWidget::CloseUI()
 {
     Super::CloseUI();
     GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Orange, "CloseInventory");
+
+    // invnetory를 닫을 때 gameinstance의 saveweapondata메서드를 호출
+    // if (UCustomGameInstance* GameInstance = Cast<UCustomGameInstance>(GetWorld()->GetGameInstance()))
+    // {
+    //     GameInstance->SaveWeaponData();
+    // }
 }
 
 void UInventoryWidget::InitializeInventory()
@@ -192,6 +201,14 @@ void UInventoryWidget::InitializeInventory()
                 UpdateWeaponUI(WeaponNameStr);
             }
         }
+    }
+}
+
+void UInventoryWidget::SwitchPage(int32 PageIndex)
+{
+    if (WeaponWidgetSwitcher)
+    {
+        WeaponWidgetSwitcher->SetActiveWidgetIndex(PageIndex);
     }
 }
 
@@ -261,5 +278,27 @@ void UInventoryWidget::OnWeaponPickedUp(FName WeaponName)
     UnlockWeapon(WeaponName);
 }
 
+void UInventoryWidget::AllWeaponDiscard()
+{
+    if (!DTWeapon)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("DTWeapon is not set in GameInstance!"));
+        return;
+    }
+    
+    for (const auto& Row : DTWeapon->GetRowMap())
+    {
+        FWeaponData* WeaponData = (FWeaponData*)Row.Value;
+        if (WeaponData)
+        {
+            WeaponData->bIsWeaponOwned = false;
 
+            UpdateWeaponUI(Row.Key.ToString());
+        }
+    }
+
+
+    
+    UE_LOG(LogTemp, Warning, TEXT("All weapons have been discarded."));
+}
 
