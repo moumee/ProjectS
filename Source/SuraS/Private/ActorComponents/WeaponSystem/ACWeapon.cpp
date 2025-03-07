@@ -1071,9 +1071,8 @@ void UACWeapon::EndWeaponSwitch(ASuraCharacterPlayerWeapon* TargetCharacter, boo
 }
 void UACWeapon::EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 {
-	// TODO: 함수 최적화 해야함
 	UE_LOG(LogTemp, Warning, TEXT("Equip Weapon!!!"));
-	//AttachWeaponToPlayer(TargetCharacter);
+
 	SetInputActionBinding();
 
 	ChangeState(IdleState);
@@ -1081,7 +1080,6 @@ void UACWeapon::EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 
 void UACWeapon::UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 {
-	// TODO: Detach 전에 처리해야하는 것들 처리해야함
 	ResetInputActionBinding();
 	DetachWeaponFromPlayer();
 
@@ -1267,21 +1265,6 @@ void UACWeapon::Create3DUI()
 
 void UACWeapon::ActivateCrosshairWidget(bool bflag)
 {
-	//if (bflag)
-	//{
-	//	if (CrosshairWidget)
-	//	{
-	//		CrosshairWidget->AddToViewport();
-	//	}
-	//}
-	//else
-	//{
-	//	if (CrosshairWidget)
-	//	{
-	//		CrosshairWidget->RemoveFromViewport();
-	//	}
-	//}
-
 	if (bflag)
 	{
 		if (AimUIWidget)
@@ -1540,10 +1523,6 @@ void UACWeapon::StopTargetDetection()
 	CurrentTargetDetectionAngle = 0.f;
 
 	ResetTargetMarkers();
-	//TODO: Targets에 저장된 Target을 향해 유도 미사일 발사 시작
-	//일단은 Targets를 초기화 시키기만 함
-	//Targets.Empty();
-	//MapTargetActorToWidget의 요소들을 전부 삭제해야함 -> 이래서 Widget을 저장하는 컨테이너가 필요할 듯
 
 	TArray<AActor*> TargetsArray = Targets.Array();
 	Targets.Empty();
@@ -1806,11 +1785,8 @@ void UACWeapon::StopMissileLaunch()
 #pragma region FireMode/Charging
 void UACWeapon::StartCharge()
 {
-	//TODO: Chargning 하는 동안 CameraShake 적용, Charging 시간에 따라 Camera Shake 정도가 점점 더 커지게 하기
 	if (CurrentState == IdleState)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Start Charging!!!"));
-
 		ChangeState(ChargingState);
 
 		SpawnChargeEffect(ChargeEffectLocation, ChargeEffectRotation, ChargeEffenctScale);
@@ -1818,7 +1794,6 @@ void UACWeapon::StartCharge()
 
 		UpdateCharge();
 	}
-
 }
 void UACWeapon::UpdateCharge()
 {
@@ -1847,8 +1822,6 @@ void UACWeapon::UpdateCharge()
 }
 void UACWeapon::StopCharge()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Stop Charging!!!"));
-
 	if (CurrentState == ChargingState)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(ChargingTimer);
@@ -1880,7 +1853,6 @@ void UACWeapon::StopCharge()
 	}
 }
 #pragma endregion
-
 
 #pragma region Recoil
 void UACWeapon::AddRecoilValue(FWeaponRecoilStruct* RecoilStruct, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw)
@@ -2114,8 +2086,6 @@ void UACWeapon::StartCameraSettingChange(FWeaponCamSettingValue* CamSetting)
 }
 void UACWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSetting)
 {
-	//UE_LOG(LogTemp, Error, TEXT("UpdateCameraSetting"));
-
 	if (Character)
 	{
 		UCameraComponent* Camera = Character->GetCamera();
@@ -2172,8 +2142,6 @@ void UACWeapon::ApplyCameraShake(TSubclassOf<UWeaponCameraShakeBase> CamShakeCla
 	{
 		if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
 		{
-			//UE_LOG(LogTemp, Error, TEXT("CamShake!!!"));
-
 			PlayerController->PlayerCameraManager->StartCameraShake(CamShakeClass, Scale);
 		}
 	}

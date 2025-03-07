@@ -51,8 +51,6 @@ void ASuraCharacterPlayerWeapon::OnOverlapBegin(UPrimitiveComponent* OverlappedC
 void ASuraCharacterPlayerWeapon::UpdateLookInputVector2D(const FInputActionValue& InputValue)
 {
 	PlayerLookInputVector2D = InputValue.Get<FVector2D>();
-
-	//UE_LOG(LogTemp, Warning, TEXT("(Player Input Value) X: %f, Y: %f"), PlayerLookInputVector2D.X, PlayerLookInputVector2D.Y);
 }
 
 void ASuraCharacterPlayerWeapon::SetLookInputVector2DZero()
@@ -70,7 +68,6 @@ void ASuraCharacterPlayerWeapon::InterpCameraFOV(float DeltaTime)
 		}
 	}
 	Super::InterpCameraFOV(DeltaTime);
-	//UE_LOG(LogTemp, Error, TEXT("Function Hiding!!!")); // 작동안함
 }
 
 void ASuraCharacterPlayerWeapon::StartCamShake(TSubclassOf<UCameraShakeBase> CamShake)
