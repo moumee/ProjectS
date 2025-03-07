@@ -1,9 +1,8 @@
 
-
 #include "ActorComponents/WeaponSystem/SuraProjectile.h"
-
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 
+#include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Interfaces/Damageable.h"
 #include "Structures/DamageData.h"
 
@@ -11,8 +10,7 @@
 #include "GameFramework/Character.h"
 #include "Components/SphereComponent.h"
 #include "Components/DecalComponent.h"
-//#include "Particles/ParticleSystem.h"
-//#include "Particles/ParticleSystemComponent.h"
+
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 
@@ -36,7 +34,6 @@ ASuraProjectile::ASuraProjectile()
 
 	//CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);		// set up a notification for when this component hits something blocking
 	//CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
-
 
 	// Players can't walk on it
 	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
@@ -143,8 +140,10 @@ void ASuraProjectile::LoadProjectileData(FName ProjectileID)
 	ProjectileData = ProjectileDataTable->FindRow<FProjectileData>(ProjectileID, TEXT(""));
 	if (ProjectileData)
 	{
+		// <Effect>
 		TrailEffect = ProjectileData->TrailEffect;
 		ImpactEffect = ProjectileData->ImpactEffect;
+		ExplosionEffect = ProjectileData->ExplosionEffect;
 		DecalMaterial = ProjectileData->HoleDecal;
 
 		InitialLifeSpan = ProjectileData->InitialLifeSpan; //TODO 이렇게는 적용이 안됨. 삭제 요망
@@ -180,17 +179,22 @@ void ASuraProjectile::SetHomingTarget(bool bIsHoming, AActor* Target)
 	ProjectileMovement->HomingAccelerationMagnitude = HomingAccelerationMagnitude;
 	ProjectileMovement->HomingTargetComponent = Target->GetRootComponent();
 
-	UE_LOG(LogTemp, Warning, TEXT("Homing!!!"));
+	TargetEnemy = Cast<ASuraCharacterEnemyBase>(Target);
+	if (TargetEnemy)
+	{
+		RecentTargetLocation = TargetEnemy->GetActorLocation();
+	}
+	//UE_LOG(LogTemp, Warning, TEXT("Homing!!!"));
 }
 
 void ASuraProjectile::LaunchProjectile()
 {
 	ProjectileMovement->Activate();
 
-	if (ProjectileMovement->bIsHomingProjectile)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Is Homing!"));
-	}
+	//if (ProjectileMovement->bIsHomingProjectile)
+	//{
+	//	UE_LOG(LogTemp, Error, TEXT("Is Homing!"));
+	//}
 }
 
 void ASuraProjectile::ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector CenterLocation)
@@ -213,7 +217,11 @@ void ASuraProjectile::ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector Cen
 					DamageAmount = ((MaxExplosionRadius - DistanceToTarget) / MaxExplosionRadius) * MaxExplosiveDamage;
 				}
 				ApplyDamage(OverlappedActor, DamageAmount, EDamageType::Explosion, true);
-				UE_LOG(LogTemp, Error, TEXT("Explosive Damage!!!"));
+				if (OnBodyShot.IsBound())
+				{
+					OnBodyShot.Execute();
+				}
+				//UE_LOG(LogTemp, Error, TEXT("Explosive Damage!!!"));
 			}
 		}
 	}
@@ -391,6 +399,13 @@ void ASuraProjectile::SpawnImpactEffect(FVector SpawnLocation, FRotator SpawnRot
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactEffect, SpawnLocation, SpawnRotation, FVector(1.0f), true);
 	}
 }
+void ASuraProjectile::SpawnExplosionEffect(FVector SpawnLocation)
+{
+	if (ExplosionEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionEffect, SpawnLocation, FRotator::ZeroRotator, FVector(1.0f), true);
+	}
+}
 void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Rocket Trail 적용시 이상함. 손봐야함
 {
 	if (ProjectileMesh && TrailEffect)
@@ -515,6 +530,50 @@ bool ASuraProjectile::CheckHeadOvelap(const AActor* OverlappedActor, const FHitR
 }
 #pragma endregion
 
+#pragma region Homing
+bool ASuraProjectile::IsTargetValid()
+{
+	//TODO: Target의 생존 여부를 판단할 방법이 필요함 -> 관련 변수 하윤님께 요청드려야 함
+	if (!ProjectileMovement->HomingTargetComponent.IsValid())
+	{
+		return false;
+	}
+	return true;
+}
+bool ASuraProjectile::IsTargetWithInRange()
+{
+	if (FVector::Distance(GetActorLocation(), RecentTargetLocation) < ExlosionTriggerRadius)
+	{
+		return true;
+	}
+	return false;
+}
+void ASuraProjectile::UpdateTargetInfo()
+{
+	if (ProjectileMovement->bIsHomingProjectile)
+	{
+		if (!IsTargetValid() || IsTargetWithInRange()) // TODO: 지금은 임시로 ||로 처리함
+		{
+			//TODO: TargetLocation를 향해 날아가서 폭파하도록 설정하기
+			//TODO: 원래의 Target의 위치와 일정 거리 이상 가까워지면 자동 폭파하도록 하는 것도 나쁘지 않은 것 같음
+			//-> 이는 Target의 사망여부와 상관 없이 적용하는 것이 좋을 듯
+
+			UE_LOG(LogTemp, Error, TEXT("Target is not valid!!!"));
+
+			SpawnExplosionEffect(GetActorLocation());
+			ApplyExplosiveDamage(bIsExplosive, GetActorLocation());
+			Destroy();
+		}
+		else
+		{
+			if (TargetEnemy && IsValid(TargetEnemy))
+			{
+				RecentTargetLocation = TargetEnemy->GetActorLocation();
+			}
+		}
+	}
+}
+#pragma endregion
 //// Called when the game starts or when spawned
 //void ASuraProjectile::BeginPlay()
 //{
@@ -527,6 +586,7 @@ void ASuraProjectile::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	UpdateTrailEffect();
+	UpdateTargetInfo();
 }
 
 void ASuraProjectile::EndPlay(const EEndPlayReason::Type EndPlayReason)
