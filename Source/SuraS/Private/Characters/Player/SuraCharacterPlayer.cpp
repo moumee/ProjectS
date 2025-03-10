@@ -23,7 +23,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ActorComponents/UISystem/ACInventoryManager.h"
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
-#include "Extensions/UIComponent.h"
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 
@@ -283,9 +282,6 @@ void ASuraCharacterPlayer::PrintPlayerDebugInfo() const
 			GEngine->AddOnScreenDebugMessage(99, 0.f, FColor::Green,
 				FString::Printf(TEXT("Input Axis Value : ( %f, %f )"), ForwardAxisInputValue, RightAxisInputValue));
 
-			GEngine->AddOnScreenDebugMessage(98, 0.f, FColor::Green,
-				FString::Printf(TEXT("Slope Speed Delta : %f"), SlopeSpeedDelta));
-
 			GEngine->AddOnScreenDebugMessage(97, 0.f, FColor::Red,
 				FString::Printf(TEXT("Current State : %s"), *CurrentState->StateDisplayName.ToString()));
 
@@ -308,18 +304,32 @@ void ASuraCharacterPlayer::UpdateDashCooldowns(float DeltaTime)
 {
 	if (DashesLeft == MaxDashes) return;
 
-	for (int i = 0; i < MaxDashes; i++)
+	float MinCurrentCooldown = FLT_MAX;
+	int32 CurrentIndex = -1;
+
+	for (int32 i = 0; i < MaxDashes; i++)
 	{
 		if (DashCooldowns[i] > 0.f)
 		{
-			DashCooldowns[i] = DashCooldowns[i] - DeltaTime;
-			if (DashCooldowns[i] <= KINDA_SMALL_NUMBER)
+			if (DashCooldowns[i] < MinCurrentCooldown)
 			{
-				DashCooldowns[i] = 0.f;
-				DashesLeft = FMath::Min(DashesLeft + 1, MaxDashes);
+				MinCurrentCooldown = DashCooldowns[i];
+				CurrentIndex = i;
 			}
 		}
 	}
+	
+	if (CurrentIndex != -1)
+	{
+		DashCooldowns[CurrentIndex] = DashCooldowns[CurrentIndex] - DeltaTime;
+		if (DashCooldowns[CurrentIndex] <= KINDA_SMALL_NUMBER)
+		{
+			DashCooldowns[CurrentIndex] = 0.f;
+			DashesLeft = FMath::Min(DashesLeft + 1, MaxDashes);
+		}
+	}
+	
+	
 }
 
 void ASuraCharacterPlayer::OnDamaged()
@@ -393,11 +403,7 @@ void ASuraCharacterPlayer::Tick(float DeltaTime)
 		CurrentState->UpdateState(this, DeltaTime);
 	}
 	
-
-	SlopeSpeedDelta = FindFloorAngle() < GetCharacterMovement()->GetWalkableFloorAngle() ?
-		SlopeSpeedDeltaCurve->GetFloatValue(FindFloorAngle()) : 0.f;
-	
-	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed + SlopeSpeedDelta;
+	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
 }
 
 void ASuraCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -482,6 +488,8 @@ void ASuraCharacterPlayer::Landed(const FHitResult& Hit)
 bool ASuraCharacterPlayer::ShouldEnterWallRunning(FVector& OutWallRunDirection, EWallSide& OutWallRunSide)
 {
 	if (!GetCharacterMovement()->IsFalling()) return false;
+
+	if (bCrouchTriggered) return false;
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);

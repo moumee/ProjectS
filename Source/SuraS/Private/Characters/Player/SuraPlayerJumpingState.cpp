@@ -85,7 +85,14 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 {
 	Super::UpdateState(Player, DeltaTime);
 	
-	Player->InterpCapsuleHeight(1.f, DeltaTime);
+	if (Player->bCrouchTriggered)
+	{
+		Player->InterpCapsuleHeight(0.6f, DeltaTime);
+	}
+	else
+	{
+		Player->InterpCapsuleHeight(1.f, DeltaTime);
+	}
 
 	UpdateBaseMovementSpeed(Player, DeltaTime);
 

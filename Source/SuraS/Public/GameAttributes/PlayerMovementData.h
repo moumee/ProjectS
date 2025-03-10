@@ -81,7 +81,10 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 	float SlidingAdditionalSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float SlidingDecreaseSpeed;
+	float SlidingSpeedIncreaseTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SlidingSpeedDecreaseTime;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float WallRunningMaxDuration;

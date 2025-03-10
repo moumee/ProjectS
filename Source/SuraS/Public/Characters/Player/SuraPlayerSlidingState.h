@@ -18,17 +18,26 @@ class SURAS_API USuraPlayerSlidingState : public USuraPlayerBaseState
 
 	FVector SlideDirection = FVector::ZeroVector;
 
-	float SlideDeltaSpeed;
+	float StateEnterSpeed = 0.f;
+
+	float SlideSpeedIncreaseTime = 0.f;
+
+	float SlideSpeedDecreaseTime = 0.f;
+
+	float SlideAdditionalSpeed = 0.f;
+
+	float IncreaseElapsedTime = 0.f;
+
+	float DecreaseElapsedTime = 0.f;
+
+	bool bSpeedIncreasing = true;
 
 	float StartSpeed = 0.f;
 
 	float CurrentSlideSpeed = 0.f;
 	
 	float CrouchSpeed = 0.f;
-
-	float SlideTransitionDelay = 0.8f;
-
-	float ElapsedTime = 0.f;
+	
 
 	FVector TargetSlideDirection = FVector::ZeroVector;
 

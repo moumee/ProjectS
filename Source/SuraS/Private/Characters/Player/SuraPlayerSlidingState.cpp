@@ -28,15 +28,17 @@ void USuraPlayerSlidingState::EnterState(ASuraCharacterPlayer* Player)
 
 	Player->GetCharacterMovement()->GroundFriction = 0.f;
 	Player->GetCharacterMovement()->BrakingDecelerationWalking = 0.f;
-	Player->SetBaseMovementSpeed(Player->GetPlayerMovementData()->GetWalkSpeed());
 
+	StateEnterSpeed = Player->GetCharacterMovement()->Velocity.Size();
 
-	StartSpeed = FMath::Max(Player->GetVelocity().Size() + Player->GetPlayerMovementData()->GetSlidingAdditionalSpeed(),
-		Player->GetPlayerMovementData()->GetRunSpeed());
-	CurrentSlideSpeed = StartSpeed;
 	CrouchSpeed = Player->GetPlayerMovementData()->GetCrouchSpeed();
 
-	SlideDeltaSpeed = Player->GetPlayerMovementData()->GetSlidingDecreaseSpeed();
+	SlideAdditionalSpeed = Player->GetPlayerMovementData()->GetSlidingAdditionalSpeed();
+	SlideSpeedIncreaseTime = Player->GetPlayerMovementData()->GetSlidingSpeedIncreaseTime();
+	SlideSpeedDecreaseTime = Player->GetPlayerMovementData()->GetSlidingSpeedDecreaseTime();
+
+	bSpeedIncreasing = true;
+	
 
 	if (Player->GetPreviousState()->GetStateType() == EPlayerState::Falling)
 	{
@@ -49,7 +51,7 @@ void USuraPlayerSlidingState::EnterState(ASuraCharacterPlayer* Player)
 		FVector ForwardVector = Player->GetActorForwardVector();
 		FVector RightVector = Player->GetActorRightVector();
 		FVector SlideDirectionXY = (ForwardVector * Player->ForwardAxisInputValue + RightVector * Player->RightAxisInputValue).GetSafeNormal();
-		SlideDirection = FVector::VectorPlaneProject(SlideDirectionXY, Player->GetCharacterMovement()->CurrentFloor.HitResult.ImpactNormal);
+		SlideDirection = FVector::VectorPlaneProject(SlideDirectionXY, Player->GetCharacterMovement()->CurrentFloor.HitResult.ImpactNormal).GetSafeNormal();
 	}
 
 	if (!FMath::IsNearlyEqual(Player->FindFloorAngle(), 0.f, 0.1f))
@@ -57,7 +59,7 @@ void USuraPlayerSlidingState::EnterState(ASuraCharacterPlayer* Player)
 		CachedSlopeDownwardDirection = FVector::VectorPlaneProject(FVector::DownVector, Player->GetCharacterMovement()->CurrentFloor.HitResult.ImpactNormal).GetSafeNormal();
 	}
 
-	Player->GetCharacterMovement()->Velocity = SlideDirection * StartSpeed;
+	Player->GetCharacterMovement()->Velocity = SlideDirection * StateEnterSpeed;
 	
 }
 
@@ -77,13 +79,40 @@ void USuraPlayerSlidingState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	
 	
+
+	if (bSpeedIncreasing)
+	{
+		if (IncreaseElapsedTime < SlideSpeedIncreaseTime)
+		{
+			IncreaseElapsedTime += DeltaTime;
+			CurrentSlideSpeed = FMath::Lerp(StateEnterSpeed, StateEnterSpeed + SlideAdditionalSpeed, IncreaseElapsedTime / SlideSpeedIncreaseTime);
+		}
+		else
+		{
+			CurrentSlideSpeed = StateEnterSpeed + SlideAdditionalSpeed;
+			bSpeedIncreasing = false;
+		}
+	}
+	else
+	{
+		if (Player->FindFloorAngle() >= -0.1f)
+		{
+			if (DecreaseElapsedTime < SlideSpeedDecreaseTime)
+			{
+				DecreaseElapsedTime += DeltaTime;
+				CurrentSlideSpeed = FMath::Lerp(StateEnterSpeed + SlideAdditionalSpeed, CrouchSpeed, DecreaseElapsedTime / SlideSpeedDecreaseTime);
+			}
+			else
+			{
+				CurrentSlideSpeed = CrouchSpeed;
+			}
+		}
+	}
 	
 
 	if (Player->FindFloorAngle() >= -0.1f)
 	{
 		//TODO: I need to start acceleration if I am back on slope
-		
-		CurrentSlideSpeed = FMath::Max(CurrentSlideSpeed - SlideDeltaSpeed * DeltaTime, CrouchSpeed);
 	}
 
 	if (FMath::IsNearlyEqual(Player->FindFloorAngle(), 0.f, 0.1f))
@@ -113,18 +142,7 @@ void USuraPlayerSlidingState::UpdateState(ASuraCharacterPlayer* Player, float De
 	
 
 	Player->InterpCapsuleHeight(0.6f, DeltaTime);
-
-	// ElapsedTime += DeltaTime;
-	// if (ElapsedTime < SlideTransitionDelay)
-	// {
-	// 	
-	// 	Player->GetCharacterMovement()->Velocity = SlideDirection * CurrentSlideSpeed;
-	// }
-	// else
-	// {
-	// 	FVector NewSlideDirection = FMath::VInterpNormalRotationTo(Player->GetCharacterMovement()->Velocity.GetSafeNormal(), TargetSlideDirection, DeltaTime, 30.f);
-	// 	Player->GetCharacterMovement()->Velocity = NewSlideDirection * CurrentSlideSpeed;
-	// }
+	
 
 	FVector NewSlideDirection = FMath::VInterpNormalRotationTo(Player->GetCharacterMovement()->Velocity.GetSafeNormal(), TargetSlideDirection, DeltaTime, 40.f);
 	Player->GetCharacterMovement()->Velocity = NewSlideDirection * CurrentSlideSpeed;
@@ -186,7 +204,8 @@ void USuraPlayerSlidingState::ExitState(ASuraCharacterPlayer* Player)
 	Player->GetCharacterMovement()->GroundFriction = Player->DefaultGroundFriction;
 	Player->GetCharacterMovement()->BrakingDecelerationWalking = Player->DefaultBrakingDecelerationWalking;
 	Player->SetPreviousGroundedState(this);
-	ElapsedTime = 0.f;
+	IncreaseElapsedTime = 0.f;
+	DecreaseElapsedTime = 0.f;
 }
 
 

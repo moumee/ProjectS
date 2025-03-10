@@ -116,12 +116,6 @@ protected:
 	float DefaultCapsuleHalfHeight;
 
 	FVector DefaultCameraLocation;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Curve", meta = (AllowPrivateAccess = "true"))
-	UCurveFloat* SlopeSpeedDeltaCurve;
-
-	// Value that influences player speed based on the angle of the slope
-	float SlopeSpeedDelta;
 	
 	float BaseMovementSpeed;
 
@@ -129,7 +123,7 @@ protected:
 
 	bool bShouldUpdateAdditionalMovementSpeed;
 
-	
+	float CurrentDashCooldownIndex = 0.f;
 
 	virtual void BeginPlay() override;
 

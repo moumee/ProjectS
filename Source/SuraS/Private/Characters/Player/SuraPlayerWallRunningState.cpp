@@ -43,12 +43,34 @@ void USuraPlayerWallRunningState::EnterState(ASuraCharacterPlayer* Player)
 }
 
 
+void USuraPlayerWallRunningState::TiltController(ASuraCharacterPlayer* Player, float DeltaTime)
+{
+	if (bShouldTilt)
+	{
+		FRotator CurrentControlRotation = Player->GetControlRotation();
+		FRotator NewRotation = FMath::RInterpTo(CurrentControlRotation,
+		                                        FRotator(CurrentControlRotation.Pitch, CurrentControlRotation.Yaw, TargetRoll), DeltaTime, 10.f);
+		Player->GetController()->SetControlRotation(NewRotation);
+		if (FMath::Abs(Player->GetControlRotation().Roll - TargetRoll) < 0.1f)
+		{
+			FRotator CurrentRotation = Player->GetControlRotation();
+			Player->GetController()->SetControlRotation(FRotator(CurrentRotation.Pitch, CurrentRotation.Yaw, TargetRoll));
+			bShouldTilt = false;
+		}
+	}
+}
 
 void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
 {
 	Super::UpdateState(Player, DeltaTime);
 
 	Player->StartCamShake(Player->WallRunCamShake);
+
+	if (Player->bCrouchTriggered)
+	{
+		Player->ChangeState(Player->FallingState);
+		return;
+	}
 
 	if (ElapsedTime < MaxDuration)
 	{
@@ -75,19 +97,7 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 		return;
 	}
 
-	if (bShouldTilt)
-	{
-		FRotator CurrentControlRotation = Player->GetControlRotation();
-		FRotator NewRotation = FMath::RInterpTo(CurrentControlRotation,
-			FRotator(CurrentControlRotation.Pitch, CurrentControlRotation.Yaw, TargetRoll), DeltaTime, 10.f);
-		Player->GetController()->SetControlRotation(NewRotation);
-		if (FMath::Abs(Player->GetControlRotation().Roll - TargetRoll) < 0.1f)
-		{
-			FRotator CurrentRotation = Player->GetControlRotation();
-			Player->GetController()->SetControlRotation(FRotator(CurrentRotation.Pitch, CurrentRotation.Yaw, TargetRoll));
-			bShouldTilt = false;
-		}
-	}
+	TiltController(Player, DeltaTime);
 
 	
 	if (Player->bJumpTriggered)
@@ -204,20 +214,7 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 		return;
 	}
 
-	// if (bShouldRotateCamera)
-	// {
-	// 	FRotator CurrentRotation = Player->GetControlRotation();
-	// 	float TargetYaw = Player->WallRunDirection.Rotation().Yaw;
-	// 	FRotator NewRotation = FMath::RInterpTo(CurrentRotation, FRotator(CurrentRotation.Pitch, TargetYaw, CurrentRotation.Roll),
-	// 		DeltaTime, 20.f);
-	// 	Player->GetController()->SetControlRotation(NewRotation);
-	//
-	// 	if (FMath::IsNearlyEqual(Player->GetActorRotation().Yaw, TargetYaw, 1.f))
-	// 	{
-	// 		Player->GetController()->SetControlRotation(FRotator(CurrentRotation.Pitch, TargetYaw, CurrentRotation.Roll));
-	// 		bShouldRotateCamera = false;
-	// 	}
-	// }
+	
 
 	
 	

@@ -46,6 +46,8 @@ public:
 
 	virtual void EnterState(ASuraCharacterPlayer* Player) override;
 	
+	void TiltController(ASuraCharacterPlayer* Player, float DeltaTime);
+
 	void SetPlayerWallOffsetLocation(ASuraCharacterPlayer* Player, float DeltaTime);
 
 	virtual void UpdateState(ASuraCharacterPlayer* Player, float DeltaTime) override;

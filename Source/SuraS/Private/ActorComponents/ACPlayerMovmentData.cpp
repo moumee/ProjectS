@@ -216,6 +216,26 @@ float UACPlayerMovementData::GetSlidingAdditionalSpeed() const
 	return PlayerRow->SlidingAdditionalSpeed;
 }
 
+float UACPlayerMovementData::GetSlidingSpeedIncreaseTime() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->SlidingSpeedIncreaseTime;
+}
+
+float UACPlayerMovementData::GetSlidingSpeedDecreaseTime() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->SlidingSpeedDecreaseTime;
+}
+
 float UACPlayerMovementData::GetDashImpulseTransitionEndDuration() const
 {
 	if (!PlayerRow)
@@ -226,15 +246,6 @@ float UACPlayerMovementData::GetDashImpulseTransitionEndDuration() const
 	return PlayerRow->DashImpulseTransitionEndDuration;
 }
 
-float UACPlayerMovementData::GetSlidingDecreaseSpeed() const
-{
-	if (!PlayerRow)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
-		return 0;
-	}
-	return PlayerRow->SlidingDecreaseSpeed;
-}
 
 float UACPlayerMovementData::GetWallRunningMaxDuration() const
 {
