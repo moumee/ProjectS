@@ -162,7 +162,7 @@ float ASuraCharacterPlayer::GetBaseMovementSpeed() const
 
 void ASuraCharacterPlayer::ChangeState(USuraPlayerBaseState* NewState)
 {
-	if (!NewState || NewState == CurrentState) return;
+	if (!NewState) return;
 
 	if (CurrentState)
 	{
@@ -195,24 +195,16 @@ bool ASuraCharacterPlayer::HasMovementInput() const
 
 void ASuraCharacterPlayer::PrimaryJump()
 {
-	if (JumpsLeft > 0)
-	{
-		JumpsLeft--;
-		FVector JumpVector = FVector::UpVector * GetPlayerMovementData()->GetPrimaryJumpZSpeed();
-		LaunchCharacter(JumpVector, false, true);
-	}
+	FVector JumpVector = FVector::UpVector * GetPlayerMovementData()->GetPrimaryJumpZSpeed();
+	LaunchCharacter(JumpVector, false, true);
 }
 
-void ASuraCharacterPlayer::DoubleJump()
+void ASuraCharacterPlayer::InAirJump()
 {
-	if (JumpsLeft > 0 && GetCharacterMovement()->IsFalling())
-	{
-		JumpsLeft--;
-		FVector InputDirection = GetActorForwardVector() * ForwardAxisInputValue + GetActorRightVector() * RightAxisInputValue;
-		FVector LaunchVelocity = InputDirection * GetPlayerMovementData()->GetDoubleJumpXYSpeed() +
-			FVector::UpVector * GetPlayerMovementData()->GetDoubleJumpZSpeed();
-		LaunchCharacter(LaunchVelocity, false, true);
-	}
+	FVector InputDirection = GetActorForwardVector() * ForwardAxisInputValue + GetActorRightVector() * RightAxisInputValue;
+	FVector LaunchVelocity = InputDirection * GetPlayerMovementData()->GetDoubleJumpXYSpeed() +
+		FVector::UpVector * GetPlayerMovementData()->GetDoubleJumpZSpeed();
+	LaunchCharacter(LaunchVelocity, false, true);
 }
 
 float ASuraCharacterPlayer::GetDefaultCapsuleHalfHeight() const
@@ -416,7 +408,7 @@ void ASuraCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ASuraCharacterPlayer::StopMoving);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraCharacterPlayer::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartJumping);
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartDashing);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &ASuraCharacterPlayer::StartDashing);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartCrouching);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASuraCharacterPlayer::StopCrouching);
 		
@@ -452,15 +444,12 @@ void ASuraCharacterPlayer::Look(const FInputActionValue& InputValue)
 
 void ASuraCharacterPlayer::StartJumping()
 {
-	if (JumpsLeft <= 0) return;
 	bJumpTriggered = true;
-	CurrentState->StartJumping(this);
 }
 
 void ASuraCharacterPlayer::StartCrouching()
 {
 	bCrouchTriggered = true;
-	CurrentState->StartCrouching(this);
 }
 
 void ASuraCharacterPlayer::StopCrouching()
@@ -470,11 +459,7 @@ void ASuraCharacterPlayer::StopCrouching()
 
 void ASuraCharacterPlayer::StartDashing()
 {
-	if (DashesLeft <= 0) return;
-	if (CurrentState == DashingState) return;
 	bDashTriggered = true;
-	CurrentState->StartDashing(this);
-	
 }
 
 void ASuraCharacterPlayer::Landed(const FHitResult& Hit)

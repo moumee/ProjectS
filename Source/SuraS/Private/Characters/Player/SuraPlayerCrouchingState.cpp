@@ -46,8 +46,8 @@ void USuraPlayerCrouchingState::EnterState(ASuraCharacterPlayer* Player)
 	case EPlayerState::Dashing:
 		{
 			SpeedTransitionTime = Player->GetPlayerMovementData()->GetCrouchDashTransitionDuration();
-			float DashSpeed = Player->GetPlayerMovementData()->GetDashSpeed();
-			SpeedChangePerSecond = (CrouchSpeed- DashSpeed) / SpeedTransitionTime;
+			float DashEndSpeed = Player->GetPlayerMovementData()->GetDashEndSpeed();
+			SpeedChangePerSecond = (CrouchSpeed- DashEndSpeed) / SpeedTransitionTime;
 			break;
 		}
 	case EPlayerState::Running:
@@ -111,19 +111,18 @@ void USuraPlayerCrouchingState::UpdateState(ASuraCharacterPlayer* Player, float 
 		return;
 	}
 
-	if (Player->bDashTriggered)
+	if (Player->bDashTriggered && Player->DashesLeft > 0)
 	{
 		Player->ChangeState(Player->DashingState);
 		return;
 	}
-
-	// Only for crouching and sliding set jumping in update
-	if (Player->bJumpTriggered)
+	
+	if (Player->bJumpTriggered && Player->JumpsLeft > 0)
 	{
+		Player->JumpsLeft--;
 		Player->PrimaryJump();
 		Player->ChangeState(Player->JumpingState);
 		return;
-		
 	}
 
 	if (!Player->bCrouchTriggered && !bUpperHit)
@@ -156,10 +155,6 @@ void USuraPlayerCrouchingState::Look(ASuraCharacterPlayer* Player, const FVector
 	Player->AddControllerYawInput(InputVector.X);
 }
 
-void USuraPlayerCrouchingState::StartJumping(ASuraCharacterPlayer* Player)
-{
-	Super::StartJumping(Player);
-}
 
 
 

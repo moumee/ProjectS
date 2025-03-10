@@ -295,7 +295,7 @@ public:
 
 	void PrimaryJump();
 
-	void DoubleJump();
+	void InAirJump();
 
 	float GetDefaultCapsuleHalfHeight() const;
 

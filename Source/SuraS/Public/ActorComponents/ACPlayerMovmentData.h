@@ -69,16 +69,16 @@ public:
 	float GetAirControl() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Data")
-	float GetDashSpeed() const;
+	float GetDashEndSpeed() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Data")
 	float GetDashImpulseSpeed() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Data")
-	int GetDashMaxStack() const;
+	float GetDashSpeedDecreaseDuration() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Data")
-	float GetDashDistance() const;
+	int GetDashMaxStack() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Data")
 	float GetDashCooldown() const;
@@ -88,10 +88,6 @@ public:
 	float GetSlidingSpeedIncreaseTime() const;
 
 	float GetSlidingSpeedDecreaseTime() const;
-
-	float GetDashImpulseTransitionEndDuration() const;
-
-	float GetSlidingDecreaseSpeed() const;
 
 	float GetWallRunningMaxDuration() const;
 

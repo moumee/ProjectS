@@ -24,6 +24,7 @@ void USuraPlayerSlidingState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 
+	
 	PlayerController = Player->GetController<APlayerController>();
 
 	Player->GetCharacterMovement()->GroundFriction = 0.f;
@@ -37,17 +38,24 @@ void USuraPlayerSlidingState::EnterState(ASuraCharacterPlayer* Player)
 	SlideSpeedIncreaseTime = Player->GetPlayerMovementData()->GetSlidingSpeedIncreaseTime();
 	SlideSpeedDecreaseTime = Player->GetPlayerMovementData()->GetSlidingSpeedDecreaseTime();
 
-	bSpeedIncreasing = true;
+	
+	
 	
 
 	if (Player->GetPreviousState()->GetStateType() == EPlayerState::Falling)
 	{
+		if (Player->JumpingState->GetSlideSpeedDecreaseElapsedTime() > 0.f)
+		{
+			bSpeedIncreasing = false;
+			DecreaseElapsedTime = Player->JumpingState->GetSlideSpeedDecreaseElapsedTime();
+		}
 		FVector DesiredSlidingDirection = Player->FallingState->GetDesiredSlidingDirection();
 		SlideDirection = FVector::VectorPlaneProject(DesiredSlidingDirection,
 			Player->GetCharacterMovement()->CurrentFloor.HitResult.ImpactNormal).GetSafeNormal();
 	}
 	else
 	{
+		bSpeedIncreasing = true;
 		FVector ForwardVector = Player->GetActorForwardVector();
 		FVector RightVector = Player->GetActorRightVector();
 		FVector SlideDirectionXY = (ForwardVector * Player->ForwardAxisInputValue + RightVector * Player->RightAxisInputValue).GetSafeNormal();
@@ -61,6 +69,7 @@ void USuraPlayerSlidingState::EnterState(ASuraCharacterPlayer* Player)
 
 	Player->GetCharacterMovement()->Velocity = SlideDirection * StateEnterSpeed;
 	
+	GEngine->AddOnScreenDebugMessage(5, 1.f, FColor::Red, FString::Printf(TEXT("Slide Speed Decrease Elapsed Time : %f"), DecreaseElapsedTime));
 }
 
 void USuraPlayerSlidingState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
@@ -154,18 +163,18 @@ void USuraPlayerSlidingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		Player->ChangeState(Player->CrouchingState);
 		return;
 	}
-
-	// Only for sliding jumping because of the capsule size reset
-	// The order matters
-	if (Player->bJumpTriggered)
+	
+	if (Player->bJumpTriggered && Player->JumpsLeft > 0)
 	{
-		if (Player->JumpsLeft > 0)
+		Player->JumpsLeft--;
+		FVector ForwardVector = Player->GetActorForwardVector();
+		FVector JumpVector = ForwardVector * Player->GetPlayerMovementData()->GetDoubleJumpXYSpeed() * 2.f +
+			FVector::UpVector * Player->GetPlayerMovementData()->GetPrimaryJumpZSpeed();
+		Player->LaunchCharacter(JumpVector, false, true);
+		// save slide speed decrease elapsed time for continuous sliding after primary jump
+		if (DecreaseElapsedTime > 0.f)
 		{
-			Player->JumpsLeft--;
-			FVector ForwardVector = Player->GetActorForwardVector();
-			FVector JumpVector = ForwardVector * Player->GetPlayerMovementData()->GetDoubleJumpXYSpeed() * 2.f +
-				FVector::UpVector * Player->GetPlayerMovementData()->GetPrimaryJumpZSpeed();
-			Player->LaunchCharacter(JumpVector, false, true);
+			Player->JumpingState->SetSlideSpeedDecreaseElapsedTime(DecreaseElapsedTime);
 		}
 		Player->ChangeState(Player->JumpingState);
 		return;
@@ -178,7 +187,7 @@ void USuraPlayerSlidingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		return;
 	}
 
-	if (Player->bDashTriggered)
+	if (Player->bDashTriggered && Player->DashesLeft > 0)
 	{
 		Player->ChangeState(Player->DashingState);
 		return;
@@ -204,15 +213,11 @@ void USuraPlayerSlidingState::ExitState(ASuraCharacterPlayer* Player)
 	Player->GetCharacterMovement()->GroundFriction = Player->DefaultGroundFriction;
 	Player->GetCharacterMovement()->BrakingDecelerationWalking = Player->DefaultBrakingDecelerationWalking;
 	Player->SetPreviousGroundedState(this);
+	
 	IncreaseElapsedTime = 0.f;
 	DecreaseElapsedTime = 0.f;
 }
 
-
-void USuraPlayerSlidingState::StartJumping(ASuraCharacterPlayer* Player)
-{
-	Super::StartJumping(Player);
-}
 
 void USuraPlayerSlidingState::Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector)
 {

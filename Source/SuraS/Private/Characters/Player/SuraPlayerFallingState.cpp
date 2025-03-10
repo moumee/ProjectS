@@ -48,9 +48,9 @@ void USuraPlayerFallingState::EnterState(ASuraCharacterPlayer* Player)
 	{
 		bShouldUpdateSpeed = true;
 		SpeedTransitionTime = Player->GetPlayerMovementData()->GetRunDashTransitionDuration();
-		float DashSpeed = Player->GetPlayerMovementData()->GetDashSpeed();
+		float DashEndSpeed = Player->GetPlayerMovementData()->GetDashEndSpeed();
 		float RunSpeed = Player->GetPlayerMovementData()->GetRunSpeed();
-		SpeedChangePerSecond = (RunSpeed - DashSpeed) / SpeedTransitionTime;
+		SpeedChangePerSecond = (RunSpeed - DashEndSpeed) / SpeedTransitionTime;
 	}
 	ElapsedTimeFromWallRun = 0.f;
 }
@@ -161,14 +161,17 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		}
 	}
 
-	if (Player->bJumpTriggered)
+	if (Player->bJumpTriggered && Player->JumpsLeft > 0)
 	{
+		Player->JumpingState->SetSlideSpeedDecreaseElapsedTime(0.f);
+		Player->JumpsLeft--;
+		Player->InAirJump();
 		Player->ChangeState(Player->JumpingState);
 		return;
 	}
 	
 
-	if (Player->bDashTriggered)
+	if (Player->bDashTriggered && Player->DashesLeft > 0)
 	{
 		Player->ChangeState(Player->DashingState);
 		return;
@@ -180,8 +183,8 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		
 		if (Player->bCrouchTriggered)
 		{
-			if (Player->GetPreviousGroundedState()->GetStateType() != EPlayerState::Sliding &&
-				Player->GetPreviousGroundedState()->GetStateType() != EPlayerState::Crouching)
+			// May have to fix this if statement
+			if (Player->GetCharacterMovement()->Velocity.Size() >= Player->GetPlayerMovementData()->GetRunSpeed())
 			{
 				Player->ChangeState(Player->SlidingState);
 				return;
@@ -220,12 +223,6 @@ void USuraPlayerFallingState::Look(ASuraCharacterPlayer* Player, const FVector2D
 	Player->AddControllerYawInput(InputVector.X);
 }
 
-void USuraPlayerFallingState::StartJumping(ASuraCharacterPlayer* Player)
-{
-	Super::StartJumping(Player);
-	
-	Player->DoubleJump();
-}
 
 void USuraPlayerFallingState::Landed(ASuraCharacterPlayer* Player, const FHitResult& HitResult)
 {

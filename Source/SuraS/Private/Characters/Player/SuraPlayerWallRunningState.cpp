@@ -100,8 +100,21 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 	TiltController(Player, DeltaTime);
 
 	
-	if (Player->bJumpTriggered)
+	if (Player->bJumpTriggered && Player->JumpsLeft > 0)
 	{
+		Player->JumpsLeft--;
+		FVector LaunchDirectionXY = FVector::ZeroVector;
+		if (Player->WallRunSide == EWallSide::Left)
+		{
+			LaunchDirectionXY = FVector::CrossProduct(Player->WallRunDirection, FVector::DownVector).GetSafeNormal();
+		}
+		else if (Player->WallRunSide == EWallSide::Right)
+		{
+			LaunchDirectionXY = FVector::CrossProduct(Player->WallRunDirection, FVector::UpVector).GetSafeNormal();
+		}
+		FVector LaunchVector = LaunchDirectionXY * 500.f +
+			FVector::UpVector * Player->GetPlayerMovementData()->GetPrimaryJumpZSpeed();
+		Player->LaunchCharacter(LaunchVector, false, true);
 		Player->ChangeState(Player->JumpingState);
 		return;
 	}
@@ -214,11 +227,6 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 		return;
 	}
 
-	
-
-	
-	
-	
 }
 
 void USuraPlayerWallRunningState::ExitState(ASuraCharacterPlayer* Player)
@@ -243,28 +251,6 @@ void USuraPlayerWallRunningState::Look(ASuraCharacterPlayer* Player, const FVect
 void USuraPlayerWallRunningState::Move(ASuraCharacterPlayer* Player, const FVector2D& InputVector)
 {
 	Super::Move(Player, InputVector);
-}
-
-void USuraPlayerWallRunningState::StartJumping(ASuraCharacterPlayer* Player)
-{
-	Super::StartJumping(Player);
-	
-	if (Player->JumpsLeft > 0)
-	{
-		FVector LaunchDirectionXY = FVector::ZeroVector;
-		Player->JumpsLeft--;
-		if (Player->WallRunSide == EWallSide::Left)
-		{
-			LaunchDirectionXY = FVector::CrossProduct(Player->WallRunDirection, FVector::DownVector).GetSafeNormal();
-		}
-		else if (Player->WallRunSide == EWallSide::Right)
-		{
-			LaunchDirectionXY = FVector::CrossProduct(Player->WallRunDirection, FVector::UpVector).GetSafeNormal();
-		}
-		FVector LaunchVector = LaunchDirectionXY * 500.f +
-			FVector::UpVector * Player->GetPlayerMovementData()->GetPrimaryJumpZSpeed();
-		Player->LaunchCharacter(LaunchVector, false, true);
-	}
 }
 
 void USuraPlayerWallRunningState::SetPlayerWallOffsetLocation(ASuraCharacterPlayer* Player, float DeltaTime)
