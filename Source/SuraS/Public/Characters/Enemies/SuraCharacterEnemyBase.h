@@ -101,4 +101,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	UAnimMontage* AttackAnimation;
+
+	//poolsystem
+	bool isInitialized = false;
+	void InitializeEnemy();
 };
