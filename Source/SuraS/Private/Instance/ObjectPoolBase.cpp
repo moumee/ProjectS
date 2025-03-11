@@ -8,11 +8,11 @@
 
 #include "Instance/ObjectPoolBase.h"
 
-UObjectPoolBase::UObjectPoolBase(const FObjectInitializer& ObjectInitializer)
+UObjectPoolBase::UObjectPoolBase()
 {
 }
 
-UObjectPoolBase::UObjectPoolBase(UWorld* const world, int initialAmount)
+void UObjectPoolBase::Initialize(UWorld* const world, int initialAmount)
 {
 	if (PooledObjectSubclass != nullptr)
 	{
@@ -47,7 +47,6 @@ AActor* UObjectPoolBase::GetPooledObject(FVector position, FRotator rotation)
 		if (PoolableActor != nullptr && PoolableActor->IsHidden())
 		{
 			PoolableActor->TeleportTo(position, rotation);
-			PoolableActor->SetActorRotation(rotation);
 			//PoolableActor->InitializeEnemy();
 			PoolableActor->SetActorHiddenInGame(false);
 			PoolableActor->SetActorEnableCollision(true);
@@ -57,6 +56,10 @@ AActor* UObjectPoolBase::GetPooledObject(FVector position, FRotator rotation)
 
 	AActor* SpawnedObject;
 	SpawnPooledObject(SpawnedObject);
+	SpawnedObject->TeleportTo(position, rotation);
+	//PoolableActor->InitializeEnemy();
+	SpawnedObject->SetActorHiddenInGame(false);
+	SpawnedObject->SetActorEnableCollision(true);
 
 	return SpawnedObject;
 }

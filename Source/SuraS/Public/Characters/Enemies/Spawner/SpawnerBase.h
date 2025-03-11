@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Instance/ObjectPoolBase.h"
 #include "SpawnerBase.generated.h"
 
 UCLASS()
@@ -12,15 +13,23 @@ class SURAS_API ASpawnerBase : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	ASpawnerBase();
 
+	void SpawnWrapper();
+
+	UPROPERTY(EditAnywhere, Category = "ObjectPool")
+	TSubclassOf<class AActor> PooledObjectSubclass;
+
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+private:
+	UPROPERTY(EditAnywhere, Category = "ObjectPool")
+	float interval = 20.0f;
+	UPROPERTY(EditAnywhere, Category = "ObjectPool")
+	int spawnCount = 5;
+
+	FTimerHandle TimerHandler;
+	UObjectPoolBase* Pool;
 
 };

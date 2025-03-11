@@ -2,13 +2,20 @@
 
 
 #include "Characters/Enemies/Spawner/SpawnerBase.h"
+#include "Instance/ObjectPoolManager.h"
 
 // Sets default values
 ASpawnerBase::ASpawnerBase()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
 
+}
+
+void ASpawnerBase::SpawnWrapper()
+{
+	for (int i = 0; i < spawnCount; i++)
+	{
+		Pool->GetPooledObject(GetActorLocation(), FRotator().ZeroRotator);
+	}
 }
 
 // Called when the game starts or when spawned
@@ -16,12 +23,11 @@ void ASpawnerBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (PooledObjectSubclass) 
+	{
+		Pool = GetGameInstance()->GetSubsystem<UObjectPoolManager>()->GetPool(PooledObjectSubclass, GetWorld());
+		GetWorld()->GetTimerManager().SetTimer(TimerHandler, this, &ASpawnerBase::SpawnWrapper, interval, true);
+	}
 }
 
-// Called every frame
-void ASpawnerBase::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
 

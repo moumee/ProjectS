@@ -15,10 +15,10 @@ class SURAS_API UObjectPoolBase : public UObject
 	GENERATED_BODY()
 
 public:
-	UObjectPoolBase(const FObjectInitializer& ObjectInitializer);
-
-	UObjectPoolBase(UWorld* const World, int initialPool);
+	UObjectPoolBase();
 	~UObjectPoolBase();
+
+	void Initialize(UWorld* const World, int initialPool);
 
 	UFUNCTION(BlueprintCallable, Category = "ObjectPool")
 	AActor* GetPooledObject(FVector position, FRotator rotation);
