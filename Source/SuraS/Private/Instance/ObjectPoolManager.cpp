@@ -7,9 +7,11 @@ UObjectPoolManager::UObjectPoolManager()
 {
 }
 
-UObjectPoolBase* UObjectPoolManager::GetPool(UClass* ObjectClass, UObject* WorldContext)
+UObjectPoolBase* UObjectPoolManager::GetPool(TSubclassOf<class AActor> ObjectClass, UObject* WorldContext)
 {
 	if (!ObjectClass || !WorldContext) return nullptr;
+
+	//FScopeLock Lock(&MyCriticalSection);
 
 	if (ObjectPool_List.Contains(ObjectClass)) 
 	{
@@ -18,10 +20,12 @@ UObjectPoolBase* UObjectPoolManager::GetPool(UClass* ObjectClass, UObject* World
 	else 
 	{
 		UObjectPoolBase* newPool = NewObject<UObjectPoolBase>(this, UObjectPoolBase::StaticClass(), TEXT("ObjectPoolBase"));
+		newPool->Initialize(GetWorld(), 3, ObjectClass);
 		ObjectPool_List.Add(ObjectClass, newPool);
+		return newPool;
 	}
 
-	return nullptr;
+	
 }
 
 void UObjectPoolManager::ReturnToPool(AActor* Object)

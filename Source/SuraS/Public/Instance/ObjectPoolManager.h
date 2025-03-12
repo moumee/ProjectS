@@ -5,7 +5,10 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "ObjectPoolBase.h"
+#include "HAL/CriticalSection.h"
 #include "ObjectPoolManager.generated.h"
+
+
 
 /**
  * 
@@ -19,7 +22,7 @@ public:
 	UObjectPoolManager();
 
 	// 특정 클래스의 객체 가져오기
-	UObjectPoolBase* GetPool(UClass* ObjectClass, UObject* WorldContext);
+	UObjectPoolBase* GetPool(TSubclassOf<class AActor> ObjectClass, UObject* WorldContext);
 
 	// 객체 풀에 반환하기
 	void ReturnToPool(AActor* Object);
@@ -27,5 +30,6 @@ public:
 
 	
 private:
-	TMap<UClass*, UObjectPoolBase*> ObjectPool_List;
+	UPROPERTY()
+	TMap<TSubclassOf<class AActor>, UObjectPoolBase*> ObjectPool_List;
 };

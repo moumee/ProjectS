@@ -1,4 +1,8 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//
+//원하는 액터를 소환하는 스포너 예제
+// 1. 해당 스포너는 PoolManager에서 pool을 가져와 pool에서 actor를 반환받는 일련의 과정의 예제이다.
+// 2. interval을 주기로 액터를 스폰한다
+//
 
 
 #include "Characters/Enemies/Spawner/SpawnerBase.h"
@@ -7,7 +11,12 @@
 // Sets default values
 ASpawnerBase::ASpawnerBase()
 {
+	PrimaryActorTick.bCanEverTick = true;
+}
 
+void ASpawnerBase::Tick(float DeltaTime)
+{
+	
 }
 
 void ASpawnerBase::SpawnWrapper()
@@ -23,7 +32,7 @@ void ASpawnerBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (PooledObjectSubclass) 
+	if (PooledObjectSubclass)
 	{
 		Pool = GetGameInstance()->GetSubsystem<UObjectPoolManager>()->GetPool(PooledObjectSubclass, GetWorld());
 		GetWorld()->GetTimerManager().SetTimer(TimerHandler, this, &ASpawnerBase::SpawnWrapper, interval, true);

@@ -14,6 +14,7 @@ class SURAS_API ASpawnerBase : public AActor
 	
 public:	
 	ASpawnerBase();
+	virtual void Tick(float DeltaTime) override;
 
 	void SpawnWrapper();
 
@@ -25,9 +26,9 @@ protected:
 
 private:
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
-	float interval = 20.0f;
+	float interval = 5.0f;
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
-	int spawnCount = 5;
+	int spawnCount = 1;
 
 	FTimerHandle TimerHandler;
 	UObjectPoolBase* Pool;

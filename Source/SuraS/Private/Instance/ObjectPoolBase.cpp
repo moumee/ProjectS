@@ -12,12 +12,16 @@ UObjectPoolBase::UObjectPoolBase()
 {
 }
 
-void UObjectPoolBase::Initialize(UWorld* const world, int initialAmount)
+void UObjectPoolBase::Initialize(UWorld* const world, int initialAmount, TSubclassOf<class AActor> object)
 {
-	if (PooledObjectSubclass != nullptr)
+	if (PooledObjectSubclass != nullptr || world != nullptr)
 	{
+		PooledObjectSubclass = object;
 		World = world;
 		ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		ObjectPool = TArray<AActor*>();
+		//UE_LOG(LogTemp, Log, TEXT("%b"), World);
 
 		if (World != nullptr)
 		{
@@ -33,6 +37,14 @@ void UObjectPoolBase::Initialize(UWorld* const world, int initialAmount)
 				}
 			}
 		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("World is nullptr!"));
+		}
+	}
+	else 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PooledObjectSubclass is nullptr!"));
 	}
 }
 
@@ -42,20 +54,27 @@ UObjectPoolBase::~UObjectPoolBase()
 
 AActor* UObjectPoolBase::GetPooledObject(FVector position, FRotator rotation)
 {
-	for (AActor* PoolableActor : ObjectPool)
+	if (true)
 	{
-		if (PoolableActor != nullptr && PoolableActor->IsHidden())
+		//UE_LOG(LogTemp, Log, TEXT("2"));
+		for (AActor* PoolableActor : ObjectPool)
 		{
-			PoolableActor->TeleportTo(position, rotation);
-			//PoolableActor->InitializeEnemy();
-			PoolableActor->SetActorHiddenInGame(false);
-			PoolableActor->SetActorEnableCollision(true);
-			return PoolableActor;
+			if (PoolableActor != nullptr && PoolableActor->IsHidden())
+			{
+				PoolableActor->TeleportTo(position, rotation);
+				//PoolableActor->InitializeEnemy();
+				PoolableActor->SetActorHiddenInGame(false);
+				PoolableActor->SetActorEnableCollision(true);
+				return PoolableActor;
+			}
 		}
 	}
 
 	AActor* SpawnedObject;
-	SpawnPooledObject(SpawnedObject);
+	SpawnedObject = World->SpawnActor<AActor>(PooledObjectSubclass,
+		FVector().ZeroVector, FRotator().ZeroRotator, ActorSpawnParameters);
+	ObjectPool.Add(SpawnedObject);
+	//SpawnPooledObject(SpawnedObject);
 	SpawnedObject->TeleportTo(position, rotation);
 	//PoolableActor->InitializeEnemy();
 	SpawnedObject->SetActorHiddenInGame(false);

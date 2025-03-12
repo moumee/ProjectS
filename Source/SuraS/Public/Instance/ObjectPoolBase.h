@@ -18,7 +18,7 @@ public:
 	UObjectPoolBase();
 	~UObjectPoolBase();
 
-	void Initialize(UWorld* const World, int initialPool);
+	void Initialize(UWorld* const world, int initialAmount, TSubclassOf<class AActor> object);
 
 	UFUNCTION(BlueprintCallable, Category = "ObjectPool")
 	AActor* GetPooledObject(FVector position, FRotator rotation);
