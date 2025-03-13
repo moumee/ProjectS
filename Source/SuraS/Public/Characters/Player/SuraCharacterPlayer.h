@@ -29,6 +29,7 @@ class UCameraComponent;
 struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
+class UWeaponSystemComponent;
 
 
 /**
@@ -43,6 +44,10 @@ class SURAS_API ASuraCharacterPlayer : public ASuraCharacterBase, public IDamage
 	UPlayerHitWidget* HitEffectWidget;
 
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponSystem")
+	UWeaponSystemComponent* WeaponSystem;
+
+
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Damage")
 	UACDamageSystem* DamageSystemComponent;
@@ -271,6 +276,7 @@ public:
 	float DefaultBrakingDecelerationWalking;
 	float DefaultBrakingDecelerationFalling;
 	float DefaultBrakingFriction;
+	float DefaultFallingLateralFriction;
 	float DefaultCameraFOV;
 	
 
@@ -288,6 +294,8 @@ public:
 	void ChangeState(USuraPlayerBaseState* NewState);
 
 	bool IsFallingDown() const;
+
+	bool HasWeapon() const;
 
 	bool HasMovementInput() const;
 
@@ -318,6 +326,8 @@ public:
 	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
 
 	virtual void StartCamShake(TSubclassOf<UCameraShakeBase> InShakeClass);
+
+	UWeaponSystemComponent* GetWeaponSystemComponent() const { return WeaponSystem; }
 
 };
 

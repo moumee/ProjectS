@@ -16,19 +16,23 @@ struct SURAS_API FProjectileData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EProjectileType ProjectileType;
 
+	// <Effect>
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	//UParticleSystem* TrailEffect;
 	UNiagaraSystem* TrailEffect;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	UNiagaraSystem* ImpactEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	//UParticleSystem* ImpactEffect;
-	UNiagaraSystem* ImpactEffect;
+	UNiagaraSystem* ExplosionEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	UMaterialInterface* HoleDecal;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Damage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+	float DefaultDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+	float HeadShotAdditionalDamage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float InitialLifeSpan;
@@ -57,6 +61,6 @@ struct SURAS_API FProjectileData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
 	bool bCanPenetrate = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
-	int32 NumPenetrableObjects = 4;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
+	//int32 NumPenetrableObjects = 4;
 };

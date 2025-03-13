@@ -31,8 +31,6 @@ public:
 
 //-----------------------------------------------------------------
 //TODO: 승환님께 아래 내용들 Player Character class에 필요하다고 말씀드리기. 
-// 또 ASuraCharacterPlayer의 private member를 protected로 전환 부탁드리기
-
 public:
 	/** Returns ArmMesh subobject **/
 	//USkeletalMeshComponent* GetArmMesh() const { return ArmMesh; }
@@ -62,10 +60,9 @@ public:
 
 
 #pragma region WeaponSystem
-
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponSystem")
-	class UWeaponSystemComponent* WeaponSystem;
+//protected:
+//	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponSystem")
+//	class UWeaponSystemComponent* WeaponSystem;
 
 public:
 	UFUNCTION()
@@ -76,14 +73,23 @@ public:
 
 #pragma endregion
 
+#pragma region AudioComponent
+protected:
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	//UAudioComponent* AudioComponent;
+public:
+	//void PlaySound(USoundBase* Sound);
+	//void StopSound();
+#pragma endregion
+
 #pragma region Mesh
+public:
 	UFUNCTION()
 	USkeletalMeshComponent* GetArmMesh() { return ArmMesh; }
 #pragma endregion
 
 public:
 	virtual void InterpCameraFOV(float DeltaTime) override;
-
 	virtual void StartCamShake(TSubclassOf<UCameraShakeBase> CamShake) override;
 };
 

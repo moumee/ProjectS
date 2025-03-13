@@ -25,6 +25,8 @@
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "Extensions/UIComponent.h"
 
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
+
 ASuraCharacterPlayer::ASuraCharacterPlayer()
 {
 
@@ -64,6 +66,10 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 
 	if (WidgetClass.Succeeded())
 		HitEffectWidgetClass = WidgetClass.Class;
+
+
+	// WeaponSystem
+	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
 }
 
 void ASuraCharacterPlayer::BeginPlay()
@@ -87,6 +93,7 @@ void ASuraCharacterPlayer::BeginPlay()
 	DefaultBrakingFriction = GetCharacterMovement()->BrakingFriction;
 	DefaultBrakingDecelerationFalling = GetCharacterMovement()->BrakingDecelerationFalling;
 	DefaultBrakingDecelerationWalking = GetCharacterMovement()->BrakingDecelerationWalking;
+	DefaultFallingLateralFriction = GetCharacterMovement()->FallingLateralFriction;
 
 	DefaultCameraFOV = GetCamera()->FieldOfView;
 	
@@ -100,6 +107,7 @@ void ASuraCharacterPlayer::BeginPlay()
 
 	BaseMovementSpeed = GetPlayerMovementData()->GetRunSpeed();
 	GetCharacterMovement()->AirControl = GetPlayerMovementData()->GetAirControl();
+	GetCharacterMovement()->GravityScale = DefaultGravityScale;
 
 	WalkingState = NewObject<USuraPlayerWalkingState>(this, USuraPlayerWalkingState::StaticClass());
 	RunningState = NewObject<USuraPlayerRunningState>(this, USuraPlayerRunningState::StaticClass());
@@ -170,6 +178,15 @@ bool ASuraCharacterPlayer::IsFallingDown() const
 {
 	
 	return GetCharacterMovement()->IsFalling() && GetCharacterMovement()->Velocity.Z < 0.f;
+}
+
+bool ASuraCharacterPlayer::HasWeapon() const
+{
+	if (WeaponSystem)
+	{
+		return WeaponSystem->GetCurrentWeapon() != nullptr;
+	}
+	return false;
 }
 
 bool ASuraCharacterPlayer::HasMovementInput() const
@@ -280,6 +297,9 @@ void ASuraCharacterPlayer::PrintPlayerDebugInfo() const
 
 			GEngine->AddOnScreenDebugMessage(94, 0.f, FColor::Green,
 				FString::Printf(TEXT("Wall Run Side : %s"), *UEnum::GetDisplayValueAsText(WallRunSide).ToString()));
+
+			GEngine->AddOnScreenDebugMessage(93, 0.f, FColor::Green,
+				FString::Printf(TEXT("Gravity Scale : %f"), GetCharacterMovement()->GravityScale));
 		}
 	}
 }
@@ -467,11 +487,11 @@ bool ASuraCharacterPlayer::ShouldEnterWallRunning(FVector& OutWallRunDirection, 
 	Params.AddIgnoredActor(this);
 	FHitResult LeftHit;
 	bool bLeftHit = GetWorld()->LineTraceSingleByChannel(LeftHit, GetActorLocation(),
-		GetActorLocation() + GetActorRightVector() * -45.f, ECC_Visibility, Params);
+		GetActorLocation() + GetActorRightVector() * -55.f, ECC_GameTraceChannel2, Params);
 	bool bLeftWallRunnable = false;
 	FHitResult RightHit;
 	bool bRightHit = GetWorld()->LineTraceSingleByChannel(RightHit, GetActorLocation(),
-		GetActorLocation() + GetActorRightVector() * 45.f, ECC_Visibility, Params);
+		GetActorLocation() + GetActorRightVector() * 55.f, ECC_GameTraceChannel2, Params);
 	bool bRightWallRunnable = false;
 
 	if (bLeftHit)

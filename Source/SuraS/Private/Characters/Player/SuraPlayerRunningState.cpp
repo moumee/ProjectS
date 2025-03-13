@@ -4,6 +4,9 @@
 #include "Characters/Player/SuraPlayerRunningState.h"
 
 #include "ActorComponents/ACPlayerMovmentData.h"
+#include "ActorComponents/WeaponSystem/ACWeapon.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponChargingState.h"
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Player/SuraPlayerCrouchingState.h"
@@ -61,8 +64,6 @@ void USuraPlayerRunningState::EnterState(ASuraCharacterPlayer* Player)
 	default:
 		break;
 	}
-
-	Player->DesiredGroundState = Player->RunningState;
 }
 
 void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
@@ -100,6 +101,16 @@ void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float De
 	{
 		Player->ChangeState(Player->WalkingState);
 		return;
+	}
+
+	if (Player->HasWeapon())
+	{
+		if (Player->GetWeaponSystemComponent()->GetCurrentWeapon()->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Charging ||
+			Player->GetWeaponSystemComponent()->IsZoomIn())
+		{
+			Player->ChangeState(Player->WalkingState);
+			return;
+		}
 	}
 
 	if (Player->bDashTriggered)

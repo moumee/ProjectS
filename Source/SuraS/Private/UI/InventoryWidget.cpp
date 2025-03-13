@@ -1,11 +1,14 @@
 #include "UI/InventoryWidget.h"
 
-#include "ActorComponents/UISystem/ACInventoryManager.h"
+#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponData.h"
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
+#include "Characters/Player/SuraCharacterPlayer.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Kismet/GameplayStatics.h"
+#include "UI/CustomGameInstance.h"
 
 void UInventoryWidget::NativeConstruct()
 {
@@ -13,54 +16,50 @@ void UInventoryWidget::NativeConstruct()
 
     // 키보드 입력을 받기 위해 IsFocusable를 true로 설정
     this->SetIsFocusable(true);
-    
+
     // 기본값 설정
     CurrentTab = EInventoryTab::Weapon;
     SetActiveTab(CurrentTab);
 
-    InitializeInventory(); // UI 초기화
-
-
 #pragma region Weapon
 
-    //const int32 MaxWeaponTypes = 3;  // 예: Rifle, Sniper, Pistol
-    //const int32 MaxWeaponSlots = 5;  // 각 무기 타입에 대해 5개의 슬롯
-
-    // Weapon 이미지 및 이름 배열 초기화
-    // WeaponImages.SetNum(MaxWeaponTypes);
-    // WeaponNames.SetNum(MaxWeaponSlots);
-
-    // for (int32 i = 0; i < MaxWeaponTypes; ++i)
-    // {
-    //     // WeaponImages[i].SetNum(MaxWeaponSlots);
-    //     // WeaponNames[i].SetNum(MaxWeaponSlots);
-    // }
-    
-    // 무기 타입별 슬롯에 해당하는 UI 위젯 할당
-    // 구현해야함
-
-    // 공통 Lock 이미지 (모든 잠긴 무기 위에 띄울 자물쇠)
-    //LockImage = Cast<UImage>(GetWidgetFromName(TEXT("Lock_Overlay")));
-
-    // 기본적으로 모든 무기 슬롯은 잠겨있다고 가정
-    // for (int32 i = 0; i < MaxWeaponTypes; ++i)
-    // {
-    //     for (int32 j = 0; j < MaxWeaponSlots; ++j)
-    //     {
-    //         if (WeaponStates[i][j] == false)
-    //         {
-    //             // 잠금 이미지 보이기
-    //             if (WeaponImages[i][j])
-    //             {
-    //                 WeaponImages[i][j]->SetVisibility(ESlateVisibility::Visible);
-    //             }
-    //         }
-    //     }
-    // }
-    
+    // Player의 UWeaponSystemComponent 가져오기
+    ASuraCharacterPlayerWeapon* Player = Cast<ASuraCharacterPlayerWeapon>(GetOwningPlayerPawn());
+    if (Player)
+    {
+        UWeaponSystemComponent* WeaponSystem = Player->FindComponentByClass<UWeaponSystemComponent>();
+        if (WeaponSystem)
+        {
+            // 델리게이트 바인딩
+            if (!WeaponSystem->OnWeaponPickedUp.IsAlreadyBound(this, &UInventoryWidget::OnWeaponPickedUp))
+            {
+                WeaponSystem->OnWeaponPickedUp.AddDynamic(this, &UInventoryWidget::OnWeaponPickedUp);
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("WeaponSystem is nullptr!"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Player is nullptr!"));
+    }
 #pragma endregion Weapon
- 
     
+    // 최초 한 번만 초기화되도록 체크
+    if (bIsInitialized)
+    {
+        return;
+    }
+
+    /** 이 주석 아래 코드들은 최초 초기화 시에만 호출됨 **/
+    UE_LOG(LogTemp, Warning, TEXT("WBP_Inventory 생성됨"));
+
+    InitializeInventory(); // UI 초기화
+
+    // 초기화 완료 후 bIsInitialized를 true로 설정
+    bIsInitialized = true;
     
 }
 
@@ -72,10 +71,21 @@ FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
         SwitchToWeaponTab();  // Weapon 탭으로 돌아가기
         return FReply::Handled();  // 이벤트 처리 완료
     }
-    else if (InKeyEvent.GetKey() == EKeys::E)
+    if (InKeyEvent.GetKey() == EKeys::E)
     {
         SwitchToChipTab();  // Chip 탭으로 전환
         return FReply::Handled();  // 이벤트 처리 완료
+    }
+
+    if (InKeyEvent.GetKey() == EKeys::A)
+    {
+        SwitchPage(0); // A 키를 누르면 1페이지로 이동
+        return FReply::Handled();
+    }
+    if (InKeyEvent.GetKey() == EKeys::D)
+    {
+        SwitchPage(1); // D 키를 누르면 2페이지로 이동
+        return FReply::Handled();
     }
 
     // 키 입력 처리: I와 Tab 키를 눌러서 인벤토리 닫기
@@ -85,17 +95,9 @@ FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
         return FReply::Handled();
     }
 
-    if (InKeyEvent.GetKey() == EKeys::T)  // T 키를 눌렀을 때
+    if (InKeyEvent.GetKey() == EKeys::Delete)
     {
-        // 무기 언락 처리
-        // if (UACInventoryManager* InventoryManager = GetOwningPlayerPawn()->FindComponentByClass<UACInventoryManager>())
-        // {
-        //     InventoryManager->UnlockWeapon("Rifle","RifleName");  // 예시로 UnlockWeapon 함수 호출
-        //     GEngine->AddOnScreenDebugMessage(-1, 2.f , FColor::Red, TEXT("Weapon unlocked"));
-        // }
-        UnlockWeapon(TEXT("Rifle"));
-    
-        return FReply::Handled();
+        AllWeaponDiscard();
     }
 
     return FReply::Handled();  // Tab 키 기본 동작 방지
@@ -161,6 +163,12 @@ void UInventoryWidget::CloseUI()
 {
     Super::CloseUI();
     GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Orange, "CloseInventory");
+
+    // invnetory를 닫을 때 gameinstance의 saveweapondata메서드를 호출
+    // if (UCustomGameInstance* GameInstance = Cast<UCustomGameInstance>(GetWorld()->GetGameInstance()))
+    // {
+    //     GameInstance->SaveWeaponData();
+    // }
 }
 
 void UInventoryWidget::InitializeInventory()
@@ -174,11 +182,11 @@ void UInventoryWidget::InitializeInventory()
     static const FString ContextString(TEXT("Weapon Data Context"));
     TArray<FName> RowNames = DTWeapon->GetRowNames();
 
-    // umg에서 바인딩한 image 위젯들 (각 무기 종류에 맞게 설정)
-    WeaponImages.Add(TEXT("Rifle"), Rifle);
-    WeaponImages.Add(TEXT("ShotGun"), ShotGun);
-    WeaponImages.Add(TEXT("MissileLauncher"), MissileLauncher);
-    WeaponImages.Add(TEXT("RailGun"), RailGun);
+    // 이미지와 텍스트를 같이 저장
+    WeaponUIElements.Add(TEXT("Rifle"), FWeaponUI(Rifle, RifleName));
+    WeaponUIElements.Add(TEXT("ShotGun"), FWeaponUI(ShotGun, ShotGunName));
+    WeaponUIElements.Add(TEXT("MissileLauncher"), FWeaponUI(MissileLauncher, MissileLauncherName));
+    WeaponUIElements.Add(TEXT("RailGun"), FWeaponUI(RailGun, RailGunName));
 
     for (FName RowName : RowNames)
     {
@@ -188,9 +196,60 @@ void UInventoryWidget::InitializeInventory()
         {
             FString WeaponNameStr = RowName.ToString(); // RowName을 문자열로 변환
 
-            if (WeaponImages.Contains(WeaponNameStr))
+            if (WeaponUIElements.Contains(WeaponNameStr))
             {
-                WeaponImages[WeaponNameStr]->SetBrushFromTexture(WeaponData->WeaponImage);
+                UpdateWeaponUI(WeaponNameStr);
+            }
+        }
+    }
+}
+
+void UInventoryWidget::SwitchPage(int32 PageIndex)
+{
+    if (WeaponWidgetSwitcher)
+    {
+        WeaponWidgetSwitcher->SetActiveWidgetIndex(PageIndex);
+    }
+}
+
+void UInventoryWidget::UpdateWeaponUI(FString WeaponNameStr)
+{
+    if (!DTWeapon) return;
+
+    // 수정된 WeaponNameStr을 사용하여 FindRow 호출
+    static const FString ContextString(TEXT("Weapon Unlock Context"));
+    FWeaponData* WeaponData = DTWeapon->FindRow<FWeaponData>(*WeaponNameStr, ContextString);
+
+    if (WeaponData)
+    {
+        // 수정된 WeaponNameStr을 사용하여 FindRow 호출
+        if (WeaponUIElements.Contains(WeaponNameStr))
+        {
+            FWeaponUI& WeaponUI = WeaponUIElements[WeaponNameStr];
+
+            // 이미지 설정
+            if (WeaponUI.WeaponImage)
+            {
+                WeaponUI.WeaponImage->SetBrushFromTexture(WeaponData->WeaponImage);
+
+                // 무기 소유 여부에 따른 색상 조정
+                if (WeaponData->bIsWeaponOwned)
+                {
+                    WeaponUI.WeaponImage->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f));
+                }
+                else
+                {
+                    WeaponUI.WeaponImage->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f));
+                }
+            }
+            // 텍스트 설정
+            if (WeaponUI.WeaponText)
+            {
+                if (WeaponData->bIsWeaponOwned)
+                {
+                    WeaponUI.WeaponText->SetText(FText::FromString(WeaponNameStr));
+                    WeaponUI.WeaponText->SetOpacity(1.0f);
+                }
             }
         }
     }
@@ -200,21 +259,46 @@ void UInventoryWidget::UnlockWeapon(FName WeaponName)
 {
     if (!DTWeapon) return;
 
+    // WeaponName_ 접두어를 제거하고, 실제 이름만 추출
+    FString WeaponNameStr = WeaponName.ToString().RightChop(24);  // "EWeaponName::WeaponName_"을 제거
+
+    // 수정된 WeaponNameStr을 사용하여 FindRow 호출
     static const FString ContextString(TEXT("Weapon Unlock Context"));
-    FWeaponData* WeaponData = DTWeapon->FindRow<FWeaponData>(WeaponName, ContextString);
+    FWeaponData* WeaponData = DTWeapon->FindRow<FWeaponData>(*WeaponNameStr, ContextString);
 
     if (WeaponData && !WeaponData->bIsWeaponOwned)
     {
         WeaponData->bIsWeaponOwned = true;
-
-        // ✅ `WeaponImages`를 재사용
-        FString WeaponNameStr = WeaponName.ToString();
-        if (WeaponImages.Contains(WeaponNameStr))
-        {
-            WeaponImages[WeaponNameStr]->SetOpacity(1.0f);  // 이미지 활성화
-        }
+        UpdateWeaponUI(WeaponNameStr);
     }
 }
 
+void UInventoryWidget::OnWeaponPickedUp(FName WeaponName)
+{
+    UnlockWeapon(WeaponName);
+}
 
+void UInventoryWidget::AllWeaponDiscard()
+{
+    if (!DTWeapon)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("DTWeapon is not set in GameInstance!"));
+        return;
+    }
+    
+    for (const auto& Row : DTWeapon->GetRowMap())
+    {
+        FWeaponData* WeaponData = (FWeaponData*)Row.Value;
+        if (WeaponData)
+        {
+            WeaponData->bIsWeaponOwned = false;
+
+            UpdateWeaponUI(Row.Key.ToString());
+        }
+    }
+
+
+    
+    UE_LOG(LogTemp, Warning, TEXT("All weapons have been discarded."));
+}
 

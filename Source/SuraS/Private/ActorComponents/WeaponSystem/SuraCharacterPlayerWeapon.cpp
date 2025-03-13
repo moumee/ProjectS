@@ -18,6 +18,7 @@
 //#include "Characters/Player/SuraPlayerRunningState.h"
 //#include "Characters/Player/SuraPlayerWalkingState.h"
 #include "Components/CapsuleComponent.h"
+//#include "Components/AudioComponent.h"
 //#include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -35,28 +36,21 @@ ASuraCharacterPlayerWeapon::ASuraCharacterPlayerWeapon()
 
 	GetArmMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	//WeaponSystem
-	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
+	////WeaponSystem
+	//WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
+
+	//AudioComponent
+	//AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	//AudioComponent->bAutoActivate = false;
 }
 
 void ASuraCharacterPlayerWeapon::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Overlapped!!!"));
-
-	//ASuraWeaponPickUp* PickUpActor = Cast<ASuraWeaponPickUp>(OtherActor);
-	//if (PickUpActor)
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Overlapped!!!"));
-	//}
-
-
 }
 
 void ASuraCharacterPlayerWeapon::UpdateLookInputVector2D(const FInputActionValue& InputValue)
 {
 	PlayerLookInputVector2D = InputValue.Get<FVector2D>();
-
-	//UE_LOG(LogTemp, Warning, TEXT("(Player Input Value) X: %f, Y: %f"), PlayerLookInputVector2D.X, PlayerLookInputVector2D.Y);
 }
 
 void ASuraCharacterPlayerWeapon::SetLookInputVector2DZero()
@@ -74,7 +68,6 @@ void ASuraCharacterPlayerWeapon::InterpCameraFOV(float DeltaTime)
 		}
 	}
 	Super::InterpCameraFOV(DeltaTime);
-	//UE_LOG(LogTemp, Error, TEXT("Function Hiding!!!")); // 작동안함
 }
 
 void ASuraCharacterPlayerWeapon::StartCamShake(TSubclassOf<UCameraShakeBase> CamShake)

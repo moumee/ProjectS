@@ -1,17 +1,16 @@
 
-
 #include "ActorComponents/WeaponSystem/SuraProjectile.h"
-
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 
+#include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Interfaces/Damageable.h"
 #include "Structures/DamageData.h"
 
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "GameFramework/Character.h"
 #include "Components/SphereComponent.h"
 #include "Components/DecalComponent.h"
-//#include "Particles/ParticleSystem.h"
-//#include "Particles/ParticleSystemComponent.h"
+
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 
@@ -35,7 +34,6 @@ ASuraProjectile::ASuraProjectile()
 
 	//CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);		// set up a notification for when this component hits something blocking
 	//CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
-
 
 	// Players can't walk on it
 	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
@@ -68,7 +66,7 @@ ASuraProjectile::ASuraProjectile()
 	UE_LOG(LogTemp, Warning, TEXT("Projectile is Spawned!!!"));
 }
 
-void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, UACWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius) //TODO: 여기서 ProjectileType을 input으로 받아야 할 듯
+void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, UACWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable) //TODO: 여기서 ProjectileType을 input으로 받아야 할 듯
 {
 	// Weapon에서 spawn projectile 할 때 처리를 해줘야 하나?
 	// 근데 어차피 projectile 종류별로 BP 따로 만들고, Mesh도 다른거 사용하는데 의미가 있나?
@@ -106,10 +104,10 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, UACWeapon*
 		else if (ProjectileType == EProjectileType::Projectile_RailGun)
 		{
 			LoadProjectileData("RailGunProjectile");
-			SpawnTrailEffect(true);
+			SpawnTrailEffect();
+			//SpawnTrailEffect(true);
 		}
 	}
-
 
 	if (bCanPenetrate)
 	{
@@ -117,6 +115,9 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, UACWeapon*
 		CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
 
 		CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+		NumPenetrableObjects = NumPenetrable;
+		UE_LOG(LogTemp, Error, TEXT("Projectile Penetrable Num: %d"), NumPenetrableObjects);
 	}
 	else
 	{
@@ -139,18 +140,25 @@ void ASuraProjectile::LoadProjectileData(FName ProjectileID)
 	ProjectileData = ProjectileDataTable->FindRow<FProjectileData>(ProjectileID, TEXT(""));
 	if (ProjectileData)
 	{
+		// <Effect>
 		TrailEffect = ProjectileData->TrailEffect;
 		ImpactEffect = ProjectileData->ImpactEffect;
+		ExplosionEffect = ProjectileData->ExplosionEffect;
 		DecalMaterial = ProjectileData->HoleDecal;
 
 		InitialLifeSpan = ProjectileData->InitialLifeSpan; //TODO 이렇게는 적용이 안됨. 삭제 요망
 		SetLifeSpan(ProjectileData->InitialLifeSpan);
 
-		DefaultDamage = ProjectileData->Damage;
+		// <Damage>
+		DefaultDamage = ProjectileData->DefaultDamage;
+		HeadShotAdditionalDamage = ProjectileData->HeadShotAdditionalDamage;
+
+		// <Explosive>
 		bIsExplosive = ProjectileData->bIsExplosive;
 		MaxExplosiveDamage = ProjectileData->MaxExplosiveDamage;
 		MaxExplosionRadius = ProjectileData->MaxExplosionRadius;
 
+		// <Homing>
 		HomingAccelerationMagnitude = ProjectileData->HomingAccelerationMagnitude;
 
 		ProjectileMovement->InitialSpeed = ProjectileData->InitialSpeed;
@@ -159,8 +167,9 @@ void ASuraProjectile::LoadProjectileData(FName ProjectileID)
 		InitialRadius = ProjectileData->InitialRadius;
 		CollisionComp->SetSphereRadius(InitialRadius);
 
+		// <Penetration>
 		bCanPenetrate = ProjectileData->bCanPenetrate;
-		NumPenetrableObjects = ProjectileData->NumPenetrableObjects;
+		//NumPenetrableObjects = ProjectileData->NumPenetrableObjects;
 	}
 }
 
@@ -170,17 +179,22 @@ void ASuraProjectile::SetHomingTarget(bool bIsHoming, AActor* Target)
 	ProjectileMovement->HomingAccelerationMagnitude = HomingAccelerationMagnitude;
 	ProjectileMovement->HomingTargetComponent = Target->GetRootComponent();
 
-	UE_LOG(LogTemp, Warning, TEXT("Homing!!!"));
+	TargetEnemy = Cast<ASuraCharacterEnemyBase>(Target);
+	if (TargetEnemy)
+	{
+		RecentTargetLocation = TargetEnemy->GetActorLocation();
+	}
+	//UE_LOG(LogTemp, Warning, TEXT("Homing!!!"));
 }
 
 void ASuraProjectile::LaunchProjectile()
 {
 	ProjectileMovement->Activate();
 
-	if (ProjectileMovement->bIsHomingProjectile)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Is Homing!"));
-	}
+	//if (ProjectileMovement->bIsHomingProjectile)
+	//{
+	//	UE_LOG(LogTemp, Error, TEXT("Is Homing!"));
+	//}
 }
 
 void ASuraProjectile::ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector CenterLocation)
@@ -203,7 +217,11 @@ void ASuraProjectile::ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector Cen
 					DamageAmount = ((MaxExplosionRadius - DistanceToTarget) / MaxExplosionRadius) * MaxExplosiveDamage;
 				}
 				ApplyDamage(OverlappedActor, DamageAmount, EDamageType::Explosion, true);
-				UE_LOG(LogTemp, Error, TEXT("Explosive Damage!!!"));
+				if (OnBodyShot.IsBound())
+				{
+					OnBodyShot.Execute();
+				}
+				//UE_LOG(LogTemp, Error, TEXT("Explosive Damage!!!"));
 			}
 		}
 	}
@@ -263,12 +281,32 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 					OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 				}
 
-				//TODO: Effect는 한번만 발생되도록 설정하기
-				//TODO: 충돌 Effect는 Projectile Type에 따라 다르게 설정하기
 				SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 				SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 
-				ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false);
+
+				if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(Hit))
+				{
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false);
+
+					if (OnHeadShot.IsBound())
+					{
+						OnHeadShot.Execute();
+					}
+				}
+				else
+				{
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false);
+
+					if (Cast<ACharacter>(OtherActor))
+					{
+						if (OnBodyShot.IsBound())
+						{
+							OnBodyShot.Execute();
+						}
+					}
+				}
+
 				ApplyExplosiveDamage(bIsExplosive, Hit.ImpactPoint);
 
 				Destroy();
@@ -282,8 +320,6 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 				OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 			}
 
-			//TODO: Effect는 한번만 발생되도록 설정하기
-			//TODO: 충돌 Effect는 Projectile Type에 따라 다르게 설정하기
 			SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 			SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 
@@ -294,8 +330,6 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Error, TEXT("BeginOverlapped!!!"));
-
 	if (bCanPenetrate)
 	{
 		if (OtherActor != nullptr)
@@ -313,11 +347,33 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 
 				//TODO: Damage는 Initialize에서 따로 받아와야함. Additional Damage를 받아와야함
 				//일단은 기본 Damage로 실험
-				ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false);
+				
+				if (HeadShotAdditionalDamage > 0.f && CheckHeadOvelap(OtherActor, SweepResult))
+				{
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false);
+
+					if (OnHeadShot.IsBound())
+					{
+						OnHeadShot.Execute();
+					}
+				}
+				else
+				{
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false);
+
+					if (Cast<ACharacter>(OtherActor))
+					{
+						if (OnBodyShot.IsBound())
+						{
+							OnBodyShot.Execute();
+						}
+					}
+				}
+
 				ApplyExplosiveDamage(bIsExplosive, SweepResult.ImpactPoint);
 
 				UpdatePenetration();
-				if (NumPenetratedObjects >= NumPenetrableObjects)
+				if (NumPenetratedObjects > NumPenetrableObjects)
 				{
 					ResetPenetration();
 
@@ -327,7 +383,6 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 						TrailEffectComponent->Deactivate();
 						TrailEffectComponent->DestroyComponent();
 					}
-
 
 					Destroy();
 				}
@@ -344,10 +399,17 @@ void ASuraProjectile::SpawnImpactEffect(FVector SpawnLocation, FRotator SpawnRot
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactEffect, SpawnLocation, SpawnRotation, FVector(1.0f), true);
 	}
 }
+void ASuraProjectile::SpawnExplosionEffect(FVector SpawnLocation)
+{
+	if (ExplosionEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionEffect, SpawnLocation, FRotator::ZeroRotator, FVector(1.0f), true);
+	}
+}
 void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Rocket Trail 적용시 이상함. 손봐야함
 {
 	if (ProjectileMesh && TrailEffect)
-	{
+	{ 
 		FTransform TrailStartTransform = ProjectileMesh->GetSocketTransform(FName(TEXT("TrailStart")), ERelativeTransformSpace::RTS_Component);
 		FTransform TrailEndTransform = ProjectileMesh->GetSocketTransform(FName(TEXT("TrailEnd")), ERelativeTransformSpace::RTS_Component);
 
@@ -439,6 +501,79 @@ void ASuraProjectile::ResetPenetration()  //TODO: 굳이 함수로 했어야 했나?
 }
 #pragma endregion
 
+#pragma region HeadShot
+bool ASuraProjectile::CheckHeadHit(const FHitResult& HitResult)
+{
+	//UE_LOG(LogTemp, Error, TEXT("FName: %s"), *HitResult.BoneName.ToString());
+	if (HitResult.BoneName == "head")
+	{
+		//UE_LOG(LogTemp, Error, TEXT("Head Shot!!!"));
+		return true;
+	}
+	return false;
+}
+bool ASuraProjectile::CheckHeadOvelap(const AActor* OverlappedActor, const FHitResult& SweepResult)
+{	
+	if (!OverlappedActor) return false;
+
+	USkeletalMeshComponent* SkeletalMesh = OverlappedActor->GetComponentByClass<USkeletalMeshComponent>();
+
+	if (SkeletalMesh && SkeletalMesh->DoesSocketExist(FName(TEXT("head"))))
+	{
+		if (CollisionComp->GetScaledSphereRadius() > FVector::Distance(SweepResult.ImpactPoint, SkeletalMesh->GetBoneLocation(FName(TEXT("head")))))
+		{
+			//UE_LOG(LogTemp, Error, TEXT("Head Shot!!!"));
+			return true;
+		}
+	}
+	return false;
+}
+#pragma endregion
+
+#pragma region Homing
+bool ASuraProjectile::IsTargetValid()
+{
+	//TODO: Target의 생존 여부를 판단할 방법이 필요함 -> 관련 변수 하윤님께 요청드려야 함
+	if (!ProjectileMovement->HomingTargetComponent.IsValid())
+	{
+		return false;
+	}
+	return true;
+}
+bool ASuraProjectile::IsTargetWithInRange()
+{
+	if (FVector::Distance(GetActorLocation(), RecentTargetLocation) < ExlosionTriggerRadius)
+	{
+		return true;
+	}
+	return false;
+}
+void ASuraProjectile::UpdateTargetInfo()
+{
+	if (ProjectileMovement->bIsHomingProjectile)
+	{
+		if (!IsTargetValid() || IsTargetWithInRange()) // TODO: 지금은 임시로 ||로 처리함
+		{
+			//TODO: TargetLocation를 향해 날아가서 폭파하도록 설정하기
+			//TODO: 원래의 Target의 위치와 일정 거리 이상 가까워지면 자동 폭파하도록 하는 것도 나쁘지 않은 것 같음
+			//-> 이는 Target의 사망여부와 상관 없이 적용하는 것이 좋을 듯
+
+			UE_LOG(LogTemp, Error, TEXT("Target is not valid!!!"));
+
+			SpawnExplosionEffect(GetActorLocation());
+			ApplyExplosiveDamage(bIsExplosive, GetActorLocation());
+			Destroy();
+		}
+		else
+		{
+			if (TargetEnemy && IsValid(TargetEnemy))
+			{
+				RecentTargetLocation = TargetEnemy->GetActorLocation();
+			}
+		}
+	}
+}
+#pragma endregion
 //// Called when the game starts or when spawned
 //void ASuraProjectile::BeginPlay()
 //{
@@ -451,6 +586,7 @@ void ASuraProjectile::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	UpdateTrailEffect();
+	UpdateTargetInfo();
 }
 
 void ASuraProjectile::EndPlay(const EEndPlayReason::Type EndPlayReason)

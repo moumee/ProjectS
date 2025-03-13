@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "BaseUIWidget.h"
-
+#include "CustomGameInstance.h"
+#include "ActorComponents/WeaponSystem/WeaponData.h"
+#include "ActorComponents/WeaponSystem/WeaponName.h"
 #include "InventoryWidget.generated.h"
 
 
@@ -21,6 +23,22 @@ enum class EInventoryTab : uint8
 {
 	Weapon UMETA(DisplayName = "Weapon"),
 	Chip UMETA(DisplayName = "Chip")
+};
+
+
+USTRUCT(BlueprintType)
+struct FWeaponUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	UImage* WeaponImage;
+
+	UPROPERTY()
+	UTextBlock* WeaponText;
+
+	FWeaponUI() : WeaponImage(nullptr), WeaponText(nullptr) {}
+	FWeaponUI(UImage* Image, UTextBlock* Text) : WeaponImage(Image), WeaponText(Text) {};
 };
 
 UCLASS()
@@ -42,6 +60,9 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	UWidgetSwitcher* ContentSwitcher;
 
+	UPROPERTY(meta = (BindWidget), BlueprintReadWrite, Category = "Weapon UI")
+	UWidgetSwitcher* WeaponWidgetSwitcher;
+
 	/** 사운드 **/
 	// 탭 전환 효과음
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
@@ -50,7 +71,7 @@ protected:
 public:
 	// 위젯이 생성된 후 호출되는 함수
 	virtual void NativeConstruct() override;
-
+	
 	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
 	// 탭 전환 함수
@@ -73,12 +94,20 @@ public:
 	
 	// WBP_Invnetory 초기화
 	void InitializeInventory();
+
+	void SwitchPage(int32 PageIndex);
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory")
 	UDataTable* DTWeapon;  // 블루프린트에서 데이터 테이블 할당
 
+	void UpdateWeaponUI(FString WeaponNameStr);
 	void UnlockWeapon(FName WeaponName);
 
+	// 모든 무기 소유 불값을 false로 만드는 함수
+	void AllWeaponDiscard();
+	
+	/** 총기 UI 요소 맵 */
+	TMap<FString, FWeaponUI> WeaponUIElements;
 
 	/** 총기 umg 바인딩 **/
 	UPROPERTY(meta = (BindWidget))
@@ -93,21 +122,29 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UImage* RailGun;
 
-	TMap<FString, UImage*> WeaponImages;
+	/** 총기 이름 바인딩 */
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* RifleName;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* ShotGunName;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* MissileLauncherName;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* RailGunName;
+	
+	UFUNCTION()
+	void OnWeaponPickedUp(FName WeaponName);
+
+private:
+	bool bIsInitialized = false;
 
 #pragma endregion Weapon
 
-private:
-	// 3 x 5 무기 UI 배열
-	//TArray<TArray<UImage*>> WeaponImages;
-	//TArray<TArray<UTextBlock*>> WeaponNames;
 
-	// lock 이미지
-	UPROPERTY()
-	UImage* LockImage;
-	
-	UPROPERTY()
-	UImage* LockBackGroundImage;
 	
 };
+
 
