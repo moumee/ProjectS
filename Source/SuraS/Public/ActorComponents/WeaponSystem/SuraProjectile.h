@@ -158,7 +158,7 @@ protected:
 #pragma region Homing
 protected:
 
-	//TODO: DT화
+	//TODO: DT화 시키기
 	float ExlosionTriggerRadius = 10.f;
 
 	UPROPERTY()

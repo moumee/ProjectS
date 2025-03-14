@@ -79,6 +79,10 @@ void UWeaponSystemComponent::InitializePlayerReference()
 				// Switch Weapon
 				EnhancedInputComponent->BindAction(SwitchWeaponUpAction, ETriggerEvent::Started, this, &UWeaponSystemComponent::SwitchToNextWeapon);
 				EnhancedInputComponent->BindAction(SwitchWeaponDownAction, ETriggerEvent::Started, this, &UWeaponSystemComponent::SwitchToPreviousWeapon);
+
+				EnhancedInputComponent->BindAction(SwitchWeapon1Action, ETriggerEvent::Started, this, &UWeaponSystemComponent::SwitchToIndex1);
+				EnhancedInputComponent->BindAction(SwitchWeapon2Action, ETriggerEvent::Started, this, &UWeaponSystemComponent::SwitchToIndex2);
+				EnhancedInputComponent->BindAction(SwitchWeapon3Action, ETriggerEvent::Started, this, &UWeaponSystemComponent::SwitchToIndex3);
 			}
 		}
 	}
@@ -393,6 +397,33 @@ void UWeaponSystemComponent::SwitchToNextWeapon()
 	if (WeaponInventory.Num() > 1)
 	{
 		CurrentWeaponIndex = (CurrentWeaponIndex + 1) % WeaponInventory.Num();
+		ChangeWeapon(CurrentWeaponIndex);
+	}
+}
+
+void UWeaponSystemComponent::SwitchToIndex1()
+{
+	if (WeaponInventory.IsValidIndex(0) && CurrentWeaponIndex != 0)
+	{
+		CurrentWeaponIndex = 0;
+		ChangeWeapon(CurrentWeaponIndex);
+	}
+}
+
+void UWeaponSystemComponent::SwitchToIndex2()
+{
+	if (WeaponInventory.IsValidIndex(1) && CurrentWeaponIndex != 1)
+	{
+		CurrentWeaponIndex = 1;
+		ChangeWeapon(CurrentWeaponIndex);
+	}
+}
+
+void UWeaponSystemComponent::SwitchToIndex3()
+{
+	if (WeaponInventory.IsValidIndex(2) && CurrentWeaponIndex != 2)
+	{
+		CurrentWeaponIndex = 2;
 		ChangeWeapon(CurrentWeaponIndex);
 	}
 }

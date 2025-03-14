@@ -850,7 +850,6 @@ void UACWeapon::PlayChargeSound()
 		ChargeAudioComponent = UGameplayStatics::SpawnSoundAttached(ChargeSound, this, FName(TEXT("Muzzle")), FVector(0, 0, 0), EAttachLocation::KeepRelativeOffset);
 	}
 }
-
 void UACWeapon::StopChargeSound()
 {
 	if (ChargeAudioComponent)
