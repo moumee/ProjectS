@@ -59,6 +59,15 @@ private:
 	class UInputAction* SwitchWeaponDownAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SwitchWeapon1Action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SwitchWeapon2Action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SwitchWeapon3Action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LeftMouseButtonAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -165,6 +174,9 @@ public:
 
 	void SwitchToPreviousWeapon();
 	void SwitchToNextWeapon();
+	void SwitchToIndex1();
+	void SwitchToIndex2();
+	void SwitchToIndex3();
 
 	virtual void SwitchToOtherWeapon() override;
 

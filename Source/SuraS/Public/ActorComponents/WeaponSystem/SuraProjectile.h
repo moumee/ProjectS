@@ -15,6 +15,8 @@
 
 class UACWeapon;
 
+class ASuraCharacterEnemyBase;
+
 class USphereComponent;
 class UProjectileMovementComponent;
 class UNiagaraSystem;
@@ -52,6 +54,8 @@ protected:
 	UStaticMeshComponent* ProjectileMesh;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
 	UNiagaraSystem* TrailEffect;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	UNiagaraSystem* ExplosionEffect;
 
 	UPROPERTY()
 	UNiagaraComponent* TrailEffectComponent;
@@ -115,12 +119,11 @@ public:
 	UFUNCTION()
 	void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	/** Returns CollisionComp subobject **/
 	USphereComponent* GetCollisionComp() const { return CollisionComp; }
-	/** Returns ProjectileMovement subobject **/
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 
 	void SpawnImpactEffect(FVector SpawnLocation, FRotator SpawnRotation);
+	void SpawnExplosionEffect(FVector SpawnLocation);
 	void SpawnTrailEffect(bool bShouldAttachedToWeapon = false);
 	void SpawnDecalEffect(FVector SpawnLocation, FRotator SpawnRotation);
 protected:
@@ -151,4 +154,20 @@ protected:
 	bool CheckHeadHit(const FHitResult& Hit);
 	bool CheckHeadOvelap(const AActor* OverlappedActor, const FHitResult& SweepResult);
 #pragma endregion
+
+#pragma region Homing
+protected:
+
+	//TODO: DT화 시키기
+	float ExlosionTriggerRadius = 10.f;
+
+	UPROPERTY()
+	ASuraCharacterEnemyBase* TargetEnemy = nullptr;
+	FVector RecentTargetLocation;
+protected:
+	bool IsTargetValid();
+	bool IsTargetWithInRange();
+	void UpdateTargetInfo();
+#pragma endregion
+
 };

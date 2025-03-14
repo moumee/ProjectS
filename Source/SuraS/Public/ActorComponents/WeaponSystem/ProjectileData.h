@@ -16,13 +16,14 @@ struct SURAS_API FProjectileData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EProjectileType ProjectileType;
 
+	// <Effect>
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	//UParticleSystem* TrailEffect;
 	UNiagaraSystem* TrailEffect;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	UNiagaraSystem* ImpactEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	//UParticleSystem* ImpactEffect;
-	UNiagaraSystem* ImpactEffect;
+	UNiagaraSystem* ExplosionEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	UMaterialInterface* HoleDecal;
