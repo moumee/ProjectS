@@ -21,7 +21,15 @@ public:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void SetMovementInput(const FVector2D& InputVector);
+	void SetMoveInput(const FVector2D& InputVector);
+
+	void SetJumpInput(bool bPressed);
+
+	void SetDashInput(bool bPressed);
+
+	void SetCrouchInput(bool bPressed);
+
+	void ShowDebugInfo();
 
 protected:
 
@@ -41,16 +49,22 @@ protected:
 	float GravityScale = 980.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float WalkSpeed = 1000.f;
+	float JumpForce = 700.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float SprintSpeed = 2000.f;
+	float MaxFallSpeed = 4000.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float WalkSpeed = 600.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float SprintSpeed = 1000.f;
 	
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float Acceleration = 4000.f;
+	float Acceleration = 8000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float Deceleration = 2000.f;
+	float Deceleration = 8000.f;
 
 	UPROPERTY()
 	APawn* PlayerPawn = nullptr;
@@ -60,24 +74,49 @@ protected:
 
 	FVector2D MovementInput;
 
+	FVector MovementInputDirection;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	FVector Velocity;
 	
 	FVector Gravity;
 	FVector GravityDirection;
 
-	bool CheckIsGrounded();
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bIsGrounded = false;
+
+	// Manage dash as boolean because it can be either Grounded or Airborne
+	bool bIsDashing = false;
+
+	bool bJumpPressed = false;
+	bool bDashPressed = false;
+	bool bCrouchPressed = false;
+
+	void CheckIsGrounded();
 	
-	void ProcessMovement(float DeltaTime);
+	void HandleState(float DeltaTime);
 
-	void UpdateMovementState();
+	void ApplyVelocity(float DeltaTime);
 
-	void HandleGroundedMovement(float DeltaTime);
-	void HandleAirborneMovement(float DeltaTime);
+	void HandleGrounded(float DeltaTime);
+	void HandleIdle(float DeltaTime);
+	void HandleWalking(float DeltaTime);
+	void HandleSprinting(float DeltaTime);
+	void HandleCrouching(float DeltaTime);
+	void HandleSliding(float DeltaTime);
+	
+	void HandleAirborne(float DeltaTime);
+	void HandleFalling(float DeltaTime);
+	void HandleJumping(float DeltaTime);
+	void HandleDoubleJumping(float DeltaTime);
+	
+	void HandleWallRunning(float DeltaTime);
+	
+	void HandleMantling(float DeltaTime);
+	
+	void HandleHanging(float DeltaTime);
 
-		
+	FVector CollideAndSlide(const FVector& StartPos, const FVector& DeltaVelocity, int32 Depth);	
 };
-
-
-
 
 

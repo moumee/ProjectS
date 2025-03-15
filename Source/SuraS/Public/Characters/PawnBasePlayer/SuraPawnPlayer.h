@@ -61,8 +61,13 @@ protected:
 
 	void StartMove(const FInputActionValue& Value);
 	void StopMove();
-
 	void Look(const FInputActionValue& Value);
+	void StartJump();
+	void StopJump();
+	void StartDash();
+	void StopDash();
+	void StartCrouch();
+	void StopCrouch();
 
 };
 

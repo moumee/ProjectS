@@ -27,6 +27,8 @@ void USuraPlayerFallingState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 
+	ElapsedTime = 0.f;
+
 	PlayerController = Player->GetController<APlayerController>();
 
 	DesiredSlidingDirection = FVector::ZeroVector;
@@ -95,7 +97,8 @@ void USuraPlayerFallingState::CacheSlidingDirection(ASuraCharacterPlayer* Player
 void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
 {
 	Super::UpdateState(Player, DeltaTime);
-	
+
+	ElapsedTime += DeltaTime;
 	
 	UpdateBaseMovementSpeed(Player, DeltaTime);
 
@@ -179,7 +182,19 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	if (Player->bLandedTriggered || Player->GetCharacterMovement()->IsMovingOnGround())
 	{
-		Player->StartCamShake(Player->LandCamShake);
+		if (ElapsedTime <= 3.f)
+		{
+			Player->StartCamShake(Player->DefaultLandCamShake);
+		}
+		else if (ElapsedTime <= 4.f)
+		{
+			Player->StartCamShake(Player->MiddleLandCamShake);
+		}
+		else
+		{
+			Player->StartCamShake(Player->HighLandCamShake);
+		}
+		
 		
 		if (Player->bCrouchTriggered)
 		{

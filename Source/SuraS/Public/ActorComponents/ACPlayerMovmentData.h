@@ -97,4 +97,10 @@ public:
 
 	float GetMaxWallRunSpeed() const;
 
+	float GetWallRunEnterZVelocityThreshold() const;
+
+	float GetWallRunEnterVerticalForce() const;
+
+	float GetWallRunCameraTiltAngle() const;
+
 };

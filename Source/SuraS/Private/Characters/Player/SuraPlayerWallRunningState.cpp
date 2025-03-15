@@ -23,41 +23,65 @@ void USuraPlayerWallRunningState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 
+	WallRunEnterZVelocityThreshold = Player->GetPlayerMovementData()->GetWallRunEnterZVelocityThreshold();
+	WallRunEnterVerticalForce = Player->GetPlayerMovementData()->GetWallRunEnterVerticalForce();
+	WallRunCameraTiltAngle = Player->GetPlayerMovementData()->GetWallRunCameraTiltAngle();
+
 	PlayerController = Player->GetController<APlayerController>();
 
 	MaxDuration = Player->GetPlayerMovementData()->GetWallRunningMaxDuration();
 	
 	
 	ElapsedTime = 0.f;
-	bShouldTilt = true;
 	bShouldRotateCamera = false;
 	bFrontWallFound = false;
 	Player->GetCharacterMovement()->GravityScale = 0.f;
 	Player->GetCharacterMovement()->AirControl = 1.f;
 	Player->JumpsLeft = Player->MaxJumps;
 	WallRunSide = Player->WallRunSide;
+	
+	float PlayerVelocityZ = Player->GetCharacterMovement()->Velocity.Z;
+	if (PlayerVelocityZ > 0.f)
+	{
+		if (PlayerVelocityZ < WallRunEnterZVelocityThreshold)
+		{
+			bShouldSlideUp = true;
+		}
+	}
+	else
+	{
+		if (PlayerVelocityZ < -WallRunEnterZVelocityThreshold)
+		{
+			bShouldSlideDown = true;
+		}
+	}
+	
 	// Need to make variable for minimum wall run velocity!! Currently set to WalkSpeed for testing purposes.
 	StateEnterVelocity = FMath::Clamp(Player->GetCharacterMovement()->Velocity.Size(), Player->GetPlayerMovementData()->GetRunSpeed()
 		, Player->GetPlayerMovementData()->GetMaxWallRunSpeed());
-	TargetRoll = Player->WallRunSide == EWallSide::Left ? 15.f : -15.f;
 }
 
 
 void USuraPlayerWallRunningState::TiltController(ASuraCharacterPlayer* Player, float DeltaTime)
 {
-	if (bShouldTilt)
+
+	float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Player->GetActorForwardVector(), Player->WallRunDirection)));
+	float Alpha = FMath::Abs(Angle / 180.f);
+	float TargetRoll = 0.f;
+	
+	if (WallRunSide == EWallSide::Left)
 	{
-		FRotator CurrentControlRotation = Player->GetControlRotation();
-		FRotator NewRotation = FMath::RInterpTo(CurrentControlRotation,
-		                                        FRotator(CurrentControlRotation.Pitch, CurrentControlRotation.Yaw, TargetRoll), DeltaTime, 10.f);
-		Player->GetController()->SetControlRotation(NewRotation);
-		if (FMath::Abs(Player->GetControlRotation().Roll - TargetRoll) < 0.1f)
-		{
-			FRotator CurrentRotation = Player->GetControlRotation();
-			Player->GetController()->SetControlRotation(FRotator(CurrentRotation.Pitch, CurrentRotation.Yaw, TargetRoll));
-			bShouldTilt = false;
-		}
+		TargetRoll = FMath::Lerp(WallRunCameraTiltAngle, -WallRunCameraTiltAngle, Alpha);
 	}
+	else if (WallRunSide == EWallSide::Right)
+	{
+		TargetRoll = FMath::Lerp(-WallRunCameraTiltAngle, WallRunCameraTiltAngle, Alpha);
+	}
+
+	FRotator CurrentControlRotation = Player->GetControlRotation();
+	FRotator NewRotation = FMath::RInterpTo(CurrentControlRotation, FRotator(CurrentControlRotation.Pitch, CurrentControlRotation.Yaw, TargetRoll), DeltaTime, 10.f);
+
+	Player->GetController()->SetControlRotation(NewRotation);
 }
 
 void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
@@ -82,11 +106,14 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 		return;
 	}
 
+	if (ElapsedTime < 0.)
+
 	Player->InterpCapsuleHeight(1.f, DeltaTime);
 
 	SetPlayerWallOffsetLocation(Player, DeltaTime);
 
-	if (Player->ForwardAxisInputValue <= 0.f)
+	if (WallRunSide == EWallSide::Left && Player->RightAxisInputValue >= 0.f ||
+		WallRunSide == EWallSide::Right && Player->RightAxisInputValue <= 0.f)
 	{
 		if (Player->IsFallingDown())
 		{
@@ -215,10 +242,20 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 		}
 		Player->WallRunDirection = NewWallRunDirection;
 		FVector NewVelocity = FVector(NewWallRunDirection.X, NewWallRunDirection.Y, 0.f) * StateEnterVelocity;
+		FVector ZDeltaVelocity = FVector::ZeroVector;
 		if (ElapsedTime < 0.75f)
 		{
-			NewVelocity += FVector::UpVector * 75.f;
+			float Alpha = ElapsedTime / 0.75f;
+			if (bShouldSlideUp)
+			{
+				ZDeltaVelocity = FVector::UpVector * FMath::Lerp(0, WallRunEnterVerticalForce, 1 - Alpha * Alpha);
+			}
+			else if (bShouldSlideDown)
+			{
+				ZDeltaVelocity = FVector::DownVector * FMath::Lerp(0, WallRunEnterVerticalForce, 1 - Alpha * Alpha);
+			}
 		}
+		NewVelocity += ZDeltaVelocity;
 		Player->GetCharacterMovement()->Velocity = NewVelocity;
 	}
 	else
@@ -239,6 +276,8 @@ void USuraPlayerWallRunningState::ExitState(ASuraCharacterPlayer* Player)
 	bFrontWallFound = false;
 	bShouldRotateCamera = false;
 	Player->bShouldRestoreCameraTilt = true;
+	bShouldSlideUp = false;
+	bShouldSlideDown = false;
 }
 
 void USuraPlayerWallRunningState::Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector)

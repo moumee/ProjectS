@@ -13,6 +13,7 @@ enum class EPrimaryState : uint8
 UENUM(BlueprintType)
 enum class EGroundedState : uint8
 {
+	None		UMETA(DisplayName = "None"),
 	Idle		UMETA(DisplayName = "Idle"),
 	Walking		UMETA(DisplayName = "Walking"),
 	Sprinting	UMETA(DisplayName = "Sprinting"),
@@ -22,9 +23,10 @@ enum class EGroundedState : uint8
 
 UENUM(BlueprintType)
 enum class EAirborneState : uint8
-{
-	Falling	UMETA(DisplayName = "Falling"),
-	Jumping	UMETA(DisplayName = "Jumping"),
+{	
+	None			UMETA(DisplayName = "None"),
+	Falling			UMETA(DisplayName = "Falling"),
+	Jumping			UMETA(DisplayName = "Jumping"),
 	DoubleJumping	UMETA(DisplayName = "DoubleJumping"),
 };
 

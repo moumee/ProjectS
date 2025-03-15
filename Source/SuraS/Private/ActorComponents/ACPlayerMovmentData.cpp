@@ -278,5 +278,35 @@ float UACPlayerMovementData::GetMaxWallRunSpeed() const
 	return PlayerRow->MaxWallRunSpeed;
 }
 
+float UACPlayerMovementData::GetWallRunEnterZVelocityThreshold() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->WallRunEnterZVelocityThreshold;
+}
+
+float UACPlayerMovementData::GetWallRunEnterVerticalForce() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->WallRunEnterVerticalForce;
+}
+
+float UACPlayerMovementData::GetWallRunCameraTiltAngle() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->WallRunCameraTiltAngle;
+}
+
 
 

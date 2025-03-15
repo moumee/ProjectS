@@ -91,5 +91,14 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxWallRunSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float WallRunEnterZVelocityThreshold;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float WallRunEnterVerticalForce;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float WallRunCameraTiltAngle;
 	
 };

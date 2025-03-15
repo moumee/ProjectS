@@ -3,6 +3,7 @@
 
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 
+#include "AITypes.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
@@ -18,6 +19,7 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	bUseControllerRotationRoll = false;
 
 	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule Component"));
+	RootComponent = CapsuleComponent;
 	CapsuleComponent->SetSimulatePhysics(false);
 	CapsuleComponent->SetCapsuleSize(40.f, 90.f);
 	CapsuleComponent->SetCollisionProfileName(TEXT("Pawn"));
@@ -66,6 +68,12 @@ void ASuraPawnPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::StartMove);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopMove);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::Look);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartJump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopJump);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::StartDash);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopDash);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartCrouch);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopCrouch);
 	}
 
 }
@@ -76,7 +84,7 @@ void ASuraPawnPlayer::StartMove(const FInputActionValue& Value)
 	
 	if (MovementComponent)
 	{
-		MovementComponent->SetMovementInput(InputVector);
+		MovementComponent->SetMoveInput(InputVector);
 	}
 	
 }
@@ -85,7 +93,7 @@ void ASuraPawnPlayer::StopMove()
 {
 	if (MovementComponent)
 	{
-		MovementComponent->SetMovementInput(FVector2D::ZeroVector);
+		MovementComponent->SetMoveInput(FVector2D::ZeroVector);
 	}
 }
 
@@ -97,4 +105,36 @@ void ASuraPawnPlayer::Look(const FInputActionValue& Value)
 	AddControllerYawInput(InputVector.X);
 	AddControllerPitchInput(InputVector.Y);
 }
+
+void ASuraPawnPlayer::StartJump()
+{
+	MovementComponent->SetJumpInput(true);
+}
+
+void ASuraPawnPlayer::StopJump()
+{
+	MovementComponent->SetJumpInput(false);
+}
+
+void ASuraPawnPlayer::StartDash()
+{
+	MovementComponent->SetDashInput(true);
+}
+
+void ASuraPawnPlayer::StopDash()
+{
+	MovementComponent->SetDashInput(false);
+}
+
+void ASuraPawnPlayer::StartCrouch()
+{
+	MovementComponent->SetCrouchInput(true);
+}
+
+void ASuraPawnPlayer::StopCrouch()
+{
+	MovementComponent->SetCrouchInput(false);
+}
+
+
 
