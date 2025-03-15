@@ -83,10 +83,10 @@ void USuraPlayerFallingState::CacheSlidingDirection(ASuraCharacterPlayer* Player
 	
 	FHitResult SlideDirectionHitResult;
 	FVector Start = Player->GetCapsuleComponent()->GetComponentLocation();
-	FVector End = Start + FVector::DownVector * Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() - 50.f;
+	FVector End = Start + FVector::DownVector * Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() - 100.f;
 	FCollisionQueryParams SlideDirectionParams;
 	SlideDirectionParams.AddIgnoredActor(Player);
-	bool bSlideDirectionHit = GetWorld()->LineTraceSingleByChannel(SlideDirectionHitResult, Start, End, ECC_Visibility, SlideDirectionParams);
+	bool bSlideDirectionHit = GetWorld()->LineTraceSingleByChannel(SlideDirectionHitResult, Start, End, ECC_WorldStatic, SlideDirectionParams);
 	if (bSlideDirectionHit)
 	{
 		FVector CurrentVelocity = Player->GetVelocity();
@@ -114,71 +114,6 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 	
 
 	CacheSlidingDirection(Player);
-	
-	FHitResult WallHitResult;
-	FCollisionQueryParams WallParams;
-	WallParams.AddIgnoredActor(Player);
-	
-	const FVector WallDetectStart = Player->GetActorLocation();
-	const FVector WallDetectEnd = WallDetectStart + Player->GetActorForwardVector() * 35.f;
-	const bool bWallHit = GetWorld()->SweepSingleByChannel(WallHitResult, WallDetectStart, WallDetectEnd, FQuat::Identity,
-		ECC_GameTraceChannel2, FCollisionShape::MakeCapsule(34,
-			88.f * 0.85f), WallParams);
-	
-	if (bWallHit && Player->GetCharacterMovement()->IsFalling() && Player->GetPreviousState()->GetStateType() == EPlayerState::Jumping)
-	{
-		Player->WallHitResult = WallHitResult;
-		FHitResult LedgeHitResult;
-		FCollisionQueryParams LedgeParams;
-		LedgeParams.AddIgnoredActor(Player);
-		
-		FVector LedgeDetectStart = FVector(WallHitResult.ImpactPoint.X, WallHitResult.ImpactPoint.Y,
-			Player->GetCamera()->GetComponentLocation().Z + 100.f);
-		FVector LedgeDetectEnd = FVector(LedgeDetectStart.X, LedgeDetectStart.Y, WallHitResult.ImpactPoint.Z);
-	
-		bool bLedgeHit = GetWorld()->SweepSingleByChannel(LedgeHitResult, LedgeDetectStart, LedgeDetectEnd, FQuat::Identity,
-			ECC_GameTraceChannel2, FCollisionShape::MakeSphere(20.f), LedgeParams);
-	
-		if (bLedgeHit && Player->GetCharacterMovement()->IsWalkable(LedgeHitResult))
-		{
-			Player->LedgeHitResult = LedgeHitResult;	
-			if (LedgeHitResult.ImpactPoint.Z < Player->GetActorLocation().Z && Player->ForwardAxisInputValue > 0.f)
-			{
-				Player->ChangeState(Player->MantlingState);
-				return;
-			}
-			Player->ChangeState(Player->HangingState);
-			return;
-		}
-	}
-
-	
-	
-
-	if (Player->GetPreviousState()->GetStateType() != EPlayerState::WallRunning)
-	{
-		if (Player->ShouldEnterWallRunning(Player->WallRunDirection, Player->WallRunSide))
-		{
-			Player->ChangeState(Player->WallRunningState);
-			return;
-		}
-	}
-
-	if (Player->bJumpTriggered && Player->JumpsLeft > 0)
-	{
-		Player->JumpingState->SetSlideSpeedDecreaseElapsedTime(0.f);
-		Player->JumpsLeft--;
-		Player->InAirJump();
-		Player->ChangeState(Player->JumpingState);
-		return;
-	}
-	
-
-	if (Player->bDashTriggered && Player->DashesLeft > 0)
-	{
-		Player->ChangeState(Player->DashingState);
-		return;
-	}
 
 	if (Player->bLandedTriggered || Player->GetCharacterMovement()->IsMovingOnGround())
 	{
@@ -210,6 +145,77 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		Player->ChangeState(Player->WalkingState);
 		return;
 	}
+
+	if (!Player->bCrouchTriggered)
+	{
+		FHitResult WallHitResult;
+		FCollisionQueryParams WallParams;
+		WallParams.AddIgnoredActor(Player);
+	
+		const FVector WallDetectStart = Player->GetActorLocation();
+		const FVector WallDetectEnd = WallDetectStart + Player->GetActorForwardVector() * 35.f;
+		const bool bWallHit = GetWorld()->SweepSingleByChannel(WallHitResult, WallDetectStart, WallDetectEnd, FQuat::Identity,
+			ECC_GameTraceChannel2, FCollisionShape::MakeCapsule(34,
+				Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.85f), WallParams);
+	
+		if (bWallHit && Player->GetCharacterMovement()->IsFalling() && Player->GetPreviousState()->GetStateType() == EPlayerState::Jumping
+			&& WallHitResult.ImpactNormal.Z < Player->GetCharacterMovement()->GetWalkableFloorZ())
+		{
+			Player->WallHitResult = WallHitResult;
+			FHitResult LedgeHitResult;
+			FCollisionQueryParams LedgeParams;
+			LedgeParams.AddIgnoredActor(Player);
+		
+			FVector LedgeDetectStart = FVector(WallHitResult.ImpactPoint.X, WallHitResult.ImpactPoint.Y,
+				Player->GetCamera()->GetComponentLocation().Z + 100.f);
+			FVector LedgeDetectEnd = FVector(LedgeDetectStart.X, LedgeDetectStart.Y, WallHitResult.ImpactPoint.Z);
+	
+			bool bLedgeHit = GetWorld()->SweepSingleByChannel(LedgeHitResult, LedgeDetectStart, LedgeDetectEnd, FQuat::Identity,
+				ECC_GameTraceChannel2, FCollisionShape::MakeSphere(20.f), LedgeParams);
+	
+			if (bLedgeHit && Player->GetCharacterMovement()->IsWalkable(LedgeHitResult))
+			{
+				Player->LedgeHitResult = LedgeHitResult;	
+				if (LedgeHitResult.ImpactPoint.Z < Player->GetActorLocation().Z && Player->ForwardAxisInputValue > 0.f)
+				{
+					Player->ChangeState(Player->MantlingState);
+					return;
+				}
+				Player->ChangeState(Player->HangingState);
+				return;
+			}
+		}
+	}
+
+	
+	
+
+	if (Player->GetPreviousState()->GetStateType() != EPlayerState::WallRunning)
+	{
+		if (Player->ShouldEnterWallRunning(Player->WallRunDirection, Player->WallRunSide))
+		{
+			Player->ChangeState(Player->WallRunningState);
+			return;
+		}
+	}
+
+	if (Player->bJumpTriggered && Player->JumpsLeft > 0)
+	{
+		Player->JumpingState->SetSlideSpeedDecreaseElapsedTime(0.f);
+		Player->JumpsLeft--;
+		Player->InAirJump();
+		Player->ChangeState(Player->JumpingState);
+		return;
+	}
+	
+
+	if (Player->bDashTriggered && Player->DashesLeft > 0)
+	{
+		Player->ChangeState(Player->DashingState);
+		return;
+	}
+
+
 
 	
 }

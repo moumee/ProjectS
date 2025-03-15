@@ -546,6 +546,16 @@ void ASuraCharacterPlayer::InterpCapsuleHeight(float TargetScale, float DeltaTim
 	float CurrentHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	float TargetHeight = GetDefaultCapsuleHalfHeight() * TargetScale;
 	float NewHeight = FMath::FInterpTo(CurrentHeight, TargetHeight, DeltaTime, 10.f);
+    
+	// Calculate how much the height will change
+	float HeightDifference = NewHeight - CurrentHeight;
+    
+	// Move the actor UP by HALF the difference to keep the bottom fixed
+	// (We need half because the capsule's origin is at its center)
+	FVector AdjustmentVector(0, 0, HeightDifference * 0.5f);
+	AddActorWorldOffset(AdjustmentVector);
+    
+	// Now change the capsule height
 	GetCapsuleComponent()->SetCapsuleHalfHeight(NewHeight);
 	
 

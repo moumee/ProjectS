@@ -120,7 +120,7 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 			ECC_GameTraceChannel2, FCollisionShape::MakeCapsule(34.f,
 				Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.85f), WallParams);
 
-		if (bWallHit && Player->GetCharacterMovement()->IsFalling())
+		if (bWallHit && Player->GetCharacterMovement()->IsFalling() && WallHitResult.ImpactNormal.Z < Player->GetCharacterMovement()->GetWalkableFloorZ())
 		{
 			Player->WallHitResult = WallHitResult;
 			FHitResult LedgeHitResult;
