@@ -3,11 +3,10 @@
 
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 
-#include "AITypes.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
-#include "Characters/PawnBasePlayer/SuraPawnPlayerMovementComponent.h"
+#include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 
 ASuraPawnPlayer::ASuraPawnPlayer()
@@ -33,7 +32,8 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	ArmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arm Mesh"));
 	ArmMesh->SetupAttachment(Camera);
 
-	MovementComponent = CreateDefaultSubobject<USuraPawnPlayerMovementComponent>(TEXT("Movement Component"));
+	MovementComponent = CreateDefaultSubobject<USuraPlayerMovementComponent>(TEXT("Movement Component"));
+	MovementComponent->UpdatedComponent = RootComponent;
 
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
@@ -52,6 +52,11 @@ void ASuraPawnPlayer::BeginPlay()
 	}
 }
 
+UCapsuleComponent* ASuraPawnPlayer::GetCapsuleComponent()
+{
+	return CapsuleComponent;
+}
+
 
 void ASuraPawnPlayer::Tick(float DeltaTime)
 {
@@ -65,40 +70,40 @@ void ASuraPawnPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::StartMove);
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopMove);
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::Look);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartJump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopJump);
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::StartDash);
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopDash);
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartCrouch);
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopCrouch);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::HandleMoveInput);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::HandleMoveInput);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::HandleLookInput);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::HandleJumpInput);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::HandleJumpInput);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::HandleDashInput);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::HandleDashInput);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::HandleCrouchInput);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::HandleCrouchInput);
 	}
 
 }
 
-void ASuraPawnPlayer::StartMove(const FInputActionValue& Value)
+void ASuraPawnPlayer::HandleMoveInput(const FInputActionValue& Value)
 {
+
+	if (!MovementComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player movement component is not valid!"));
+		return;
+	}
+	
 	FVector2D InputVector = Value.Get<FVector2D>();
+
+	const FRotator YawRotation = FRotator(0, GetControlRotation().Yaw, 0);
+	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 	
-	if (MovementComponent)
-	{
-		MovementComponent->SetMoveInput(InputVector);
-	}
-	
+	MovementComponent->AddInputVector(ForwardDirection * InputVector.Y);
+	MovementComponent->AddInputVector(RightDirection * InputVector.X);
+	MovementComponent->SetMovementInputVector(InputVector);
 }
 
-void ASuraPawnPlayer::StopMove()
-{
-	if (MovementComponent)
-	{
-		MovementComponent->SetMoveInput(FVector2D::ZeroVector);
-	}
-}
-
-
-void ASuraPawnPlayer::Look(const FInputActionValue& Value)
+void ASuraPawnPlayer::HandleLookInput(const FInputActionValue& Value)
 {
 	FVector2D InputVector = Value.Get<FVector2D>();
 
@@ -106,35 +111,46 @@ void ASuraPawnPlayer::Look(const FInputActionValue& Value)
 	AddControllerPitchInput(InputVector.Y);
 }
 
-void ASuraPawnPlayer::StartJump()
+void ASuraPawnPlayer::HandleJumpInput(const FInputActionValue& Value)
 {
-	MovementComponent->SetJumpInput(true);
+	if (!MovementComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player movement component is not valid!"));
+		return;
+	}
+	
+	bool bJumpPressed = Value.Get<bool>();
+	
+	MovementComponent->SetJumpPressed(bJumpPressed);
 }
 
-void ASuraPawnPlayer::StopJump()
+
+void ASuraPawnPlayer::HandleDashInput(const FInputActionValue& Value)
 {
-	MovementComponent->SetJumpInput(false);
+	if (!MovementComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player movement component is not valid!"));
+		return;
+	}
+	
+	bool bDashPressed = Value.Get<bool>();
+
+	MovementComponent->SetJumpPressed(bDashPressed);
 }
 
-void ASuraPawnPlayer::StartDash()
+void ASuraPawnPlayer::HandleCrouchInput(const FInputActionValue& Value)
 {
-	MovementComponent->SetDashInput(true);
+	if (!MovementComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player movement component is not valid!"));
+		return;
+	}
+	
+	bool bCrouchPressed = Value.Get<bool>();
+	
+	MovementComponent->SetJumpPressed(bCrouchPressed);
 }
 
-void ASuraPawnPlayer::StopDash()
-{
-	MovementComponent->SetDashInput(false);
-}
-
-void ASuraPawnPlayer::StartCrouch()
-{
-	MovementComponent->SetCrouchInput(true);
-}
-
-void ASuraPawnPlayer::StopCrouch()
-{
-	MovementComponent->SetCrouchInput(false);
-}
 
 
 

@@ -3,12 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InputActionValue.h"
 #include "GameFramework/Pawn.h"
 #include "SuraPawnPlayer.generated.h"
 
+class USuraPlayerMovementComponent;
 class UCameraComponent;
 class UCapsuleComponent;
-class USuraPawnPlayerMovementComponent;
 struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
@@ -27,6 +28,8 @@ public:
 	
 	virtual void BeginPlay() override;
 
+	UCapsuleComponent* GetCapsuleComponent();
+
 protected:
 
 	UPROPERTY(EditAnywhere)
@@ -38,8 +41,8 @@ protected:
 	UPROPERTY(EditAnywhere)
 	UCameraComponent* Camera;
 
-	UPROPERTY()
-	USuraPawnPlayerMovementComponent* MovementComponent;
+	UPROPERTY(EditAnywhere)
+	USuraPlayerMovementComponent* MovementComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	UInputMappingContext* DefaultMappingContext;
@@ -59,15 +62,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	UInputAction* CrouchAction;
 
-	void StartMove(const FInputActionValue& Value);
-	void StopMove();
-	void Look(const FInputActionValue& Value);
-	void StartJump();
-	void StopJump();
-	void StartDash();
-	void StopDash();
-	void StartCrouch();
-	void StopCrouch();
+	void HandleMoveInput(const FInputActionValue& Value);
+	void HandleLookInput(const FInputActionValue& Value);
+	void HandleJumpInput(const FInputActionValue& Value);
+	void HandleDashInput(const FInputActionValue& Value);
+	void HandleCrouchInput(const FInputActionValue& Value);
 
 };
 

@@ -20,7 +20,8 @@ public class SuraS : ModuleRules
 			"NavigationSystem",	// Added by Yoony for AI Navigation
             "UMG",			 //Added by Boranaga for the use of UI
             "EngineCameras", //Added by Boranaga for the use of CameraShake
-			"Niagara"        //Added by Boranaga for the use of ParticleSystem
+			"Niagara",        //Added by Boranaga for the use of ParticleSystem
+			"GameplayTags" // Added by <Eren Yeager> for the use of GameplayTags
         });
     }
 }
