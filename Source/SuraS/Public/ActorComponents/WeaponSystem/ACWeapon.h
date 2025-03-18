@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
 #include "Components/SkeletalMeshComponent.h"
 
 #include "ActorComponents/WeaponSystem/WeaponName.h"
@@ -37,8 +38,10 @@ class UWeaponAimUIWidget;
 class UInputAction;
 struct FInputBindingHandle;
 
-UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SURAS_API UACWeapon : public USkeletalMeshComponent, public IWeaponInterface
+//UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS()
+//class SURAS_API UACWeapon : public USkeletalMeshComponent, public IWeaponInterface
+class SURAS_API AWeapon : public AActor, public IWeaponInterface
 {
 	GENERATED_BODY()
 
@@ -47,6 +50,11 @@ public:
 	UDataTable* WeaponDataTable;
 
 	FWeaponData* WeaponData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponMesh")
+	USkeletalMeshComponent* WeaponMesh;
+	UFUNCTION()
+	USkeletalMeshComponent* GetWeaponMesh() { return WeaponMesh; }
 
 	UPROPERTY(EditDefaultsOnly, Category = Projectile)
 	TSubclassOf<class ASuraProjectile> ProjectileClass;
@@ -60,7 +68,6 @@ public:
 	FVector MuzzleOffset;
 
 	/** MappingContext */
-	//TODO: FireMapping�� Character���� ó���ϴ� ���� ������ �����غ�����
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputMappingContext* FireMappingContext;
 
@@ -88,7 +95,7 @@ public:
 	
 	TArray<FInputBindingHandle*> InputActionBindingHandles;
 
-	UACWeapon();
+	AWeapon();
 
 	void InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter);
 	void InitializeCamera(ASuraCharacterPlayerWeapon* NewCharacter);
@@ -118,13 +125,12 @@ public:
 	void ZoomOut();
 
 protected:
-	// Called when the game starts
 	UFUNCTION()
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void Tick(float DeltaTime) override;
+	//virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
 	/** Ends gameplay for this component. */
@@ -516,6 +522,36 @@ public:
 	void ApplyRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct = nullptr);
 	void RecoverRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct = nullptr);
 	void UpdateRecoil(float DeltaTime);
+#pragma endregion
+
+#pragma region Overheat
+protected:
+	UPROPERTY(EditAnywhere)
+	bool bIsOverheatMode = false;
+	UPROPERTY(EditAnywhere)
+	float OverheatBaseIncrement = 0.5f; //TODO: 총기 능력 사용 시간만큼 더해지도록 해야함. 그리고 우클릭 좌클릭 다르게 들어가도록
+	UPROPERTY(EditAnywhere)
+	float MaxOverheatValue = 5.f;
+	UPROPERTY(EditAnywhere)
+	float OverheatSpeed = 10.f;
+	UPROPERTY(EditAnywhere)
+	float OverheatRecoverSpeed = 10.f; //TODO: Reload Time을 사용할 수도 있어서 조금 지켜봐야함
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float OverheatRecoveryStartTime = 0.2f;
+
+	bool bIsOverheating = false;
+
+	float TotalTargetOverheatValue = 0.f;
+	float CurrentOverheatVaule = 0.f;
+	float OverheatRecoverTimer = 0.f;
+protected:
+	void AddOverheatValue();
+	void ApplyOverheat(float DeltaTime);
+	void RecoverOverheat(float DeltaTime);
+	void UpdateOverheat(float DeltaTime);
+
+
 #pragma endregion
 
 #pragma region Projectile/SingleProjectileSpread

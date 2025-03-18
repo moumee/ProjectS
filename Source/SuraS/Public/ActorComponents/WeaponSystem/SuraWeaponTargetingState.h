@@ -17,9 +17,9 @@ public:
 	USuraWeaponTargetingState();
 	~USuraWeaponTargetingState();
 
-	virtual void EnterState(UACWeapon* Weapon) override;
+	virtual void EnterState(AWeapon* Weapon) override;
 
-	virtual void UpdateState(UACWeapon* Weapon, float DeltaTime) override;
+	virtual void UpdateState(AWeapon* Weapon, float DeltaTime) override;
 
-	virtual void ExitState(UACWeapon* Weapon) override;
+	virtual void ExitState(AWeapon* Weapon) override;
 };

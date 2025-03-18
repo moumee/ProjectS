@@ -13,18 +13,18 @@ USuraWeaponReloadingState::~USuraWeaponReloadingState()
 {
 }
 
-void USuraWeaponReloadingState::EnterState(UACWeapon* Weapon)
+void USuraWeaponReloadingState::EnterState(AWeapon* Weapon)
 {
 	Super::EnterState(Weapon);
 	Weapon->StartReload();
 }
 
-void USuraWeaponReloadingState::UpdateState(UACWeapon* Weapon, float DeltaTime)
+void USuraWeaponReloadingState::UpdateState(AWeapon* Weapon, float DeltaTime)
 {
 	Super::UpdateState(Weapon, DeltaTime);
 }
 
-void USuraWeaponReloadingState::ExitState(UACWeapon* Weapon)
+void USuraWeaponReloadingState::ExitState(AWeapon* Weapon)
 {
 	Super::ExitState(Weapon);
 }

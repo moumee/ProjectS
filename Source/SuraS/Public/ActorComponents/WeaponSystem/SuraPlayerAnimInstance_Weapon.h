@@ -10,7 +10,7 @@
 
 class USuraPlayerBaseState;
 class ASuraCharacterPlayerWeapon;
-class UACWeapon;
+class AWeapon;
 /**
  * 
  */
@@ -91,7 +91,7 @@ public:
 
 	//TODO: Logic ¹Ù²ã¾ß ÇÔ
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
-	UACWeapon* CurrentWeapon;
+	AWeapon* CurrentWeapon;
 
 	//--------------------------
 

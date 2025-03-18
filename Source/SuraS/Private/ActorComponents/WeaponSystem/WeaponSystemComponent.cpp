@@ -255,7 +255,7 @@ void UWeaponSystemComponent::PickUpWeapon()
 
 bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 {
-	for (const UACWeapon* WeaponInPossession : WeaponInventory)
+	for (const AWeapon* WeaponInPossession : WeaponInventory)
 	{
 		if (WeaponInPossession->GetWeaponName() == NewWeaponPickUp->GetWeaponName())
 		{
@@ -263,7 +263,7 @@ bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 		}
 	}
 
-	UACWeapon* NewWeapon = NewWeaponPickUp->SpawnWeapon(PlayerOwner);
+	AWeapon* NewWeapon = NewWeaponPickUp->SpawnWeapon(PlayerOwner);
 	NewWeaponPickUp->DestroyWeaponPickUp();
 
 	WeaponInventory.AddUnique(NewWeapon);
@@ -271,7 +271,6 @@ bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 	if (CurrentWeapon == nullptr)
 	{
 		CurrentWeapon = NewWeapon;
-		//CurrentWeapon->EquipWeapon(PlayerOwner);
 		CurrentWeapon->SwitchWeapon(PlayerOwner, true);
 	}
 

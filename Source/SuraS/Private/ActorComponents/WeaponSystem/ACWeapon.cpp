@@ -48,13 +48,14 @@
 
 
 // Sets default values for this component's properties
-UACWeapon::UACWeapon()
+AWeapon::AWeapon()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true; //TODO: Tick 활용하면 활성화해야함.
+	PrimaryActorTick.bCanEverTick = true;
 
-	WeaponAnimInstance = GetAnimInstance();
+	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
+	WeaponMesh->SetupAttachment(GetRootComponent(), FName(TEXT("WeaponMesh")));
+
+	WeaponAnimInstance = WeaponMesh->GetAnimInstance();
 
 	//TODO: Muzzle Offset은 weapon Type에 따라서 다를듯
 	// 현재는 기본적으로 Weapon Mesh의"Muzzle" Socket의 위치를 이용하고 있어서 MuzzleOffset는 사용 안하는 중임
@@ -67,9 +68,9 @@ UACWeapon::UACWeapon()
 	WeaponType = EWeaponType::WeaponType_Rifle;
 	WeaponFireMode = EWeaponFireMode::WeaponFireMode_Single;
 	
-	SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	SetCollisionObjectType(ECC_GameTraceChannel3); //Weapon
-	SetCollisionResponseToAllChannels(ECR_Ignore);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh->SetCollisionObjectType(ECC_GameTraceChannel3); //Weapon
+	WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 
 	//---------------------------------------------------------------------------------
 	NumOfLeftAmmo = MaxAmmo;
@@ -171,7 +172,7 @@ UACWeapon::UACWeapon()
 
 }
 
-void UACWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
+void AWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
 {
 	Character = NewCharacter;
 	if (Character)
@@ -216,7 +217,7 @@ void UACWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
 	SetAimSocketRelativeTransform();
 }
 
-void UACWeapon::InitializeCamera(ASuraCharacterPlayerWeapon* NewCharacter)
+void AWeapon::InitializeCamera(ASuraCharacterPlayerWeapon* NewCharacter)
 {
 	if (NewCharacter)
 	{
@@ -226,7 +227,7 @@ void UACWeapon::InitializeCamera(ASuraCharacterPlayerWeapon* NewCharacter)
 	}
 }
 
-void UACWeapon::InitializeUI()
+void AWeapon::InitializeUI()
 {
 	//if (CrosshairWidgetClass)
 	//{
@@ -310,7 +311,7 @@ void UACWeapon::InitializeUI()
 	//}
 }
 
-void UACWeapon::LoadWeaponData(FName WeaponID)
+void AWeapon::LoadWeaponData(FName WeaponID)
 {
 	WeaponData = WeaponDataTable->FindRow<FWeaponData>(WeaponID, TEXT(""));
 	if (WeaponData)
@@ -381,7 +382,7 @@ void UACWeapon::LoadWeaponData(FName WeaponID)
 }
 
 // Called when the game starts
-void UACWeapon::BeginPlay()
+void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -396,7 +397,7 @@ void UACWeapon::BeginPlay()
 	TargetingState = NewObject<USuraWeaponTargetingState>(this, USuraWeaponTargetingState::StaticClass());
 	ChargingState = NewObject<USuraWeaponChargingState>(this, USuraWeaponChargingState::StaticClass());
 
-	WeaponAnimInstance = GetAnimInstance();
+	WeaponAnimInstance = WeaponMesh->GetAnimInstance();
 
 	CurrentState = UnequippedState;
 
@@ -411,9 +412,9 @@ void UACWeapon::BeginPlay()
 	//SetCollisionResponseToAllChannels(ECR_Ignore);
 }
 
-void UACWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void AWeapon::Tick(float DeltaTime)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	Super::Tick(DeltaTime);
 
 	if (CurrentState)
 	{
@@ -422,14 +423,31 @@ void UACWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	UpdateRecoil(DeltaTime);
 
 	UpdateSpread(DeltaTime);
+
+	UpdateOverheat(DeltaTime);
 }
 
-void UACWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
+//void UACWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+//{
+//	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+//
+//	if (CurrentState)
+//	{
+//		CurrentState->UpdateState(this, DeltaTime);
+//	}
+//	UpdateRecoil(DeltaTime);
+//
+//	UpdateSpread(DeltaTime);
+//
+//	UpdateOverheat(DeltaTime);
+//}
+
+void AWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 }
 
-bool UACWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter)
+bool AWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter)
 {
 	Character = TargetCharacter;
 
@@ -468,7 +486,7 @@ bool UACWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter
 
 	//TODO: 더 좋은 방법을 생각해 봐야함
 	//RightHandToAimSocketOffset = this->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetMesh()->GetSocketLocation(FName("Gun"));
-	RightHandToAimSocketOffset = this->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetArmMesh()->GetBoneLocation(FName(TEXT("hand_r")));
+	RightHandToAimSocketOffset = WeaponMesh->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetArmMesh()->GetBoneLocation(FName(TEXT("hand_r")));
 	if (Character->GetWeaponSystem() && Character->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 	{
 		Character->GetWeaponSystem()->SetRightHandToAimSocketOffset(RightHandToAimSocketOffset);
@@ -482,12 +500,13 @@ bool UACWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter
 	ActivateCrosshairWidget(true);
 	ActivateAmmoCounterWidget(true);
 
-	SetVisibility(true);
+	//TODO: BP에서 부가적으로 부착한 Mesh들도 Visibility를 관리해야함
+	WeaponMesh->SetVisibility(true);
 
 	return true;
 }
 
-void UACWeapon::DetachWeaponFromPlayer()
+void AWeapon::DetachWeaponFromPlayer()
 {
 	if (Character == nullptr)
 	{
@@ -495,13 +514,14 @@ void UACWeapon::DetachWeaponFromPlayer()
 	}
 	else
 	{
-		DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		//DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 		//ActivateCrosshairWidget(false);
-		SetVisibility(false);
+		WeaponMesh->SetVisibility(false);
 	}
 }
 
-void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 NumPenetrable, bool bIsHoming, AActor* HomingTarget)
+void AWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 NumPenetrable, bool bIsHoming, AActor* HomingTarget)
 {
 	//TODO: Projectile 종류에 대한 정보를 input으로 받아야 하나? 아직은 잘 모르곘음
 	if (CurrentState != UnequippedState)
@@ -571,7 +591,7 @@ void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, float AdditionalDa
 			UWorld* const World = GetWorld();
 			if (World != nullptr)
 			{
-				const FVector SpawnLocation = this->GetSocketLocation(FName(TEXT("Muzzle")));
+				const FVector SpawnLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
 				const FRotator SpawnRotation = (TargetLocationOfProjectile - SpawnLocation).Rotation();
 
 				//Set Spawn Collision Handling Override
@@ -605,6 +625,12 @@ void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, float AdditionalDa
 			ConsumeAmmo();
 		}
 
+		// <Overheat>
+		if (bIsOverheatMode)
+		{
+			AddOverheatValue();
+		}
+
 		// <Recoil & CamShake>
 		if (bIsZoomIn)
 		{
@@ -619,7 +645,7 @@ void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, float AdditionalDa
 	}
 }
 
-void UACWeapon::FireMultiProjectile()
+void AWeapon::FireMultiProjectile()
 {
 	if (CurrentState != UnequippedState)
 	{
@@ -664,7 +690,7 @@ void UACWeapon::FireMultiProjectile()
 				UWorld* const World = GetWorld();
 				if (World != nullptr)
 				{
-					const FVector SpawnLocation = this->GetSocketLocation(FName(TEXT("Muzzle")));
+					const FVector SpawnLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
 
 					for (int pellet = 0; pellet < PelletsNum; pellet++)
 					{
@@ -693,6 +719,12 @@ void UACWeapon::FireMultiProjectile()
 
 			ConsumeAmmo();
 
+			// <Overheat>
+			if (bIsOverheatMode)
+			{
+				AddOverheatValue();
+			}
+
 			// <Recoil & CamShake>
 			if (bIsZoomIn)
 			{
@@ -708,14 +740,14 @@ void UACWeapon::FireMultiProjectile()
 	}
 }
 
-void UACWeapon::SpawnProjectile()
+void AWeapon::SpawnProjectile()
 {
 	//TODO: Weapon name에 따라 다른 Projectile을 spawn 하도록 하려고 했는데,
 	//그냥 BP에서 초기에 Projectile 클래스를 지정해주면 되는 것이여서 일단은 보류중임.
 
 }
 
-void UACWeapon::ZoomToggle()
+void AWeapon::ZoomToggle()
 {
 	if (CurrentState == IdleState || CurrentState == FiringState)
 	{
@@ -732,7 +764,7 @@ void UACWeapon::ZoomToggle()
 	}
 }
 
-void UACWeapon::ZoomIn()
+void AWeapon::ZoomIn()
 {
 	bIsZoomIn = true;
 
@@ -745,7 +777,7 @@ void UACWeapon::ZoomIn()
 	ActivateCrosshairWidget(false);
 }
 
-void UACWeapon::ZoomOut()
+void AWeapon::ZoomOut()
 {
 	bIsZoomIn = false;
 
@@ -758,7 +790,7 @@ void UACWeapon::ZoomOut()
 }
 
 #pragma region WeaponState
-void UACWeapon::ChangeState(USuraWeaponBaseState* NewState)
+void AWeapon::ChangeState(USuraWeaponBaseState* NewState)
 {
 	if (!NewState || NewState == CurrentState) return;
 
@@ -772,7 +804,7 @@ void UACWeapon::ChangeState(USuraWeaponBaseState* NewState)
 #pragma endregion
 
 #pragma region Animation
-void UACWeapon::StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMontage* WeaponFireAnimation)
+void AWeapon::StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMontage* WeaponFireAnimation)
 {
 	if (CharacterAnimInstance != nullptr)
 	{
@@ -788,13 +820,13 @@ void UACWeapon::StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMo
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Fire Weapon Animation!!!"));
 		//WeaponAnimInstance->Montage_Play(WeaponFireAnimation, 1.f);
-		if (!GetAnimInstance()->Montage_IsPlaying(WeaponFireAnimation))
+		if (!WeaponMesh->GetAnimInstance()->Montage_IsPlaying(WeaponFireAnimation))
 		{
-			GetAnimInstance()->Montage_Play(WeaponFireAnimation, 1.f);
+			WeaponMesh->GetAnimInstance()->Montage_Play(WeaponFireAnimation, 1.f);
 		}
 	}
 }
-void UACWeapon::StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation, float CharacterAnimPlayRate, float WeaponAnimPlayRate)
+void AWeapon::StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation, float CharacterAnimPlayRate, float WeaponAnimPlayRate)
 {
 	if (CharacterAnimInstance != nullptr && CharacterAnimation != nullptr)
 	{
@@ -816,13 +848,13 @@ void UACWeapon::StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* W
 
 	if (WeaponAnimInstance != nullptr && WeaponAnimation != nullptr)
 	{
-		if (!GetAnimInstance()->Montage_IsPlaying(WeaponAnimation))
+		if (!WeaponMesh->GetAnimInstance()->Montage_IsPlaying(WeaponAnimation))
 		{
-			GetAnimInstance()->Montage_Play(WeaponAnimation, WeaponAnimation->GetPlayLength() / WeaponAnimPlayRate);
+			WeaponMesh->GetAnimInstance()->Montage_Play(WeaponAnimation, WeaponAnimation->GetPlayLength() / WeaponAnimPlayRate);
 		}
 	}
 }
-void UACWeapon::CancelAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation)
+void AWeapon::CancelAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation)
 {
 	if (CharacterAnimInstance != nullptr)
 	{
@@ -834,23 +866,23 @@ void UACWeapon::CancelAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* 
 
 	if (WeaponAnimInstance != nullptr)
 	{
-		if (GetAnimInstance()->Montage_IsPlaying(WeaponAnimation))
+		if (WeaponMesh->GetAnimInstance()->Montage_IsPlaying(WeaponAnimation))
 		{
-			GetAnimInstance()->Montage_Stop(0.f, WeaponAnimation);
+			WeaponMesh->GetAnimInstance()->Montage_Stop(0.f, WeaponAnimation);
 		}
 	}
 }
 #pragma endregion
 
 
-void UACWeapon::PlayChargeSound()
+void AWeapon::PlayChargeSound()
 {
 	if (ChargeSound)
 	{
-		ChargeAudioComponent = UGameplayStatics::SpawnSoundAttached(ChargeSound, this, FName(TEXT("Muzzle")), FVector(0, 0, 0), EAttachLocation::KeepRelativeOffset);
+		ChargeAudioComponent = UGameplayStatics::SpawnSoundAttached(ChargeSound, GetRootComponent(), FName(TEXT("Muzzle")), FVector(0, 0, 0), EAttachLocation::KeepRelativeOffset);
 	}
 }
-void UACWeapon::StopChargeSound()
+void AWeapon::StopChargeSound()
 {
 	if (ChargeAudioComponent)
 	{
@@ -859,7 +891,7 @@ void UACWeapon::StopChargeSound()
 }
 
 #pragma region Niagara
-void UACWeapon::SpawnMuzzleFireEffect(FVector SpawnLocation, FRotator SpawnRotation)
+void AWeapon::SpawnMuzzleFireEffect(FVector SpawnLocation, FRotator SpawnRotation)
 {
 	if (MuzzleFireEffect)
 	{
@@ -872,13 +904,13 @@ void UACWeapon::SpawnMuzzleFireEffect(FVector SpawnLocation, FRotator SpawnRotat
 			true);
 	}
 }
-void UACWeapon::SpawnChargeEffect(FVector SpawnLocation, FRotator SpawnRotation, FVector EffectScale)
+void AWeapon::SpawnChargeEffect(FVector SpawnLocation, FRotator SpawnRotation, FVector EffectScale)
 {
 	if (ChargeEffect)
 	{
 		ChargeEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
 			ChargeEffect,
-			this,
+			WeaponMesh,
 			FName(TEXT("Muzzle")),
 			SpawnLocation,
 			FRotator(0, 0, 0),
@@ -891,7 +923,7 @@ void UACWeapon::SpawnChargeEffect(FVector SpawnLocation, FRotator SpawnRotation,
 		ChargeEffectComponent->SetSeekDelta(20.f / MaxChargeTime);
 	}
 }
-void UACWeapon::DestroyChargeEffect()
+void AWeapon::DestroyChargeEffect()
 {
 	if (ChargeEffectComponent)
 	{
@@ -903,7 +935,7 @@ void UACWeapon::DestroyChargeEffect()
 #pragma endregion
 
 
-bool UACWeapon::PerformLineTrace(FVector StartLocation, FVector LineDirection, float MaxDistance, FVector& HitLocation)
+bool AWeapon::PerformLineTrace(FVector StartLocation, FVector LineDirection, float MaxDistance, FVector& HitLocation)
 {
 	FVector Start = StartLocation;
 	FVector End = StartLocation + LineDirection * MaxDistance;
@@ -911,7 +943,8 @@ bool UACWeapon::PerformLineTrace(FVector StartLocation, FVector LineDirection, f
 	FHitResult HitResult;
 
 	FCollisionQueryParams Params;
-	Params.AddIgnoredComponent(this);
+	Params.AddIgnoredComponent(WeaponMesh);
+	Params.AddIgnoredActor(this);
 	Params.AddIgnoredActor(Character);
 
 	FCollisionResponseParams ResponseParams;
@@ -939,7 +972,7 @@ bool UACWeapon::PerformLineTrace(FVector StartLocation, FVector LineDirection, f
 	return bHit;
 }
 
-bool UACWeapon::PerformSphereTrace(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& HitLocation)
+bool AWeapon::PerformSphereTrace(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& HitLocation)
 {
 	FVector Start = StartLocation;
 	FVector End = StartLocation + TraceDirection * MaxDistance;
@@ -952,7 +985,8 @@ bool UACWeapon::PerformSphereTrace(FVector StartLocation, FVector TraceDirection
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
 
 	FCollisionQueryParams Params;
-	Params.AddIgnoredComponent(this);
+	Params.AddIgnoredComponent(WeaponMesh);
+	Params.AddIgnoredActor(this);
 	Params.AddIgnoredActor(Character);
 
 	bool bHit = GetWorld()->SweepSingleByObjectType(
@@ -984,7 +1018,7 @@ bool UACWeapon::PerformSphereTrace(FVector StartLocation, FVector TraceDirection
 	return bHit;
 }
 
-FVector UACWeapon::CalculateScreenCenterWorldPositionAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const
+FVector AWeapon::CalculateScreenCenterWorldPositionAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const
 {
 	if (!CharacterController || !CharacterController->PlayerCameraManager)
 	{
@@ -1009,27 +1043,27 @@ FVector UACWeapon::CalculateScreenCenterWorldPositionAndDirection(FVector& OutWo
 	return FVector::ZeroVector;
 }
 
-void UACWeapon::SetAimSocketTransform()
+void AWeapon::SetAimSocketTransform()
 {
-	FTransform AimSocketTransform = GetSocketTransform(FName(TEXT("Aim")));
+	FTransform AimSocketTransform = WeaponMesh->GetSocketTransform(FName(TEXT("Aim")));
 	//FTransform IKHandGunTransform = Character->GetMesh()->GetSocketTransform(FName(TEXT("ik_hand_gun")));
 	FTransform IKHandGunTransform = Character->GetArmMesh()->GetSocketTransform(FName(TEXT("ik_hand_gun")));
 
 	AimSocketRelativeTransform = AimSocketTransform.GetRelativeTransform(IKHandGunTransform);
 }
 
-void UACWeapon::SetAimSocketRelativeTransform()
+void AWeapon::SetAimSocketRelativeTransform()
 {
-	AimSocketRelativeTransform = GetSocketTransform(FName(TEXT("Aim")), ERelativeTransformSpace::RTS_Component);
+	AimSocketRelativeTransform = WeaponMesh->GetSocketTransform(FName(TEXT("Aim")), ERelativeTransformSpace::RTS_Component);
 }
 
-FTransform UACWeapon::GetAimSocketRelativeTransform()
+FTransform AWeapon::GetAimSocketRelativeTransform()
 {
 	return AimSocketRelativeTransform;
 }
 
 #pragma region Equip/Unequip
-void UACWeapon::SwitchWeapon(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip)
+void AWeapon::SwitchWeapon(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip)
 {
 	//TODO: Reloading 중이였다면, CancelReload 해줘야함
 	if (CurrentState == ReloadingState)
@@ -1051,7 +1085,7 @@ void UACWeapon::SwitchWeapon(ASuraCharacterPlayerWeapon* TargetCharacter, bool b
 		StartAnimation(AM_Unequip_Character, nullptr, WeaponSwitchingRate, WeaponSwitchingRate);
 	}
 }
-void UACWeapon::EndWeaponSwitch(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip)
+void AWeapon::EndWeaponSwitch(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip)
 {
 	if (bEquip)
 	{
@@ -1068,7 +1102,7 @@ void UACWeapon::EndWeaponSwitch(ASuraCharacterPlayerWeapon* TargetCharacter, boo
 		}
 	}
 }
-void UACWeapon::EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
+void AWeapon::EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Equip Weapon!!!"));
 
@@ -1077,7 +1111,7 @@ void UACWeapon::EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 	ChangeState(IdleState);
 }
 
-void UACWeapon::UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
+void AWeapon::UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 {
 	ResetInputActionBinding();
 	DetachWeaponFromPlayer();
@@ -1086,7 +1120,7 @@ void UACWeapon::UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 	ChangeState(UnequippedState);
 }
 
-void UACWeapon::SetInputActionBinding()
+void AWeapon::SetInputActionBinding()
 {
 	if (Character)
 	{
@@ -1097,46 +1131,46 @@ void UACWeapon::SetInputActionBinding()
 				if (WeaponName == EWeaponName::WeaponName_Rifle)
 				{
 					//FullAuto Shot
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UACWeapon::StartFullAutoShot));
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UACWeapon::StopFullAutoShot));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &AWeapon::StartFullAutoShot));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &AWeapon::StopFullAutoShot));
 					//Zoom
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &AWeapon::ZoomToggle));
 					//Reload
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &AWeapon::HandleReload));
 				}
 				else if (WeaponName == EWeaponName::WeaponName_ShotGun)
 				{
 					//Fire Single Shot
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleSingleFire));
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireBurstShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleBurstFire));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &AWeapon::HandleSingleFire));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireBurstShotAction, ETriggerEvent::Started, this, &AWeapon::HandleBurstFire));
 					//Reload
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &AWeapon::HandleReload));
 				}
 				else if (WeaponName == EWeaponName::WeaponName_MissileLauncher)
 				{
 					//Fire Single Shot
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleSingleFire));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &AWeapon::HandleSingleFire));
 					//Targeting
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(HoldAction, ETriggerEvent::Triggered, this, &UACWeapon::StartTargetDetection));
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(HoldAction, ETriggerEvent::Completed, this, &UACWeapon::StopTargetDetection));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(HoldAction, ETriggerEvent::Triggered, this, &AWeapon::StartTargetDetection));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(HoldAction, ETriggerEvent::Completed, this, &AWeapon::StopTargetDetection));
 					//Reload
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &AWeapon::HandleReload));
 				}
 				else if (WeaponName == EWeaponName::WeaponName_RailGun)
 				{
 					//Charging
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ChargeAction, ETriggerEvent::Triggered, this, &UACWeapon::StartCharge));
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ChargeAction, ETriggerEvent::Completed, this, &UACWeapon::StopCharge));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ChargeAction, ETriggerEvent::Triggered, this, &AWeapon::StartCharge));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ChargeAction, ETriggerEvent::Completed, this, &AWeapon::StopCharge));
 					//Zoom
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &AWeapon::ZoomToggle));
 					//Reload
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &AWeapon::HandleReload));
 				}
 			}
 		}
 	}
 }
-void UACWeapon::ResetInputActionBinding()
+void AWeapon::ResetInputActionBinding()
 {
 	if (Character)
 	{
@@ -1156,7 +1190,7 @@ void UACWeapon::ResetInputActionBinding()
 #pragma endregion
 
 #pragma region Reload
-void UACWeapon::HandleReload()
+void AWeapon::HandleReload()
 {
 	if (CurrentState == IdleState)
 	{
@@ -1168,12 +1202,12 @@ void UACWeapon::HandleReload()
 		}
 	}
 }
-void UACWeapon::CancelReload()
+void AWeapon::CancelReload()
 {
 	CancelAnimation(AM_Reload_Character, AM_Reload_Weapon);
 	GetWorld()->GetTimerManager().ClearTimer(ReloadingTimer);
 }
-void UACWeapon::StartReload()
+void AWeapon::StartReload()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Start Reload!!!"));
 
@@ -1182,16 +1216,17 @@ void UACWeapon::StartReload()
 		ZoomOut();
 	}
 
+	// TODO: 여기서 일반 Reloading인지 OverHitting Recover인지 구분해서 다른 처리를 해줘야함
 	StartAnimation(AM_Reload_Character, AM_Reload_Weapon, ReloadingTime, ReloadingTime);
-	GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &UACWeapon::StopReload, ReloadingTime, false);
+	GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopReload, ReloadingTime, false);
 }
-void UACWeapon::StopReload()
+void AWeapon::StopReload()
 {
 	ReloadAmmo();
 	ChangeState(IdleState);
 }
 
-void UACWeapon::ConsumeAmmo()
+void AWeapon::ConsumeAmmo()
 {
 	if (NumOfLeftAmmo > 0)
 	{
@@ -1202,7 +1237,7 @@ void UACWeapon::ConsumeAmmo()
 		}
 	}
 }
-void UACWeapon::ReloadAmmo()
+void AWeapon::ReloadAmmo()
 {
 	NumOfLeftAmmo = MaxAmmo;
 	if (AmmoCounterWidget)
@@ -1210,11 +1245,11 @@ void UACWeapon::ReloadAmmo()
 		AmmoCounterWidget->UpdateAmmoCount(NumOfLeftAmmo);
 	}
 }
-bool UACWeapon::HasAmmo()
+bool AWeapon::HasAmmo()
 {
 	return (NumOfLeftAmmo > 0);
 }
-void UACWeapon::AutoReload()
+void AWeapon::AutoReload()
 {
 	if (bCanAutoReload)
 	{
@@ -1224,13 +1259,13 @@ void UACWeapon::AutoReload()
 		}
 	}
 }
-void UACWeapon::ReloadingEnd() //Legacy: 사용 안함. animation이 끝날 때의 처리를 위해 남겨 둠.
+void AWeapon::ReloadingEnd() //Legacy: 사용 안함. animation이 끝날 때의 처리를 위해 남겨 둠.
 {
 	UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
 }
 #pragma endregion
 
-void UACWeapon::Create3DUI()
+void AWeapon::Create3DUI()
 {
 	////RenderTarget 생성
 	//RenderTarget = NewObject<UTextureRenderTarget2D>();
@@ -1262,7 +1297,7 @@ void UACWeapon::Create3DUI()
 	//}
 }
 
-void UACWeapon::ActivateCrosshairWidget(bool bflag)
+void AWeapon::ActivateCrosshairWidget(bool bflag)
 {
 	if (bflag)
 	{
@@ -1280,7 +1315,7 @@ void UACWeapon::ActivateCrosshairWidget(bool bflag)
 		}
 	}
 }
-void UACWeapon::ActivateAmmoCounterWidget(bool bflag)
+void AWeapon::ActivateAmmoCounterWidget(bool bflag)
 {
 	if (bflag)
 	{
@@ -1298,7 +1333,7 @@ void UACWeapon::ActivateAmmoCounterWidget(bool bflag)
 	}
 }
 
-void UACWeapon::SetUpAimUIDelegateBinding(ASuraProjectile* Projectile)
+void AWeapon::SetUpAimUIDelegateBinding(ASuraProjectile* Projectile)
 {
 	if (AimUIWidget)
 	{
@@ -1307,7 +1342,7 @@ void UACWeapon::SetUpAimUIDelegateBinding(ASuraProjectile* Projectile)
 }
 
 #pragma region FireMode
-void UACWeapon::HandleSingleFire()
+void AWeapon::HandleSingleFire()
 {
 	if (CurrentState == IdleState)
 	{
@@ -1315,7 +1350,7 @@ void UACWeapon::HandleSingleFire()
 		StartSingleShot();
 	}
 }
-void UACWeapon::HandleBurstFire()
+void AWeapon::HandleBurstFire()
 {
 	if (CurrentState == IdleState)
 	{
@@ -1331,7 +1366,7 @@ void UACWeapon::HandleBurstFire()
 		}
 	}
 }
-void UACWeapon::HandleFullAutoFire()
+void AWeapon::HandleFullAutoFire()
 {
 	if (CurrentState == IdleState)
 	{
@@ -1342,7 +1377,7 @@ void UACWeapon::HandleFullAutoFire()
 #pragma endregion
 
 #pragma region FireMode/SingleShot
-void UACWeapon::StartSingleShot(float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 NumPenetrable)
+void AWeapon::StartSingleShot(float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 NumPenetrable)
 {
 	//TODO: 방식을 바꿔야 함 
 	//TODO: Enum에 따라서 다르게 함수 호출하는 방식이 아니라, StartSingleShot 자체에 Input을 넣어서 필요한 곳에서 각각 다른 Input 넣어서 작동하도록 해야함
@@ -1362,17 +1397,21 @@ void UACWeapon::StartSingleShot(float AdditionalDamage, float AdditionalRecoilAm
 	{
 		FireSingleProjectile(true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false, NumPenetrable);
 	}
+	else if (WeaponName == EWeaponName::WeaponName_EnergyRifle)
+	{
+		FireSingleProjectile(false);
+	}
 
-	GetWorld()->GetTimerManager().SetTimer(SingleShotTimer, this, &UACWeapon::StopSingleShot, SingleShotDelay, false);
+	GetWorld()->GetTimerManager().SetTimer(SingleShotTimer, this, &AWeapon::StopSingleShot, SingleShotDelay, false);
 }
-void UACWeapon::StopSingleShot()
+void AWeapon::StopSingleShot()
 {
 	ChangeState(IdleState);
 }
 #pragma endregion
 
 #pragma region FireMode/BurstShot
-void UACWeapon::StartBurstFire(bool bMultiProjectile)
+void AWeapon::StartBurstFire(bool bMultiProjectile)
 {
 	if (BurstShotFired < BurstShotCount)
 	{
@@ -1393,7 +1432,7 @@ void UACWeapon::StartBurstFire(bool bMultiProjectile)
 	}
 }
 
-void UACWeapon::StopBurstFire()
+void AWeapon::StopBurstFire()
 {
 	BurstShotFired = 0;
 	if (GetWorld()->GetTimerManager().IsTimerActive(BurstShotTimer))
@@ -1406,7 +1445,7 @@ void UACWeapon::StopBurstFire()
 #pragma endregion
 
 #pragma region FireMode/FullAuto
-void UACWeapon::StartFullAutoShot()
+void AWeapon::StartFullAutoShot()
 {
 	if (CurrentState == IdleState)
 	{
@@ -1424,7 +1463,7 @@ void UACWeapon::StartFullAutoShot()
 		}
 	}
 }
-void UACWeapon::StopFullAutoShot()
+void AWeapon::StopFullAutoShot()
 {
 	//TODO: 방식에 마음에 안듦. 다른 방법 생각해보기
 	if (CurrentState == FiringState)
@@ -1438,7 +1477,7 @@ void UACWeapon::StopFullAutoShot()
 #pragma endregion
 
 #pragma region FireMode/Targeting
-void UACWeapon::StartTargetDetection()
+void AWeapon::StartTargetDetection()
 {
 	if (CurrentState == IdleState)
 	{
@@ -1448,7 +1487,7 @@ void UACWeapon::StartTargetDetection()
 		UpdateTargetDetection(GetWorld()->GetDeltaSeconds());
 	}
 }
-void UACWeapon::UpdateTargetDetection(float DeltaTime) //TODO: 해당 타겟 혹은 기존 타겟의 생존 여부도 판단해서 Update 해야함
+void AWeapon::UpdateTargetDetection(float DeltaTime) //TODO: 해당 타겟 혹은 기존 타겟의 생존 여부도 판단해서 Update 해야함
 {
 	ElapsedTimeAfterTargetingStarted += DeltaTime;
 
@@ -1511,7 +1550,7 @@ void UACWeapon::UpdateTargetDetection(float DeltaTime) //TODO: 해당 타겟 혹은 기
 	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
 	GetWorld()->GetTimerManager().SetTimer(TargetDetectionTimer, [this, DeltaSeconds]() {UpdateTargetDetection(DeltaSeconds); }, DeltaSeconds, false);
 }
-void UACWeapon::StopTargetDetection()
+void AWeapon::StopTargetDetection()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Stop Target Detection!!!"));
 
@@ -1528,7 +1567,7 @@ void UACWeapon::StopTargetDetection()
 	StartMissileLaunch(TargetsArray);
 }
 
-bool UACWeapon::SearchOverlappedActor(FVector CenterLocation, float SearchRadius, TArray<AActor*>& OverlappedActors)
+bool AWeapon::SearchOverlappedActor(FVector CenterLocation, float SearchRadius, TArray<AActor*>& OverlappedActors)
 {
 	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
 	traceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
@@ -1538,14 +1577,14 @@ bool UACWeapon::SearchOverlappedActor(FVector CenterLocation, float SearchRadius
 
 	return bIsAnyActorExist;
 }
-TTuple<FVector2D, bool> UACWeapon::GetScreenPositionOfWorldLocation(const FVector& SearchLocation) const
+TTuple<FVector2D, bool> AWeapon::GetScreenPositionOfWorldLocation(const FVector& SearchLocation) const
 {
 	FVector2D ScreenLocation = FVector2D::ZeroVector;
 	bool bResult = UGameplayStatics::ProjectWorldToScreen(CharacterController, SearchLocation, ScreenLocation);
 
 	return MakeTuple(ScreenLocation, bResult);
 }
-bool UACWeapon::IsInViewport(FVector2D ActorScreenPosition, float ScreenRatio_Width, float ScreenRatio_Height) const
+bool AWeapon::IsInViewport(FVector2D ActorScreenPosition, float ScreenRatio_Width, float ScreenRatio_Height) const
 {
 	FVector2D ViewportSize = GEngine->GameViewport->Viewport->GetSizeXY();
 
@@ -1638,7 +1677,7 @@ bool UACWeapon::IsInViewport(FVector2D ActorScreenPosition, float ScreenRatio_Wi
 		return false;
 	}
 }
-float UACWeapon::GetUnsignedAngleBetweenVectors(const FVector& VectorA, const FVector& VectorB, const FVector& Axis)
+float AWeapon::GetUnsignedAngleBetweenVectors(const FVector& VectorA, const FVector& VectorB, const FVector& Axis)
 {
 	FVector NormalizedA = VectorA.GetSafeNormal();
 	FVector NormalizedB = VectorB.GetSafeNormal();
@@ -1660,7 +1699,7 @@ float UACWeapon::GetUnsignedAngleBetweenVectors(const FVector& VectorA, const FV
 	//각도를 도 단위로 변환
 	return FMath::RadiansToDegrees(Angle);
 }
-bool UACWeapon::CheckIfTargetIsBlockedByObstacle(AActor* target)
+bool AWeapon::CheckIfTargetIsBlockedByObstacle(AActor* target)
 {
 	float Radius = 10.f;
 
@@ -1687,7 +1726,7 @@ bool UACWeapon::CheckIfTargetIsBlockedByObstacle(AActor* target)
 	);
 	return bHit;
 }
-UUserWidget* UACWeapon::CreateTargetMarkerWidget(AActor* TargetActor)
+UUserWidget* AWeapon::CreateTargetMarkerWidget(AActor* TargetActor)
 {
 	if (TargetMarkerWidgetClass)
 	{
@@ -1697,7 +1736,7 @@ UUserWidget* UACWeapon::CreateTargetMarkerWidget(AActor* TargetActor)
 	}
 	return nullptr;
 }
-void UACWeapon::UpdateTargetMarkers()
+void AWeapon::UpdateTargetMarkers()
 {
 	for (AActor* Target : Targets)
 	{
@@ -1732,7 +1771,7 @@ void UACWeapon::UpdateTargetMarkers()
 		}
 	}
 }
-void UACWeapon::ResetTargetMarkers()
+void AWeapon::ResetTargetMarkers()
 {
 	for (AActor* Target : Targets)
 	{
@@ -1745,7 +1784,7 @@ void UACWeapon::ResetTargetMarkers()
 	MapTargetActorToWidget.Empty();
 }
 
-void UACWeapon::StartMissileLaunch(TArray<AActor*> TargetActors)
+void AWeapon::StartMissileLaunch(TArray<AActor*> TargetActors)
 {
 	ConfirmedTargets = TargetActors;
 	CurrentTargetIndex = 0;
@@ -1759,7 +1798,7 @@ void UACWeapon::StartMissileLaunch(TArray<AActor*> TargetActors)
 		UpdateMissileLaunch();
 	}
 }
-void UACWeapon::UpdateMissileLaunch()
+void AWeapon::UpdateMissileLaunch()
 {
 	FireSingleProjectile(false, 0.f, 0.f, 0.f, 0.f, 0, true, ConfirmedTargets[CurrentTargetIndex]);
 	CurrentTargetIndex++;
@@ -1769,10 +1808,10 @@ void UACWeapon::UpdateMissileLaunch()
 	}
 	else
 	{
-		GetWorld()->GetTimerManager().SetTimer(MissileLaunchTimer, this, &UACWeapon::UpdateMissileLaunch, MissileLaunchDelay, false);
+		GetWorld()->GetTimerManager().SetTimer(MissileLaunchTimer, this, &AWeapon::UpdateMissileLaunch, MissileLaunchDelay, false);
 	}
 }
-void UACWeapon::StopMissileLaunch()
+void AWeapon::StopMissileLaunch()
 {
 	ConfirmedTargets.Empty();
 	CurrentTargetIndex = 0;
@@ -1782,7 +1821,7 @@ void UACWeapon::StopMissileLaunch()
 #pragma endregion
 
 #pragma region FireMode/Charging
-void UACWeapon::StartCharge()
+void AWeapon::StartCharge()
 {
 	if (CurrentState == IdleState)
 	{
@@ -1794,7 +1833,7 @@ void UACWeapon::StartCharge()
 		UpdateCharge();
 	}
 }
-void UACWeapon::UpdateCharge()
+void AWeapon::UpdateCharge()
 {
 	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
 	ElapsedChargeTime += DeltaSeconds;
@@ -1811,15 +1850,15 @@ void UACWeapon::UpdateCharge()
 		}
 		else
 		{
-			GetWorld()->GetTimerManager().SetTimer(ChargingTimer, this, &UACWeapon::UpdateCharge, DeltaSeconds, false);
+			GetWorld()->GetTimerManager().SetTimer(ChargingTimer, this, &AWeapon::UpdateCharge, DeltaSeconds, false);
 		}
 	}
 	else
 	{
-		GetWorld()->GetTimerManager().SetTimer(ChargingTimer, this, &UACWeapon::UpdateCharge, DeltaSeconds, false);
+		GetWorld()->GetTimerManager().SetTimer(ChargingTimer, this, &AWeapon::UpdateCharge, DeltaSeconds, false);
 	}
 }
-void UACWeapon::StopCharge()
+void AWeapon::StopCharge()
 {
 	if (CurrentState == ChargingState)
 	{
@@ -1854,7 +1893,7 @@ void UACWeapon::StopCharge()
 #pragma endregion
 
 #pragma region Recoil
-void UACWeapon::AddRecoilValue(FWeaponRecoilStruct* RecoilStruct, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw)
+void AWeapon::AddRecoilValue(FWeaponRecoilStruct* RecoilStruct, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw)
 {
 	bIsRecoiling = true;
 
@@ -1868,7 +1907,7 @@ void UACWeapon::AddRecoilValue(FWeaponRecoilStruct* RecoilStruct, float Addition
 	}
 }
 
-void UACWeapon::ApplyRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct)
+void AWeapon::ApplyRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct)
 {
 	if (Character && RecoilStruct)
 	{
@@ -1886,7 +1925,7 @@ void UACWeapon::ApplyRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct)
 	}
 }
 
-void UACWeapon::RecoverRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct)
+void AWeapon::RecoverRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct)
 {
 	APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
 	if (!PlayerController) return;
@@ -1959,7 +1998,7 @@ void UACWeapon::RecoverRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct
 		bIsRecoiling = false;
 	}
 }
-void UACWeapon::UpdateRecoil(float DeltaTime)
+void AWeapon::UpdateRecoil(float DeltaTime)
 {
 	if (Character)
 	{
@@ -1980,8 +2019,62 @@ void UACWeapon::UpdateRecoil(float DeltaTime)
 }
 #pragma endregion
 
+#pragma region Overheat
+void AWeapon::AddOverheatValue()
+{
+	bIsOverheating = true;
+	OverheatRecoverTimer = 0.f;
+
+	TotalTargetOverheatValue += OverheatBaseIncrement; // TODO: 총기 능력 사용 시간 만큼 더해져야함
+	TotalTargetOverheatValue = FMath::Clamp(TotalTargetOverheatValue, 0.f, MaxOverheatValue);
+}
+void AWeapon::ApplyOverheat(float DeltaTime)
+{
+	float InterpOverheatTargetValue = FMath::FInterpConstantTo(CurrentOverheatVaule, TotalTargetOverheatValue, DeltaTime, OverheatSpeed);
+	CurrentOverheatVaule = InterpOverheatTargetValue;
+
+	OverheatRecoverTimer += DeltaTime;
+}
+void AWeapon::RecoverOverheat(float DeltaTime)
+{
+	float InterpOverheatRecoverTargetValue = FMath::FInterpConstantTo(CurrentOverheatVaule, 0.f, DeltaTime, OverheatRecoverSpeed);
+	CurrentOverheatVaule = InterpOverheatRecoverTargetValue;
+
+	if (FMath::Abs(CurrentOverheatVaule) < 0.1f)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Overheat has been perfectly Recovered!!!"));
+
+		TotalTargetOverheatValue = 0.f;
+		CurrentOverheatVaule = 0.f;
+
+		bIsOverheating = false;
+
+		//TODO: Overheat UI 업데이트 해야함
+	}
+}
+void AWeapon::UpdateOverheat(float DeltaTime)
+{
+	if (Character)
+	{
+		if (bIsOverheating)
+		{
+			if (DefaultSpread.SpreadRecoveryStartTime > SpreadRecoverTimer)
+			{
+				ApplyOverheat(DeltaTime);
+			}
+			else
+			{
+				RecoverOverheat(DeltaTime);
+			}
+
+			//TODO: Overheat UI Update
+		}
+	}
+}
+#pragma endregion
+
 #pragma region Projectile/SingleProjectileSpread
-void UACWeapon::AddSpreadValue(FProjectileSpreadValue* SpreadValue)
+void AWeapon::AddSpreadValue(FProjectileSpreadValue* SpreadValue)
 {
 	if (!SpreadValue) return;
 
@@ -1993,7 +2086,7 @@ void UACWeapon::AddSpreadValue(FProjectileSpreadValue* SpreadValue)
 	TotalTargetSpreadValue += RandSpreadValue;
 	TotalTargetSpreadValue = FMath::Clamp(TotalTargetSpreadValue, 0.f, SpreadValue->MaxSpreadValue);
 }
-void UACWeapon::ApplySpread(float DeltaTime, FProjectileSpreadValue* SpreadValue)
+void AWeapon::ApplySpread(float DeltaTime, FProjectileSpreadValue* SpreadValue)
 {
 	if (!SpreadValue) return;
 
@@ -2002,7 +2095,7 @@ void UACWeapon::ApplySpread(float DeltaTime, FProjectileSpreadValue* SpreadValue
 
 	SpreadRecoverTimer += DeltaTime;
 }
-void UACWeapon::RecoverSpread(float DeltaTime, FProjectileSpreadValue* SpreadValue)
+void AWeapon::RecoverSpread(float DeltaTime, FProjectileSpreadValue* SpreadValue)
 {
 	if (!SpreadValue) return;
 
@@ -2024,7 +2117,7 @@ void UACWeapon::RecoverSpread(float DeltaTime, FProjectileSpreadValue* SpreadVal
 		}
 	}
 }
-void UACWeapon::UpdateSpread(float DeltaTime)
+void AWeapon::UpdateSpread(float DeltaTime)
 {
 	if (Character)
 	{
@@ -2063,7 +2156,7 @@ void UACWeapon::UpdateSpread(float DeltaTime)
 		}
 	}
 }
-FVector UACWeapon::GetRandomSpreadVector(FVector BaseDir)
+FVector AWeapon::GetRandomSpreadVector(FVector BaseDir)
 {
 	const FVector SpreadVector = UKismetMathLibrary::RandomUnitVectorInConeInDegrees(BaseDir.GetSafeNormal(), CurrentSpreadVaule);
 
@@ -2072,7 +2165,7 @@ FVector UACWeapon::GetRandomSpreadVector(FVector BaseDir)
 #pragma endregion
 
 #pragma region Camera
-void UACWeapon::StartCameraSettingChange(FWeaponCamSettingValue* CamSetting)
+void AWeapon::StartCameraSettingChange(FWeaponCamSettingValue* CamSetting)
 {
 	bIsUsingPlayerCamFov = true;
 
@@ -2083,7 +2176,7 @@ void UACWeapon::StartCameraSettingChange(FWeaponCamSettingValue* CamSetting)
 
 	UpdateCameraSetting(GetWorld()->GetDeltaSeconds(), CamSetting);
 }
-void UACWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSetting)
+void AWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSetting)
 {
 	if (Character)
 	{
@@ -2121,12 +2214,12 @@ void UACWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* Cam
 		}
 	}
 }
-void UACWeapon::StopCameraSettingChange()
+void AWeapon::StopCameraSettingChange()
 {
 	bIsUsingPlayerCamFov = false;
 	UE_LOG(LogTemp, Error, TEXT("Modifying Cam Setting is Completed!!!"));
 }
-void UACWeapon::ForceStopCamModification()
+void AWeapon::ForceStopCamModification()
 {
 	bIsUsingPlayerCamFov = false;
 
@@ -2135,7 +2228,7 @@ void UACWeapon::ForceStopCamModification()
 		GetWorld()->GetTimerManager().ClearTimer(CamSettingTimer);
 	}
 }
-void UACWeapon::ApplyCameraShake(TSubclassOf<UWeaponCameraShakeBase> CamShakeClass, float Scale)
+void AWeapon::ApplyCameraShake(TSubclassOf<UWeaponCameraShakeBase> CamShakeClass, float Scale)
 {
 	if (Character && CamShakeClass)
 	{

@@ -186,7 +186,7 @@ void USuraPlayerAnimInstance_Weapon::SetAimSocket()
 			&& IsValid(Character->GetWeaponSystem()->GetCurrentWeapon())
 			&& Character->GetWeaponSystem()->GetCurrentWeapon() != nullptr)
 		{
-			FTransform AimSocketTransform = Character->GetWeaponSystem()->GetCurrentWeapon()->GetSocketTransform(FName(TEXT("Aim")));
+			FTransform AimSocketTransform = Character->GetWeaponSystem()->GetCurrentWeapon()->GetWeaponMesh()->GetSocketTransform(FName(TEXT("Aim")));
 			FTransform IKHandGunTransform = Character->GetMesh()->GetSocketTransform(FName(TEXT("ik_hand_gun")));
 
 			AimSocketRelativeTransform = AimSocketTransform.GetRelativeTransform(IKHandGunTransform);
@@ -232,7 +232,7 @@ void USuraPlayerAnimInstance_Weapon::SetTargetRightHandTransform()
 			FTransform RootTransform = Character->GetArmMesh()->GetComponentTransform();
 
 			FTransform CameraTransform = Character->GetCamera()->GetComponentTransform();
-			FTransform WeaponAimSocketTransform = Character->GetWeaponSystem()->GetCurrentWeapon()->GetSocketTransform(FName(TEXT("Aim")));
+			FTransform WeaponAimSocketTransform = Character->GetWeaponSystem()->GetCurrentWeapon()->GetWeaponMesh()->GetSocketTransform(FName(TEXT("Aim")));
 			FTransform RightHandTransform = Character->GetArmMesh()->GetBoneTransform(FName(TEXT("hand_r")));
 
 			FTransform CameraRelativeTransform = CameraTransform.GetRelativeTransform(RootTransform);

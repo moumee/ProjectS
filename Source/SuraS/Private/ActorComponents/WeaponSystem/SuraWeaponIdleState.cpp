@@ -11,18 +11,18 @@ USuraWeaponIdleState::~USuraWeaponIdleState()
 {
 }
 
-void USuraWeaponIdleState::EnterState(UACWeapon* Weapon)
+void USuraWeaponIdleState::EnterState(AWeapon* Weapon)
 {
 	Super::EnterState(Weapon);
 	Weapon->AutoReload();
 }
 
-void USuraWeaponIdleState::UpdateState(UACWeapon* Weapon, float DeltaTime)
+void USuraWeaponIdleState::UpdateState(AWeapon* Weapon, float DeltaTime)
 {
 	Super::UpdateState(Weapon, DeltaTime);
 }
 
-void USuraWeaponIdleState::ExitState(UACWeapon* Weapon)
+void USuraWeaponIdleState::ExitState(AWeapon* Weapon)
 {
 	Super::ExitState(Weapon);
 }

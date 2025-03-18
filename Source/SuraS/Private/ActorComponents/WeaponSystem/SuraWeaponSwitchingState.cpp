@@ -13,18 +13,18 @@ USuraWeaponSwitchingState::~USuraWeaponSwitchingState()
 {
 }
 
-void USuraWeaponSwitchingState::EnterState(UACWeapon* Weapon)
+void USuraWeaponSwitchingState::EnterState(AWeapon* Weapon)
 {
 	Super::EnterState(Weapon);
 	Weapon->ZoomOut();
 }
 
-void USuraWeaponSwitchingState::UpdateState(UACWeapon* Weapon, float DeltaTime)
+void USuraWeaponSwitchingState::UpdateState(AWeapon* Weapon, float DeltaTime)
 {
 	Super::UpdateState(Weapon, DeltaTime);
 }
 
-void USuraWeaponSwitchingState::ExitState(UACWeapon* Weapon)
+void USuraWeaponSwitchingState::ExitState(AWeapon* Weapon)
 {
 	Super::ExitState(Weapon);
 }
