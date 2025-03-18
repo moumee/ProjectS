@@ -13,17 +13,17 @@ USuraWeaponFiringState::~USuraWeaponFiringState()
 {
 }
 
-void USuraWeaponFiringState::EnterState(UACWeapon* Weapon)
+void USuraWeaponFiringState::EnterState(AWeapon* Weapon)
 {
 	Super::EnterState(Weapon);
 }
 
-void USuraWeaponFiringState::UpdateState(UACWeapon* Weapon, float DeltaTime)
+void USuraWeaponFiringState::UpdateState(AWeapon* Weapon, float DeltaTime)
 {
 	Super::UpdateState(Weapon, DeltaTime);
 }
 
-void USuraWeaponFiringState::ExitState(UACWeapon* Weapon)
+void USuraWeaponFiringState::ExitState(AWeapon* Weapon)
 {
 	Super::ExitState(Weapon);
 	//Weapon->AutoReload();

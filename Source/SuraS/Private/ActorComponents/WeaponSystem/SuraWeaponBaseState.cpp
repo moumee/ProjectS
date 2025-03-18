@@ -10,14 +10,14 @@ EWeaponStateType USuraWeaponBaseState::GetWeaponStateType() const
     return WeaponStateType;
 }
 
-void USuraWeaponBaseState::EnterState(UACWeapon* Weapon)
+void USuraWeaponBaseState::EnterState(AWeapon* Weapon)
 {
 }
 
-void USuraWeaponBaseState::UpdateState(UACWeapon* Weapon, float DeltaTime)
+void USuraWeaponBaseState::UpdateState(AWeapon* Weapon, float DeltaTime)
 {
 }
 
-void USuraWeaponBaseState::ExitState(UACWeapon* Weapon)
+void USuraWeaponBaseState::ExitState(AWeapon* Weapon)
 {
 }

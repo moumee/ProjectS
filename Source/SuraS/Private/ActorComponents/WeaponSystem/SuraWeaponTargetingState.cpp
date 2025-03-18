@@ -13,19 +13,19 @@ USuraWeaponTargetingState::~USuraWeaponTargetingState()
 {
 }
 
-void USuraWeaponTargetingState::EnterState(UACWeapon* Weapon)
+void USuraWeaponTargetingState::EnterState(AWeapon* Weapon)
 {
 	Super::EnterState(Weapon);
 }
 
-void USuraWeaponTargetingState::UpdateState(UACWeapon* Weapon, float DeltaTime)
+void USuraWeaponTargetingState::UpdateState(AWeapon* Weapon, float DeltaTime)
 {
 	Super::UpdateState(Weapon, DeltaTime);
 
 	Weapon->UpdateTargetMarkers();
 }
 
-void USuraWeaponTargetingState::ExitState(UACWeapon* Weapon)
+void USuraWeaponTargetingState::ExitState(AWeapon* Weapon)
 {
 	Super::ExitState(Weapon);
 }

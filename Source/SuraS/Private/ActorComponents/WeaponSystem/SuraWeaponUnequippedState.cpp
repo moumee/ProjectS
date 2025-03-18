@@ -14,7 +14,7 @@ USuraWeaponUnequippedState::~USuraWeaponUnequippedState()
 {
 }
 
-void USuraWeaponUnequippedState::EnterState(UACWeapon* Weapon)
+void USuraWeaponUnequippedState::EnterState(AWeapon* Weapon)
 {
 	Super::EnterState(Weapon);
 
@@ -24,12 +24,12 @@ void USuraWeaponUnequippedState::EnterState(UACWeapon* Weapon)
 	Weapon->ActivateAmmoCounterWidget(false);
 }
 
-void USuraWeaponUnequippedState::UpdateState(UACWeapon* Weapon, float DeltaTime)
+void USuraWeaponUnequippedState::UpdateState(AWeapon* Weapon, float DeltaTime)
 {
 	Super::UpdateState(Weapon, DeltaTime);
 }
 
-void USuraWeaponUnequippedState::ExitState(UACWeapon* Weapon)
+void USuraWeaponUnequippedState::ExitState(AWeapon* Weapon)
 {
 	Super::ExitState(Weapon);
 	//Weapon->StartCameraSettingChange(&Weapon->CamSetting_Default); //TODO: 이 처리가 꼭 필요한가? 고민해봐야함

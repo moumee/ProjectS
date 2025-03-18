@@ -66,7 +66,7 @@ ASuraProjectile::ASuraProjectile()
 	UE_LOG(LogTemp, Warning, TEXT("Projectile is Spawned!!!"));
 }
 
-void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, UACWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable) //TODO: 여기서 ProjectileType을 input으로 받아야 할 듯
+void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable) //TODO: 여기서 ProjectileType을 input으로 받아야 할 듯
 {
 	// Weapon에서 spawn projectile 할 때 처리를 해줘야 하나?
 	// 근데 어차피 projectile 종류별로 BP 따로 만들고, Mesh도 다른거 사용하는데 의미가 있나?
@@ -426,7 +426,7 @@ void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Roc
 			TrailEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 				GetWorld(),
 				TrailEffect,
-				Weapon->GetSocketLocation(FName(TEXT("Muzzle"))),
+				Weapon->GetWeaponMesh()->GetSocketLocation(FName(TEXT("Muzzle"))),
 				FRotator(0.f, 0.f, 0.f));
 
 
