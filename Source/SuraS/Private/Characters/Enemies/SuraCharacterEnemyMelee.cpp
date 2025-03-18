@@ -26,6 +26,7 @@ void ASuraCharacterEnemyMelee::Attack(const ASuraCharacterPlayer* AttackTarget)
 {
 	Player = AttackTarget;
 
+	// Rotate to face the player for attacks
 	GetWorldTimerManager().SetTimer(
 		RotationHandle,
 		this, &ASuraCharacterEnemyMelee::RotateTowardPlayer,
@@ -39,6 +40,7 @@ void ASuraCharacterEnemyMelee::Attack(const ASuraCharacterPlayer* AttackTarget)
 		EnemyAnimInstance->Montage_Play(AttackAnimation);
 	}
 
+	// To stop reset rotation timer
 	FTimerHandle ClearTimerHandle;
 
 	GetWorldTimerManager().SetTimer(
