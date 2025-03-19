@@ -2,12 +2,14 @@
 
 
 #include "Instance/ObjectPoolManager.h"
+#include "Characters/Enemies/SuraCharacterEnemyBase.h"
+#include "Instance/EnemyPoolBase.h"
 
 UObjectPoolManager::UObjectPoolManager()
 {
 }
 
-UObjectPoolBase* UObjectPoolManager::GetPool(TSubclassOf<class AActor> ObjectClass, UObject* WorldContext)
+UObjectPoolBase* UObjectPoolManager::GetPool(AActor* ObjectClass, UObject* WorldContext)
 {
 	if (!ObjectClass || !WorldContext) return nullptr;
 
@@ -19,10 +21,21 @@ UObjectPoolBase* UObjectPoolManager::GetPool(TSubclassOf<class AActor> ObjectCla
 	}
 	else 
 	{
-		UObjectPoolBase* newPool = NewObject<UObjectPoolBase>(this, UObjectPoolBase::StaticClass(), TEXT("ObjectPoolBase"));
-		newPool->Initialize(GetWorld(), 3, ObjectClass);
-		ObjectPool_List.Add(ObjectClass, newPool);
-		return newPool;
+		if (true)
+		{
+			UObjectPoolBase* newPool = NewObject<UEnemyPoolBase>(this, UEnemyPoolBase::StaticClass(), TEXT("ObjectPoolBase"));
+			newPool->Initialize(GetWorld(), 3, ObjectClass);
+			ObjectPool_List.Add(ObjectClass, newPool);
+			return newPool;
+		}
+		else
+		{
+			UObjectPoolBase* newPool = NewObject<UObjectPoolBase>(this, UObjectPoolBase::StaticClass(), TEXT("ObjectPoolBase"));
+			newPool->Initialize(GetWorld(), 3, ObjectClass);
+			ObjectPool_List.Add(ObjectClass, newPool);
+			return newPool;
+		}
+		
 	}
 
 	

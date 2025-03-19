@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Instance/ObjectPoolBase.h"
+#include "AIController.h"
 #include "SpawnerBase.generated.h"
 
 UCLASS()
@@ -19,7 +20,10 @@ public:
 	void SpawnWrapper();
 
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
-	TSubclassOf<class AActor> PooledObjectSubclass;
+	AActor* PooledObject;
+
+	UPROPERTY(EditAnywhere, Category = "ObjectPool")
+	UBehaviorTree* BehaviorTree;
 
 protected:
 	virtual void BeginPlay() override;
