@@ -7,6 +7,7 @@
 #include "Components/SkeletalMeshComponent.h"
 
 #include "ActorComponents/WeaponSystem/WeaponName.h"
+#include "ActorComponents/WeaponSystem/WeaponAction.h"
 #include "ActorComponents/WeaponSystem/WeaponType.h"
 #include "ActorComponents/WeaponSystem/WeaponFireMode.h"
 #include "ActorComponents/WeaponSystem/WeaponCamSettingValue.h"
@@ -40,15 +41,13 @@ struct FInputBindingHandle;
 
 //UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 UCLASS()
-//class SURAS_API UACWeapon : public USkeletalMeshComponent, public IWeaponInterface
 class SURAS_API AWeapon : public AActor, public IWeaponInterface
 {
 	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon)
-	UDataTable* WeaponDataTable;
-
+	FDataTableRowHandle WeaponDataTableHandle;
 	FWeaponData* WeaponData;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponMesh")
@@ -56,8 +55,18 @@ public:
 	UFUNCTION()
 	USkeletalMeshComponent* GetWeaponMesh() { return WeaponMesh; }
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
+	EWeaponAction LeftMouseAction;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
+	EWeaponAction RightMouseAction;
+
 	UPROPERTY(EditDefaultsOnly, Category = Projectile)
 	TSubclassOf<class ASuraProjectile> ProjectileClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+	TSubclassOf<class ASuraProjectile> LeftProjectileClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+	TSubclassOf<class ASuraProjectile> RightProjectileClass;
 
 	/** AnimMontage to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
@@ -73,22 +82,34 @@ public:
 
 	/** Fire Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* FireAction;
+	UInputAction* LeftSingleShotAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* RightSingleShotAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* FireSingleShotAction;
+	UInputAction* LeftBurstShotAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* RightBurstShotAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* FireBurstShotAction;
+	UInputAction* LeftFullAutoShotAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* RightFullAutoShotAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* ZoomAction;
+	UInputAction* LeftHoldAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* RightHoldAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* HoldAction;
+	UInputAction* LeftChargeAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* RightChargeAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* ChargeAction;
+	class UInputAction* RightZoomAction;
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ReloadAction;
@@ -101,7 +122,7 @@ public:
 	void InitializeCamera(ASuraCharacterPlayerWeapon* NewCharacter);
 	void InitializeUI();
 
-	void LoadWeaponData(FName WeaponID);
+	void LoadWeaponData();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	bool AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter);
@@ -111,8 +132,8 @@ public:
 
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void FireSingleProjectile(bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 NumPenetrable = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
-	void FireMultiProjectile();
+	void FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 	void SpawnProjectile();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
@@ -382,8 +403,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponFireMode WeaponFireMode;
 protected:
-	void HandleSingleFire();
-	void HandleBurstFire();
+	void HandleSingleFire(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
+	void HandleBurstFire(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
 	void HandleFullAutoFire();
 #pragma endregion
 
@@ -394,7 +415,7 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float SingleShotDelay = 1.f;
 public:
-	void StartSingleShot(float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 NumPenetrable = 0);
+	void StartSingleShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 	void StopSingleShot();
 #pragma endregion
 
@@ -411,7 +432,7 @@ protected:
 	int32 BurstShotFired = 0;
 
 protected:
-	void StartBurstFire(bool bMultiProjectile = false);
+	void StartBurstFire(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 	void StopBurstFire();
 #pragma endregion
 
@@ -423,7 +444,7 @@ protected:
 	FTimerHandle FullAutoShotTimer;
 
 protected:
-	void StartFullAutoShot();
+	void StartFullAutoShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
 	void StopFullAutoShot();
 #pragma endregion
 
@@ -453,7 +474,7 @@ protected:
 protected:
 	void StartTargetDetection();
 	void UpdateTargetDetection(float DeltaTime);
-	void StopTargetDetection();
+	void StopTargetDetection(const TSubclassOf<ASuraProjectile>& InProjectileClass);
 
 	bool SearchOverlappedActor(FVector CenterLocation, float SearchRadius, TArray<AActor*>& OverlappedActors);
 	TTuple<FVector2D, bool> GetScreenPositionOfWorldLocation(const FVector& SearchLocation) const;
@@ -471,8 +492,8 @@ protected:
 	float MissileLaunchDelay = 0.2;
 	FTimerHandle MissileLaunchTimer;
 protected:
-	void StartMissileLaunch(TArray<AActor*> TargetActors);
-	void UpdateMissileLaunch();
+	void StartMissileLaunch(TArray<AActor*> TargetActors, const TSubclassOf<ASuraProjectile>& InProjectileClass);
+	void UpdateMissileLaunch(const TSubclassOf<ASuraProjectile>& InProjectileClass);
 	void StopMissileLaunch();
 #pragma endregion
 
@@ -487,7 +508,7 @@ protected:
 	float ChargingAdditionalRecoilAmountYawBase = 1.f;
 	float ChargingAdditionalProjectileRadiusBase = 20.f;
 
-	int32 MaxPenetrableObjectsNum = 4;
+	//int32 MaxPenetrableObjectsNum = 4;
 
 	float ElapsedChargeTime = 0.f;
 	FTimerHandle ChargingTimer;
@@ -495,6 +516,12 @@ protected:
 	void StartCharge();
 	void UpdateCharge();
 	void StopCharge();
+#pragma endregion
+
+#pragma region
+protected:
+	int32 MaxPenetrableObjectsNum_Left = 4;
+	int32 MaxPenetrableObjectsNum_Right = 4;
 #pragma endregion
 
 #pragma region Recoil
@@ -576,6 +603,11 @@ protected:
 
 #pragma region Projectile/MultiProjectileSpread
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectile")
+	bool bEnableMultiProjectile_Left;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectile")
+	bool bEnableMultiProjectile_Right;
+
 	UPROPERTY(EditAnywhere)
 	int32 PelletsNum = 9;
 
