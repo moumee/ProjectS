@@ -32,7 +32,7 @@ public:
 	USkeletalMesh* FirearmMeshAsset;
 
 	UPROPERTY(EditAnywhere, Category = "Projectile")
-	TSubclassOf<class ASuraProjectile> ProjectileClass;
+	TSubclassOf<class ASuraEnemyProjectile> ProjectileClass;
 
 	void InitializeFirearem(const ASuraCharacterEnemyBase* OwnerChar, int32 NewMaxAmmo, int32 NewMagsize); // should be called after being deferred spawned
 

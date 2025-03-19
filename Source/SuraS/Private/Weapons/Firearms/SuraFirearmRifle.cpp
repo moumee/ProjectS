@@ -2,7 +2,7 @@
 
 
 #include "Weapons/Firearms/SuraFirearmRifle.h"
-#include "ActorComponents/WeaponSystem/SuraProjectile.h"
+#include "Weapons/Projectiles/SuraEnemyProjectile.h"
 
 void ASuraFirearmRifle::Fire(AActor* FirearmOwner, const AActor* TargetActor, float AdditionalDamage, float AdditionalRadius, bool bIsHoming)
 {
@@ -14,10 +14,9 @@ void ASuraFirearmRifle::Fire(AActor* FirearmOwner, const AActor* TargetActor, fl
 		FActorSpawnParameters ActorSpawnParams;
 		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		ASuraProjectile* Projectile = GetWorld()->SpawnActor<ASuraProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+		ASuraEnemyProjectile* Projectile = GetWorld()->SpawnActor<ASuraEnemyProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 
-		Projectile->InitializeProjectile(FirearmOwner, nullptr, AdditionalDamage, AdditionalRadius);
-
+		Projectile->InitializeProjectile(FirearmOwner, AdditionalDamage, AdditionalRadius);
 		Projectile->LaunchProjectile();
 	}
 }

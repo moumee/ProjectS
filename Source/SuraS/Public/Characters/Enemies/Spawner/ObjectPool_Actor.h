@@ -20,13 +20,13 @@ public:
 	AObjectPool_Actor();
 
 	UFUNCTION(BlueprintCallable, Category = "ObjectPool")
-		APawn* SpawnPooledObject();
+		ASuraCharacterEnemyBase* SpawnPooledObject();
 
 	UFUNCTION()
 		void SpawnWrapper();
 
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
-		TSubclassOf<class APawn> PooledObjectSubclass;
+		TSubclassOf<class ASuraCharacterEnemyBase> PooledObjectSubclass;
 
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
 		int PoolSize = 5;
@@ -34,7 +34,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	TArray<APawn*> ObjectPool;
+	TArray<ASuraCharacterEnemyBase*> ObjectPool;
 
 private:
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
