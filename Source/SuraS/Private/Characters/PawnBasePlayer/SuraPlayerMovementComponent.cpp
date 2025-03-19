@@ -3,6 +3,7 @@
 
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 
+#include "AITypes.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/CapsuleComponent.h"
 
@@ -23,49 +24,30 @@ void USuraPlayerMovementComponent::BeginPlay()
 		SuraPawnPlayer = Cast<ASuraPawnPlayer>(PawnOwner);
 	}
 
-	SetMovementState(FGameplayTag::RequestGameplayTag("State.Movement.Airborne.Falling"));
+	GravityAcceleration = GravityDirection * GravityScale;
+	CurrentMovementState = EMovementState::EMS_Airborne;
+
 }
+
+
 
 void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType,
                                                  FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	GEngine->AddOnScreenDebugMessage(
+		0, 0.f, FColor::Cyan, FString::Printf(TEXT("Current State : %s"), *UEnum::GetValueAsString(CurrentMovementState)));
+
+	GEngine->AddOnScreenDebugMessage(
+		1, 0.f, FColor::Cyan, FString::Printf(TEXT("Velocity : (%f, %f, %f) / Size2D : %f "), Velocity.X, Velocity.Y, Velocity.Z, Velocity.Size2D()));
+
 	if (!PawnOwner || !UpdatedComponent || ShouldSkipUpdate(DeltaTime))
 	{
 		return;
 	}
 
-	if (!IsGrounded() && MovementStateTag.MatchesTag(FGameplayTag::RequestGameplayTag("State.Movement.Grounded")))
-	{
-		bIsGrounded = false;
-		if (Velocity.Z < 0.f)
-		{
-			SetMovementState(FGameplayTag::RequestGameplayTag("State.Movement.Airborne.Falling"));
-		}
-		else
-		{
-			SetMovementState(FGameplayTag::RequestGameplayTag("State.Movement.Airborne.Jumping"));
-		}
-	}
-
-	if (bIsGrounded)
-	{
-		
-	}
-	
-	FVector DeltaVelocity = ConsumeInputVector().GetClampedToMaxSize(1.f) * Acceleration * DeltaTime;
-	FVector SummedVelocity = Velocity + DeltaVelocity;
-	FVector SummedVelocityXY = FVector(SummedVelocity.X, SummedVelocity.Y, 0);
-	if (SummedVelocityXY.Size() > WishSpeed)
-	{
-		FVector ClampedXY = SummedVelocityXY.GetClampedToMaxSize(WishSpeed);
-		Velocity = ClampedXY + Velocity.Z;
-	}
-	else
-	{
-		Velocity = SummedVelocity;
-	}
+	TickState(DeltaTime);
 
 	FVector DesiredTickMovement = Velocity * DeltaTime;
 	if (!DesiredTickMovement.IsNearlyZero())
@@ -82,30 +64,158 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 	
 }
 
+void USuraPlayerMovementComponent::TickState(float DeltaTime)
+{
+	switch (CurrentMovementState)
+	{
+		case EMovementState::EMS_Move:
+			TickMove(DeltaTime);
+			break;
+		case EMovementState::EMS_Slide:
+			TickSlide(DeltaTime);
+			break;
+		case EMovementState::EMS_Airborne:
+			TickAirborne(DeltaTime);
+			break;
+		case EMovementState::EMS_Dash:
+			TickDash(DeltaTime);
+			break;
+		case EMovementState::EMS_WallRun:
+			TickWallRun(DeltaTime);
+			break;
+		case EMovementState::EMS_Hang:
+			TickHang(DeltaTime);
+			break;
+		case EMovementState::EMS_Mantle:
+			TickMantle(DeltaTime);
+			break;
+		default:
+			UE_LOG(LogTemp, Error, TEXT("CurrentMovementState not valid"));
+			break;
+	}
+}
+
+void USuraPlayerMovementComponent::TickMove(float DeltaTime)
+{
+
+	if (!IsGrounded())
+	{
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
+	}
+	
+	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();
+
+	if (MovementInputVector.IsNearlyZero())
+	{
+		if (Velocity.Size() > 0.f)
+		{
+			FVector DeltaVelocity = -Velocity.GetSafeNormal() * Deceleration * DeltaTime;
+			if (DeltaVelocity.Size() > Velocity.Size())
+			{
+				Velocity = FVector::ZeroVector;
+			}
+			else
+			{
+				Velocity += DeltaVelocity;
+			}
+		}
+	}
+	else
+	{
+		float WishSpeed = MovementInputVector.Y > 0.f ? RunSpeed : WalkSpeed;
+		Velocity = (Velocity + InputDirection * Acceleration * DeltaTime).GetClampedToMaxSize2D(WishSpeed);
+	}
+
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(SuraPawnPlayer);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, SuraPawnPlayer->GetActorLocation(),
+		SuraPawnPlayer->GetActorLocation() - FVector(0, 0, SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 10.f),
+		ECC_WorldStatic, Params);
+
+	if (bHit && Hit.IsValidBlockingHit())
+	{
+		if (Hit.ImpactNormal.Z >= MinWalkableFloorZ)
+		{
+			Velocity = FVector::VectorPlaneProject(Velocity, Hit.ImpactNormal).GetSafeNormal() * Velocity.Size();
+		}
+	}
+
+	if (bJumpPressed)
+	{
+		Velocity.Z = FMath::Sqrt(2 * GravityScale * JumpHeight);
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
+	}
+	
+}
+
+void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
+{
+	
+}
+
+void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
+{
+	if (IsGrounded())
+	{
+		SetMovementState(EMovementState::EMS_Move);
+		return;
+	}
+	
+	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();
+
+
+	Velocity = (Velocity + InputDirection * AirAcceleration * DeltaTime).GetClampedToMaxSize2D(RunSpeed);
+
+	Velocity += GravityAcceleration * DeltaTime;
+	if (Velocity.Z < -MaxFallVerticalSpeed)
+	{
+		Velocity.Z *= MaxFallVerticalSpeed / FMath::Abs(Velocity.Z);
+	}
+	
+}
+
+void USuraPlayerMovementComponent::TickDash(float DeltaTime){}
+
+void USuraPlayerMovementComponent::TickWallRun(float DeltaTime){}
+
+void USuraPlayerMovementComponent::TickHang(float DeltaTime){}
+
+void USuraPlayerMovementComponent::TickMantle(float DeltaTime){}
+
+void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState NewState)
+{
+	
+}
+
+
+
 bool USuraPlayerMovementComponent::IsGrounded() const
 {
 	FHitResult GroundSweepHit;
 	FCollisionQueryParams GroundSweepParams;
 	GroundSweepParams.AddIgnoredActor(PawnOwner);
 
-	FCollisionShape CapsuleShape = SuraPawnPlayer->GetCapsuleComponent()->GetCollisionShape();
-
 	FVector SweepStart = SuraPawnPlayer->GetActorLocation();
-	FVector SweepEnd = SuraPawnPlayer->GetActorLocation() -
+	FVector SweepEnd = SuraPawnPlayer->GetActorLocation() +
 		FVector::DownVector * (SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 10.f);
 	
 	bool bHit = GetWorld()->SweepSingleByChannel(GroundSweepHit, SweepStart, SweepEnd, FQuat::Identity, ECC_WorldStatic,
-		CapsuleShape, GroundSweepParams);
+		FCollisionShape::MakeSphere(40.f), GroundSweepParams);
+	
 
 	if (!bHit || !GroundSweepHit.bBlockingHit)
 	{
 		return false;
 	}
 
-	if (GroundSweepHit.ImpactNormal.Z < MinWalkableFloorZ)
-	{
-		return false;
-	}
+	// if (GroundSweepHit.ImpactNormal.Z < MinWalkableFloorZ)
+	// {
+	// 	return false;
+	// }
 
 	return true;
 }
@@ -117,25 +227,12 @@ void USuraPlayerMovementComponent::SetMovementInputVector(const FVector2D& InMov
 	MovementInputVector = InMovementInputVector;
 }
 
-void USuraPlayerMovementComponent::SetMovementState(const FGameplayTag& InStateTag)
+void USuraPlayerMovementComponent::SetMovementState(EMovementState NewState)
 {
-	MovementStateTag = InStateTag;
-    
-	TArray<FGameplayTag> TagsToRemove;
-    
-	for (const FGameplayTag& Tag : OwnedGameplayTags)
-	{
-		if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag("State.Movement")))
-		{
-			TagsToRemove.Add(Tag);
-		}
-	}
-    
-	for (const FGameplayTag& Tag : TagsToRemove)
-	{
-		OwnedGameplayTags.RemoveTag(Tag);
-	}
-	OwnedGameplayTags.AddTag(InStateTag);
+	PreviousMovementState = CurrentMovementState;
+	CurrentMovementState = NewState;
+
+	OnMovementStateChanged(NewState);
 }
 
 void USuraPlayerMovementComponent::SetJumpPressed(bool bPressed)
@@ -143,10 +240,12 @@ void USuraPlayerMovementComponent::SetJumpPressed(bool bPressed)
 	bJumpPressed = bPressed;
 }
 
+
 void USuraPlayerMovementComponent::SetDashPressed(bool bPressed)
 {
 	bDashPressed = bPressed;
 }
+
 
 void USuraPlayerMovementComponent::SetCrouchPressed(bool bPressed)
 {

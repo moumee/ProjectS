@@ -3,15 +3,24 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTags.h"
-#include "GameplayTagContainer.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "SuraPlayerMovementComponent.generated.h"
 
 class ASuraPawnPlayer;
-/**
- * 
- */
+
+UENUM(Blueprintable)
+enum class EMovementState : uint8
+{
+	EMS_Move,
+	EMS_Slide,
+	EMS_Airborne,
+	EMS_Dash,
+	EMS_WallRun,
+	EMS_Mantle,
+	EMS_Hang
+};
+
+
 UCLASS()
 class SURAS_API USuraPlayerMovementComponent : public UPawnMovementComponent
 {
@@ -22,10 +31,8 @@ public:
 	USuraPlayerMovementComponent();
 
 	virtual void BeginPlay() override;
-	
-	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	const FGameplayTagContainer& GetOwnedGameplayTags() const { return OwnedGameplayTags; }
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void SetMovementInputVector(const FVector2D& InMovementInputVector);
 
@@ -56,7 +63,13 @@ protected:
 	float Acceleration = 1000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
+	float AirAcceleration = 500.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
 	float Deceleration = 2000.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float MaxFallVerticalSpeed = 3000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float MaxWalkableFloorAngle = 50.f;
@@ -69,17 +82,15 @@ protected:
 	UPROPERTY()
 	ASuraPawnPlayer* SuraPawnPlayer = nullptr;
 
-	FVector Gravity = GravityDirection * GravityScale;
+	FVector GravityAcceleration;
 	
 	FVector GravityDirection = FVector::DownVector;
 
-	float WishSpeed = WalkSpeed;
-
+	EMovementState PreviousMovementState;
+	
+	EMovementState CurrentMovementState;
+	
 	FVector2D MovementInputVector = FVector2D::ZeroVector;
-
-	FGameplayTagContainer OwnedGameplayTags;
-
-	FGameplayTag MovementStateTag;
 
 	float MinWalkableFloorZ;
 
@@ -93,6 +104,24 @@ protected:
 
 	bool IsGrounded() const;
 
-	void SetMovementState(const FGameplayTag& InStateTag);
-	
+	void SetMovementState(EMovementState NewState);
+
+	void OnMovementStateChanged(EMovementState NewState);
+
+	void TickState(float DeltaTime);
+
+	void TickMove(float DeltaTime);
+
+	void TickSlide(float DeltaTime);
+
+	void TickAirborne(float DeltaTime);
+
+	void TickDash(float DeltaTime);
+
+	void TickWallRun(float DeltaTime);
+
+	void TickMantle(float DeltaTime);
+
+	void TickHang(float DeltaTime);
+
 };

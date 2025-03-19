@@ -64,9 +64,12 @@ protected:
 
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);
-	void HandleJumpInput(const FInputActionValue& Value);
-	void HandleDashInput(const FInputActionValue& Value);
-	void HandleCrouchInput(const FInputActionValue& Value);
+	void StartJumpInput();
+	void StopJumpInput();
+	void StartDashInput();
+	void StopDashInput();
+	void StartCrouchInput();
+	void StopCrouchInput();
 
 };
 

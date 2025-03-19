@@ -73,12 +73,12 @@ void ASuraPawnPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::HandleMoveInput);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::HandleMoveInput);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::HandleLookInput);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::HandleJumpInput);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::HandleJumpInput);
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::HandleDashInput);
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::HandleDashInput);
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::HandleCrouchInput);
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::HandleCrouchInput);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartJumpInput);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopJumpInput);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartDashInput);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopDashInput);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartCrouchInput);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopCrouchInput);
 	}
 
 }
@@ -111,7 +111,7 @@ void ASuraPawnPlayer::HandleLookInput(const FInputActionValue& Value)
 	AddControllerPitchInput(InputVector.Y);
 }
 
-void ASuraPawnPlayer::HandleJumpInput(const FInputActionValue& Value)
+void ASuraPawnPlayer::StartJumpInput()
 {
 	if (!MovementComponent)
 	{
@@ -119,26 +119,45 @@ void ASuraPawnPlayer::HandleJumpInput(const FInputActionValue& Value)
 		return;
 	}
 	
-	bool bJumpPressed = Value.Get<bool>();
+	MovementComponent->SetJumpPressed(true);
+}
+
+void ASuraPawnPlayer::StopJumpInput()
+{
+	if (!MovementComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player movement component is not valid!"));
+		return;
+	}
 	
-	MovementComponent->SetJumpPressed(bJumpPressed);
+	MovementComponent->SetJumpPressed(false);
 }
 
 
-void ASuraPawnPlayer::HandleDashInput(const FInputActionValue& Value)
+
+void ASuraPawnPlayer::StartDashInput()
 {
 	if (!MovementComponent)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Player movement component is not valid!"));
 		return;
 	}
-	
-	bool bDashPressed = Value.Get<bool>();
 
-	MovementComponent->SetJumpPressed(bDashPressed);
+	MovementComponent->SetJumpPressed(true);
 }
 
-void ASuraPawnPlayer::HandleCrouchInput(const FInputActionValue& Value)
+void ASuraPawnPlayer::StopDashInput()
+{
+	if (!MovementComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player movement component is not valid!"));
+		return;
+	}
+
+	MovementComponent->SetJumpPressed(false);
+}
+
+void ASuraPawnPlayer::StartCrouchInput()
 {
 	if (!MovementComponent)
 	{
@@ -146,9 +165,18 @@ void ASuraPawnPlayer::HandleCrouchInput(const FInputActionValue& Value)
 		return;
 	}
 	
-	bool bCrouchPressed = Value.Get<bool>();
+	MovementComponent->SetJumpPressed(true);
+}
+
+void ASuraPawnPlayer::StopCrouchInput()
+{
+	if (!MovementComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player movement component is not valid!"));
+		return;
+	}
 	
-	MovementComponent->SetJumpPressed(bCrouchPressed);
+	MovementComponent->SetJumpPressed(false);
 }
 
 
