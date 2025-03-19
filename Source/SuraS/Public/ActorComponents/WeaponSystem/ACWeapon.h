@@ -132,8 +132,8 @@ public:
 
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 NumPenetrable = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
-	void FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass);
+	void FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 	void SpawnProjectile();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
@@ -403,8 +403,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponFireMode WeaponFireMode;
 protected:
-	void HandleSingleFire(bool bIsLeftInput = true, bool bSingleProjectile = true);
-	void HandleBurstFire(bool bIsLeftInput = true, bool bSingleProjectile = true);
+	void HandleSingleFire(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
+	void HandleBurstFire(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
 	void HandleFullAutoFire();
 #pragma endregion
 
@@ -415,7 +415,7 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float SingleShotDelay = 1.f;
 public:
-	void StartSingleShot(bool bIsLeftInput = true, bool bSingleProjectile = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 NumPenetrable = 0);
+	void StartSingleShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 	void StopSingleShot();
 #pragma endregion
 
@@ -432,7 +432,7 @@ protected:
 	int32 BurstShotFired = 0;
 
 protected:
-	void StartBurstFire(bool bIsLeftInput = true, bool bSingleProjectile = true);
+	void StartBurstFire(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 	void StopBurstFire();
 #pragma endregion
 
@@ -444,7 +444,7 @@ protected:
 	FTimerHandle FullAutoShotTimer;
 
 protected:
-	void StartFullAutoShot(bool bIsLeftInput = true, bool bSingleProjectile = true);
+	void StartFullAutoShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
 	void StopFullAutoShot();
 #pragma endregion
 
@@ -508,7 +508,7 @@ protected:
 	float ChargingAdditionalRecoilAmountYawBase = 1.f;
 	float ChargingAdditionalProjectileRadiusBase = 20.f;
 
-	int32 MaxPenetrableObjectsNum = 4;
+	//int32 MaxPenetrableObjectsNum = 4;
 
 	float ElapsedChargeTime = 0.f;
 	FTimerHandle ChargingTimer;
@@ -516,6 +516,12 @@ protected:
 	void StartCharge();
 	void UpdateCharge();
 	void StopCharge();
+#pragma endregion
+
+#pragma region
+protected:
+	int32 MaxPenetrableObjectsNum_Left = 4;
+	int32 MaxPenetrableObjectsNum_Right = 4;
 #pragma endregion
 
 #pragma region Recoil

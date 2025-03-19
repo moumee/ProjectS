@@ -66,14 +66,8 @@ ASuraProjectile::ASuraProjectile()
 	UE_LOG(LogTemp, Warning, TEXT("Projectile is Spawned!!!"));
 }
 
-void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable) //TODO: 여기서 ProjectileType을 input으로 받아야 할 듯
+void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable)
 {
-	// Weapon에서 spawn projectile 할 때 처리를 해줘야 하나?
-	// 근데 어차피 projectile 종류별로 BP 따로 만들고, Mesh도 다른거 사용하는데 의미가 있나?
-
-	// 결론: 아래처럼 처음부터 Projectile의 type을 정해놓고 그에 맞는 DT low를 탐색하는 것이 아니라,
-	// BP에서 DT RowBase를 선택 가능하게 하고, 선택된 DT RowBase에 따라 속성값들을 불러오는 식으로 하기(Projectile의 Type Enum 또한 마찬가지로)
-
 	if (IsValid(OwnerWeapon))
 	{
 		Weapon = OwnerWeapon;
@@ -83,33 +77,11 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 	{
 		ProjectileOwner = OwnerOfProjectile;
 
-		if (ProjectileType == EProjectileType::Projectile_Rifle)
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("Rifle Projectile!!!"));
-			LoadProjectileData("RifleProjectile");
-			SpawnTrailEffect();
-		}
-		else if (ProjectileType == EProjectileType::Projectile_ShotGun)
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("ShotGun Projectile!!!"));
-			LoadProjectileData("ShotGunProjectile");
-			SpawnTrailEffect();
-		}
-		else if (ProjectileType == EProjectileType::Projectile_BasicRocket)
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("BasicRocket Projectile!!!"));
-			LoadProjectileData("BasicRocketProjectile");
-			SpawnTrailEffect();
-		}
-		else if (ProjectileType == EProjectileType::Projectile_RailGun)
-		{
-			LoadProjectileData("RailGunProjectile");
-			SpawnTrailEffect();
-			//SpawnTrailEffect(true);
-		}
+		LoadProjectileData();
+		SpawnTrailEffect();
 	}
 
-	if (bCanPenetrate)
+	if (NumPenetrable > 0 || bCanPenetrate)
 	{
 		CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
 		CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
@@ -135,9 +107,10 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 	UE_LOG(LogTemp, Warning, TEXT("Projectile MaxSpeed: %f"), ProjectileMovement->MaxSpeed);
 }
 
-void ASuraProjectile::LoadProjectileData(FName ProjectileID)
+void ASuraProjectile::LoadProjectileData()
 {
-	ProjectileData = ProjectileDataTable->FindRow<FProjectileData>(ProjectileID, TEXT(""));
+	//ProjectileData = ProjectileDataTable->FindRow<FProjectileData>(ProjectileID, TEXT(""));
+	ProjectileData = ProjectileDataTableHandle.GetRow<FProjectileData>("");
 	if (ProjectileData)
 	{
 		// <Effect>
@@ -168,8 +141,7 @@ void ASuraProjectile::LoadProjectileData(FName ProjectileID)
 		CollisionComp->SetSphereRadius(InitialRadius);
 
 		// <Penetration>
-		bCanPenetrate = ProjectileData->bCanPenetrate;
-		//NumPenetrableObjects = ProjectileData->NumPenetrableObjects;
+		bCanPenetrate = ProjectileData->bCanPenetrate; //legacy
 	}
 }
 
@@ -330,7 +302,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (bCanPenetrate)
+	if (NumPenetrableObjects > 0 || bCanPenetrate)
 	{
 		if (OtherActor != nullptr)
 		{

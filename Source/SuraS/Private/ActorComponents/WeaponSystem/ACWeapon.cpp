@@ -54,6 +54,7 @@ AWeapon::AWeapon()
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	WeaponMesh->SetupAttachment(GetRootComponent(), FName(TEXT("WeaponMesh")));
+	WeaponMesh->SetVisibility(false);
 
 	WeaponAnimInstance = WeaponMesh->GetAnimInstance();
 
@@ -368,7 +369,8 @@ void AWeapon::LoadWeaponData()
 		ChargingAdditionalProjectileRadiusBase = WeaponData->ChargingAdditionalProjectileRadiusBase;
 
 		// <Penetration>
-		MaxPenetrableObjectsNum = WeaponData->MaxPenetrableObjectsNum;
+		MaxPenetrableObjectsNum_Left = WeaponData->MaxPenetrableObjectsNum_Left;
+		MaxPenetrableObjectsNum_Right = WeaponData->MaxPenetrableObjectsNum_Right;
 	}
 }
 
@@ -513,7 +515,7 @@ void AWeapon::DetachWeaponFromPlayer()
 	}
 }
 
-void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, bool bShouldConsumeAmmo, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 NumPenetrable, bool bIsHoming, AActor* HomingTarget)
+void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable, bool bShouldConsumeAmmo, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
 {
 	//TODO: Projectile 종류에 대한 정보를 input으로 받아야 하나? 아직은 잘 모르곘음
 	if (CurrentState != UnequippedState)
@@ -637,7 +639,7 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 	}
 }
 
-void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass)
+void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable, bool bShouldConsumeAmmo, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
 {
 	if (CurrentState != UnequippedState)
 	{
@@ -692,9 +694,11 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 						ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 						ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(InProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-						Projectile->InitializeProjectile(Character, this);
+						Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable);
 						SetUpAimUIDelegateBinding(Projectile);
 						Projectile->LaunchProjectile();
+
+						//TODO: 나중에는 Multi Homing Projectile도 가능하게 만들예정. 자동 타겟팅으로
 					}
 
 					SpawnMuzzleFireEffect(SpawnLocation, (TargetLocationOfProjectile - SpawnLocation).GetSafeNormal().Rotation());
@@ -709,7 +713,10 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 
 			StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
 
-			ConsumeAmmo();
+			if (bShouldConsumeAmmo)
+			{
+				ConsumeAmmo();
+			}
 
 			// <Overheat>
 			if (bIsOverheatMode)
@@ -720,12 +727,12 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 			// <Recoil & CamShake>
 			if (bIsZoomIn)
 			{
-				AddRecoilValue(&ZoomRecoil);
+				AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
 				ApplyCameraShake(ZoomCameraShakeClass);
 			}
 			else
 			{
-				AddRecoilValue(&DefaultRecoil);
+				AddRecoilValue(&DefaultRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
 				ApplyCameraShake(DefaultCameraShakeClass);
 			}
 		}
@@ -1126,11 +1133,11 @@ void AWeapon::SetInputActionBinding()
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						LeftSingleShotAction,
 						ETriggerEvent::Started,
-						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile)
+						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
 						{
-							HandleSingleFire(bIsLeftInput, bSingleProjectile);
+							HandleSingleFire(bIsLeftInput, bSingleProjectile, NumPenetrable);
 						},
-						true, !bEnableMultiProjectile_Left
+						true, !bEnableMultiProjectile_Left, MaxPenetrableObjectsNum_Left
 					));
 				}
 				else if (LeftMouseAction == EWeaponAction::WeaponAction_BurstShot)
@@ -1138,11 +1145,11 @@ void AWeapon::SetInputActionBinding()
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						LeftBurstShotAction,
 						ETriggerEvent::Started,
-						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile)
+						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
 						{
-							HandleBurstFire(bIsLeftInput, bSingleProjectile);
+							HandleBurstFire(bIsLeftInput, bSingleProjectile, NumPenetrable);
 						},
-						true, !bEnableMultiProjectile_Left
+						true, !bEnableMultiProjectile_Left, MaxPenetrableObjectsNum_Left
 					));
 				}
 				else if (LeftMouseAction == EWeaponAction::WeaponAction_FullAutoShot)
@@ -1150,11 +1157,11 @@ void AWeapon::SetInputActionBinding()
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						LeftFullAutoShotAction,
 						ETriggerEvent::Started,
-						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile)
+						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
 						{
-							StartFullAutoShot(bIsLeftInput, bSingleProjectile);
+							StartFullAutoShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
 						},
-						true, !bEnableMultiProjectile_Left
+						true, !bEnableMultiProjectile_Left, MaxPenetrableObjectsNum_Left
 					));
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(LeftFullAutoShotAction, ETriggerEvent::Completed, this, &AWeapon::StopFullAutoShot));
 				}
@@ -1187,11 +1194,11 @@ void AWeapon::SetInputActionBinding()
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						RightSingleShotAction,
 						ETriggerEvent::Started,
-						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile)
+						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
 						{
-							HandleSingleFire(bIsLeftInput, bSingleProjectile);
+							HandleSingleFire(bIsLeftInput, bSingleProjectile, NumPenetrable);
 						},
-						false, !bEnableMultiProjectile_Right
+						false, !bEnableMultiProjectile_Right, MaxPenetrableObjectsNum_Right
 					));
 				}
 				else if (RightMouseAction == EWeaponAction::WeaponAction_BurstShot)
@@ -1199,11 +1206,11 @@ void AWeapon::SetInputActionBinding()
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						RightBurstShotAction,
 						ETriggerEvent::Started,
-						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile)
+						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
 						{
-							HandleBurstFire(bIsLeftInput, bSingleProjectile);
+							HandleBurstFire(bIsLeftInput, bSingleProjectile, NumPenetrable);
 						},
-						false, !bEnableMultiProjectile_Right
+						false, !bEnableMultiProjectile_Right, MaxPenetrableObjectsNum_Right
 					));
 				}
 				else if (RightMouseAction == EWeaponAction::WeaponAction_FullAutoShot)
@@ -1211,11 +1218,11 @@ void AWeapon::SetInputActionBinding()
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						RightFullAutoShotAction,
 						ETriggerEvent::Started,
-						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile)
+						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
 						{
-							StartFullAutoShot(bIsLeftInput, bSingleProjectile);
+							StartFullAutoShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
 						},
-						false, !bEnableMultiProjectile_Right
+						false, !bEnableMultiProjectile_Right, MaxPenetrableObjectsNum_Right
 					));
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(RightFullAutoShotAction, ETriggerEvent::Completed, this, &AWeapon::StopFullAutoShot));
 				}
@@ -1420,20 +1427,20 @@ void AWeapon::SetUpAimUIDelegateBinding(ASuraProjectile* Projectile)
 }
 
 #pragma region FireMode
-void AWeapon::HandleSingleFire(bool bIsLeftInput, bool bSingleProjectile)
+void AWeapon::HandleSingleFire(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
 {
 	if (CurrentState == IdleState)
 	{
 		ChangeState(FiringState);
-		StartSingleShot(bIsLeftInput, bSingleProjectile);
+		StartSingleShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
 	}
 }
-void AWeapon::HandleBurstFire(bool bIsLeftInput, bool bSingleProjectile)
+void AWeapon::HandleBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
 {
 	if (CurrentState == IdleState)
 	{
 		ChangeState(FiringState);
-		StartBurstFire(bIsLeftInput, bSingleProjectile);
+		StartBurstFire(bIsLeftInput, bSingleProjectile, NumPenetrable);
 
 		//if (WeaponName == EWeaponName::WeaponName_Rifle)
 		//{
@@ -1456,7 +1463,7 @@ void AWeapon::HandleFullAutoFire() //TODO: 안쓰임. 삭제 요망
 #pragma endregion
 
 #pragma region FireMode/SingleShot
-void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 NumPenetrable)
+void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
 {
 
 	// Old Version
@@ -1489,22 +1496,22 @@ void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, float A
 	{
 		if (bSingleProjectile)
 		{
-			FireSingleProjectile(LeftProjectileClass);
+			FireSingleProjectile(LeftProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 		}
 		else
 		{
-			FireMultiProjectile(LeftProjectileClass);
+			FireMultiProjectile(LeftProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 		}
 	}
 	else
 	{
 		if (bSingleProjectile)
 		{
-			FireSingleProjectile(RightProjectileClass);
+			FireSingleProjectile(RightProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 		}
 		else
 		{
-			FireMultiProjectile(RightProjectileClass);
+			FireMultiProjectile(RightProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 		}
 	}
 
@@ -1517,7 +1524,7 @@ void AWeapon::StopSingleShot()
 #pragma endregion
 
 #pragma region FireMode/BurstShot
-void AWeapon::StartBurstFire(bool bIsLeftInput, bool bSingleProjectile)
+void AWeapon::StartBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
 {
 	if (BurstShotFired < BurstShotCount)
 	{
@@ -1525,26 +1532,26 @@ void AWeapon::StartBurstFire(bool bIsLeftInput, bool bSingleProjectile)
 		{
 			if (bSingleProjectile)
 			{
-				FireSingleProjectile(LeftProjectileClass);
+				FireSingleProjectile(LeftProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 			}
 			else
 			{
-				FireMultiProjectile(LeftProjectileClass);
+				FireMultiProjectile(LeftProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 			}
 		}
 		else
 		{
 			if (bSingleProjectile)
 			{
-				FireSingleProjectile(RightProjectileClass);
+				FireSingleProjectile(RightProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 			}
 			else
 			{
-				FireMultiProjectile(RightProjectileClass);
+				FireMultiProjectile(RightProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 			}
 		}
 		BurstShotFired++;
-		GetWorld()->GetTimerManager().SetTimer(BurstShotTimer, [this, bIsLeftInput, bSingleProjectile]() {StartBurstFire(bIsLeftInput, bSingleProjectile); }, BurstShotFireRate, true);
+		GetWorld()->GetTimerManager().SetTimer(BurstShotTimer, [this, bIsLeftInput, bSingleProjectile, NumPenetrable]() {StartBurstFire(bIsLeftInput, bSingleProjectile, NumPenetrable); }, BurstShotFireRate, true);
 	}
 	else
 	{
@@ -1565,7 +1572,7 @@ void AWeapon::StopBurstFire()
 #pragma endregion
 
 #pragma region FireMode/FullAuto
-void AWeapon::StartFullAutoShot(bool bIsLeftInput, bool bSingleProjectile)
+void AWeapon::StartFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
 {
 	if (CurrentState == IdleState)
 	{
@@ -1578,32 +1585,36 @@ void AWeapon::StartFullAutoShot(bool bIsLeftInput, bool bSingleProjectile)
 			{
 				if (bSingleProjectile)
 				{
-					FireSingleProjectile(LeftProjectileClass);
+					FireSingleProjectile(LeftProjectileClass, NumPenetrable);
+					int32 PenetrableNum = NumPenetrable;
 					bool bShouldConsumeAmmo = true;
 					float AdditionalDamage = 0.f;
 					bool bCanHoming = false;
-					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, bShouldConsumeAmmo, AdditionalDamage, bCanHoming]() {FireSingleProjectile(LeftProjectileClass, bShouldConsumeAmmo, AdditionalDamage, bCanHoming); }, FullAutoShotFireRate, true);
+					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, PenetrableNum, bShouldConsumeAmmo, AdditionalDamage, bCanHoming]() {FireSingleProjectile(LeftProjectileClass, PenetrableNum, bShouldConsumeAmmo, AdditionalDamage, bCanHoming); }, FullAutoShotFireRate, true);
 				}
 				else
 				{
-					FireMultiProjectile(LeftProjectileClass);
-					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this]() {FireMultiProjectile(LeftProjectileClass); }, FullAutoShotFireRate, true);
+					FireMultiProjectile(LeftProjectileClass, NumPenetrable);
+					int32 PenetrableNum = NumPenetrable;
+					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, PenetrableNum]() {FireMultiProjectile(LeftProjectileClass, PenetrableNum); }, FullAutoShotFireRate, true);
 				}
 			}
 			else
 			{
 				if (bSingleProjectile)
 				{
-					FireSingleProjectile(RightProjectileClass);
+					FireSingleProjectile(RightProjectileClass, NumPenetrable);
+					int32 PenetrableNum = NumPenetrable;
 					bool bShouldConsumeAmmo = true;
 					float AdditionalDamage = 0.f;
 					bool bCanHoming = false;
-					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, bShouldConsumeAmmo, AdditionalDamage, bCanHoming]() {FireSingleProjectile(RightProjectileClass, bShouldConsumeAmmo, AdditionalDamage, bCanHoming); }, FullAutoShotFireRate, true);
+					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, PenetrableNum, bShouldConsumeAmmo, AdditionalDamage, bCanHoming]() {FireSingleProjectile(RightProjectileClass, PenetrableNum, bShouldConsumeAmmo, AdditionalDamage, bCanHoming); }, FullAutoShotFireRate, true);
 				}
 				else
 				{
-					FireMultiProjectile(RightProjectileClass);
-					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this]() {FireMultiProjectile(RightProjectileClass); }, FullAutoShotFireRate, true);
+					FireMultiProjectile(RightProjectileClass, NumPenetrable);
+					int32 PenetrableNum = NumPenetrable;
+					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, PenetrableNum]() {FireMultiProjectile(RightProjectileClass, PenetrableNum); }, FullAutoShotFireRate, true);
 				}
 			}
 		}
@@ -1946,7 +1957,7 @@ void AWeapon::StartMissileLaunch(TArray<AActor*> TargetActors, const TSubclassOf
 }
 void AWeapon::UpdateMissileLaunch(const TSubclassOf<ASuraProjectile>& InProjectileClass)
 {
-	FireSingleProjectile(InProjectileClass, false, 0.f, 0.f, 0.f, 0.f, 0, true, ConfirmedTargets[CurrentTargetIndex]);
+	FireSingleProjectile(InProjectileClass, 0, false, 0.f, 0.f, 0.f, 0.f, true, ConfirmedTargets[CurrentTargetIndex]);
 	CurrentTargetIndex++;
 	if (ConfirmedTargets.Num() <= CurrentTargetIndex)
 	{
@@ -2028,12 +2039,12 @@ void AWeapon::StopCharge()
 			AdditionalRecoilAmountPitch = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalRecoilAmountPitchBase;
 			AdditionalRecoilAmountYaw = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalRecoilAmountYawBase;
 			AdditionalProjectileRadius = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalProjectileRadiusBase;
-			PenetrableObjectsNum = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * MaxPenetrableObjectsNum;
+			PenetrableObjectsNum = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * MaxPenetrableObjectsNum_Left; //TODO: 오른쪽 왼쪽 달리 해야함
 			UE_LOG(LogTemp, Error, TEXT("Penetrable Num: %d"), PenetrableObjectsNum);
 		}
 
 		//TODO: Charge도 커스텀화 하니까 이 코드도 달리 표현해야함
-		StartSingleShot(true, true, ChargingAdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, PenetrableObjectsNum);
+		StartSingleShot(true, true, PenetrableObjectsNum, ChargingAdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
 
 		ElapsedChargeTime = 0.f;
 	}

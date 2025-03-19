@@ -31,8 +31,8 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	TSubclassOf<class ASuraProjectile> RightProjectileClass;
 	//-----------------------------------------------------------------
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EProjectileType ProjectileType; //TODO: 2개 선택 가능하도록 해야함
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//EProjectileType ProjectileType; //TODO: 2개 선택 가능하도록 해야함
 	
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
@@ -129,5 +129,7 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	float ChargingAdditionalProjectileRadiusBase = 20.f;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
-	int32 MaxPenetrableObjectsNum = 4;
+	int32 MaxPenetrableObjectsNum_Left = 4;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
+	int32 MaxPenetrableObjectsNum_Right = 4;
 };

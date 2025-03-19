@@ -259,6 +259,7 @@ bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 	{
 		if (WeaponInPossession->GetWeaponName() == NewWeaponPickUp->GetWeaponName())
 		{
+			UE_LOG(LogTemp, Error, TEXT("Already Possess"));
 			return false;
 		}
 	}
