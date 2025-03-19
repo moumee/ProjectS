@@ -474,7 +474,7 @@ protected:
 protected:
 	void StartTargetDetection();
 	void UpdateTargetDetection(float DeltaTime);
-	void StopTargetDetection();
+	void StopTargetDetection(const TSubclassOf<ASuraProjectile>& InProjectileClass);
 
 	bool SearchOverlappedActor(FVector CenterLocation, float SearchRadius, TArray<AActor*>& OverlappedActors);
 	TTuple<FVector2D, bool> GetScreenPositionOfWorldLocation(const FVector& SearchLocation) const;
@@ -492,8 +492,8 @@ protected:
 	float MissileLaunchDelay = 0.2;
 	FTimerHandle MissileLaunchTimer;
 protected:
-	void StartMissileLaunch(TArray<AActor*> TargetActors);
-	void UpdateMissileLaunch();
+	void StartMissileLaunch(TArray<AActor*> TargetActors, const TSubclassOf<ASuraProjectile>& InProjectileClass);
+	void UpdateMissileLaunch(const TSubclassOf<ASuraProjectile>& InProjectileClass);
 	void StopMissileLaunch();
 #pragma endregion
 

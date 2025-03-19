@@ -1123,7 +1123,7 @@ void AWeapon::SetInputActionBinding()
 				// <LeftMouseAction>
 				if (LeftMouseAction == EWeaponAction::WeaponAction_SingleShot)
 				{
-					EnhancedInputComponent->BindActionValueLambda(
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						LeftSingleShotAction,
 						ETriggerEvent::Started,
 						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile)
@@ -1131,11 +1131,11 @@ void AWeapon::SetInputActionBinding()
 							HandleSingleFire(bIsLeftInput, bSingleProjectile);
 						},
 						true, !bEnableMultiProjectile_Left
-					);
+					));
 				}
 				else if (LeftMouseAction == EWeaponAction::WeaponAction_BurstShot)
 				{
-					EnhancedInputComponent->BindActionValueLambda(
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						LeftBurstShotAction,
 						ETriggerEvent::Started,
 						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile)
@@ -1143,11 +1143,11 @@ void AWeapon::SetInputActionBinding()
 							HandleBurstFire(bIsLeftInput, bSingleProjectile);
 						},
 						true, !bEnableMultiProjectile_Left
-					);
+					));
 				}
 				else if (LeftMouseAction == EWeaponAction::WeaponAction_FullAutoShot)
 				{
-					EnhancedInputComponent->BindActionValueLambda(
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						LeftFullAutoShotAction,
 						ETriggerEvent::Started,
 						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile)
@@ -1155,7 +1155,7 @@ void AWeapon::SetInputActionBinding()
 							StartFullAutoShot(bIsLeftInput, bSingleProjectile);
 						},
 						true, !bEnableMultiProjectile_Left
-					);
+					));
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(LeftFullAutoShotAction, ETriggerEvent::Completed, this, &AWeapon::StopFullAutoShot));
 				}
 				else if (LeftMouseAction == EWeaponAction::WeaponAction_Charge)
@@ -1166,7 +1166,15 @@ void AWeapon::SetInputActionBinding()
 				else if (LeftMouseAction == EWeaponAction::WeaponAction_Hold)
 				{
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(LeftHoldAction, ETriggerEvent::Triggered, this, &AWeapon::StartTargetDetection));
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(LeftHoldAction, ETriggerEvent::Completed, this, &AWeapon::StopTargetDetection));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
+						LeftHoldAction,
+						ETriggerEvent::Completed,
+						[this](const FInputActionValue& InputActionValue, const TSubclassOf<ASuraProjectile>& InProjectileClass)
+						{
+							StopTargetDetection(InProjectileClass);
+						},
+						LeftProjectileClass
+					));
 				}
 				else if (LeftMouseAction == EWeaponAction::WeaponAction_Zoom)
 				{
@@ -1176,7 +1184,7 @@ void AWeapon::SetInputActionBinding()
 				// <RightMouseAction>
 				if (RightMouseAction == EWeaponAction::WeaponAction_SingleShot)
 				{
-					EnhancedInputComponent->BindActionValueLambda(
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						RightSingleShotAction,
 						ETriggerEvent::Started,
 						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile)
@@ -1184,11 +1192,11 @@ void AWeapon::SetInputActionBinding()
 							HandleSingleFire(bIsLeftInput, bSingleProjectile);
 						},
 						false, !bEnableMultiProjectile_Right
-					);
+					));
 				}
 				else if (RightMouseAction == EWeaponAction::WeaponAction_BurstShot)
 				{
-					EnhancedInputComponent->BindActionValueLambda(
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						RightBurstShotAction,
 						ETriggerEvent::Started,
 						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile)
@@ -1196,11 +1204,11 @@ void AWeapon::SetInputActionBinding()
 							HandleBurstFire(bIsLeftInput, bSingleProjectile);
 						},
 						false, !bEnableMultiProjectile_Right
-					);
+					));
 				}
 				else if (RightMouseAction == EWeaponAction::WeaponAction_FullAutoShot)
 				{
-					EnhancedInputComponent->BindActionValueLambda(
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						RightFullAutoShotAction,
 						ETriggerEvent::Started,
 						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile)
@@ -1208,7 +1216,7 @@ void AWeapon::SetInputActionBinding()
 							StartFullAutoShot(bIsLeftInput, bSingleProjectile);
 						},
 						false, !bEnableMultiProjectile_Right
-					);
+					));
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(RightFullAutoShotAction, ETriggerEvent::Completed, this, &AWeapon::StopFullAutoShot));
 				}
 				else if (RightMouseAction == EWeaponAction::WeaponAction_Charge)
@@ -1219,7 +1227,15 @@ void AWeapon::SetInputActionBinding()
 				else if (RightMouseAction == EWeaponAction::WeaponAction_Hold)
 				{
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(RightHoldAction, ETriggerEvent::Triggered, this, &AWeapon::StartTargetDetection));
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(RightHoldAction, ETriggerEvent::Completed, this, &AWeapon::StopTargetDetection));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
+						RightHoldAction,
+						ETriggerEvent::Completed,
+						[this](const FInputActionValue& InputActionValue, const TSubclassOf<ASuraProjectile>& InProjectileClass)
+						{
+							StopTargetDetection(InProjectileClass);
+						},
+						RightProjectileClass
+					));
 				}
 				else if (RightMouseAction == EWeaponAction::WeaponAction_Zoom)
 				{
@@ -1680,7 +1696,7 @@ void AWeapon::UpdateTargetDetection(float DeltaTime) //TODO: 해당 타겟 혹은 기존
 	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
 	GetWorld()->GetTimerManager().SetTimer(TargetDetectionTimer, [this, DeltaSeconds]() {UpdateTargetDetection(DeltaSeconds); }, DeltaSeconds, false);
 }
-void AWeapon::StopTargetDetection()
+void AWeapon::StopTargetDetection(const TSubclassOf<ASuraProjectile>& InProjectileClass)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Stop Target Detection!!!"));
 
@@ -1694,7 +1710,7 @@ void AWeapon::StopTargetDetection()
 
 	TArray<AActor*> TargetsArray = Targets.Array();
 	Targets.Empty();
-	StartMissileLaunch(TargetsArray);
+	StartMissileLaunch(TargetsArray, InProjectileClass);
 }
 
 bool AWeapon::SearchOverlappedActor(FVector CenterLocation, float SearchRadius, TArray<AActor*>& OverlappedActors)
@@ -1914,7 +1930,7 @@ void AWeapon::ResetTargetMarkers()
 	MapTargetActorToWidget.Empty();
 }
 
-void AWeapon::StartMissileLaunch(TArray<AActor*> TargetActors)
+void AWeapon::StartMissileLaunch(TArray<AActor*> TargetActors, const TSubclassOf<ASuraProjectile>& InProjectileClass)
 {
 	ConfirmedTargets = TargetActors;
 	CurrentTargetIndex = 0;
@@ -1925,12 +1941,12 @@ void AWeapon::StartMissileLaunch(TArray<AActor*> TargetActors)
 	else
 	{
 		ChangeState(FiringState);
-		UpdateMissileLaunch();
+		UpdateMissileLaunch(InProjectileClass);
 	}
 }
-void AWeapon::UpdateMissileLaunch()
+void AWeapon::UpdateMissileLaunch(const TSubclassOf<ASuraProjectile>& InProjectileClass)
 {
-	FireSingleProjectile(ProjectileClass, false, 0.f, 0.f, 0.f, 0.f, 0, true, ConfirmedTargets[CurrentTargetIndex]);
+	FireSingleProjectile(InProjectileClass, false, 0.f, 0.f, 0.f, 0.f, 0, true, ConfirmedTargets[CurrentTargetIndex]);
 	CurrentTargetIndex++;
 	if (ConfirmedTargets.Num() <= CurrentTargetIndex)
 	{
@@ -1938,7 +1954,8 @@ void AWeapon::UpdateMissileLaunch()
 	}
 	else
 	{
-		GetWorld()->GetTimerManager().SetTimer(MissileLaunchTimer, this, &AWeapon::UpdateMissileLaunch, MissileLaunchDelay, false);
+		//GetWorld()->GetTimerManager().SetTimer(MissileLaunchTimer, this, &AWeapon::UpdateMissileLaunch, MissileLaunchDelay, false);
+		GetWorld()->GetTimerManager().SetTimer(MissileLaunchTimer, [this, InProjectileClass] {UpdateMissileLaunch(InProjectileClass); }, MissileLaunchDelay, false);
 	}
 }
 void AWeapon::StopMissileLaunch()
