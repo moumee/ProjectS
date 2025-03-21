@@ -14,7 +14,6 @@ enum class EMovementState : uint8
 	EMS_Move,
 	EMS_Slide,
 	EMS_Airborne,
-	EMS_Dash,
 	EMS_WallRun,
 	EMS_Mantle,
 	EMS_Hang
@@ -79,6 +78,15 @@ protected:
 
 protected:
 
+	float JumpBuffer = 0.1f;
+
+	float ElapsedTimeFromGround = 0.f;
+
+	int32 MaxJumpCount = 2;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	int32 CurrentJumpCount = 0;
+
 	UPROPERTY()
 	ASuraPawnPlayer* SuraPawnPlayer = nullptr;
 
@@ -106,7 +114,7 @@ protected:
 
 	void SetMovementState(EMovementState NewState);
 
-	void OnMovementStateChanged(EMovementState NewState);
+	void OnMovementStateChanged(EMovementState OldState, EMovementState NewState);
 
 	void TickState(float DeltaTime);
 

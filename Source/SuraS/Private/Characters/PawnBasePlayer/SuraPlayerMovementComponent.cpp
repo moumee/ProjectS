@@ -77,9 +77,6 @@ void USuraPlayerMovementComponent::TickState(float DeltaTime)
 		case EMovementState::EMS_Airborne:
 			TickAirborne(DeltaTime);
 			break;
-		case EMovementState::EMS_Dash:
-			TickDash(DeltaTime);
-			break;
 		case EMovementState::EMS_WallRun:
 			TickWallRun(DeltaTime);
 			break;
@@ -145,9 +142,15 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 	if (bJumpPressed)
 	{
+		CurrentJumpCount++;
 		Velocity.Z = FMath::Sqrt(2 * GravityScale * JumpHeight);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
+	}
+
+	if (bDashPressed)
+	{
+		
 	}
 	
 }
@@ -159,10 +162,18 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 
 void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 {
+	if (PreviousMovementState == EMovementState::EMS_Move)
+	{
+		ElapsedTimeFromGround += DeltaTime;
+	}
+	
 	if (IsGrounded())
 	{
-		SetMovementState(EMovementState::EMS_Move);
-		return;
+		if (ElapsedTimeFromGround > JumpBuffer)
+		{
+			SetMovementState(EMovementState::EMS_Move);
+			return;
+		}
 	}
 	
 	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();
@@ -175,6 +186,16 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	{
 		Velocity.Z *= MaxFallVerticalSpeed / FMath::Abs(Velocity.Z);
 	}
+
+	// Only able to double jump after apex
+	if (bJumpPressed && Velocity.Z <= 0.f)
+	{
+		if (CurrentJumpCount < MaxJumpCount)
+		{
+			CurrentJumpCount++;
+			Velocity.Z += FMath::Sqrt(2 * GravityScale * JumpHeight);
+		}
+	}
 	
 }
 
@@ -186,8 +207,13 @@ void USuraPlayerMovementComponent::TickHang(float DeltaTime){}
 
 void USuraPlayerMovementComponent::TickMantle(float DeltaTime){}
 
-void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState NewState)
+void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldState, EMovementState NewState)
 {
+	if (OldState == EMovementState::EMS_Airborne && NewState != EMovementState::EMS_Airborne)
+	{
+		CurrentJumpCount = 0;
+		ElapsedTimeFromGround = 0.f;
+	}
 	
 }
 
@@ -212,14 +238,13 @@ bool USuraPlayerMovementComponent::IsGrounded() const
 		return false;
 	}
 
-	// if (GroundSweepHit.ImpactNormal.Z < MinWalkableFloorZ)
-	// {
-	// 	return false;
-	// }
+	if (GroundSweepHit.ImpactNormal.Z < MinWalkableFloorZ)
+	{
+		return false;
+	}
 
 	return true;
 }
-
 
 
 void USuraPlayerMovementComponent::SetMovementInputVector(const FVector2D& InMovementInputVector)
@@ -232,7 +257,7 @@ void USuraPlayerMovementComponent::SetMovementState(EMovementState NewState)
 	PreviousMovementState = CurrentMovementState;
 	CurrentMovementState = NewState;
 
-	OnMovementStateChanged(NewState);
+	OnMovementStateChanged(PreviousMovementState, NewState);
 }
 
 void USuraPlayerMovementComponent::SetJumpPressed(bool bPressed)
