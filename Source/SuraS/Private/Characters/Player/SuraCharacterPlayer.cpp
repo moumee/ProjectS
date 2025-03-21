@@ -56,7 +56,7 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 
 	// inventory actor components
 	UIManager = CreateDefaultSubobject<UACUIMangerComponent>(TEXT("UI Manager Component"));
-	InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("Inventory Manager Component"));
+	// InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("Inventory Manager Component"));
 	
 
 	DamageSystemComponent = CreateDefaultSubobject<UACDamageSystem>(TEXT("Damage System Component"));

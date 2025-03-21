@@ -4,9 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "BaseUIWidget.h"
-#include "CustomGameInstance.h"
-#include "ActorComponents/WeaponSystem/WeaponData.h"
-#include "ActorComponents/WeaponSystem/WeaponName.h"
 #include "InventoryWidget.generated.h"
 
 
@@ -15,6 +12,8 @@ class UTextBlock;
 class FReply;
 class UWidgetSwitcher;
 class UImage;
+class UButton;
+
 /**
  * 
  */
@@ -105,35 +104,36 @@ public:
 
 	// 모든 무기 소유 불값을 false로 만드는 함수
 	void AllWeaponDiscard();
+
+	// 총 버튼 클릭시 이벤트 함수
+	UFUNCTION() void OnWeaponButtonClicked_Rifle();
+	UFUNCTION() void OnWeaponButtonClicked_ShotGun();
+	UFUNCTION() void OnWeaponButtonClicked_MissileLauncher();
+
+	// 무기 변경 요청하는 함수
+	void RequestWeaponChangeByName(const FString& WeaponNameStr);
 	
 	/** 총기 UI 요소 맵 */
 	TMap<FString, FWeaponUI> WeaponUIElements;
 
-	/** 총기 umg 바인딩 **/
-	UPROPERTY(meta = (BindWidget))
-	UImage* Rifle;
+	/** 총기 button 바인딩 **/
+	UPROPERTY(meta = (BindWidget)) UButton* BtnRifle;
+	UPROPERTY(meta = (BindWidget)) UButton* BtnShotGun;
+	UPROPERTY(meta = (BindWidget)) UButton* BtnMissileLauncher;
+	//UPROPERTY(meta = (BindWidget)) UButton* RailGun;
+	
 
-	UPROPERTY(meta = (BindWidget))
-	UImage* ShotGun;
-
-	UPROPERTY(meta = (BindWidget))
-	UImage* MissileLauncher;
-
-	UPROPERTY(meta = (BindWidget))
-	UImage* RailGun;
+	/** 총기 img 바인딩 **/
+	UPROPERTY(meta = (BindWidget)) UImage* Rifle;
+	UPROPERTY(meta = (BindWidget)) UImage* ShotGun;
+	UPROPERTY(meta = (BindWidget)) UImage* MissileLauncher;
+	//UPROPERTY(meta = (BindWidget)) UImage* RailGun;
 
 	/** 총기 이름 바인딩 */
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* RifleName;
-
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* ShotGunName;
-
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* MissileLauncherName;
-
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* RailGunName;
+	UPROPERTY(meta = (BindWidget)) UTextBlock* RifleName;
+	UPROPERTY(meta = (BindWidget)) UTextBlock* ShotGunName;
+	UPROPERTY(meta = (BindWidget)) UTextBlock* MissileLauncherName;
+	//UPROPERTY(meta = (BindWidget)) UTextBlock* RailGunName;
 	
 	UFUNCTION()
 	void OnWeaponPickedUp(FName WeaponName);

@@ -181,6 +181,10 @@ public:
 	virtual void SwitchToOtherWeapon() override;
 
 	void ChangeWeapon(int32 WeaponIndex);
+
+	// suhyeon
+	UFUNCTION(BlueprintCallable, Category = "Weapons")
+	const TArray<AWeapon*>& GetWeaponInventory() const {return WeaponInventory; }
 #pragma endregion
 	
 };
