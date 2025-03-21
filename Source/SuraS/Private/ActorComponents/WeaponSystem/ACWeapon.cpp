@@ -74,7 +74,7 @@ AWeapon::AWeapon()
 	WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 
 	//---------------------------------------------------------------------------------
-	NumOfLeftAmmo = MaxAmmo;
+	LeftAmmoInCurrentMag = MaxAmmoPerMag;
 
 	//<UI>
 	//AmmoCounterWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("AmmoCounterWidgetComponent"));
@@ -254,7 +254,8 @@ void AWeapon::InitializeUI()
 
 		if (AmmoCounterWidget)
 		{
-			AmmoCounterWidget->UpdateAmmoCount(NumOfLeftAmmo);
+			AmmoCounterWidget->UpdateAmmoCount(LeftAmmoInCurrentMag);
+			AmmoCounterWidget->UpdateTotalAmmo(TotalAmmo);
 		}
 	}
 
@@ -320,13 +321,16 @@ void AWeapon::LoadWeaponData()
 		ChargeEffenctScale = WeaponData->ChargeEffenctScale;
 
 		// <Reload>
-		MaxAmmo = WeaponData->MaxAmmo;
-		NumOfLeftAmmo = MaxAmmo;
+		MaxTotalAmmo = WeaponData->MaxTotalAmmo;
+		TotalAmmo = MaxTotalAmmo;
+		MaxAmmoPerMag = WeaponData->MaxAmmoPerMag;
+		LeftAmmoInCurrentMag = MaxAmmoPerMag;
 
 		// <SingleShot>
 		SingleShotDelay = WeaponData->SingleShotDelay;
 
 		// <BurstShot>
+		BurstShotDelay = WeaponData->BurstShotDelay;
 		BurstShotFireRate = WeaponData->BurstShotFireRate;
 		BurstShotCount = WeaponData->BurstShotCount;
 
@@ -417,23 +421,8 @@ void AWeapon::Tick(float DeltaTime)
 
 	UpdateSpread(DeltaTime);
 
-	UpdateOverheat(DeltaTime);
+	UpdateOverheat(DeltaTime); //TODO: Overheat 기능은 안쓸거라고 하는데, 혹시 mesh에 과열 효과 적용할 수도 있으니까 일단은 놔둠
 }
-
-//void UACWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-//{
-//	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-//
-//	if (CurrentState)
-//	{
-//		CurrentState->UpdateState(this, DeltaTime);
-//	}
-//	UpdateRecoil(DeltaTime);
-//
-//	UpdateSpread(DeltaTime);
-//
-//	UpdateOverheat(DeltaTime);
-//}
 
 void AWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
@@ -444,13 +433,6 @@ bool AWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter)
 {
 	Character = TargetCharacter;
 
-	//TODO: 무기 소지 확인 방법 수정하기. 
-	// 그리고 WeaponSystemComponent에서 weapon Inventory에 해당 무기가 존재하는지 확인해야함
-	// Check that the character is valid, and has no weapon component yet
-	//if (Character == nullptr || Character->GetInstanceComponents().FindItemByClass<UACWeapon>())
-	//{
-	//	return false;
-	//}
 	if (Character == nullptr)
 	{
 		return false;
@@ -494,7 +476,7 @@ bool AWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter)
 	ActivateCrosshairWidget(true);
 	ActivateAmmoCounterWidget(true);
 
-	//TODO: BP에서 부가적으로 부착한 Mesh들도 Visibility를 관리해야함
+	//TODO: BP에서 부가적으로 부착한 Mesh들도 Visibility를 관리해야함. 근데 에디터에서 WeaponMesh가 부모 소켓으로 되어있으면 하위의 것들은 알아서 처리되는 듯?
 	WeaponMesh->SetVisibility(true);
 
 	return true;
@@ -517,7 +499,6 @@ void AWeapon::DetachWeaponFromPlayer()
 
 void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable, bool bShouldConsumeAmmo, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
 {
-	//TODO: Projectile 종류에 대한 정보를 input으로 받아야 하나? 아직은 잘 모르곘음
 	if (CurrentState != UnequippedState)
 	{
 		if (Character == nullptr || Character->GetController() == nullptr)
@@ -527,7 +508,7 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 
 		if (bShouldConsumeAmmo)
 		{
-			if (!HasAmmo())
+			if (!HasAmmoInCurrentMag())
 			{
 				return;
 			}
@@ -648,7 +629,7 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 			return;
 		}
 
-		if (HasAmmo())
+		if (HasAmmoInCurrentMag())
 		{
 			if (bIsZoomIn)
 			{
@@ -743,7 +724,6 @@ void AWeapon::SpawnProjectile()
 {
 	//TODO: Weapon name에 따라 다른 Projectile을 spawn 하도록 하려고 했는데,
 	//그냥 BP에서 초기에 Projectile 클래스를 지정해주면 되는 것이여서 일단은 보류중임.
-
 }
 
 void AWeapon::ZoomToggle()
@@ -1279,7 +1259,7 @@ void AWeapon::HandleReload()
 {
 	if (CurrentState == IdleState)
 	{
-		if (NumOfLeftAmmo < MaxAmmo)
+		if (LeftAmmoInCurrentMag < MaxAmmoPerMag && TotalAmmo > 0)
 		{
 			//TODO: ReloadingState의 EnterState에서 StartReload 해도 될 듯
 			ChangeState(ReloadingState);
@@ -1313,32 +1293,68 @@ void AWeapon::StopReload()
 
 void AWeapon::ConsumeAmmo()
 {
-	if (NumOfLeftAmmo > 0)
+	if (LeftAmmoInCurrentMag > 0)
 	{
-		NumOfLeftAmmo--;
+		LeftAmmoInCurrentMag--;
 		if (AmmoCounterWidget)
 		{
-			AmmoCounterWidget->UpdateAmmoCount(NumOfLeftAmmo);
+			AmmoCounterWidget->UpdateAmmoCount(LeftAmmoInCurrentMag);
 		}
 	}
 }
 void AWeapon::ReloadAmmo()
 {
-	NumOfLeftAmmo = MaxAmmo;
+	//int32 RequiredAmmo = MaxAmmoPerMag - LeftAmmoInCurrentMag;
+	//if (TotalAmmo < RequiredAmmo)
+	//{
+	//	LeftAmmoInCurrentMag = LeftAmmoInCurrentMag + TotalAmmo;
+	//	TotalAmmo = 0;
+	//}
+	//else
+	//{
+	//	TotalAmmo = TotalAmmo - RequiredAmmo;
+	//	LeftAmmoInCurrentMag = MaxAmmoPerMag;
+	//}
+
+	int32 RequiredAmmo = MaxAmmoPerMag - LeftAmmoInCurrentMag;
+	int32 AmmoToReload = FMath::Min(RequiredAmmo, TotalAmmo);
+
+	LeftAmmoInCurrentMag += AmmoToReload;
+	TotalAmmo -= AmmoToReload;
+
+	//--------------
+
+	//LeftAmmoInCurrentMag = MaxAmmoPerMag;
 	if (AmmoCounterWidget)
 	{
-		AmmoCounterWidget->UpdateAmmoCount(NumOfLeftAmmo);
+		AmmoCounterWidget->UpdateAmmoCount(LeftAmmoInCurrentMag);
+		AmmoCounterWidget->UpdateTotalAmmo(TotalAmmo);
 	}
 }
-bool AWeapon::HasAmmo()
+bool AWeapon::HasAmmoInCurrentMag()
 {
-	return (NumOfLeftAmmo > 0);
+	return (LeftAmmoInCurrentMag > 0);
+}
+bool AWeapon::AddAmmo(int32 NumAmmo)
+{
+	if (TotalAmmo < MaxTotalAmmo)
+	{
+		int32 NewTotalAmmo = FMath::Clamp(TotalAmmo + NumAmmo, 0, MaxTotalAmmo);
+		TotalAmmo = NewTotalAmmo;
+		if (AmmoCounterWidget)
+		{
+			AmmoCounterWidget->UpdateAmmoCount(LeftAmmoInCurrentMag);
+			AmmoCounterWidget->UpdateTotalAmmo(TotalAmmo);
+		}
+		return true;
+	}
+	return false;
 }
 void AWeapon::AutoReload()
 {
 	if (bCanAutoReload)
 	{
-		if (!HasAmmo())
+		if (!HasAmmoInCurrentMag() && TotalAmmo > 0)
 		{
 			ChangeState(ReloadingState);
 		}
@@ -1441,15 +1457,6 @@ void AWeapon::HandleBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 N
 	{
 		ChangeState(FiringState);
 		StartBurstFire(bIsLeftInput, bSingleProjectile, NumPenetrable);
-
-		//if (WeaponName == EWeaponName::WeaponName_Rifle)
-		//{
-		//	StartBurstFire(false);
-		//}
-		//else if (WeaponName == EWeaponName::WeaponName_ShotGun)
-		//{
-		//	StartBurstFire(true);
-		//}
 	}
 }
 void AWeapon::HandleFullAutoFire() //TODO: 안쓰임. 삭제 요망
@@ -1465,33 +1472,6 @@ void AWeapon::HandleFullAutoFire() //TODO: 안쓰임. 삭제 요망
 #pragma region FireMode/SingleShot
 void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
 {
-
-	// Old Version
-	//TODO: 방식을 바꿔야 함 
-	//TODO: Enum에 따라서 다르게 함수 호출하는 방식이 아니라, StartSingleShot 자체에 Input을 넣어서 필요한 곳에서 각각 다른 Input 넣어서 작동하도록 해야함
-	//if (WeaponName == EWeaponName::WeaponName_Rifle)
-	//{
-	//	FireSingleProjectile();
-	//}
-	//else if (WeaponName == EWeaponName::WeaponName_ShotGun)
-	//{
-	//	FireMultiProjectile();
-	//}
-	//else if (WeaponName == EWeaponName::WeaponName_MissileLauncher)
-	//{
-	//	FireSingleProjectile();
-	//}
-	//else if (WeaponName == EWeaponName::WeaponName_RailGun)
-	//{
-	//	FireSingleProjectile(true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false, NumPenetrable);
-	//}
-	//else if (WeaponName == EWeaponName::WeaponName_EnergyRifle)
-	//{
-	//	FireSingleProjectile(false);
-	//}
-
-	//--------------
-	//New Version
 	if (bIsLeftInput)
 	{
 		if (bSingleProjectile)
@@ -1558,7 +1538,6 @@ void AWeapon::StartBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 Nu
 		StopBurstFire();
 	}
 }
-
 void AWeapon::StopBurstFire()
 {
 	BurstShotFired = 0;
@@ -1566,7 +1545,10 @@ void AWeapon::StopBurstFire()
 	{
 		GetWorld()->GetTimerManager().ClearTimer(BurstShotTimer);
 	}
-
+	GetWorld()->GetTimerManager().SetTimer(BurstShotTimer, this, &AWeapon::EndBurstShot, BurstShotDelay, false);
+}
+void AWeapon::EndBurstShot()
+{
 	ChangeState(IdleState);
 }
 #pragma endregion
@@ -1709,19 +1691,22 @@ void AWeapon::UpdateTargetDetection(float DeltaTime) //TODO: 해당 타겟 혹은 기존
 }
 void AWeapon::StopTargetDetection(const TSubclassOf<ASuraProjectile>& InProjectileClass)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Stop Target Detection!!!"));
+	if (CurrentState == TargetingState)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Stop Target Detection!!!"));
 
-	GetWorld()->GetTimerManager().ClearTimer(TargetDetectionTimer);
+		GetWorld()->GetTimerManager().ClearTimer(TargetDetectionTimer);
 
-	ElapsedTimeAfterTargetingStarted = 0.f;
-	CurrentTargetDetectionRadius = 0.f;
-	CurrentTargetDetectionAngle = 0.f;
+		ElapsedTimeAfterTargetingStarted = 0.f;
+		CurrentTargetDetectionRadius = 0.f;
+		CurrentTargetDetectionAngle = 0.f;
 
-	ResetTargetMarkers();
+		ResetTargetMarkers();
 
-	TArray<AActor*> TargetsArray = Targets.Array();
-	Targets.Empty();
-	StartMissileLaunch(TargetsArray, InProjectileClass);
+		TArray<AActor*> TargetsArray = Targets.Array();
+		Targets.Empty();
+		StartMissileLaunch(TargetsArray, InProjectileClass);
+	}
 }
 
 bool AWeapon::SearchOverlappedActor(FVector CenterLocation, float SearchRadius, TArray<AActor*>& OverlappedActors)

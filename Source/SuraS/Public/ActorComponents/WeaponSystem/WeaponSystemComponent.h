@@ -106,9 +106,8 @@ public:
 
 public:
 	void PickUpWeapon();
-
 	bool ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp);
-
+	bool ObtainAmmo(ASuraWeaponPickUp* MagazinePickUp);
 #pragma endregion
 
 #pragma region Zoom

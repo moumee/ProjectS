@@ -321,10 +321,16 @@ protected:
 	float ReloadingTime = 2.5f;
 
 	UPROPERTY(EditAnywhere)
-	int32 MaxAmmo = 20.f;
+	int32 MaxTotalAmmo = 200.f;
 
 	UPROPERTY(EditAnywhere)
-	int32 NumOfLeftAmmo;
+	int32 TotalAmmo = 100.f;
+
+	UPROPERTY(EditAnywhere)
+	int32 MaxAmmoPerMag = 20.f;
+
+	UPROPERTY(EditAnywhere)
+	int32 LeftAmmoInCurrentMag;
 
 	FTimerHandle ReloadingTimer;
 protected:
@@ -337,8 +343,9 @@ protected:
 
 	void ConsumeAmmo();
 	void ReloadAmmo();
-	bool HasAmmo();
+	bool HasAmmoInCurrentMag();
 public:
+	bool AddAmmo(int32 NumAmmo);
 	void AutoReload();
 	virtual void ReloadingEnd() override; //Legacy
 #pragma endregion
@@ -423,6 +430,9 @@ public:
 protected:
 	FTimerHandle BurstShotTimer;
 
+	UPROPERTY(EditAnywhere, Category = "BurstShot")
+	float BurstShotDelay = 1.f;
+
 	UPROPERTY(EditAnywhere)
 	float BurstShotFireRate = 0.1f;
 
@@ -434,6 +444,7 @@ protected:
 protected:
 	void StartBurstFire(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 	void StopBurstFire();
+	void EndBurstShot();
 #pragma endregion
 
 #pragma region FireMode/FullAuto
