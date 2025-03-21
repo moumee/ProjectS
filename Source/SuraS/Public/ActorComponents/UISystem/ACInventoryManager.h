@@ -14,15 +14,17 @@ class SURAS_API UACInventoryManager : public UActorComponent
 public:
 	UACInventoryManager();
 
-	// UFUNCTION(BlueprintCallable, Category="Inventory")
+	//void SetInventoryWidget(UInventoryWidget* InWidget);
 	
-	void UnlockWeapon(FName WeaponName);
+	void SetPendingWeaponIndex(int32 Index);
+	void OnConfirmWeaponEquip();
 
 protected:
-	// TArray<TArray<bool>> WeaponStates; // 무기 상태 (락: false, 언락: true)
 
 	// Inventory 위젯을 저장할 변수
-	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
-	// UInventoryWidget* InventoryWidget;
+	UInventoryWidget* InventoryWidget;
+
+	int32 PendingWeaponIndex = -1; // 버튼을 누르면 바꾸고자 하는 weaponInventory index를 저장하는 변수
+	bool bWaitingForWeaponSwitch = false; // 
 	
 };
