@@ -143,7 +143,7 @@ void ASuraPawnPlayer::StartDashInput()
 		return;
 	}
 
-	MovementComponent->SetJumpPressed(true);
+	MovementComponent->SetDashPressed(true);
 }
 
 void ASuraPawnPlayer::StopDashInput()
@@ -154,7 +154,7 @@ void ASuraPawnPlayer::StopDashInput()
 		return;
 	}
 
-	MovementComponent->SetJumpPressed(false);
+	MovementComponent->SetDashPressed(false);
 }
 
 void ASuraPawnPlayer::StartCrouchInput()
@@ -165,7 +165,7 @@ void ASuraPawnPlayer::StartCrouchInput()
 		return;
 	}
 	
-	MovementComponent->SetJumpPressed(true);
+	MovementComponent->SetCrouchPressed(true);
 }
 
 void ASuraPawnPlayer::StopCrouchInput()
@@ -176,7 +176,7 @@ void ASuraPawnPlayer::StopCrouchInput()
 		return;
 	}
 	
-	MovementComponent->SetJumpPressed(false);
+	MovementComponent->SetCrouchPressed(false);
 }
 
 

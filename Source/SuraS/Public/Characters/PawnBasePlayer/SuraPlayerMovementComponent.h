@@ -43,48 +43,78 @@ public:
 
 protected:
 
-	UPROPERTY(EditAnywhere, Category = "Movement")
-	float GravityScale = 980.f;
+	UPROPERTY(EditAnywhere, Category = "Movement|Gravity")
+	float GravityScale = 1500.f;
 
-	UPROPERTY(EditAnywhere, Category = "Movement")
+	UPROPERTY(EditAnywhere, Category = "Movement|Walk")
 	float WalkSpeed = 600.f;
 
-	UPROPERTY(EditAnywhere, Category = "Movement")
-	float RunSpeed = 1000.f;
+	UPROPERTY(EditAnywhere, Category = "Movement|Dash")
+	float DashStartSpeed = 3000.f;
 
-	UPROPERTY(EditAnywhere, Category = "Movement")
+	UPROPERTY(EditAnywhere, Category = "Movement|Dash")
+	float DashEndSpeed = 1500.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Dash")
+	float DashDecelerationTime = 0.4f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Dash")
+	float DashCooldown = 5.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Run")
+	float RunSpeed = 1000.f;
+	
+	UPROPERTY(EditAnywhere, Category = "Movement|Crouch")
 	float CrouchSpeed = 400.f;
 
-	UPROPERTY(EditAnywhere, Category = "Movement")
-	float JumpHeight = 300.f;
+	UPROPERTY(EditAnywhere, Category = "Movement|Jump")
+	float JumpHeight = 200.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float Acceleration = 1000.f;
+	float Acceleration = 8000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float AirAcceleration = 500.f;
+	float Deceleration = 8000.f;
+	
+	UPROPERTY(EditAnywhere, Category = "Movement|Air")
+	float AirAcceleration = 1500.f;
 
-	UPROPERTY(EditAnywhere, Category = "Movement")
-	float Deceleration = 2000.f;
+	UPROPERTY(EditAnywhere, Category = "Movement|Air")
+	float AirDeceleration = 2000.f;
 
-	UPROPERTY(EditAnywhere, Category = "Movement")
+	UPROPERTY(EditAnywhere, Category = "Movement|Air")
 	float MaxFallVerticalSpeed = 3000.f;
 
-	UPROPERTY(EditAnywhere, Category = "Movement")
+	UPROPERTY(EditAnywhere, Category = "Movement|Walk")
 	float MaxWalkableFloorAngle = 50.f;
 
-	UPROPERTY(EditAnywhere, Category = "Movement")
+	UPROPERTY(EditAnywhere, Category = "Movement|Walk")
 	float MaxStepHeight = 50.f;
 
 protected:
 
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
+	bool bIsDashing = false;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
+	TArray<float> DashCooldowns;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
+	int32 AvailableDashCount = 2;
+
+	float JumpZVelocity = 0.f;
+	
 	float JumpBuffer = 0.1f;
 
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
 	float ElapsedTimeFromGround = 0.f;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
+	float ElapsedTimeFromDash = 0.f;
 
 	int32 MaxJumpCount = 2;
 
-	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
 	int32 CurrentJumpCount = 0;
 
 	UPROPERTY()
@@ -94,21 +124,25 @@ protected:
 	
 	FVector GravityDirection = FVector::DownVector;
 
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	EMovementState PreviousMovementState;
-	
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	EMovementState CurrentMovementState;
-	
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	FVector2D MovementInputVector = FVector2D::ZeroVector;
 
 	float MinWalkableFloorZ;
 
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
 	bool bJumpPressed = false;
 
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	bool bDashPressed = false;
 
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Crouch")
 	bool bCrouchPressed = false;
-
-	bool bIsGrounded = true;
 
 	bool IsGrounded() const;
 
@@ -124,12 +158,12 @@ protected:
 
 	void TickAirborne(float DeltaTime);
 
-	void TickDash(float DeltaTime);
-
 	void TickWallRun(float DeltaTime);
 
 	void TickMantle(float DeltaTime);
 
 	void TickHang(float DeltaTime);
+
+	void UpdateDashCooldowns(float DeltaTime);
 
 };

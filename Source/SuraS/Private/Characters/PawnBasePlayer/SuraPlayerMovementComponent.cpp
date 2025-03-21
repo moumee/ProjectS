@@ -13,6 +13,8 @@ USuraPlayerMovementComponent::USuraPlayerMovementComponent()
 	PrimaryComponentTick.TickGroup = TG_PrePhysics;
 
 	MinWalkableFloorZ = FMath::Cos(FMath::DegreesToRadians(MaxWalkableFloorAngle));
+
+	DashCooldowns.Init(0.f, 2);
 }
 
 void USuraPlayerMovementComponent::BeginPlay()
@@ -26,6 +28,7 @@ void USuraPlayerMovementComponent::BeginPlay()
 
 	GravityAcceleration = GravityDirection * GravityScale;
 	CurrentMovementState = EMovementState::EMS_Airborne;
+	JumpZVelocity = FMath::Sqrt(2 * GravityScale * JumpHeight);
 
 }
 
@@ -42,10 +45,14 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 	GEngine->AddOnScreenDebugMessage(
 		1, 0.f, FColor::Cyan, FString::Printf(TEXT("Velocity : (%f, %f, %f) / Size2D : %f "), Velocity.X, Velocity.Y, Velocity.Z, Velocity.Size2D()));
 
+	
+
 	if (!PawnOwner || !UpdatedComponent || ShouldSkipUpdate(DeltaTime))
 	{
 		return;
 	}
+
+	UpdateDashCooldowns(DeltaTime);
 
 	TickState(DeltaTime);
 
@@ -103,36 +110,57 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 	
 	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();
 
-	if (MovementInputVector.IsNearlyZero())
+	if (!bIsDashing)
 	{
-		if (Velocity.Size() > 0.f)
+		if (MovementInputVector.IsNearlyZero())
 		{
-			FVector DeltaVelocity = -Velocity.GetSafeNormal() * Deceleration * DeltaTime;
-			if (DeltaVelocity.Size() > Velocity.Size())
+			if (Velocity.Size() > 0.f)
 			{
-				Velocity = FVector::ZeroVector;
+				FVector DeltaVelocity = -Velocity.GetSafeNormal() * Deceleration * DeltaTime;
+				if (DeltaVelocity.Size() > Velocity.Size())
+				{
+					Velocity = FVector::ZeroVector;
+				}
+				else
+				{
+					Velocity += DeltaVelocity;
+				}
 			}
-			else
-			{
-				Velocity += DeltaVelocity;
-			}
+		}
+		else
+		{
+			float WishSpeed = MovementInputVector.Y > 0.f ? RunSpeed : WalkSpeed;
+			Velocity = (Velocity + InputDirection * Acceleration * DeltaTime).GetClampedToMaxSize2D(WishSpeed);
 		}
 	}
 	else
 	{
-		float WishSpeed = MovementInputVector.Y > 0.f ? RunSpeed : WalkSpeed;
-		Velocity = (Velocity + InputDirection * Acceleration * DeltaTime).GetClampedToMaxSize2D(WishSpeed);
+		if (ElapsedTimeFromDash < DashDecelerationTime)
+		{
+			ElapsedTimeFromDash += DeltaTime;
+			float T = ElapsedTimeFromDash / DashDecelerationTime;
+			FVector CalculatedVelocity = Velocity.GetSafeNormal() * FMath::Lerp(DashStartSpeed, DashEndSpeed, T * T * T);
+			Velocity = CalculatedVelocity;
+		}
+		else
+		{
+			bIsDashing = false;
+			ElapsedTimeFromDash = 0.f;
+			Velocity = Velocity.GetSafeNormal() * DashEndSpeed;
+		}
 	}
+
+	
 
 	FHitResult Hit;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(SuraPawnPlayer);
 
 	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, SuraPawnPlayer->GetActorLocation(),
-		SuraPawnPlayer->GetActorLocation() - FVector(0, 0, SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 10.f),
+		SuraPawnPlayer->GetActorLocation() - FVector(0, 0, SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 20.f),
 		ECC_WorldStatic, Params);
 
-	if (bHit && Hit.IsValidBlockingHit())
+	if (bHit && Hit.IsValidBlockingHit() && !bIsDashing)
 	{
 		if (Hit.ImpactNormal.Z >= MinWalkableFloorZ)
 		{
@@ -140,17 +168,32 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		}
 	}
 
-	if (bJumpPressed)
+	if (bJumpPressed && CurrentJumpCount < MaxJumpCount)
 	{
+		bJumpPressed = false;
 		CurrentJumpCount++;
-		Velocity.Z = FMath::Sqrt(2 * GravityScale * JumpHeight);
+		Velocity.Z = JumpZVelocity;
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
 
-	if (bDashPressed)
+	if (bDashPressed && AvailableDashCount > 0)
 	{
+		bDashPressed = false;
+		bIsDashing = true;
 		
+		for (int32 i = 0; i < DashCooldowns.Num(); i++)
+		{
+			if (DashCooldowns[i] == 0.f)
+			{
+				AvailableDashCount--;
+				DashCooldowns[i] = DashCooldown;
+				break;
+			}
+		}
+
+		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
+		Velocity = DashDirection * DashStartSpeed;
 	}
 	
 }
@@ -178,8 +221,35 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	
 	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();
 
-
-	Velocity = (Velocity + InputDirection * AirAcceleration * DeltaTime).GetClampedToMaxSize2D(RunSpeed);
+	if (!bIsDashing)
+	{
+		float MaxHorizontalSpeed = RunSpeed * 0.8f;
+		if (Velocity.Size2D() > MaxHorizontalSpeed)
+		{
+			Velocity = (Velocity - Velocity.GetSafeNormal() * AirDeceleration * DeltaTime).GetClampedToSize2D(MaxHorizontalSpeed, FLT_MAX);
+		}
+		else
+		{
+			Velocity = (Velocity + InputDirection * AirAcceleration * DeltaTime).GetClampedToMaxSize2D(MaxHorizontalSpeed);
+		}
+	}
+	else
+	{
+		if (ElapsedTimeFromDash < DashDecelerationTime)
+		{
+			ElapsedTimeFromDash += DeltaTime;
+			float T = ElapsedTimeFromDash / DashDecelerationTime;
+			FVector HorizontalVelocity = Velocity.GetSafeNormal2D() * FMath::Lerp(DashStartSpeed, DashEndSpeed, T * T * T);
+			Velocity = FVector(HorizontalVelocity.X, HorizontalVelocity.Y, Velocity.Z);
+		}
+		else
+		{
+			bIsDashing = false;
+			ElapsedTimeFromDash = 0.f;
+			FVector HorizontalVelocity = Velocity.GetSafeNormal2D() * DashEndSpeed;
+			Velocity = FVector(HorizontalVelocity.X, HorizontalVelocity.Y, Velocity.Z);
+		}
+	}
 
 	Velocity += GravityAcceleration * DeltaTime;
 	if (Velocity.Z < -MaxFallVerticalSpeed)
@@ -193,13 +263,11 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		if (CurrentJumpCount < MaxJumpCount)
 		{
 			CurrentJumpCount++;
-			Velocity.Z += FMath::Sqrt(2 * GravityScale * JumpHeight);
+			Velocity.Z = JumpZVelocity;
 		}
 	}
 	
 }
-
-void USuraPlayerMovementComponent::TickDash(float DeltaTime){}
 
 void USuraPlayerMovementComponent::TickWallRun(float DeltaTime){}
 
@@ -209,7 +277,7 @@ void USuraPlayerMovementComponent::TickMantle(float DeltaTime){}
 
 void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldState, EMovementState NewState)
 {
-	if (OldState == EMovementState::EMS_Airborne && NewState != EMovementState::EMS_Airborne)
+	if (OldState == EMovementState::EMS_Airborne)
 	{
 		CurrentJumpCount = 0;
 		ElapsedTimeFromGround = 0.f;
@@ -276,6 +344,34 @@ void USuraPlayerMovementComponent::SetCrouchPressed(bool bPressed)
 {
 	bCrouchPressed = bPressed;
 }
+
+void USuraPlayerMovementComponent::UpdateDashCooldowns(float DeltaTime)
+{
+	float MinCooldownLeftIndex = -1;
+	
+	if (AvailableDashCount < DashCooldowns.Num())
+	{
+		float MinDashCooldown = FLT_MAX;
+		for (int32 i = 0; i < DashCooldowns.Num(); i++)
+		{
+			if (DashCooldowns[i] > 0 && DashCooldowns[i] < MinDashCooldown)
+			{
+				MinDashCooldown = DashCooldowns[i];
+				MinCooldownLeftIndex = i;
+			}
+		}
+	}
+
+	if (MinCooldownLeftIndex > -1)
+	{
+		DashCooldowns[MinCooldownLeftIndex] = FMath::Clamp(DashCooldowns[MinCooldownLeftIndex] - DeltaTime, 0.f, DashCooldown);
+		if (DashCooldowns[MinCooldownLeftIndex] <= 0.f)
+		{
+			AvailableDashCount++;
+		}
+	}
+}
+
 
 
 
