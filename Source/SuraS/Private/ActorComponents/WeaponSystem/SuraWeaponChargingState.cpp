@@ -12,17 +12,17 @@ USuraWeaponChargingState::~USuraWeaponChargingState()
 {
 }
 
-void USuraWeaponChargingState::EnterState(UACWeapon* Weapon)
+void USuraWeaponChargingState::EnterState(AWeapon* Weapon)
 {
 	Super::EnterState(Weapon);
 }
 
-void USuraWeaponChargingState::UpdateState(UACWeapon* Weapon, float DeltaTime)
+void USuraWeaponChargingState::UpdateState(AWeapon* Weapon, float DeltaTime)
 {
 	Super::UpdateState(Weapon, DeltaTime);
 }
 
-void USuraWeaponChargingState::ExitState(UACWeapon* Weapon)
+void USuraWeaponChargingState::ExitState(AWeapon* Weapon)
 {
 	Super::ExitState(Weapon);
 }

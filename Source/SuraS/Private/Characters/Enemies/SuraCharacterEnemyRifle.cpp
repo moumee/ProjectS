@@ -31,8 +31,6 @@ void ASuraCharacterEnemyRifle::Attack(const ASuraCharacterPlayer* Player)
 		EnemyAnimInstance->Montage_Play(AttackAnimation);
 
 		Firearm->Fire(this, Player, 0, 0, false);
-
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("hi"));
 	}
 	else
 	{

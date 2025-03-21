@@ -6,7 +6,7 @@
 #include "WeaponStateType.h"
 #include "SuraWeaponBaseState.generated.h"
 
-class UACWeapon;
+class AWeapon;
 /**
  * 
  */
@@ -24,11 +24,11 @@ public:
 
 	virtual EWeaponStateType GetWeaponStateType() const;
 
-	virtual void EnterState(UACWeapon* Weapon);
+	virtual void EnterState(AWeapon* Weapon);
 
-	virtual void UpdateState(UACWeapon* Weapon, float DeltaTime);
+	virtual void UpdateState(AWeapon* Weapon, float DeltaTime);
 
-	virtual void ExitState(UACWeapon* Weapon);
+	virtual void ExitState(AWeapon* Weapon);
 
 
 	//TODO: Reloading, Equiping, Unequip -> Switching? (얘는 잘 모르겠네), OutOfAmmo, ZoomIn ZoomOut

@@ -13,7 +13,7 @@
 
 #include "SuraProjectile.generated.h"
 
-class UACWeapon;
+class AWeapon;
 
 class ASuraCharacterEnemyBase;
 
@@ -35,9 +35,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Projectile)
 	EProjectileType ProjectileType = EProjectileType::Projectile_Rifle;
 
-	//TODO: UDataTable, FDataTableRowHandle 둘중에 하나 사용해야함
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Projectile)
-	UDataTable* ProjectileDataTable;
+	FDataTableRowHandle ProjectileDataTableHandle;
 
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (RowType="ProjectileData"))
 	//FDataTableRowHandle ProjectileDataTableHandle;
@@ -74,7 +73,7 @@ protected:
 	AActor* ProjectileOwner;
 
 	UPROPERTY(VisibleAnywhere)
-	UACWeapon* Weapon;
+	AWeapon* Weapon;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
 	float InitialSpeed = 50000.f;
@@ -104,8 +103,8 @@ protected:
 	int32 NumPenetrableObjects = 4;
 public:	
 	ASuraProjectile();
-	void InitializeProjectile(AActor* Owner, UACWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0);
-	void LoadProjectileData(FName ProjectileID);
+	void InitializeProjectile(AActor* Owner, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0);
+	void LoadProjectileData();
 	void SetHomingTarget(bool bIsHoming, AActor* Target);
 	void LaunchProjectile();
 

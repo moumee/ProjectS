@@ -10,7 +10,7 @@
 
 #include "SuraWeaponPickUp.generated.h"
 
-class UACWeapon;
+class AWeapon;
 class USuraPickUpComponent;
 class ASuraCharacterBase;
 class ASuraCharacterPlayerWeapon;
@@ -38,7 +38,7 @@ public:
 	void AttachToCharacter(ASuraCharacterPlayerWeapon* Character);
 
 	UFUNCTION()
-	UACWeapon* SpawnWeapon(ASuraCharacterPlayerWeapon* Character);
+	AWeapon* SpawnWeapon(ASuraCharacterPlayerWeapon* Character);
 
 	void DestroyWeaponPickUp();
 
@@ -53,7 +53,7 @@ protected:
 
 	/** Weapon class to spawn */
 	UPROPERTY(EditDefaultsOnly, Category = Weapon)
-	TSubclassOf<UACWeapon> WeaponClass;
+	TSubclassOf<AWeapon> WeaponClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* WeaponMesh;

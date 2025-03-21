@@ -12,7 +12,7 @@
 // delegate about inventory widget (writted by suhyeon)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponPickedUp, FName, WeaponName);
 
-class UACWeapon;
+class AWeapon;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SURAS_API UWeaponSystemComponent : public UActorComponent, public IWeaponInterface
@@ -159,16 +159,16 @@ public:
 #pragma region SwitchWeapon
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapons")
-	TArray<UACWeapon*> WeaponInventory;
+	TArray<AWeapon*> WeaponInventory;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
-	UACWeapon* CurrentWeapon = nullptr;
+	AWeapon* CurrentWeapon = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	int32 CurrentWeaponIndex = 0;
 
 public:
-	UACWeapon* GetCurrentWeapon() { return CurrentWeapon; }
+	AWeapon* GetCurrentWeapon() { return CurrentWeapon; }
 
 	int32 GetWeaponNum() { return WeaponInventory.Num(); }
 

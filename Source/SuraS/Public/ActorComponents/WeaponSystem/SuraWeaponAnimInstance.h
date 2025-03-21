@@ -6,7 +6,7 @@
 #include "Animation/AnimInstance.h"
 #include "SuraWeaponAnimInstance.generated.h"
 
-class UACWeapon;
+class AWeapon;
 /**
  * 
  */
@@ -16,7 +16,7 @@ class SURAS_API USuraWeaponAnimInstance : public UAnimInstance
 	GENERATED_BODY()
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
-	UACWeapon* Weapon;
+	AWeapon* Weapon;
 
 	virtual void NativeInitializeAnimation() override;
 

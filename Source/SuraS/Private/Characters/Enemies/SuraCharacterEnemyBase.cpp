@@ -37,41 +37,7 @@ void ASuraCharacterEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UpdateHealthBarValue();
-
-	HealthBarWidget->SetHiddenInGame(true);
-
-	if (UEnemyHealthBarWidget* const Widget = Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject()))
-	{
-		HealthBarWidgetSize = Widget->GetHealthBarSize();
-	}
-
-	if (DamageSystemComp)
-	{
-		GetDamageSystemComp()->OnDamaged.AddUObject(this, &ASuraCharacterEnemyBase::OnDamagedTriggered);
-		GetDamageSystemComp()->OnDeath.AddUObject(this, &ASuraCharacterEnemyBase::OnDeathTriggered);
-	}
-
-	// GetCapsuleComponent()->SetVisibility(true);
-	// GetCapsuleComponent()->SetHiddenInGame(false);
-
-	const auto EnemyAttributesData = EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(EnemyType, "");
-
-	if (EnemyAttributesData)
-	{
-		GetDamageSystemComp()->SetMaxHealth(EnemyAttributesData->MaxHealth);
-		GetDamageSystemComp()->SetHealth(EnemyAttributesData->MaxHealth);
-
-		GetCharacterMovement()->MaxWalkSpeed = EnemyAttributesData->MaxWalkSpeed;
-
-		AttackDamageAmount = EnemyAttributesData->AttackDamageAmount;
-
-		HitAnimation = EnemyAttributesData->HitAnimation;
-		DeathAnimation = EnemyAttributesData->DeathAnimation;
-		AttackAnimation = EnemyAttributesData->AttackAnimation;
-	}
-
-	PlayerController = GetWorld()->GetFirstPlayerController();
+	InitializeEnemy();
 }
 
 void ASuraCharacterEnemyBase::Tick(float DeltaSeconds)
@@ -191,6 +157,54 @@ void ASuraCharacterEnemyBase::Attack(const ASuraCharacterPlayer* Player)
 	{
 		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
 		EnemyAnimInstance->Montage_Play(AttackAnimation);
+	}
+}
+
+void ASuraCharacterEnemyBase::InitializeEnemy()
+{
+	if (isInitialized)
+	{
+		GetDamageSystemComp()->SetHealth(GetDamageSystemComp()->GetMaxHealth());
+	}
+	else
+	{
+		UpdateHealthBarValue();
+
+		HealthBarWidget->SetHiddenInGame(true);
+
+		if (UEnemyHealthBarWidget* const Widget = Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject()))
+		{
+			HealthBarWidgetSize = Widget->GetHealthBarSize();
+		}
+
+		if (DamageSystemComp)
+		{
+			GetDamageSystemComp()->OnDamaged.AddUObject(this, &ASuraCharacterEnemyBase::OnDamagedTriggered);
+			GetDamageSystemComp()->OnDeath.AddUObject(this, &ASuraCharacterEnemyBase::OnDeathTriggered);
+		}
+
+		// GetCapsuleComponent()->SetVisibility(true);
+		// GetCapsuleComponent()->SetHiddenInGame(false);
+
+		const auto EnemyAttributesData = EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(EnemyType, "");
+
+		if (EnemyAttributesData)
+		{
+			GetDamageSystemComp()->SetMaxHealth(EnemyAttributesData->MaxHealth);
+			GetDamageSystemComp()->SetHealth(EnemyAttributesData->MaxHealth);
+
+			GetCharacterMovement()->MaxWalkSpeed = EnemyAttributesData->MaxWalkSpeed;
+
+			AttackDamageAmount = EnemyAttributesData->AttackDamageAmount;
+
+			HitAnimation = EnemyAttributesData->HitAnimation;
+			DeathAnimation = EnemyAttributesData->DeathAnimation;
+			AttackAnimation = EnemyAttributesData->AttackAnimation;
+		}
+
+		PlayerController = GetWorld()->GetFirstPlayerController();
+
+		isInitialized = true;
 	}
 }
 

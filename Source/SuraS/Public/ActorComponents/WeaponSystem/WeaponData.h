@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "ActorComponents/WeaponSystem/WeaponName.h"
+#include "ActorComponents/WeaponSystem/WeaponAction.h"
 #include "ActorComponents/WeaponSystem/ProjectileType.h"
 #include "ActorComponents/WeaponSystem/WeaponRecoilStruct.h"
 #include "ActorComponents/WeaponSystem/WeaponCameraShakeBase.h"
@@ -16,11 +17,22 @@ struct SURAS_API FWeaponData : public FTableRowBase
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Name")
 	EWeaponName WeaponName;
+	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
+	EWeaponAction LeftMouseAction;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
+	EWeaponAction RightMouseAction;
+	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+	TSubclassOf<class ASuraProjectile> LeftProjectileClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+	TSubclassOf<class ASuraProjectile> RightProjectileClass;
+	//-----------------------------------------------------------------
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EProjectileType ProjectileType;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//EProjectileType ProjectileType; //TODO: 2개 선택 가능하도록 해야함
 	
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
@@ -69,7 +81,11 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSpread")
 	FProjectileSpreadValue ZoomSpread;
 	//-----------------------------------------------------------------
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectileSpread")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectile")
+	bool bEnableMultiProjectile_Left;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectile")
+	bool bEnableMultiProjectile_Right;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectile")
 	float MaxAngleOfMultiProjectileSpread = 15.f;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
@@ -113,5 +129,7 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	float ChargingAdditionalProjectileRadiusBase = 20.f;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
-	int32 MaxPenetrableObjectsNum = 4;
+	int32 MaxPenetrableObjectsNum_Left = 4;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
+	int32 MaxPenetrableObjectsNum_Right = 4;
 };
