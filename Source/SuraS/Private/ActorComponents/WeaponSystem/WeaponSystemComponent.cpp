@@ -7,6 +7,7 @@
 #include "ActorComponents/WeaponSystem/SuraWeaponPickUp.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponName.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponBaseState.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -25,8 +26,6 @@ UWeaponSystemComponent::UWeaponSystemComponent()
 	// ...
 }
 
-
-// Called when the game starts
 void UWeaponSystemComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -36,8 +35,6 @@ void UWeaponSystemComponent::BeginPlay()
 	InitializePlayerReference();
 }
 
-
-// Called every frame
 void UWeaponSystemComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -71,8 +68,6 @@ void UWeaponSystemComponent::InitializePlayerReference()
 
 			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 			{
-				//TODO : Weapon Switching�ϴ� logic �ʿ���
-
 				// Inereact With WeaponPickUp
 				EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &UWeaponSystemComponent::PickUpWeapon);
 	
@@ -120,7 +115,7 @@ bool UWeaponSystemComponent::SearchWeapon()
 					MinDistanceToWeapon = DistanceToWeapon;
 					NearestWeapon = WeaponObject;
 
-					// TODO: Overlap �� weapon�� UI on/off ���?�߰��ϱ�
+					// TODO: Overlapped weapon UI on/off
 				}
 			}
 		}
@@ -239,27 +234,39 @@ void UWeaponSystemComponent::PickUpWeapon()
 {
 	if (OverlappedWeapon != nullptr)
 	{
-		//TODO: �ٷ� Attach �ϴ� ���� �ƴ϶� inventory�� �ѱ⸦ �����ϱ�
-		// OverlappedWeapon->AttachToCharacter(PlayerOwner);
-		ObtainNewWeapon(OverlappedWeapon);
+		if (CurrentWeapon == nullptr || (CurrentWeapon != nullptr && CurrentWeapon->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Idle))
+		{
+			if (OverlappedWeapon->IsMagazine())
+			{
+				ObtainAmmo(OverlappedWeapon);
+			}
+			else
+			{
+				ObtainNewWeapon(OverlappedWeapon);
 
-		/** suhyeon **/
-		// WeaponName을 FName으로 변환
-		FName WeaponNameAsFName = FName(*UEnum::GetValueAsString(OverlappedWeapon->GetWeaponName()));
-		//
-		// 델리게이트 호출
-		OnWeaponPickedUp.Broadcast(WeaponNameAsFName);
-		/** suhyeon **/
+				/** suhyeon **/
+				// WeaponName을 FName으로 변환
+					FName WeaponNameAsFName = FName(*UEnum::GetValueAsString(OverlappedWeapon->GetWeaponName()));
+				//
+				// 델리게이트 호출
+				OnWeaponPickedUp.Broadcast(WeaponNameAsFName);
+				/** suhyeon **/
+			}
+		}
 	}
 }
 
 bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 {
-	for (const AWeapon* WeaponInPossession : WeaponInventory)
+	for (AWeapon* WeaponInPossession : WeaponInventory)
 	{
 		if (WeaponInPossession->GetWeaponName() == NewWeaponPickUp->GetWeaponName())
 		{
 			UE_LOG(LogTemp, Error, TEXT("Already Possess"));
+			if (WeaponInPossession->AddAmmo(NewWeaponPickUp->GetAmmo()))
+			{
+				NewWeaponPickUp->DestroyWeaponPickUp();
+			}
 			return false;
 		}
 	}
@@ -276,6 +283,22 @@ bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 	}
 
 	return true;
+}
+
+bool UWeaponSystemComponent::ObtainAmmo(ASuraWeaponPickUp* MagazinePickUp)
+{
+	for (AWeapon* WeaponInPossession : WeaponInventory)
+	{
+		if (WeaponInPossession->GetWeaponName() == MagazinePickUp->GetWeaponName())
+		{
+			if (WeaponInPossession->AddAmmo(MagazinePickUp->GetAmmo()))
+			{
+				MagazinePickUp->DestroyWeaponPickUp();
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 #pragma endregion

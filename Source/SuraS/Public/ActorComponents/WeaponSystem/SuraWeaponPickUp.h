@@ -50,7 +50,6 @@ public:
 
 
 protected:
-
 	/** Weapon class to spawn */
 	UPROPERTY(EditDefaultsOnly, Category = Weapon)
 	TSubclassOf<AWeapon> WeaponClass;
@@ -61,15 +60,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponName WeaponName;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon, meta = (AllowPrivateAccess = "true"))
-	//UACWeapon* Weapon;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
 	USuraPickUpComponent* PickUpComponent;
-	
+protected:
+	UPROPERTY(EditAnywhere)
+	bool bIsMagazine = false;
+
+	UPROPERTY(EditAnywhere)
+	int32 NumAmmo = 10;
+
 public:
-	//UACWeapon* GetWeapon() const { return Weapon; }
-
 	EWeaponName GetWeaponName() const { return WeaponName; }
-
+	bool IsMagazine() const { return bIsMagazine; }
+	int32 GetAmmo() const { return NumAmmo; }
 };

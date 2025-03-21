@@ -12,8 +12,7 @@
 // Sets default values
 ASuraWeaponPickUp::ASuraWeaponPickUp()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	//Weapon = CreateDefaultSubobject<UACWeapon>(TEXT("Weapon"));
 	//Weapon->SetupAttachment(RootComponent);
@@ -83,10 +82,6 @@ AWeapon* ASuraWeaponPickUp::SpawnWeapon(ASuraCharacterPlayerWeapon* Character)
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 			NewWeapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass, GetActorTransform(), ActorSpawnParams);
 			NewWeapon->InitializeWeapon(Character);
-			
-			//NewWeapon->AttachToComponent(Character->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
-
-			//NewWeapon = World->SpawnActor<UACWeapon>(WeaponClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 		}
 	}
 

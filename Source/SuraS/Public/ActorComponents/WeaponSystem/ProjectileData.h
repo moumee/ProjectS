@@ -50,6 +50,9 @@ struct SURAS_API FProjectileData : public FTableRowBase
 	bool bIsExplosive;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosive")
+	bool bVisualizeExplosionRadius = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosive")
 	float MaxExplosiveDamage = 100.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosive")
