@@ -63,7 +63,17 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 		SafeMoveUpdatedComponent(DesiredTickMovement, UpdatedComponent->GetComponentRotation(), true, Hit);
 		if (Hit.IsValidBlockingHit())
 		{
-			SlideAlongSurface(DesiredTickMovement, 1.f - Hit.Time, Hit.Normal, Hit);
+			if (CurrentMovementState == EMovementState::EMS_Move && Hit.ImpactNormal.Z < MinWalkableFloorZ)
+			{
+				FVector AdjustedTickMovement = FVector(DesiredTickMovement.X, DesiredTickMovement.Y, 0).GetSafeNormal() * DesiredTickMovement.Size();
+				FVector AdjustedNormal = FVector(Hit.Normal.X, Hit.Normal.Y, 0).GetSafeNormal();
+				SlideAlongSurface(AdjustedTickMovement, 1.f - Hit.Time, AdjustedNormal, Hit);
+			}
+			else
+			{
+				SlideAlongSurface(DesiredTickMovement, 1.f - Hit.Time, Hit.Normal, Hit);
+			}
+			
 		}
 	}
 	
@@ -139,7 +149,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		{
 			ElapsedTimeFromDash += DeltaTime;
 			float T = ElapsedTimeFromDash / DashDecelerationTime;
-			FVector CalculatedVelocity = Velocity.GetSafeNormal() * FMath::Lerp(DashStartSpeed, DashEndSpeed, T * T * T);
+			FVector CalculatedVelocity = Velocity.GetSafeNormal() * FMath::Lerp(DashStartSpeed, DashEndSpeed, T * T);
 			Velocity = CalculatedVelocity;
 		}
 		else
@@ -239,7 +249,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		{
 			ElapsedTimeFromDash += DeltaTime;
 			float T = ElapsedTimeFromDash / DashDecelerationTime;
-			FVector HorizontalVelocity = Velocity.GetSafeNormal2D() * FMath::Lerp(DashStartSpeed, DashEndSpeed, T * T * T);
+			FVector HorizontalVelocity = Velocity.GetSafeNormal2D() * FMath::Lerp(DashStartSpeed, DashEndSpeed, T * T);
 			Velocity = FVector(HorizontalVelocity.X, HorizontalVelocity.Y, Velocity.Z);
 		}
 		else
@@ -257,14 +267,32 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		Velocity.Z *= MaxFallVerticalSpeed / FMath::Abs(Velocity.Z);
 	}
 
-	// Only able to double jump after apex
-	if (bJumpPressed && Velocity.Z <= 0.f)
+	if (bJumpPressed)
 	{
 		if (CurrentJumpCount < MaxJumpCount)
 		{
 			CurrentJumpCount++;
 			Velocity.Z = JumpZVelocity;
 		}
+	}
+
+	if (bDashPressed && AvailableDashCount > 0)
+	{
+		bDashPressed = false;
+		bIsDashing = true;
+		
+		for (int32 i = 0; i < DashCooldowns.Num(); i++)
+		{
+			if (DashCooldowns[i] == 0.f)
+			{
+				AvailableDashCount--;
+				DashCooldowns[i] = DashCooldown;
+				break;
+			}
+		}
+
+		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
+		Velocity = DashDirection * DashStartSpeed;
 	}
 	
 }
