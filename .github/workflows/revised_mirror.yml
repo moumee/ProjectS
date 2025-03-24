@@ -1,55 +1,89 @@
-name: Mirror Source Code from Azure DevOps
+name: Mirror Azure DevOps to GitHub
 
 on:
-  workflow_dispatch:  # Only runs on manual trigger
+  workflow_dispatch:
+    # Only manual triggering
 
 jobs:
-  mirror-source:
+  mirror:
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout GitHub repo
-        uses: actions/checkout@v3
-        with:
-          ref: main
-          fetch-depth: 0
 
-      - name: Configure Git
+      - name: Set up Git
         run: |
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
-
-      - name: Mirror from Azure DevOps (source code only)
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+      
+      - name: Clone Azure DevOps Repository
         run: |
-          # Clean the working directory first
-          git rm -rf .
-          git commit --allow-empty -m "Clean repository for mirroring"
+          # Azure DevOps repository details
+          AZURE_REPO_URL="https://dev.azure.com/hayoon603/SuraS/_git/SuraS"
+          AZURE_PAT="${{ secrets.AZURE_PAT }}"
           
-          # Add Azure DevOps as a remote
-          git remote add azure https://user:${{ secrets.AZURE_PAT }}@dev.azure.com/hayoon603/SuraS/_git/SuraS
+          # Clone the repository with all history
+          git clone --mirror "https://$AZURE_PAT@dev.azure.com/hayoon603/SuraS/_git/SuraS" azure_repo
+          cd azure_repo
+      
+      - name: Filter Source Code Files
+        run: |
+          cd azure_repo
           
-          # Fetch everything from Azure
-          git fetch azure --prune
+          # Create a new temporary branch
+          git checkout -b temp_filtered_branch
           
-          # Loop through Azure commits and recreate them with only source files
-          for commit in $(git log azure/main --reverse --format="%H"); do
-            # Checkout only source files from this commit
-            git checkout $commit -- "*.cpp" "*.h" "*.hpp" || true
-            
-            # If any files were checked out, add and commit them with original metadata
-            if git status --porcelain | grep -q .; then
-              git add "*.cpp" "*.h" "*.hpp" || true
-              
-              GIT_COMMITTER_DATE="$(git show -s --format=%ci $commit)" \
-              GIT_AUTHOR_DATE="$(git show -s --format=%ai $commit)" \
-              git commit -m "$(git log -1 --format=%B $commit)" \
-              --author="$(git log -1 --format='%an <%ae>' $commit)"
-            fi
-          done
+          # Create a .gitattributes file to handle line endings consistently
+          echo "* text=auto" > .gitattributes
           
-          # Set remote URL with authentication for pushing
-          git remote set-url origin https://${{ secrets.GH_PAT }}@github.com/moumee/ProjectS.git
+          # Create/update .gitignore to exclude non-source files
+          cat > .gitignore << EOL
+          # Unreal Engine generated files
+          Binaries/
+          Build/
+          DerivedDataCache/
+          Intermediate/
+          Saved/
           
-          # Force push directly to main
-          git push origin main --force
-        env:
-          AZURE_PAT: ${{ secrets.AZURE_PAT }}
+          # Large assets
+          Content/Movies/
+          Content/StarterContent/
+          
+          # Exclude large binary files
+          *.uasset
+          *.umap
+          *.upk
+          *.pak
+          *.dll
+          *.exe
+          *.pdb
+          *.lib
+          
+          # Logs
+          *.log
+          
+          # OS generated files
+          .DS_Store
+          Thumbs.db
+          EOL
+          
+          # Add .gitattributes and .gitignore
+          git add .gitattributes .gitignore
+          git commit -m "Add .gitattributes and .gitignore for filtering"
+          
+          # Use git-filter-repo to keep only source code files
+          # First install git-filter-repo
+          pip install git-filter-repo
+          
+          # Then filter the repository to keep only source code files
+          git-filter-repo --path "*.cpp" --path "*.h" --path "*.hpp" --path "*.c" --path-glob "*.cs" --path "*.uproject" --path "*.uplugin" --path "Source/" --path "Plugins/" --path "Config/" --path "*.ini" --path "*.build.cs" --path "*.target.cs" --path "*.module.cs" --path "*.version" --path "*.xml" --path "*.json" --force
+      
+      - name: Push to GitHub
+        run: |
+          cd azure_repo
+          
+          # Update remote to point to GitHub repository
+          git remote set-url origin "https://${{ secrets.GITHUB_TOKEN }}@github.com/moumee/ProjectS.git"
+          
+          # Push all branches and tags to GitHub
+          git push origin --all -f
+          git push origin --tags -f
