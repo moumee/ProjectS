@@ -25,7 +25,7 @@ jobs:
           git commit --allow-empty -m "Clean repository for mirroring"
           
           # Add Azure DevOps as a remote
-          git remote add azure https://user:${{ secrets.AZURE_PAT }}@dev.azure.com/your-org/your-project/_git/your-repo
+          git remote add azure https://user:${{ secrets.AZURE_PAT }}@dev.azure.com/hayoon/SuraS/_git/SuraS
           
           # Fetch everything from Azure
           git fetch azure --prune
