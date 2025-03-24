@@ -17,6 +17,8 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
+          # Disable password prompting
+          git config --global credential.helper store
       
       - name: Create .gitignore and .gitattributes
         run: |
@@ -54,30 +56,31 @@ jobs:
           Thumbs.db
           EOL
 
-      - name: Clone and Filter Azure DevOps Repository (all branches)
+      - name: Clone Azure DevOps Repository
         run: |
-          # Azure DevOps repository details
+          # Store credentials before any git operations
           AZURE_PAT="${{ secrets.AZURE_PAT }}"
           
-          # Clone the repository with all branches, but use partial clone to minimize downloaded data
-          # This uses "blobless" clone which doesn't download the large files initially
-          mkdir azure_repo
-          git init azure_repo
+          # Create credentials file to avoid password prompts
+          echo "https://$AZURE_PAT@dev.azure.com" > ~/.git-credentials
+          chmod 600 ~/.git-credentials
+          
+          # Use a different cloning approach that works better with authentication
+          git clone --filter=blob:none "https://anything:$AZURE_PAT@dev.azure.com/hayoon603/SuraS/_git/SuraS" azure_repo
           cd azure_repo
-          git remote add origin "https://$AZURE_PAT@dev.azure.com/hayoon603/SuraS/_git/SuraS"
           
-          # Fetch metadata without blobs
-          git fetch --filter=blob:none --prune origin
+          # Fetch all branches
+          git fetch --filter=blob:none --all
           
-          # Create local branches tracking remote branches
-          for branch in $(git branch -r | grep -v HEAD); do
-            git branch --track "${branch#origin/}" "$branch"
+          # Create local branches for all remote branches
+          for branch in $(git branch -r | grep -v HEAD | sed 's/origin\///'); do
+            git checkout -b "$branch" "origin/$branch" || echo "Could not checkout $branch"
           done
           
-          # Checkout main branch
+          # Checkout main branch or another default branch
           git checkout main || git checkout master || git checkout develop || git checkout $(git branch | head -1 | tr -d ' *')
           
-          # Use git-filter-repo to filter all branches
+          # Apply git-filter-repo to keep only source files across all branches
           git-filter-repo --path "*.cpp" --path "*.h" --path "*.hpp" --path "*.c" --path-glob "*.cs" --path "*.uproject" --path "*.uplugin" --path "Source/" --path "Plugins/" --path "Config/" --path "*.ini" --path "*.build.cs" --path "*.target.cs" --path "*.module.cs" --path "*.version" --path "*.xml" --path "*.json" --force
           
           # Add .gitattributes and .gitignore
@@ -86,14 +89,14 @@ jobs:
           git add .gitattributes .gitignore
           git commit -m "Add .gitattributes and .gitignore"
 
-      - name: Clear and Push to GitHub
+      - name: Push to GitHub
         run: |
           cd azure_repo
           
           # Configure GitHub as remote
           git remote add github "https://${{ secrets.GH_PAT }}@github.com/moumee/ProjectS.git"
           
-          # First, create an empty branch on GitHub to clear everything
+          # First, push an orphan branch to GitHub to clear everything
           git checkout --orphan temp_empty
           git rm -rf .
           cp ../gitattributes .gitattributes
@@ -103,15 +106,14 @@ jobs:
           git push github temp_empty:main --force
           
           # Get the list of all local branches
-          branches=$(git branch | sed 's/^..//')
+          branches=$(git branch | grep -v "temp_empty" | sed 's/^..//')
           
           # Push each branch individually
           for branch in $branches; do
-            if [ "$branch" != "temp_empty" ]; then
-              git checkout $branch
-              git push github $branch:$branch --force
-            fi
+            echo "Pushing branch: $branch"
+            git checkout $branch
+            git push github $branch:$branch --force
           done
           
-          # Push tags
+          # Push tags if any
           git push github --tags --force
