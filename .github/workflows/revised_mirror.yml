@@ -57,7 +57,7 @@ jobs:
       - name: Clone and Filter Azure DevOps Repository (all branches)
         run: |
           # Azure DevOps repository details
-          AZURE_PAT="${{ secrets.AZURE_DEVOPS_PAT }}"
+          AZURE_PAT="${{ secrets.AZURE_PAT }}"
           
           # Clone the repository with all branches, but use partial clone to minimize downloaded data
           # This uses "blobless" clone which doesn't download the large files initially
