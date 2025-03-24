@@ -9,34 +9,22 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Install git-filter-repo
+        run: |
+          pip install git-filter-repo
 
       - name: Set up Git
         run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
       
-      - name: Clone Azure DevOps Repository
+      - name: Create .gitignore and .gitattributes
         run: |
-          # Azure DevOps repository details
-          AZURE_REPO_URL="https://dev.azure.com/hayoon603/SuraS/_git/SuraS"
-          AZURE_PAT="${{ secrets.AZURE_PAT }}"
+          # Create a .gitattributes file
+          echo "* text=auto" > gitattributes
           
-          # Clone the repository with all history
-          git clone --mirror "https://$AZURE_PAT@dev.azure.com/hayoon603/SuraS/_git/SuraS" azure_repo
-          cd azure_repo
-      
-      - name: Filter Source Code Files
-        run: |
-          cd azure_repo
-          
-          # Create a new temporary branch
-          git checkout -b temp_filtered_branch
-          
-          # Create a .gitattributes file to handle line endings consistently
-          echo "* text=auto" > .gitattributes
-          
-          # Create/update .gitignore to exclude non-source files
-          cat > .gitignore << EOL
+          # Create .gitignore file
+          cat > gitignore << EOL
           # Unreal Engine generated files
           Binaries/
           Build/
@@ -65,25 +53,65 @@ jobs:
           .DS_Store
           Thumbs.db
           EOL
+
+      - name: Clone and Filter Azure DevOps Repository (all branches)
+        run: |
+          # Azure DevOps repository details
+          AZURE_PAT="${{ secrets.AZURE_DEVOPS_PAT }}"
+          
+          # Clone the repository with all branches, but use partial clone to minimize downloaded data
+          # This uses "blobless" clone which doesn't download the large files initially
+          mkdir azure_repo
+          git init azure_repo
+          cd azure_repo
+          git remote add origin "https://$AZURE_PAT@dev.azure.com/hayoon603/SuraS/_git/SuraS"
+          
+          # Fetch metadata without blobs
+          git fetch --filter=blob:none --prune origin
+          
+          # Create local branches tracking remote branches
+          for branch in $(git branch -r | grep -v HEAD); do
+            git branch --track "${branch#origin/}" "$branch"
+          done
+          
+          # Checkout main branch
+          git checkout main || git checkout master || git checkout develop || git checkout $(git branch | head -1 | tr -d ' *')
+          
+          # Use git-filter-repo to filter all branches
+          git-filter-repo --path "*.cpp" --path "*.h" --path "*.hpp" --path "*.c" --path-glob "*.cs" --path "*.uproject" --path "*.uplugin" --path "Source/" --path "Plugins/" --path "Config/" --path "*.ini" --path "*.build.cs" --path "*.target.cs" --path "*.module.cs" --path "*.version" --path "*.xml" --path "*.json" --force
           
           # Add .gitattributes and .gitignore
+          cp ../gitattributes .gitattributes
+          cp ../gitignore .gitignore
           git add .gitattributes .gitignore
-          git commit -m "Add .gitattributes and .gitignore for filtering"
-          
-          # Use git-filter-repo to keep only source code files
-          # First install git-filter-repo
-          pip install git-filter-repo
-          
-          # Then filter the repository to keep only source code files
-          git-filter-repo --path "*.cpp" --path "*.h" --path "*.hpp" --path "*.c" --path-glob "*.cs" --path "*.uproject" --path "*.uplugin" --path "Source/" --path "Plugins/" --path "Config/" --path "*.ini" --path "*.build.cs" --path "*.target.cs" --path "*.module.cs" --path "*.version" --path "*.xml" --path "*.json" --force
-      
-      - name: Push to GitHub
+          git commit -m "Add .gitattributes and .gitignore"
+
+      - name: Clear and Push to GitHub
         run: |
           cd azure_repo
           
-          # Update remote to point to GitHub repository
-          git remote set-url origin "https://${{ secrets.GITHUB_TOKEN }}@github.com/moumee/ProjectS.git"
+          # Configure GitHub as remote
+          git remote add github "https://${{ secrets.GITHUB_TOKEN }}@github.com/moumee/ProjectS.git"
           
-          # Push all branches and tags to GitHub
-          git push origin --all -f
-          git push origin --tags -f
+          # First, create an empty branch on GitHub to clear everything
+          git checkout --orphan temp_empty
+          git rm -rf .
+          cp ../gitattributes .gitattributes
+          cp ../gitignore .gitignore
+          git add .gitattributes .gitignore
+          git commit -m "Initial empty commit"
+          git push github temp_empty:main --force
+          
+          # Get the list of all local branches
+          branches=$(git branch | sed 's/^..//')
+          
+          # Push each branch individually
+          for branch in $branches; do
+            if [ "$branch" != "temp_empty" ]; then
+              git checkout $branch
+              git push github $branch:$branch --force
+            fi
+          done
+          
+          # Push tags
+          git push github --tags --force
