@@ -1,0 +1,52 @@
+name: Mirror Source Code from Azure DevOps
+
+on:
+  workflow_dispatch:  # Only runs on manual trigger
+
+jobs:
+  mirror-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitHub repo
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+
+      - name: Mirror from Azure DevOps (source code only)
+        run: |
+          # Clean the working directory first
+          git rm -rf .
+          git commit --allow-empty -m "Clean repository for mirroring"
+          
+          # Add Azure DevOps as a remote
+          git remote add azure https://user:${{ secrets.AZURE_PAT }}@dev.azure.com/your-org/your-project/_git/your-repo
+          
+          # Fetch everything from Azure
+          git fetch azure --prune
+          
+          # Loop through Azure commits and recreate them with only source files
+          for commit in $(git log azure/main --reverse --format="%H"); do
+            # Checkout only source files from this commit
+            git checkout $commit -- "*.cpp" "*.h" "*.hpp" || true
+            
+            # If any files were checked out, add and commit them with original metadata
+            if git status --porcelain | grep -q .; then
+              git add "*.cpp" "*.h" "*.hpp" || true
+              
+              GIT_COMMITTER_DATE="$(git show -s --format=%ci $commit)" \
+              GIT_AUTHOR_DATE="$(git show -s --format=%ai $commit)" \
+              git commit -m "$(git log -1 --format=%B $commit)" \
+              --author="$(git log -1 --format='%an <%ae>' $commit)"
+            fi
+          done
+          
+          # Force push directly to main
+          git push origin main --force
+        env:
+          AZURE_PAT: ${{ secrets.AZURE_PAT }}
