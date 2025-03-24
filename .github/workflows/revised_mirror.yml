@@ -91,7 +91,7 @@ jobs:
           cd azure_repo
           
           # Configure GitHub as remote
-          git remote add github "https://${{ secrets.GITHUB_TOKEN }}@github.com/moumee/ProjectS.git"
+          git remote add github "https://${{ secrets.GH_PAT }}@github.com/moumee/ProjectS.git"
           
           # First, create an empty branch on GitHub to clear everything
           git checkout --orphan temp_empty
