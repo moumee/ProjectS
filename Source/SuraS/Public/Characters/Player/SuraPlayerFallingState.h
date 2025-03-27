@@ -22,6 +22,8 @@ class SURAS_API USuraPlayerFallingState : public USuraPlayerBaseState
 
 	float ElapsedTimeFromWallRun = 0.f;
 
+	float ElapsedTime = 0.f;
+
 	UPROPERTY()
 	APlayerController* PlayerController;
 
@@ -48,8 +50,6 @@ public:
 	virtual void Move(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
 
 	virtual void Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
-
-	virtual void StartJumping(ASuraCharacterPlayer* Player) override;
 
 	virtual void Landed(ASuraCharacterPlayer* Player, const FHitResult& HitResult) override;
 	

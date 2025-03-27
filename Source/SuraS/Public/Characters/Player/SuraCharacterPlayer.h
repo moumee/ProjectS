@@ -116,12 +116,6 @@ protected:
 	float DefaultCapsuleHalfHeight;
 
 	FVector DefaultCameraLocation;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Curve", meta = (AllowPrivateAccess = "true"))
-	UCurveFloat* SlopeSpeedDeltaCurve;
-
-	// Value that influences player speed based on the angle of the slope
-	float SlopeSpeedDelta;
 	
 	float BaseMovementSpeed;
 
@@ -129,7 +123,7 @@ protected:
 
 	bool bShouldUpdateAdditionalMovementSpeed;
 
-	
+	float CurrentDashCooldownIndex = 0.f;
 
 	virtual void BeginPlay() override;
 
@@ -199,7 +193,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
 	TSubclassOf<UCameraShakeBase> DoubleJumpCamShake;
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
-	TSubclassOf<UCameraShakeBase> LandCamShake;
+	TSubclassOf<UCameraShakeBase> DefaultLandCamShake;
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	TSubclassOf<UCameraShakeBase> MiddleLandCamShake;
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	TSubclassOf<UCameraShakeBase> HighLandCamShake;
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
 	TSubclassOf<UCameraShakeBase> SlideCamShake;
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
@@ -301,7 +299,7 @@ public:
 
 	void PrimaryJump();
 
-	void DoubleJump();
+	void InAirJump();
 
 	float GetDefaultCapsuleHalfHeight() const;
 

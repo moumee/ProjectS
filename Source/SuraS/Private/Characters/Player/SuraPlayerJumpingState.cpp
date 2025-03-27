@@ -54,9 +54,9 @@ void USuraPlayerJumpingState::EnterState(ASuraCharacterPlayer* Player)
 	{
 		bShouldUpdateSpeed = true;
 		SpeedTransitionTime = Player->GetPlayerMovementData()->GetRunDashTransitionDuration();
-		float DashSpeed = Player->GetPlayerMovementData()->GetDashSpeed();
+		float DashEndSpeed = Player->GetPlayerMovementData()->GetDashEndSpeed();
 		float RunSpeed = Player->GetPlayerMovementData()->GetRunSpeed();
-		SpeedChangePerSecond = (RunSpeed - DashSpeed) / SpeedTransitionTime;
+		SpeedChangePerSecond = (RunSpeed - DashEndSpeed) / SpeedTransitionTime;
 	}
 	ElapsedTimeFromWallRun = 0.f;
 }
@@ -85,7 +85,14 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 {
 	Super::UpdateState(Player, DeltaTime);
 	
-	Player->InterpCapsuleHeight(1.f, DeltaTime);
+	if (Player->bCrouchTriggered)
+	{
+		Player->InterpCapsuleHeight(0.6f, DeltaTime);
+	}
+	else
+	{
+		Player->InterpCapsuleHeight(1.f, DeltaTime);
+	}
 
 	UpdateBaseMovementSpeed(Player, DeltaTime);
 
@@ -113,7 +120,7 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 			ECC_GameTraceChannel2, FCollisionShape::MakeCapsule(34.f,
 				Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.85f), WallParams);
 
-		if (bWallHit && Player->GetCharacterMovement()->IsFalling())
+		if (bWallHit && Player->GetCharacterMovement()->IsFalling() && WallHitResult.ImpactNormal.Z < Player->GetCharacterMovement()->GetWalkableFloorZ())
 		{
 			Player->WallHitResult = WallHitResult;
 			FHitResult LedgeHitResult;
@@ -164,6 +171,15 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 			return;
 		}
 	}
+
+	if (Player->bJumpTriggered && Player->JumpsLeft > 0)
+	{
+		SlideSpeedDecreaseElapsedTime = 0.f;
+		Player->JumpsLeft--;
+		Player->InAirJump();
+		Player->ChangeState(Player->JumpingState);
+		return;
+	}
 	
 
 	if (Player->IsFallingDown())
@@ -172,7 +188,7 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		return;
 	}
 
-	if (Player->bDashTriggered)
+	if (Player->bDashTriggered && Player->DashesLeft > 0)
 	{
 		Player->ChangeState(Player->DashingState);
 		return;
@@ -207,13 +223,10 @@ void USuraPlayerJumpingState::Look(ASuraCharacterPlayer* Player, const FVector2D
 
 	Player->AddControllerPitchInput(InputVector.Y);
 	Player->AddControllerYawInput(InputVector.X);
-
-	
 }
 
-void USuraPlayerJumpingState::StartJumping(ASuraCharacterPlayer* Player)
+void USuraPlayerJumpingState::SetSlideSpeedDecreaseElapsedTime(float ElapsedTime)
 {
-	Super::StartJumping(Player);
-	Player->DoubleJump();
+	SlideSpeedDecreaseElapsedTime = ElapsedTime;
 }
 

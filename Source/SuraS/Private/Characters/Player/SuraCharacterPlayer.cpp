@@ -23,7 +23,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ActorComponents/UISystem/ACInventoryManager.h"
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
-#include "Extensions/UIComponent.h"
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 
@@ -163,7 +162,7 @@ float ASuraCharacterPlayer::GetBaseMovementSpeed() const
 
 void ASuraCharacterPlayer::ChangeState(USuraPlayerBaseState* NewState)
 {
-	if (!NewState || NewState == CurrentState) return;
+	if (!NewState) return;
 
 	if (CurrentState)
 	{
@@ -196,24 +195,16 @@ bool ASuraCharacterPlayer::HasMovementInput() const
 
 void ASuraCharacterPlayer::PrimaryJump()
 {
-	if (JumpsLeft > 0)
-	{
-		JumpsLeft--;
-		FVector JumpVector = FVector::UpVector * GetPlayerMovementData()->GetPrimaryJumpZSpeed();
-		LaunchCharacter(JumpVector, false, true);
-	}
+	FVector JumpVector = FVector::UpVector * GetPlayerMovementData()->GetPrimaryJumpZSpeed();
+	LaunchCharacter(JumpVector, false, true);
 }
 
-void ASuraCharacterPlayer::DoubleJump()
+void ASuraCharacterPlayer::InAirJump()
 {
-	if (JumpsLeft > 0 && GetCharacterMovement()->IsFalling())
-	{
-		JumpsLeft--;
-		FVector InputDirection = GetActorForwardVector() * ForwardAxisInputValue + GetActorRightVector() * RightAxisInputValue;
-		FVector LaunchVelocity = InputDirection * GetPlayerMovementData()->GetDoubleJumpXYSpeed() +
-			FVector::UpVector * GetPlayerMovementData()->GetDoubleJumpZSpeed();
-		LaunchCharacter(LaunchVelocity, false, true);
-	}
+	FVector InputDirection = GetActorForwardVector() * ForwardAxisInputValue + GetActorRightVector() * RightAxisInputValue;
+	FVector LaunchVelocity = InputDirection * GetPlayerMovementData()->GetDoubleJumpXYSpeed() +
+		FVector::UpVector * GetPlayerMovementData()->GetDoubleJumpZSpeed();
+	LaunchCharacter(LaunchVelocity, false, true);
 }
 
 float ASuraCharacterPlayer::GetDefaultCapsuleHalfHeight() const
@@ -283,9 +274,6 @@ void ASuraCharacterPlayer::PrintPlayerDebugInfo() const
 			GEngine->AddOnScreenDebugMessage(99, 0.f, FColor::Green,
 				FString::Printf(TEXT("Input Axis Value : ( %f, %f )"), ForwardAxisInputValue, RightAxisInputValue));
 
-			GEngine->AddOnScreenDebugMessage(98, 0.f, FColor::Green,
-				FString::Printf(TEXT("Slope Speed Delta : %f"), SlopeSpeedDelta));
-
 			GEngine->AddOnScreenDebugMessage(97, 0.f, FColor::Red,
 				FString::Printf(TEXT("Current State : %s"), *CurrentState->StateDisplayName.ToString()));
 
@@ -308,18 +296,32 @@ void ASuraCharacterPlayer::UpdateDashCooldowns(float DeltaTime)
 {
 	if (DashesLeft == MaxDashes) return;
 
-	for (int i = 0; i < MaxDashes; i++)
+	float MinCurrentCooldown = FLT_MAX;
+	int32 CurrentIndex = -1;
+
+	for (int32 i = 0; i < MaxDashes; i++)
 	{
 		if (DashCooldowns[i] > 0.f)
 		{
-			DashCooldowns[i] = DashCooldowns[i] - DeltaTime;
-			if (DashCooldowns[i] <= KINDA_SMALL_NUMBER)
+			if (DashCooldowns[i] < MinCurrentCooldown)
 			{
-				DashCooldowns[i] = 0.f;
-				DashesLeft = FMath::Min(DashesLeft + 1, MaxDashes);
+				MinCurrentCooldown = DashCooldowns[i];
+				CurrentIndex = i;
 			}
 		}
 	}
+	
+	if (CurrentIndex != -1)
+	{
+		DashCooldowns[CurrentIndex] = DashCooldowns[CurrentIndex] - DeltaTime;
+		if (DashCooldowns[CurrentIndex] <= KINDA_SMALL_NUMBER)
+		{
+			DashCooldowns[CurrentIndex] = 0.f;
+			DashesLeft = FMath::Min(DashesLeft + 1, MaxDashes);
+		}
+	}
+	
+	
 }
 
 void ASuraCharacterPlayer::OnDamaged()
@@ -393,11 +395,7 @@ void ASuraCharacterPlayer::Tick(float DeltaTime)
 		CurrentState->UpdateState(this, DeltaTime);
 	}
 	
-
-	SlopeSpeedDelta = FindFloorAngle() < GetCharacterMovement()->GetWalkableFloorAngle() ?
-		SlopeSpeedDeltaCurve->GetFloatValue(FindFloorAngle()) : 0.f;
-	
-	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed + SlopeSpeedDelta;
+	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
 }
 
 void ASuraCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -410,7 +408,7 @@ void ASuraCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ASuraCharacterPlayer::StopMoving);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraCharacterPlayer::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartJumping);
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartDashing);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &ASuraCharacterPlayer::StartDashing);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartCrouching);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASuraCharacterPlayer::StopCrouching);
 		
@@ -446,15 +444,12 @@ void ASuraCharacterPlayer::Look(const FInputActionValue& InputValue)
 
 void ASuraCharacterPlayer::StartJumping()
 {
-	if (JumpsLeft <= 0) return;
 	bJumpTriggered = true;
-	CurrentState->StartJumping(this);
 }
 
 void ASuraCharacterPlayer::StartCrouching()
 {
 	bCrouchTriggered = true;
-	CurrentState->StartCrouching(this);
 }
 
 void ASuraCharacterPlayer::StopCrouching()
@@ -464,11 +459,7 @@ void ASuraCharacterPlayer::StopCrouching()
 
 void ASuraCharacterPlayer::StartDashing()
 {
-	if (DashesLeft <= 0) return;
-	if (CurrentState == DashingState) return;
 	bDashTriggered = true;
-	CurrentState->StartDashing(this);
-	
 }
 
 void ASuraCharacterPlayer::Landed(const FHitResult& Hit)
@@ -482,6 +473,8 @@ void ASuraCharacterPlayer::Landed(const FHitResult& Hit)
 bool ASuraCharacterPlayer::ShouldEnterWallRunning(FVector& OutWallRunDirection, EWallSide& OutWallRunSide)
 {
 	if (!GetCharacterMovement()->IsFalling()) return false;
+
+	if (bCrouchTriggered) return false;
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
@@ -553,6 +546,16 @@ void ASuraCharacterPlayer::InterpCapsuleHeight(float TargetScale, float DeltaTim
 	float CurrentHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	float TargetHeight = GetDefaultCapsuleHalfHeight() * TargetScale;
 	float NewHeight = FMath::FInterpTo(CurrentHeight, TargetHeight, DeltaTime, 10.f);
+    
+	// Calculate how much the height will change
+	float HeightDifference = NewHeight - CurrentHeight;
+    
+	// Move the actor UP by HALF the difference to keep the bottom fixed
+	// (We need half because the capsule's origin is at its center)
+	FVector AdjustmentVector(0, 0, HeightDifference * 0.5f);
+	AddActorWorldOffset(AdjustmentVector);
+    
+	// Now change the capsule height
 	GetCapsuleComponent()->SetCapsuleHalfHeight(NewHeight);
 	
 

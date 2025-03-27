@@ -18,7 +18,6 @@ class SURAS_API USuraPlayerWallRunningState : public USuraPlayerBaseState
 
 	float StateEnterVelocity = 0.f;
 
-	FVector WallRunDirection = FVector::ZeroVector;
 
 	FHitResult WallHit;
 
@@ -26,13 +25,19 @@ class SURAS_API USuraPlayerWallRunningState : public USuraPlayerBaseState
 
 	bool bFrontWallFound = false;
 	
-	float TargetRoll = 0.f;
-
-	bool bShouldTilt = false;
-
 	float ElapsedTime = 0.f;
 
 	float MaxDuration;
+
+	bool bShouldSlideUp = false;
+
+	bool bShouldSlideDown = false;
+
+	float WallRunEnterZVelocityThreshold = 0.f;
+
+	float WallRunEnterVerticalForce = 0.f;
+
+	float WallRunCameraTiltAngle = 0.f;
 
 	UPROPERTY()
 	APlayerController* PlayerController;
@@ -46,6 +51,8 @@ public:
 
 	virtual void EnterState(ASuraCharacterPlayer* Player) override;
 	
+	void TiltController(ASuraCharacterPlayer* Player, float DeltaTime);
+
 	void SetPlayerWallOffsetLocation(ASuraCharacterPlayer* Player, float DeltaTime);
 
 	virtual void UpdateState(ASuraCharacterPlayer* Player, float DeltaTime) override;
@@ -56,7 +63,6 @@ public:
 
 	virtual void Move(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
 
-	virtual void StartJumping(ASuraCharacterPlayer* Player) override;
 
 };
 

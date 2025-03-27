@@ -27,6 +27,8 @@ class SURAS_API USuraPlayerJumpingState : public USuraPlayerBaseState
 
 	float ElapsedTimeFromHanging = 0.f;
 
+	float SlideSpeedDecreaseElapsedTime = 0.f;
+
 	UPROPERTY()
 	APlayerController* PlayerController;
 
@@ -35,6 +37,7 @@ public:
 	USuraPlayerJumpingState();
 	
 	virtual void EnterState(ASuraCharacterPlayer* Player) override;
+	
 	void UpdateBaseMovementSpeed(ASuraCharacterPlayer* Player, float DeltaTime);
 
 	virtual void UpdateState(ASuraCharacterPlayer* Player, float DeltaTime) override;
@@ -45,8 +48,9 @@ public:
 
 	virtual void Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
 
-	virtual void StartJumping(ASuraCharacterPlayer* Player) override;
+	void SetSlideSpeedDecreaseElapsedTime(float ElapsedTime);
 
+	float GetSlideSpeedDecreaseElapsedTime() const { return SlideSpeedDecreaseElapsedTime; };
 	
 };
 

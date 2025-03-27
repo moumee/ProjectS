@@ -50,8 +50,8 @@ void USuraPlayerRunningState::EnterState(ASuraCharacterPlayer* Player)
 	case EPlayerState::Dashing:
 		{
 			SpeedTransitionTime = Player->GetPlayerMovementData()->GetRunDashTransitionDuration();
-			float DashSpeed = Player->GetPlayerMovementData()->GetDashSpeed();
-			SpeedChangePerSecond = (RunSpeed - DashSpeed) / SpeedTransitionTime;
+			float DashEndSpeed = Player->GetPlayerMovementData()->GetDashEndSpeed();
+			SpeedChangePerSecond = (RunSpeed - DashEndSpeed) / SpeedTransitionTime;
 			break;
 		}
 	case EPlayerState::Crouching:
@@ -113,7 +113,7 @@ void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float De
 		}
 	}
 
-	if (Player->bDashTriggered)
+	if (Player->bDashTriggered && Player->DashesLeft > 0)
 	{
 		Player->ChangeState(Player->DashingState);
 		return;
@@ -121,8 +121,7 @@ void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	if (Player->bCrouchTriggered)
 	{
-		if (FMath::IsNearlyEqual(Player->GetBaseMovementSpeed(), Player->GetPlayerMovementData()->GetRunSpeed(), 10.f) &&
-			Player->FindFloorAngle() <= 0.1f)
+		if (FMath::IsNearlyEqual(Player->GetBaseMovementSpeed(), Player->GetPlayerMovementData()->GetRunSpeed(), 10.f))
 		{
 			Player->ChangeState(Player->SlidingState);
 			return;
@@ -131,8 +130,10 @@ void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float De
 		return;
 	}
 
-	if (Player->bJumpTriggered)
+	if (Player->bJumpTriggered && Player->JumpsLeft > 0)
 	{
+		Player->JumpsLeft--;
+		Player->PrimaryJump();
 		Player->ChangeState(Player->JumpingState);
 		return;
 	}
@@ -162,11 +163,4 @@ void USuraPlayerRunningState::Look(ASuraCharacterPlayer* Player, const FVector2D
 	Player->AddControllerYawInput(InputVector.X);
 }
 
-void USuraPlayerRunningState::StartJumping(ASuraCharacterPlayer* Player)
-{
-	Super::StartJumping(Player);
-	Player->PrimaryJump();
-
-	
-}
 

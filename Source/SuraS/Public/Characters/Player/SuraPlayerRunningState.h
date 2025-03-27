@@ -39,5 +39,4 @@ public:
 
 	virtual void Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
 
-	virtual void StartJumping(ASuraCharacterPlayer* Player) override;
 };

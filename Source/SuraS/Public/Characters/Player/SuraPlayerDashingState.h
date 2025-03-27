@@ -14,13 +14,9 @@ class SURAS_API USuraPlayerDashingState : public USuraPlayerBaseState
 {
 	GENERATED_BODY()
 
-	float DashImpulseDuration = 0.f;
-
 	float DashElapsedTime = 0.f;
 
-	float StartTransitionDuration = 0.f;
-
-	float EndTransitionDuration = 0.f;
+	float DashSpeedDecreaseTime = 0.f;
 
 	float DashImpulseSpeed;
 

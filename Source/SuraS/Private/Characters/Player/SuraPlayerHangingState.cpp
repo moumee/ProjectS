@@ -68,8 +68,13 @@ void USuraPlayerHangingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		}
 	}
 
-	if (Player->bJumpTriggered)
+	if (Player->bJumpTriggered && Player->JumpsLeft > 0)
 	{
+		Player->JumpsLeft--;
+		FVector JumpXY = FVector(Player->WallHitResult.ImpactNormal.X, Player->WallHitResult.ImpactNormal.Y, 0.f);
+		FVector JumpVector = JumpXY * 500.f + FVector::UpVector *
+			Player->GetPlayerMovementData()->GetPrimaryJumpZSpeed() * 0.8f;
+		Player->LaunchCharacter(JumpVector, true, true);
 		Player->ChangeState(Player->JumpingState);
 		return;
 	}
@@ -104,15 +109,3 @@ void USuraPlayerHangingState::Look(ASuraCharacterPlayer* Player, const FVector2D
 	
 }
 
-void USuraPlayerHangingState::StartJumping(ASuraCharacterPlayer* Player)
-{
-	Super::StartJumping(Player);
-	if (Player->JumpsLeft > 0)
-	{
-		Player->JumpsLeft -= 1;
-		FVector JumpXY = FVector(Player->WallHitResult.ImpactNormal.X, Player->WallHitResult.ImpactNormal.Y, 0.f);
-		FVector JumpVector = JumpXY * 500.f + FVector::UpVector *
-			Player->GetPlayerMovementData()->GetPrimaryJumpZSpeed() * 0.8f;
-		Player->LaunchCharacter(JumpVector, true, true);
-	}
-}

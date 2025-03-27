@@ -156,14 +156,14 @@ float UACPlayerMovementData::GetAirControl() const
 	return PlayerRow->AirControl;
 }
 
-float UACPlayerMovementData::GetDashSpeed() const
+float UACPlayerMovementData::GetDashEndSpeed() const
 {
 	if (!PlayerRow)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
 		return 0;
 	}
-	return PlayerRow->DashSpeed;
+	return PlayerRow->DashEndSpeed;
 }
 
 float UACPlayerMovementData::GetDashImpulseSpeed() const
@@ -176,6 +176,16 @@ float UACPlayerMovementData::GetDashImpulseSpeed() const
 	return PlayerRow->DashImpulseSpeed;
 }
 
+float UACPlayerMovementData::GetDashSpeedDecreaseDuration() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->DashSpeedDecreaseDuration;
+}
+
 int UACPlayerMovementData::GetDashMaxStack() const
 {
 	if (!PlayerRow)
@@ -184,16 +194,6 @@ int UACPlayerMovementData::GetDashMaxStack() const
 		return 0;
 	}
 	return PlayerRow->DashMaxStack;
-}
-
-float UACPlayerMovementData::GetDashDistance() const
-{
-	if (!PlayerRow)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
-		return 0;
-	}
-	return PlayerRow->DashDistance;
 }
 
 float UACPlayerMovementData::GetDashCooldown() const
@@ -216,25 +216,27 @@ float UACPlayerMovementData::GetSlidingAdditionalSpeed() const
 	return PlayerRow->SlidingAdditionalSpeed;
 }
 
-float UACPlayerMovementData::GetDashImpulseTransitionEndDuration() const
+float UACPlayerMovementData::GetSlidingSpeedIncreaseTime() const
 {
 	if (!PlayerRow)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
 		return 0;
 	}
-	return PlayerRow->DashImpulseTransitionEndDuration;
+	return PlayerRow->SlidingSpeedIncreaseTime;
 }
 
-float UACPlayerMovementData::GetSlidingDecreaseSpeed() const
+float UACPlayerMovementData::GetSlidingSpeedDecreaseTime() const
 {
 	if (!PlayerRow)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
 		return 0;
 	}
-	return PlayerRow->SlidingDecreaseSpeed;
+	return PlayerRow->SlidingSpeedDecreaseTime;
 }
+
+
 
 float UACPlayerMovementData::GetWallRunningMaxDuration() const
 {
@@ -274,6 +276,36 @@ float UACPlayerMovementData::GetMaxWallRunSpeed() const
 		return 0;
 	}
 	return PlayerRow->MaxWallRunSpeed;
+}
+
+float UACPlayerMovementData::GetWallRunEnterZVelocityThreshold() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->WallRunEnterZVelocityThreshold;
+}
+
+float UACPlayerMovementData::GetWallRunEnterVerticalForce() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->WallRunEnterVerticalForce;
+}
+
+float UACPlayerMovementData::GetWallRunCameraTiltAngle() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->WallRunCameraTiltAngle;
 }
 
 

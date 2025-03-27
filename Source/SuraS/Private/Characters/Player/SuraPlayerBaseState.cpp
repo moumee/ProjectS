@@ -37,17 +37,6 @@ void USuraPlayerBaseState::Look(ASuraCharacterPlayer* Player, const FVector2D& I
 {
 }
 
-void USuraPlayerBaseState::StartJumping(ASuraCharacterPlayer* Player)
-{
-}
-
-void USuraPlayerBaseState::StartDashing(ASuraCharacterPlayer* Player)
-{
-}
-
-void USuraPlayerBaseState::StartCrouching(ASuraCharacterPlayer* Player)
-{
-}
 
 void USuraPlayerBaseState::Landed(ASuraCharacterPlayer* Player, const FHitResult& HitResult)
 {
