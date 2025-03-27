@@ -22,7 +22,7 @@ public:
 	UObjectPoolManager();
 
 	// 특정 클래스의 객체 가져오기
-	UObjectPoolBase* GetPool(TSubclassOf<class AActor> ObjectClass, UObject* WorldContext);
+	UObjectPoolBase* GetPool(AActor* ObjectClass, UObject* WorldContext);
 
 	// 객체 풀에 반환하기
 	void ReturnToPool(AActor* Object);
@@ -31,5 +31,5 @@ public:
 	
 private:
 	UPROPERTY()
-	TMap<TSubclassOf<class AActor>, UObjectPoolBase*> ObjectPool_List;
+	TMap<AActor*, UObjectPoolBase*> ObjectPool_List;
 };

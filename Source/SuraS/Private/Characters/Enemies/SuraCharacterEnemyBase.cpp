@@ -37,13 +37,13 @@ void ASuraCharacterEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	InitializeEnemy();
+	//InitializeEnemy();
 }
 
 void ASuraCharacterEnemyBase::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	
+	if (!isInitialized) return;
 	if (UEnemyHealthBarWidget* const Widget = Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject()))
 	{
 		float Distance = FVector::Dist(GetPlayerController()->PlayerCameraManager->GetCameraLocation(), GetActorLocation());

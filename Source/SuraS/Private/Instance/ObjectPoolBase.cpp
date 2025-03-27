@@ -12,11 +12,12 @@ UObjectPoolBase::UObjectPoolBase()
 {
 }
 
-void UObjectPoolBase::Initialize(UWorld* const world, int initialAmount, TSubclassOf<class AActor> object)
+void UObjectPoolBase::Initialize(UWorld* const world, int initialAmount, AActor* object)
 {
-	if (PooledObjectSubclass != nullptr || world != nullptr)
+	if (object != nullptr || world != nullptr)
 	{
-		PooledObjectSubclass = object;
+		PooledObject = object;
+		PooledObjectSubclass = object->GetClass();
 		World = world;
 		ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
@@ -71,10 +72,11 @@ AActor* UObjectPoolBase::GetPooledObject(FVector position, FRotator rotation)
 	}
 
 	AActor* SpawnedObject;
-	SpawnedObject = World->SpawnActor<AActor>(PooledObjectSubclass,
-		FVector().ZeroVector, FRotator().ZeroRotator, ActorSpawnParameters);
+	SpawnPooledObject(SpawnedObject);
+	//SpawnedObject = World->SpawnActor<AActor>(PooledObjectSubclass,
+		//FVector().ZeroVector, FRotator().ZeroRotator, ActorSpawnParameters);
 	ObjectPool.Add(SpawnedObject);
-	//SpawnPooledObject(SpawnedObject);
+	
 	SpawnedObject->TeleportTo(position, rotation);
 	//PoolableActor->InitializeEnemy();
 	SpawnedObject->SetActorHiddenInGame(false);

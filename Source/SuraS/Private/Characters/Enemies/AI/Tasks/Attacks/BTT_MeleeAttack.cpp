@@ -18,16 +18,15 @@ EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	{
 		if (ASuraCharacterPlayer* const Player = Cast<ASuraCharacterPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
 		{
+			FOnMontageEnded OnAttackMontageEnded;
+			OnAttackMontageEnded.BindUObject(this, &UBTT_MeleeAttack::OnAttackEnded);
+
 			Enemy->Attack(Player);
 
 			TempOwnerComp = &OwnerComp; // for finishing task latently
 
-			FOnMontageEnded OnAttackMontageEnded;
-			OnAttackMontageEnded.BindUObject(this, &UBTT_MeleeAttack::OnAttackEnded);
-
 			Enemy->GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(OnAttackMontageEnded); // montage interrupted
 			Enemy->GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(OnAttackMontageEnded); // montage ended
-			
 
 			FinishLatentTask(OwnerComp, EBTNodeResult::InProgress);
 			return EBTNodeResult::InProgress;
@@ -39,8 +38,5 @@ EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerC
 
 void UBTT_MeleeAttack::OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted)
 {
-	if (TempOwnerComp)
-		TempOwnerComp->OnTaskFinished(this, EBTNodeResult::Succeeded);
-	else
-		TempOwnerComp->OnTaskFinished(this, EBTNodeResult::Failed);
+	FinishLatentTask(*TempOwnerComp, EBTNodeResult::Succeeded);
 }
