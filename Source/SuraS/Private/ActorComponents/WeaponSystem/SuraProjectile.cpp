@@ -128,6 +128,7 @@ void ASuraProjectile::LoadProjectileData()
 
 		// <Explosive>
 		bIsExplosive = ProjectileData->bIsExplosive;
+		bVisualizeExplosionRadius = ProjectileData->bVisualizeExplosionRadius;
 		MaxExplosiveDamage = ProjectileData->MaxExplosiveDamage;
 		MaxExplosionRadius = ProjectileData->MaxExplosionRadius;
 
@@ -195,6 +196,11 @@ void ASuraProjectile::ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector Cen
 				}
 				//UE_LOG(LogTemp, Error, TEXT("Explosive Damage!!!"));
 			}
+		}
+
+		if (bVisualizeExplosionRadius)
+		{
+			DrawSphere(CenterLocation, MaxExplosionRadius);
 		}
 	}
 }
@@ -459,6 +465,21 @@ void ASuraProjectile::UpdateTrailEffect()
 			TrailEffectComponent->SetVectorParameter(FName(TEXT("Beam End")), ProjectileMesh->GetSocketLocation(FName(TEXT("TrailStart"))));
 		}
 	}
+}
+
+void ASuraProjectile::DrawSphere(FVector Location, float Radius)
+{
+	DrawDebugSphere(
+		GetWorld(),                 // UWorld* World
+		Location,         // 위치 (Center)
+		Radius,                     // 반지름 (Radius)
+		12,                        // 세그먼트 수 (Segments)
+		FColor::Red,               // 색상
+		false,                     // 지속 시간 무한 (true면 지속적으로 표시됨)
+		5.0f,                      // 지속 시간 (초)
+		0,                         // Depth Priority
+		2.0f                       // 선 두께
+	);
 }
 
 #pragma region Penetration

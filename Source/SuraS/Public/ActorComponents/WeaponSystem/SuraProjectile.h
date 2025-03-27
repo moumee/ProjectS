@@ -84,13 +84,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
 	float InitialRadius = 10.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosive")
 	bool bIsExplosive = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosive")
+	bool bVisualizeExplosionRadius = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosive")
 	float MaxExplosiveDamage = 100.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosive")
 	float MaxExplosionRadius = 300.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
@@ -128,6 +131,8 @@ public:
 protected:
 	bool bShouldUpdateTrailEffect = false;
 	void UpdateTrailEffect();
+
+	void DrawSphere(FVector Location, float Radius);
 
 //protected:
 //	// Called when the game starts or when spawned

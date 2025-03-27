@@ -106,9 +106,8 @@ public:
 
 public:
 	void PickUpWeapon();
-
 	bool ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp);
-
+	bool ObtainAmmo(ASuraWeaponPickUp* MagazinePickUp);
 #pragma endregion
 
 #pragma region Zoom
@@ -181,6 +180,10 @@ public:
 	virtual void SwitchToOtherWeapon() override;
 
 	void ChangeWeapon(int32 WeaponIndex);
+
+	// suhyeon
+	UFUNCTION(BlueprintCallable, Category = "Weapons")
+	const TArray<AWeapon*>& GetWeaponInventory() const {return WeaponInventory; }
 #pragma endregion
 	
 };

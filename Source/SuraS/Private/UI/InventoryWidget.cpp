@@ -1,14 +1,15 @@
 #include "UI/InventoryWidget.h"
 
+#include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponData.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
+#include "Components/Button.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Kismet/GameplayStatics.h"
-#include "UI/CustomGameInstance.h"
 
 void UInventoryWidget::NativeConstruct()
 {
@@ -22,7 +23,7 @@ void UInventoryWidget::NativeConstruct()
     SetActiveTab(CurrentTab);
 
 #pragma region Weapon
-
+    
     // Player의 UWeaponSystemComponent 가져오기
     ASuraCharacterPlayerWeapon* Player = Cast<ASuraCharacterPlayerWeapon>(GetOwningPlayerPawn());
     if (Player)
@@ -45,6 +46,9 @@ void UInventoryWidget::NativeConstruct()
     {
         UE_LOG(LogTemp, Warning, TEXT("Player is nullptr!"));
     }
+    
+    
+    
 #pragma endregion Weapon
     
     // 최초 한 번만 초기화되도록 체크
@@ -58,8 +62,19 @@ void UInventoryWidget::NativeConstruct()
 
     InitializeInventory(); // UI 초기화
 
+    if (BtnRifle)
+        BtnRifle->OnClicked.AddDynamic(this, &UInventoryWidget::OnWeaponButtonClicked_Rifle);
+
+    if (BtnShotGun)
+        BtnShotGun->OnClicked.AddDynamic(this, &UInventoryWidget::OnWeaponButtonClicked_ShotGun);
+
+    if (BtnMissileLauncher)
+        BtnMissileLauncher->OnClicked.AddDynamic(this, &UInventoryWidget::OnWeaponButtonClicked_MissileLauncher);
+
     // 초기화 완료 후 bIsInitialized를 true로 설정
     bIsInitialized = true;
+
+    
     
 }
 
@@ -98,6 +113,35 @@ FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
     if (InKeyEvent.GetKey() == EKeys::Delete)
     {
         AllWeaponDiscard();
+    }
+
+    if (InKeyEvent.GetKey() == EKeys::F)
+    {
+        // 무기 교체 함수 호출
+        // APawn* OwnerPawn = GetOwningPlayerPawn();
+        // if (!OwnerPawn) return FReply::Unhandled();
+        //
+        // UACInventoryManager* Manager = OwnerPawn->FindComponentByClass<UACInventoryManager>();
+        // if (!Manager) return FReply::Unhandled();
+        //
+        // Manager->OnConfirmWeaponEquip();
+
+
+       // GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("F 키 감지됨"));
+
+        ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwningPlayerPawn());
+        if (!OwnerCharacter) return FReply::Unhandled();
+
+        UACInventoryManager* Manager = OwnerCharacter->FindComponentByClass<UACInventoryManager>();
+        if (!Manager)
+        {
+            //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("InventoryManager 못 찾음"));
+            return FReply::Unhandled();
+        }
+
+        Manager->OnConfirmWeaponEquip();
+        //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("OnConfrimWeaponEquip함수 호출됨"));
+        return FReply::Handled();
     }
 
     return FReply::Handled();  // Tab 키 기본 동작 방지
@@ -186,7 +230,7 @@ void UInventoryWidget::InitializeInventory()
     WeaponUIElements.Add(TEXT("Rifle"), FWeaponUI(Rifle, RifleName));
     WeaponUIElements.Add(TEXT("ShotGun"), FWeaponUI(ShotGun, ShotGunName));
     WeaponUIElements.Add(TEXT("MissileLauncher"), FWeaponUI(MissileLauncher, MissileLauncherName));
-    WeaponUIElements.Add(TEXT("RailGun"), FWeaponUI(RailGun, RailGunName));
+    //WeaponUIElements.Add(TEXT("RailGun"), FWeaponUI(RailGun, RailGunName));
 
     for (FName RowName : RowNames)
     {
@@ -302,3 +346,80 @@ void UInventoryWidget::AllWeaponDiscard()
     UE_LOG(LogTemp, Warning, TEXT("All weapons have been discarded."));
 }
 
+void UInventoryWidget::OnWeaponButtonClicked_Rifle()
+{
+    //GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Cyan, TEXT("Rifle 버튼 클릭됨"));
+    RequestWeaponChangeByName("Rifle");
+}
+
+void UInventoryWidget::OnWeaponButtonClicked_ShotGun()
+{
+    RequestWeaponChangeByName("ShotGun");
+}
+
+void UInventoryWidget::OnWeaponButtonClicked_MissileLauncher()
+{
+    RequestWeaponChangeByName("MissileLauncher");
+}
+
+void UInventoryWidget::RequestWeaponChangeByName(const FString& WeaponNameStr)
+{
+    GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Cyan,
+        FString::Printf(TEXT("요청된 무기 이름: %s"), *WeaponNameStr));
+
+    APawn* Pawn = GetOwningPlayerPawn();
+    if (!Pawn)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("Pawn 가져오기 실패"));
+        return;
+    }
+
+    UWeaponSystemComponent* WeaponSystem = Pawn->FindComponentByClass<UWeaponSystemComponent>();
+    if (!WeaponSystem)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("WeaponSystemComponent 찾기 실패"));
+        return;
+    }
+
+    UACInventoryManager* Manager = Pawn->FindComponentByClass<UACInventoryManager>();
+    if (!Manager)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("InventoryManager 찾기 실패"));
+        return;
+    }
+
+    const TArray<AWeapon*>& Inventory = WeaponSystem->GetWeaponInventory();
+    GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
+        FString::Printf(TEXT("WeaponInventory에 있는 무기 수: %d"), Inventory.Num()));
+
+    // 무기 인벤토리 탐색
+    for (int32 i = 0; i < Inventory.Num(); ++i)
+    {
+        AWeapon* Weapon = Inventory[i];
+        if (!Weapon || !Weapon->WeaponData)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow,
+                FString::Printf(TEXT("[%d] 무기 또는 WeaponData가 nullptr"), i));
+            continue;
+        }
+
+        FString WeaponEnumStr = UEnum::GetDisplayValueAsText(Weapon->WeaponData->WeaponName).ToString();
+
+        // GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White,
+        //     FString::Printf(TEXT("[%d] 무기 이름: %s"), i, *WeaponEnumStr));
+
+        if (WeaponEnumStr == WeaponNameStr)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
+                FString::Printf(TEXT("일치하는 무기 인덱스: %d"), i));
+
+            GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, FString::Printf(TEXT("무기를 교체하려면 F키를 눌러주세요")));
+
+            Manager->SetPendingWeaponIndex(i);
+            return;
+        }
+    }
+
+    GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
+        FString::Printf(TEXT("'%s' 무기를 WeaponInventory에서 찾을 수 없음"), *WeaponNameStr));
+}
