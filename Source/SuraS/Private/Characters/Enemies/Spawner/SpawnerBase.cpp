@@ -32,9 +32,9 @@ void ASpawnerBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (PooledObjectSubclass)
+	if (PooledObject)
 	{
-		Pool = GetGameInstance()->GetSubsystem<UObjectPoolManager>()->GetPool(PooledObjectSubclass, GetWorld());
+		Pool = GetGameInstance()->GetSubsystem<UObjectPoolManager>()->GetPool(PooledObject, GetWorld());
 		GetWorld()->GetTimerManager().SetTimer(TimerHandler, this, &ASpawnerBase::SpawnWrapper, interval, true);
 	}
 }

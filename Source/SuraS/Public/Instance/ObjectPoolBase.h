@@ -18,12 +18,13 @@ public:
 	UObjectPoolBase();
 	~UObjectPoolBase();
 
-	void Initialize(UWorld* const world, int initialAmount, TSubclassOf<class AActor> object);
+	virtual void Initialize(UWorld* const world, int initialAmount, AActor* object);
 
 	UFUNCTION(BlueprintCallable, Category = "ObjectPool")
 	AActor* GetPooledObject(FVector position, FRotator rotation);
 
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
+	AActor* PooledObject;
 	TSubclassOf<class AActor> PooledObjectSubclass;
 
 protected:
@@ -31,10 +32,12 @@ protected:
 	virtual void SpawnPooledObject(AActor*& spawnedObject);
 
 	TArray<AActor*> ObjectPool;
+	FActorSpawnParameters ActorSpawnParameters;
+	UWorld* World;
 
 private:
 
-	FActorSpawnParameters ActorSpawnParameters;
+	
 
-	UWorld* World;
+	
 };
