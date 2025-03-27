@@ -211,6 +211,65 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 	
 }
 
+bool USuraPlayerMovementComponent::TryWallRun()
+{
+	FCollisionQueryParams WallQueryParams;
+	WallQueryParams.AddIgnoredActor(SuraPawnPlayer);
+	
+	FVector WallTraceStart = PawnOwner->GetActorLocation();
+	FVector WallTraceRightEnd = WallTraceStart + PawnOwner->GetActorRightVector() * 200.f;
+	FVector WallTraceLeftEnd = WallTraceStart - PawnOwner->GetActorRightVector() * 200.f;
+
+	FHitResult WallRightHit;
+	bool bWallRightHit = GetWorld()->LineTraceSingleByChannel(WallRightHit, WallTraceStart, WallTraceRightEnd,
+	                                                          ECC_WorldStatic, WallQueryParams);
+
+	bool bRightWallRunnable = false;
+
+	if (bWallRightHit && WallRightHit.IsValidBlockingHit() && WallRightHit.ImpactNormal.Z < MinWalkableFloorZ)
+	{
+		bRightWallRunnable = true;
+	}
+
+	FHitResult WallLeftHit;
+	bool bWallLeftHit = GetWorld()->LineTraceSingleByChannel(WallLeftHit, WallTraceStart, WallTraceLeftEnd,
+	                                                         ECC_WorldStatic, WallQueryParams);
+
+	bool bLeftWallRunnable = false;
+
+	if (bWallLeftHit && WallLeftHit.IsValidBlockingHit() && WallLeftHit.ImpactNormal.Z < MinWalkableFloorZ)
+	{
+		bLeftWallRunnable = true;
+	}
+
+	if (bRightWallRunnable && bLeftWallRunnable)
+	{
+		CurrentWallSide = WallLeftHit.Distance > WallRightHit.Distance ? EWallRunSide::EWRS_Right : EWallRunSide::EWRS_Left;
+		CurrentWallHit = WallLeftHit.Distance > WallRightHit.Distance ? WallRightHit : WallLeftHit;
+		SetMovementState(EMovementState::EMS_WallRun);
+		return true;
+	}
+	else if (bLeftWallRunnable)
+	{
+		CurrentWallSide = EWallRunSide::EWRS_Left;
+		CurrentWallHit = WallLeftHit;
+		SetMovementState(EMovementState::EMS_WallRun);
+		return true;
+	}
+	else if (bRightWallRunnable)
+	{
+		CurrentWallSide = EWallRunSide::EWRS_Right;
+		CurrentWallHit = WallRightHit;
+		SetMovementState(EMovementState::EMS_WallRun);
+		return true;
+	}
+	else
+	{
+		CurrentWallSide = EWallRunSide::EWRS_None;
+	}
+	return false;
+}
+
 void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 {
 	if (PreviousMovementState == EMovementState::EMS_Move)
@@ -227,55 +286,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		}
 	}
 
-	FCollisionQueryParams WallQueryParams;
-	WallQueryParams.AddIgnoredActor(SuraPawnPlayer);
-	
-	FVector WallTraceStart = PawnOwner->GetActorLocation();
-	FVector WallTraceRightEnd = WallTraceStart + PawnOwner->GetActorRightVector() * 200.f;
-	FVector WallTraceLeftEnd = WallTraceStart - PawnOwner->GetActorRightVector() * 200.f;
-	
-	bool bWallRightHit = GetWorld()->LineTraceSingleByChannel(RightWallHit, WallTraceStart, WallTraceRightEnd,
-		ECC_WorldStatic, WallQueryParams);
-
-	bool bRightWallRunnable = false;
-
-	if (bWallRightHit && RightWallHit.IsValidBlockingHit() && RightWallHit.ImpactNormal.Z < MinWalkableFloorZ)
-	{
-		bRightWallRunnable = true;
-	}
-
-	bool bWallLeftHit = GetWorld()->LineTraceSingleByChannel(LeftWallHit, WallTraceStart, WallTraceLeftEnd,
-		ECC_WorldStatic, WallQueryParams);
-
-	bool bLeftWallRunnable = false;
-
-	if (bWallLeftHit && LeftWallHit.IsValidBlockingHit() && LeftWallHit.ImpactNormal.Z < MinWalkableFloorZ)
-	{
-		bLeftWallRunnable = true;
-	}
-
-	if (bRightWallRunnable && bLeftWallRunnable)
-	{
-		CurrentWallSide = LeftWallHit.Distance > RightWallHit.Distance ? EWallSide::EWS_Right : EWallSide::EWS_Left;
-		SetMovementState(EMovementState::EMS_WallRun);
-		return;
-	}
-	else if (bLeftWallRunnable)
-	{
-		CurrentWallSide = EWallSide::EWS_Left;
-		SetMovementState(EMovementState::EMS_WallRun);
-		return;
-	}
-	else if (bRightWallRunnable)
-	{
-		CurrentWallSide = EWallSide::EWS_Right;
-		SetMovementState(EMovementState::EMS_WallRun);
-		return;
-	}
-	else
-	{
-		CurrentWallSide = EWallSide::EWS_None;
-	}
+	if (TryWallRun()) return;
 	
 	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();
 
@@ -347,6 +358,47 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 
 void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 {
+	float EnterZSpeed = Velocity.Z;
+
+	// Implement later
+	if (EnterZSpeed >= 0.f && EnterZSpeed < 30.f)
+	{
+		
+	}
+	else if (EnterZSpeed < 0.f && EnterZSpeed > -30.f)
+	{
+		
+	}
+	else
+	{
+		
+	}
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(SuraPawnPlayer);
+	FVector TraceStart = SuraPawnPlayer->GetActorLocation();
+	FVector TraceEnd = TraceStart - CurrentWallHit.ImpactNormal * 200.f;
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility,
+		Params);
+	
+	if (bHit && HitResult.IsValidBlockingHit())
+	{
+		CurrentWallHit = HitResult;
+		if (CurrentWallSide == EWallRunSide::EWRS_Left)
+		{
+			FVector VelocityDir = FVector::CrossProduct(CurrentWallHit.ImpactNormal, FVector::UpVector).GetSafeNormal();
+			Velocity = VelocityDir * 1000.f;
+		}
+		else if (CurrentWallSide == EWallRunSide::EWRS_Right)
+		{
+			FVector VelocityDir = FVector::CrossProduct(CurrentWallHit.ImpactNormal, FVector::DownVector).GetSafeNormal();
+			Velocity = VelocityDir * 1000.f;
+		}
+		
+	}
+	
 	
 }
 

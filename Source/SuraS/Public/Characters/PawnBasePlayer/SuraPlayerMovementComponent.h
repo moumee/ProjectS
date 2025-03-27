@@ -20,11 +20,11 @@ enum class EMovementState : uint8
 };
 
 UENUM(Blueprintable)
-enum class EWallSide : uint8
+enum class EWallRunSide : uint8
 {
-	EWS_None,
-	EWS_Left,
-	EWS_Right,
+	EWRS_None,
+	EWRS_Left,
+	EWRS_Right,
 };
 
 
@@ -100,12 +100,10 @@ protected:
 	float MaxStepHeight = 30.f;
 
 protected:
+	
+	EWallRunSide CurrentWallSide = EWallRunSide::EWRS_None;
 
-	EWallSide CurrentWallSide = EWallSide::EWS_None;
-
-	FHitResult LeftWallHit;
-
-	FHitResult RightWallHit;
+	FHitResult CurrentWallHit;
 	
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	bool bIsDashing = false;
@@ -171,6 +169,7 @@ protected:
 	void TickMove(float DeltaTime);
 
 	void TickSlide(float DeltaTime);
+	bool TryWallRun();
 
 	void TickAirborne(float DeltaTime);
 
