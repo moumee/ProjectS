@@ -3,7 +3,6 @@
 
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 
-#include "AITypes.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/CapsuleComponent.h"
 
@@ -68,6 +67,7 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 				FVector AdjustedTickMovement = FVector(DesiredTickMovement.X, DesiredTickMovement.Y, 0).GetSafeNormal() * DesiredTickMovement.Size();
 				FVector AdjustedNormal = FVector(Hit.Normal.X, Hit.Normal.Y, 0).GetSafeNormal();
 				SlideAlongSurface(AdjustedTickMovement, 1.f - Hit.Time, AdjustedNormal, Hit);
+				
 			}
 			else
 			{
@@ -149,7 +149,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		{
 			ElapsedTimeFromDash += DeltaTime;
 			float T = ElapsedTimeFromDash / DashDecelerationTime;
-			FVector CalculatedVelocity = Velocity.GetSafeNormal() * FMath::Lerp(DashStartSpeed, DashEndSpeed, T * T);
+			FVector CalculatedVelocity = Velocity.GetSafeNormal() * FMath::InterpEaseIn(DashStartSpeed, DashEndSpeed, T, 2.f);
 			Velocity = CalculatedVelocity;
 		}
 		else
@@ -159,8 +159,6 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 			Velocity = Velocity.GetSafeNormal() * DashEndSpeed;
 		}
 	}
-
-	
 
 	FHitResult Hit;
 	FCollisionQueryParams Params;
@@ -227,6 +225,56 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			SetMovementState(EMovementState::EMS_Move);
 			return;
 		}
+	}
+
+	FCollisionQueryParams WallQueryParams;
+	WallQueryParams.AddIgnoredActor(SuraPawnPlayer);
+	
+	FVector WallTraceStart = PawnOwner->GetActorLocation();
+	FVector WallTraceRightEnd = WallTraceStart + PawnOwner->GetActorRightVector() * 200.f;
+	FVector WallTraceLeftEnd = WallTraceStart - PawnOwner->GetActorRightVector() * 200.f;
+	
+	bool bWallRightHit = GetWorld()->LineTraceSingleByChannel(RightWallHit, WallTraceStart, WallTraceRightEnd,
+		ECC_WorldStatic, WallQueryParams);
+
+	bool bRightWallRunnable = false;
+
+	if (bWallRightHit && RightWallHit.IsValidBlockingHit() && RightWallHit.ImpactNormal.Z < MinWalkableFloorZ)
+	{
+		bRightWallRunnable = true;
+	}
+
+	bool bWallLeftHit = GetWorld()->LineTraceSingleByChannel(LeftWallHit, WallTraceStart, WallTraceLeftEnd,
+		ECC_WorldStatic, WallQueryParams);
+
+	bool bLeftWallRunnable = false;
+
+	if (bWallLeftHit && LeftWallHit.IsValidBlockingHit() && LeftWallHit.ImpactNormal.Z < MinWalkableFloorZ)
+	{
+		bLeftWallRunnable = true;
+	}
+
+	if (bRightWallRunnable && bLeftWallRunnable)
+	{
+		CurrentWallSide = LeftWallHit.Distance > RightWallHit.Distance ? EWallSide::EWS_Right : EWallSide::EWS_Left;
+		SetMovementState(EMovementState::EMS_WallRun);
+		return;
+	}
+	else if (bLeftWallRunnable)
+	{
+		CurrentWallSide = EWallSide::EWS_Left;
+		SetMovementState(EMovementState::EMS_WallRun);
+		return;
+	}
+	else if (bRightWallRunnable)
+	{
+		CurrentWallSide = EWallSide::EWS_Right;
+		SetMovementState(EMovementState::EMS_WallRun);
+		return;
+	}
+	else
+	{
+		CurrentWallSide = EWallSide::EWS_None;
 	}
 	
 	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();
@@ -297,7 +345,10 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	
 }
 
-void USuraPlayerMovementComponent::TickWallRun(float DeltaTime){}
+void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
+{
+	
+}
 
 void USuraPlayerMovementComponent::TickHang(float DeltaTime){}
 
@@ -320,13 +371,13 @@ bool USuraPlayerMovementComponent::IsGrounded() const
 	FHitResult GroundSweepHit;
 	FCollisionQueryParams GroundSweepParams;
 	GroundSweepParams.AddIgnoredActor(PawnOwner);
-
+	
 	FVector SweepStart = SuraPawnPlayer->GetActorLocation();
 	FVector SweepEnd = SuraPawnPlayer->GetActorLocation() +
-		FVector::DownVector * (SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 10.f);
+		FVector::DownVector * (SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 	
 	bool bHit = GetWorld()->SweepSingleByChannel(GroundSweepHit, SweepStart, SweepEnd, FQuat::Identity, ECC_WorldStatic,
-		FCollisionShape::MakeSphere(40.f), GroundSweepParams);
+		FCollisionShape::MakeSphere(20.f), GroundSweepParams);
 	
 
 	if (!bHit || !GroundSweepHit.bBlockingHit)
@@ -338,6 +389,108 @@ bool USuraPlayerMovementComponent::IsGrounded() const
 	{
 		return false;
 	}
+
+	return true;
+}
+
+bool USuraPlayerMovementComponent::TryStepUp(const FHitResult& Hit, const FVector& DeltaMove, float DeltaTime)
+{
+	if (!SuraPawnPlayer || MaxStepHeight <= 0.f)
+	{
+		return false;
+	}
+
+	const UCapsuleComponent* Capsule = SuraPawnPlayer->GetCapsuleComponent();
+
+	const FVector CurrentLocation = UpdatedComponent->GetComponentLocation();
+	const float CapsuleHalfHeight = Capsule->GetScaledCapsuleHalfHeight();
+	const float CapsuleRadius = Capsule->GetScaledCapsuleRadius();
+	const FVector HorizontalMoveDirection = DeltaMove.GetSafeNormal2D();
+
+	// --- 1. Initial Downward Check from slightly above impact point ---
+	// This confirms we hit something near our base, not high up the capsule
+	FVector CheckStart = Hit.ImpactPoint + Hit.ImpactNormal * 0.1f; // Start slightly away from surface
+	CheckStart.Z = CurrentLocation.Z; // Align Z with character center initially
+	FVector CheckEnd = CheckStart - FVector(0, 0, CapsuleHalfHeight + MaxStepHeight + 5.0f); // Check down further than max step height
+
+	FHitResult InitialDownHit;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(PawnOwner);
+
+	if (!GetWorld()->LineTraceSingleByChannel(InitialDownHit, CheckStart, CheckEnd, ECC_Visibility, QueryParams))
+	{
+		// Didn't hit anything below impact point? Strange scenario, abort.
+		return false;
+	}
+
+    // Calculate height difference from character base to the initial impact point's floor
+	float InitialFloorZ = InitialDownHit.ImpactPoint.Z;
+	float InitialStepHeight = InitialFloorZ - (CurrentLocation.Z - CapsuleHalfHeight);
+
+    // If the floor below the impact point is already too high, it's not a step we can take
+	if (InitialStepHeight > MaxStepHeight || InitialStepHeight <= KINDA_SMALL_NUMBER)
+	{
+		return false;
+	}
+     if (InitialDownHit.ImpactNormal.Z < MinWalkableFloorZ)
+    {
+         return false; // Initial surface below impact isn't walkable
+    }
+
+
+	// --- 2. Upward Check for Clearance ---
+	// Check if there's space above the potential step ledge
+	FVector UpCheckStart = InitialDownHit.ImpactPoint + FVector(0, 0, 0.1f); // Start just above the found floor
+    FVector UpCheckEnd = UpCheckStart + FVector(0, 0, MaxStepHeight + CapsuleHalfHeight * 2.0f); // Check up high enough for capsule
+
+	FCollisionShape CapsuleShape = FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight);
+	FHitResult UpHit;
+
+
+	bool bHitUp = GetWorld()->SweepSingleByChannel(
+		UpHit,
+		UpCheckStart, // Start slightly above the potential step surface
+		UpCheckStart, // End at same location for a check, not a move trace
+		FQuat::Identity,
+		ECC_Visibility, // Or your character collision channel
+		CapsuleShape,
+		QueryParams
+	);
+
+	// If the upward check hits something right away, there's no room to step up.
+	if (bHitUp && UpHit.bBlockingHit)
+	{
+		return false;
+	}
+
+
+	// --- 3. Perform the Step Up ---
+	// We have confirmed a step of appropriate height and clearance above it.
+	const float TargetZ = InitialFloorZ + CapsuleHalfHeight + 1.0f; // Target center Z slightly above the step surface
+	const FVector TargetLocation = FVector(CurrentLocation.X, CurrentLocation.Y, TargetZ); // Keep X/Y for now
+
+	// Move the character vertically. Use TeleportPhysics to avoid physics interactions during the snap.
+	UpdatedComponent->SetWorldLocation(TargetLocation, false, nullptr, ETeleportType::TeleportPhysics);
+
+	// --- 4. Continue Horizontal Movement ---
+	// Since we consumed the initial hit time, calculate remaining time and move horizontally
+	float RemainingTime = DeltaTime * (1.f - Hit.Time);
+    if (RemainingTime > KINDA_SMALL_NUMBER)
+    {
+        FVector RemainingHorizontalMove = Velocity.GetSafeNormal2D() * Velocity.Size2D() * RemainingTime;
+        FHitResult MoveAfterStepHit;
+        SafeMoveUpdatedComponent(RemainingHorizontalMove, UpdatedComponent->GetComponentRotation(), true, MoveAfterStepHit);
+
+        // Optional: Handle sliding if we hit something *after* stepping up
+        if (MoveAfterStepHit.IsValidBlockingHit())
+        {
+            SlideAlongSurface(RemainingHorizontalMove, 1.f - MoveAfterStepHit.Time, MoveAfterStepHit.Normal, MoveAfterStepHit);
+        }
+    }
+
+
+	// Crucial: Reset velocity Z component after stepping up, otherwise gravity might be instantly reapplied too strongly
+	Velocity.Z = FMath::Max(0.f, Velocity.Z); // Don't want downward velocity right after step up
 
 	return true;
 }

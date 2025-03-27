@@ -19,6 +19,14 @@ enum class EMovementState : uint8
 	EMS_Hang
 };
 
+UENUM(Blueprintable)
+enum class EWallSide : uint8
+{
+	EWS_None,
+	EWS_Left,
+	EWS_Right,
+};
+
 
 UCLASS()
 class SURAS_API USuraPlayerMovementComponent : public UPawnMovementComponent
@@ -89,10 +97,16 @@ protected:
 	float MaxWalkableFloorAngle = 50.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Walk")
-	float MaxStepHeight = 50.f;
+	float MaxStepHeight = 30.f;
 
 protected:
 
+	EWallSide CurrentWallSide = EWallSide::EWS_None;
+
+	FHitResult LeftWallHit;
+
+	FHitResult RightWallHit;
+	
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	bool bIsDashing = false;
 	
@@ -145,6 +159,8 @@ protected:
 	bool bCrouchPressed = false;
 
 	bool IsGrounded() const;
+
+	bool TryStepUp(const FHitResult& Hit, const FVector& DeltaMove, float DeltaTime);
 
 	void SetMovementState(EMovementState NewState);
 

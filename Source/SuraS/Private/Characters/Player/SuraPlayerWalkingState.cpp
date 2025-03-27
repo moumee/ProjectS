@@ -34,8 +34,6 @@ void USuraPlayerWalkingState::EnterState(ASuraCharacterPlayer* Player)
 
 	float WalkSpeed = Player->GetPlayerMovementData()->GetWalkSpeed();
 	
-
-	
 	switch (Player->GetPreviousGroundedState()->GetStateType())
 	{
 	case EPlayerState::Running:
