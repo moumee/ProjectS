@@ -256,25 +256,25 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 
 	if (bRightWallRunnable && bLeftWallRunnable)
 	{
-		CurrentWallSide = LeftWallHit.Distance > RightWallHit.Distance ? EWallSide::EWS_Right : EWallSide::EWS_Left;
+		CurrentWallSide = LeftWallHit.Distance > RightWallHit.Distance ? EWallRunSide::EWRS_Right : EWallRunSide::EWRS_Left;
 		SetMovementState(EMovementState::EMS_WallRun);
 		return;
 	}
 	else if (bLeftWallRunnable)
 	{
-		CurrentWallSide = EWallSide::EWS_Left;
+		CurrentWallSide = EWallRunSide::EWRS_Left;
 		SetMovementState(EMovementState::EMS_WallRun);
 		return;
 	}
 	else if (bRightWallRunnable)
 	{
-		CurrentWallSide = EWallSide::EWS_Right;
+		CurrentWallSide = EWallRunSide::EWRS_Right;
 		SetMovementState(EMovementState::EMS_WallRun);
 		return;
 	}
 	else
 	{
-		CurrentWallSide = EWallSide::EWS_None;
+		CurrentWallSide = EWallRunSide::EWRS_None;
 	}
 	
 	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();

@@ -20,11 +20,11 @@ enum class EMovementState : uint8
 };
 
 UENUM(Blueprintable)
-enum class EWallSide : uint8
+enum class EWallRunSide : uint8
 {
-	EWS_None,
-	EWS_Left,
-	EWS_Right,
+	EWRS_None,
+	EWRS_Left,
+	EWRS_Right,
 };
 
 
@@ -101,7 +101,7 @@ protected:
 
 protected:
 
-	EWallSide CurrentWallSide = EWallSide::EWS_None;
+	EWallRunSide CurrentWallSide = EWallRunSide::EWRS_None;
 
 	FHitResult LeftWallHit;
 
