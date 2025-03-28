@@ -37,7 +37,7 @@ void ASuraCharacterEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//InitializeEnemy();
+	InitializeEnemy();
 }
 
 void ASuraCharacterEnemyBase::Tick(float DeltaSeconds)
