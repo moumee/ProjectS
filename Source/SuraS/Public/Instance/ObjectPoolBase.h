@@ -31,8 +31,10 @@ protected:
 
 	virtual void SpawnPooledObject(AActor*& spawnedObject);
 
+	UPROPERTY()
 	TArray<AActor*> ObjectPool;
 	FActorSpawnParameters ActorSpawnParameters;
+	UPROPERTY()
 	UWorld* World;
 
 private:
