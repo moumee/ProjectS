@@ -14,12 +14,9 @@ class SURAS_API UBTT_MeleeAttack : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
-	UBehaviorTreeComponent* TempOwnerComp;
-
 	FOnMontageEnded OnAttackMontageEnded;
 
-	bool IsAttacking;
+	bool IsAttacking = true;
 
 	void OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted);
 	

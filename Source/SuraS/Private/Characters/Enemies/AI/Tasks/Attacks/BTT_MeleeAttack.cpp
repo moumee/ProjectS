@@ -10,6 +10,7 @@
 UBTT_MeleeAttack::UBTT_MeleeAttack(FObjectInitializer const& ObjectInitializer)
 {
 	NodeName = "Melee Attack";
+	bNotifyTick = true;
 }
 
 EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -20,11 +21,8 @@ EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerC
 		{
 			OnAttackMontageEnded.BindUObject(this, &UBTT_MeleeAttack::OnAttackEnded);
 
-			// Attack
 			IsAttacking = true;
 			Enemy->Attack(Player);
-
-			TempOwnerComp = &OwnerComp; // for finishing task latently
 
 			Enemy->GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(OnAttackMontageEnded); // montage interrupted
 			Enemy->GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(OnAttackMontageEnded); // montage ended

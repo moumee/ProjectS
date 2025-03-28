@@ -2,6 +2,8 @@
 
 
 #include "Characters/Enemies/AI/Tasks/Attacks/BTT_Fire.h"
+
+#include "AIController.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "BehaviorTree/BlackboardComponent.h"

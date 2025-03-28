@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
+
+#include "BehaviorTree/BehaviorTree.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Characters/Player/SuraCharacterPlayer.h" // For detecting the player
 #include "Perception/AIPerceptionComponent.h"

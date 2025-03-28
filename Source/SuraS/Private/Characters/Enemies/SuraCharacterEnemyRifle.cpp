@@ -3,6 +3,8 @@
 
 #include "Characters/Enemies/SuraCharacterEnemyRifle.h"
 
+#include "Weapons/Firearms/SuraFirearmRifle.h"
+
 ASuraCharacterEnemyRifle::ASuraCharacterEnemyRifle()
 {
 	EnemyType = "Rifle";
@@ -21,6 +23,8 @@ void ASuraCharacterEnemyRifle::BeginPlay()
 
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 	Firearm->AttachToComponent(GetMesh(), AttachmentRules, FName(TEXT("Gun")));
+
+	EnemyWeapon = Firearm;
 }
 
 void ASuraCharacterEnemyRifle::Attack(const ASuraCharacterPlayer* Player)
