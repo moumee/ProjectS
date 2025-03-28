@@ -64,7 +64,7 @@ protected:
 	float DashEndSpeed = 1500.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Dash")
-	float DashDecelerationTime = 0.4f;
+	float DashDecelerationTime = 0.25f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Dash")
 	float DashCooldown = 5.f;
@@ -85,7 +85,7 @@ protected:
 	float Deceleration = 8000.f;
 	
 	UPROPERTY(EditAnywhere, Category = "Movement|Air")
-	float AirAcceleration = 1500.f;
+	float AirAcceleration = 3000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Air")
 	float AirDeceleration = 2000.f;
@@ -100,8 +100,10 @@ protected:
 	float MaxStepHeight = 30.f;
 
 protected:
+
+	float WallJumpBuffer = 0.5f;
 	
-	EWallRunSide CurrentWallSide = EWallRunSide::EWRS_None;
+	EWallRunSide CurrentWallRunSide = EWallRunSide::EWRS_None;
 
 	FHitResult CurrentWallHit;
 	
@@ -119,7 +121,7 @@ protected:
 	float JumpBuffer = 0.1f;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
-	float ElapsedTimeFromGround = 0.f;
+	float ElapsedTimeFromSurface = 0.f;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	float ElapsedTimeFromDash = 0.f;
@@ -169,7 +171,7 @@ protected:
 	void TickMove(float DeltaTime);
 
 	void TickSlide(float DeltaTime);
-	bool TryWallRun();
+	bool CanWallRun();
 
 	void TickAirborne(float DeltaTime);
 

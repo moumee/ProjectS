@@ -3,6 +3,7 @@
 
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 
+#include "AnimNodes/AnimNode_RandomPlayer.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/CapsuleComponent.h"
 
@@ -211,88 +212,63 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 	
 }
 
-bool USuraPlayerMovementComponent::TryWallRun()
-{
-	FCollisionQueryParams WallQueryParams;
-	WallQueryParams.AddIgnoredActor(SuraPawnPlayer);
-	
-	FVector WallTraceStart = PawnOwner->GetActorLocation();
-	FVector WallTraceRightEnd = WallTraceStart + PawnOwner->GetActorRightVector() * 200.f;
-	FVector WallTraceLeftEnd = WallTraceStart - PawnOwner->GetActorRightVector() * 200.f;
 
-	FHitResult WallRightHit;
-	bool bWallRightHit = GetWorld()->LineTraceSingleByChannel(WallRightHit, WallTraceStart, WallTraceRightEnd,
-	                                                          ECC_WorldStatic, WallQueryParams);
-
-	bool bRightWallRunnable = false;
-
-	if (bWallRightHit && WallRightHit.IsValidBlockingHit() && WallRightHit.ImpactNormal.Z < MinWalkableFloorZ)
-	{
-		bRightWallRunnable = true;
-	}
-
-	FHitResult WallLeftHit;
-	bool bWallLeftHit = GetWorld()->LineTraceSingleByChannel(WallLeftHit, WallTraceStart, WallTraceLeftEnd,
-	                                                         ECC_WorldStatic, WallQueryParams);
-
-	bool bLeftWallRunnable = false;
-
-	if (bWallLeftHit && WallLeftHit.IsValidBlockingHit() && WallLeftHit.ImpactNormal.Z < MinWalkableFloorZ)
-	{
-		bLeftWallRunnable = true;
-	}
-
-	if (bRightWallRunnable && bLeftWallRunnable)
-	{
-		CurrentWallSide = WallLeftHit.Distance > WallRightHit.Distance ? EWallRunSide::EWRS_Right : EWallRunSide::EWRS_Left;
-		CurrentWallHit = WallLeftHit.Distance > WallRightHit.Distance ? WallRightHit : WallLeftHit;
-		SetMovementState(EMovementState::EMS_WallRun);
-		return true;
-	}
-	else if (bLeftWallRunnable)
-	{
-		CurrentWallSide = EWallRunSide::EWRS_Left;
-		CurrentWallHit = WallLeftHit;
-		SetMovementState(EMovementState::EMS_WallRun);
-		return true;
-	}
-	else if (bRightWallRunnable)
-	{
-		CurrentWallSide = EWallRunSide::EWRS_Right;
-		CurrentWallHit = WallRightHit;
-		SetMovementState(EMovementState::EMS_WallRun);
-		return true;
-	}
-	else
-	{
-		CurrentWallSide = EWallRunSide::EWRS_None;
-	}
-	return false;
-}
 
 void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 {
-	if (PreviousMovementState == EMovementState::EMS_Move)
+	if (PreviousMovementState == EMovementState::EMS_Move ||
+		PreviousMovementState == EMovementState::EMS_WallRun)
 	{
-		ElapsedTimeFromGround += DeltaTime;
+		ElapsedTimeFromSurface += DeltaTime;
 	}
 	
 	if (IsGrounded())
 	{
-		if (ElapsedTimeFromGround > JumpBuffer)
+		if (PreviousMovementState != EMovementState::EMS_Move)
 		{
 			SetMovementState(EMovementState::EMS_Move);
 			return;
 		}
+		else
+		{
+			if (ElapsedTimeFromSurface > JumpBuffer)
+			{
+				SetMovementState(EMovementState::EMS_Move);
+				return;
+			}
+		}
+
+		
 	}
 
-	if (TryWallRun()) return;
+	if (CanWallRun())
+	{
+		if ((CurrentWallRunSide == EWallRunSide::EWRS_Left && MovementInputVector.X < 0.f) ||
+			(CurrentWallRunSide == EWallRunSide::EWRS_Right && MovementInputVector.X > 0.f))
+		{
+			if (PreviousMovementState != EMovementState::EMS_WallRun)
+			{
+				SetMovementState(EMovementState::EMS_WallRun);
+				return;
+			}
+			else
+			{
+				if (ElapsedTimeFromSurface > WallJumpBuffer)
+				{
+					SetMovementState(EMovementState::EMS_WallRun);
+					return;
+				}
+			}
+		}
+	}
+
+	
 	
 	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();
 
 	if (!bIsDashing)
 	{
-		float MaxHorizontalSpeed = RunSpeed * 0.8f;
+		float MaxHorizontalSpeed = RunSpeed;
 		if (Velocity.Size2D() > MaxHorizontalSpeed)
 		{
 			Velocity = (Velocity - Velocity.GetSafeNormal() * AirDeceleration * DeltaTime).GetClampedToSize2D(MaxHorizontalSpeed, FLT_MAX);
@@ -328,6 +304,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 
 	if (bJumpPressed)
 	{
+		bJumpPressed = false;
 		if (CurrentJumpCount < MaxJumpCount)
 		{
 			CurrentJumpCount++;
@@ -351,7 +328,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		}
 
 		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
-		Velocity = DashDirection * DashStartSpeed;
+		Velocity = DashDirection.GetSafeNormal2D() * DashStartSpeed + Velocity.Z;
 	}
 	
 }
@@ -386,19 +363,45 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	if (bHit && HitResult.IsValidBlockingHit())
 	{
 		CurrentWallHit = HitResult;
-		if (CurrentWallSide == EWallRunSide::EWRS_Left)
+		if (CurrentWallRunSide == EWallRunSide::EWRS_Left)
 		{
 			FVector VelocityDir = FVector::CrossProduct(CurrentWallHit.ImpactNormal, FVector::UpVector).GetSafeNormal();
 			Velocity = VelocityDir * 1000.f;
 		}
-		else if (CurrentWallSide == EWallRunSide::EWRS_Right)
+		else if (CurrentWallRunSide == EWallRunSide::EWRS_Right)
 		{
 			FVector VelocityDir = FVector::CrossProduct(CurrentWallHit.ImpactNormal, FVector::DownVector).GetSafeNormal();
 			Velocity = VelocityDir * 1000.f;
 		}
-		
+
+		if (CurrentWallRunSide == EWallRunSide::EWRS_Left && MovementInputVector.X >= 0.f ||
+			CurrentWallRunSide == EWallRunSide::EWRS_Right && MovementInputVector.X <= 0.f)
+		{
+			SetMovementState(EMovementState::EMS_Airborne);
+			return;
+		}
 	}
-	
+	else
+	{
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
+	}
+
+	if (bJumpPressed && CurrentJumpCount < MaxJumpCount)
+	{
+		bJumpPressed = false;
+		CurrentJumpCount++;
+		FVector WallNormal2D = CurrentWallHit.ImpactNormal.GetSafeNormal2D();
+		Velocity += WallNormal2D * 500.f + FVector::UpVector * JumpZVelocity;
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
+	}
+
+	if (bCrouchPressed)
+	{
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
+	}
 	
 }
 
@@ -406,12 +409,68 @@ void USuraPlayerMovementComponent::TickHang(float DeltaTime){}
 
 void USuraPlayerMovementComponent::TickMantle(float DeltaTime){}
 
+bool USuraPlayerMovementComponent::CanWallRun()
+{
+	FCollisionQueryParams WallQueryParams;
+	WallQueryParams.AddIgnoredActor(SuraPawnPlayer);
+	
+	FVector WallTraceStart = PawnOwner->GetActorLocation();
+	FVector WallTraceRightEnd = WallTraceStart + PawnOwner->GetActorRightVector() * 100.f;
+	FVector WallTraceLeftEnd = WallTraceStart - PawnOwner->GetActorRightVector() * 100.f;
+
+	FHitResult WallRightHit;
+	bool bWallRightHit = GetWorld()->LineTraceSingleByChannel(WallRightHit, WallTraceStart, WallTraceRightEnd,
+															  ECC_GameTraceChannel2, WallQueryParams);
+
+	bool bRightWallRunnable = false;
+
+	if (bWallRightHit && WallRightHit.IsValidBlockingHit() && WallRightHit.ImpactNormal.Z < MinWalkableFloorZ)
+	{
+		bRightWallRunnable = true;
+	}
+
+	FHitResult WallLeftHit;
+	bool bWallLeftHit = GetWorld()->LineTraceSingleByChannel(WallLeftHit, WallTraceStart, WallTraceLeftEnd,
+															 ECC_WorldStatic, WallQueryParams);
+
+	bool bLeftWallRunnable = false;
+
+	if (bWallLeftHit && WallLeftHit.IsValidBlockingHit() && WallLeftHit.ImpactNormal.Z < MinWalkableFloorZ)
+	{
+		bLeftWallRunnable = true;
+	}
+
+	if (bRightWallRunnable && bLeftWallRunnable)
+	{
+		CurrentWallRunSide = WallLeftHit.Distance > WallRightHit.Distance ? EWallRunSide::EWRS_Right : EWallRunSide::EWRS_Left;
+		CurrentWallHit = WallLeftHit.Distance > WallRightHit.Distance ? WallRightHit : WallLeftHit;
+		return true;
+	}
+	else if (bLeftWallRunnable)
+	{
+		CurrentWallRunSide = EWallRunSide::EWRS_Left;
+		CurrentWallHit = WallLeftHit;
+		return true;
+	}
+	else if (bRightWallRunnable)
+	{
+		CurrentWallRunSide = EWallRunSide::EWRS_Right;
+		CurrentWallHit = WallRightHit;
+		return true;
+	}
+	else
+	{
+		CurrentWallRunSide = EWallRunSide::EWRS_None;
+	}
+	return false;
+}
+
 void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldState, EMovementState NewState)
 {
 	if (OldState == EMovementState::EMS_Airborne)
 	{
+		ElapsedTimeFromSurface = 0.f;
 		CurrentJumpCount = 0;
-		ElapsedTimeFromGround = 0.f;
 	}
 	
 }
