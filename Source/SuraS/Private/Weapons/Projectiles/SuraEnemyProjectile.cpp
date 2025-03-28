@@ -58,17 +58,12 @@ void ASuraEnemyProjectile::InitializeProjectile(AActor* TheOwner, float TheAddit
 
 void ASuraEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("hit"));
+	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("hit"));
 
 	if (OtherActor != nullptr && OtherActor != ProjectileOwner) 
 	{
 		if (OtherActor != this && OtherComp != nullptr && OtherComp->IsSimulatingPhysics())
 			OtherComp->AddImpulseAtLocation(GetVelocity() * 100.f, GetActorLocation());
-
-		if (ASuraCharacterPlayer* const Player = Cast<ASuraCharacterPlayer>(Hit.GetActor()))
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("poyo"));
-		}
 
 		ApplyDamage(OtherActor, DamageAmount + AdditionalDamage, EDamageType::Melee, false);
 

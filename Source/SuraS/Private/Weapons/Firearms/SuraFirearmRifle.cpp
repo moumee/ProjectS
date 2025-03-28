@@ -8,7 +8,7 @@ void ASuraFirearmRifle::Fire(AActor* FirearmOwner, const AActor* TargetActor, fl
 {
 	if (ProjectileClass)
 	{
-		const FVector SpawnLocation = FirearmMesh->GetSocketLocation(FName(TEXT("Muzzle")));
+		const FVector SpawnLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
 		const FRotator SpawnRotation = (TargetActor->GetActorLocation() - SpawnLocation).Rotation();
 
 		FActorSpawnParameters ActorSpawnParams;

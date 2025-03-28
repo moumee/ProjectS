@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
-#include "Weapons/Firearms/SuraFirearmRifle.h"
 #include "SuraCharacterEnemyRifle.generated.h"
 
+class ASuraFirearmRifle;
 /**
  * 
  */
@@ -14,7 +14,8 @@ UCLASS()
 class SURAS_API ASuraCharacterEnemyRifle : public ASuraCharacterEnemyBase
 {
 	GENERATED_BODY()
-	
+
+	UPROPERTY()
 	ASuraFirearmRifle* Firearm;
 
 protected:
