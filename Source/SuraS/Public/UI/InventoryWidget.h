@@ -134,6 +134,15 @@ public:
 	UPROPERTY(meta = (BindWidget)) UTextBlock* ShotGunName;
 	UPROPERTY(meta = (BindWidget)) UTextBlock* MissileLauncherName;
 	//UPROPERTY(meta = (BindWidget)) UTextBlock* RailGunName;
+
+	/** 현재 선택 중인 무기 속성창 **/
+	UPROPERTY(meta = (BindWidget)) UImage* CurrentWeaponImage;
+	//damage
+	//speed
+	//rebound
+	//handle speed
+	//magazine
+	//firing method
 	
 	UFUNCTION()
 	void OnWeaponPickedUp(FName WeaponName);

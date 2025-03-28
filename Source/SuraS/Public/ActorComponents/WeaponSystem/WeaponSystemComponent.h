@@ -181,9 +181,12 @@ public:
 
 	void ChangeWeapon(int32 WeaponIndex);
 
-	// suhyeon
+	/** suhyeon **/
 	UFUNCTION(BlueprintCallable, Category = "Weapons")
 	const TArray<AWeapon*>& GetWeaponInventory() const {return WeaponInventory; }
+
+	int32 GetCurrentWeaponIndex() const {return CurrentWeaponIndex; }
+	/** suhyeon**/
 #pragma endregion
 	
 };

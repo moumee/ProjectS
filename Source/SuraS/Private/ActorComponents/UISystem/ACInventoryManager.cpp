@@ -4,11 +4,28 @@
 #include "AsyncTreeDifferences.h"
 #include "SceneTextures.h"
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
+#include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h" // 정확한 경로로 바꿔주세요
+#include "Components/Image.h"
 #include "GameFramework/Character.h"
 
 UACInventoryManager::UACInventoryManager()
 {
+	
+}
+
+void UACInventoryManager::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	if (!pWeaponSystemComponent)
+	{
+		pWeaponSystemComponent = GetOwner()->FindComponentByClass<UWeaponSystemComponent>();
+		if (!pWeaponSystemComponent)
+		{
+			UE_LOG(LogTemp, Error, TEXT("UWeaponSystemComponent를 찾을 수 없습니다."));
+		}
+	}
 	
 }
 
@@ -103,10 +120,45 @@ void UACInventoryManager::OnConfirmWeaponEquip()
 			break;
 	}
 
+	UpdateCurrentWeaponWindow();
+
 	bWaitingForWeaponSwitch = false;
 	PendingWeaponIndex = -1;
 
 	
+}
+
+void UACInventoryManager::UpdateCurrentWeaponWindow()
+{
+	// weaponinventory랑 current index 정보를 써서 attribute창 업데이트! 호출은 inventory widget초기화때랑 current index가 바뀔 때?
+
+	TArray<AWeapon*> WeaponInventory = pWeaponSystemComponent->GetWeaponInventory();
+	int32 CurrentWeaponIndex = pWeaponSystemComponent->GetCurrentWeaponIndex();
+
+
+	// UIManagerComponent 인스턴스 가져오기 (UIManagerComponent가 다른 컴포넌트라면 GetOwner()를 사용하거나 다른 방법으로 접근)
+	UACUIMangerComponent* UIManagerComponent = GetOwner()->FindComponentByClass<UACUIMangerComponent>();
+
+
+	if (UIManagerComponent)
+	{
+		// GetWidget을 사용하여 이미 생성된 UInventoryWidget 인스턴스를 가져옴
+		const UInventoryWidget* InventoryWidget = Cast<UInventoryWidget>(UIManagerComponent->GetWidget(EUIType::Inventory));
+
+		if (InventoryWidget && WeaponInventory.IsValidIndex(CurrentWeaponIndex))
+		{
+			AWeapon* CurrentWeapon = WeaponInventory[CurrentWeaponIndex];
+			if (CurrentWeapon && CurrentWeapon->WeaponData && CurrentWeapon->WeaponData->WeaponImage)
+			{
+				InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(CurrentWeapon->WeaponData->WeaponImage);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Weapon 또는 WeaponData 또는 WeaponImage가 nullptr입니다."));
+			}
+		}
+	}
+
 }
 
 
