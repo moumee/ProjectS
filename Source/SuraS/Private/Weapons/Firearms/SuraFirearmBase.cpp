@@ -7,24 +7,11 @@
 // Sets default values
 ASuraFirearmBase::ASuraFirearmBase()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
-	FirearmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirearmMesh"));
-	FirearmMesh->SetupAttachment(RootComponent);
 }
 
-// Called when the game starts or when spawned
-void ASuraFirearmBase::BeginPlay()
+void ASuraFirearmBase::InitializeFirearem(ASuraCharacterEnemyBase* OwnerChar, int32 NewMaxAmmo, int32 NewMagsize)
 {
-	Super::BeginPlay();
-
-	if (FirearmMeshAsset)
-		FirearmMesh->SetSkeletalMesh(FirearmMeshAsset);
-}
-
-void ASuraFirearmBase::InitializeFirearem(const ASuraCharacterEnemyBase* OwnerChar, int32 NewMaxAmmo, int32 NewMagsize)
-{
+	Owner = OwnerChar;
 	OwnerCharacter = OwnerChar;
 	MaxAmmo = NewMaxAmmo;
 	CurrentAmmoInReserve = NewMaxAmmo;

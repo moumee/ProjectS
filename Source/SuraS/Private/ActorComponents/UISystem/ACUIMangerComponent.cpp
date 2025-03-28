@@ -4,6 +4,7 @@
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "EnhancedInputComponent.h"
 #include "ActorComponents/UISystem/ACCrosshairManager.h"
+#include "ActorComponents/UISystem/ACInventoryManager.h"
 
 
 // Sets default values for this component's properties
@@ -73,15 +74,31 @@ UBaseUIWidget* UACUIMangerComponent::GetWidget(EUIType UIType)
 }
 
 void UACUIMangerComponent::InitializeMangers()
-{
-	CrosshairManager = NewObject<UACCrosshairManager>(this, UACCrosshairManager::StaticClass());
-	CrosshairManager->RegisterComponent(); // 이 시점에서 해당 manager의 begin play가 호출됨.
+{	// 크로스헤어는 재형님 코드에서 무기마다 호출. 따라서 여기서 컴포넌트 등록 필요 없음.
+	//CrosshairManager = NewObject<UACCrosshairManager>(this, UACCrosshairManager::StaticClass());
+	//CrosshairManager->RegisterComponent(); // 이 시점에서 해당 manager의 begin play가 호출됨.
 
 	
 
 	// // 인벤토리 매니저 생성 및 등록
-	// InventoryManager = NewObject<UACInventoryManager>(this, UACInventoryManager::StaticClass());
-	// InventoryManager->RegisterComponent();
+	InventoryManager = NewObject<UACInventoryManager>(this, UACInventoryManager::StaticClass());
+	InventoryManager->RegisterComponent();
+
+	// InventoryManager = GetOwner()->FindComponentByClass<UACInventoryManager>();
+	//
+	// if (!InventoryManager)
+	// {
+	// 	UE_LOG(LogTemp, Warning, TEXT("InventoryManager not found!"));
+	// 	return;
+	// }
+	//
+	// // Inventory 위젯 생성
+	// UInventoryWidget* InventoryWidget = Cast<UInventoryWidget>(GetWidget(EUIType::Inventory));
+	// if (InventoryWidget)
+	// {
+	// 	InventoryManager->SetInventoryWidget(InventoryWidget);
+	// }
+
 }
 
 

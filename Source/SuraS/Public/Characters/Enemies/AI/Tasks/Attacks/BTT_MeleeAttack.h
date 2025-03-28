@@ -14,11 +14,14 @@ class SURAS_API UBTT_MeleeAttack : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
 
-	UBehaviorTreeComponent* TempOwnerComp;
+	FOnMontageEnded OnAttackMontageEnded;
+
+	bool IsAttacking = true;
 
 	void OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted);
 	
 public:
 	explicit UBTT_MeleeAttack(FObjectInitializer const& ObjectInitializer);
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 };

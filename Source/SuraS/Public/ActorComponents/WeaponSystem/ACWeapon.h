@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
 #include "Components/SkeletalMeshComponent.h"
 
 #include "ActorComponents/WeaponSystem/WeaponName.h"
+#include "ActorComponents/WeaponSystem/WeaponAction.h"
 #include "ActorComponents/WeaponSystem/WeaponType.h"
 #include "ActorComponents/WeaponSystem/WeaponFireMode.h"
 #include "ActorComponents/WeaponSystem/WeaponCamSettingValue.h"
@@ -37,19 +39,34 @@ class UWeaponAimUIWidget;
 class UInputAction;
 struct FInputBindingHandle;
 
-UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SURAS_API UACWeapon : public USkeletalMeshComponent, public IWeaponInterface
+//UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS()
+class SURAS_API AWeapon : public AActor, public IWeaponInterface
 {
 	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon)
-	UDataTable* WeaponDataTable;
-
+	FDataTableRowHandle WeaponDataTableHandle;
 	FWeaponData* WeaponData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponMesh")
+	USkeletalMeshComponent* WeaponMesh;
+	UFUNCTION()
+	USkeletalMeshComponent* GetWeaponMesh() { return WeaponMesh; }
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
+	EWeaponAction LeftMouseAction;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
+	EWeaponAction RightMouseAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = Projectile)
 	TSubclassOf<class ASuraProjectile> ProjectileClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+	TSubclassOf<class ASuraProjectile> LeftProjectileClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+	TSubclassOf<class ASuraProjectile> RightProjectileClass;
 
 	/** AnimMontage to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
@@ -60,41 +77,52 @@ public:
 	FVector MuzzleOffset;
 
 	/** MappingContext */
-	//TODO: FireMapping�� Character���� ó���ϴ� ���� ������ �����غ�����
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputMappingContext* FireMappingContext;
 
 	/** Fire Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* FireAction;
+	UInputAction* LeftSingleShotAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* RightSingleShotAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* FireSingleShotAction;
+	UInputAction* LeftBurstShotAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* RightBurstShotAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* FireBurstShotAction;
+	UInputAction* LeftFullAutoShotAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* RightFullAutoShotAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* ZoomAction;
+	UInputAction* LeftHoldAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* RightHoldAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* HoldAction;
+	UInputAction* LeftChargeAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* RightChargeAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* ChargeAction;
+	class UInputAction* RightZoomAction;
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ReloadAction;
 	
 	TArray<FInputBindingHandle*> InputActionBindingHandles;
 
-	UACWeapon();
+	AWeapon();
 
 	void InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter);
 	void InitializeCamera(ASuraCharacterPlayerWeapon* NewCharacter);
 	void InitializeUI();
 
-	void LoadWeaponData(FName WeaponID);
+	void LoadWeaponData();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	bool AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter);
@@ -104,8 +132,8 @@ public:
 
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void FireSingleProjectile(bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 NumPenetrable = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
-	void FireMultiProjectile();
+	void FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 	void SpawnProjectile();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
@@ -118,13 +146,12 @@ public:
 	void ZoomOut();
 
 protected:
-	// Called when the game starts
 	UFUNCTION()
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void Tick(float DeltaTime) override;
+	//virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
 	/** Ends gameplay for this component. */
@@ -294,10 +321,16 @@ protected:
 	float ReloadingTime = 2.5f;
 
 	UPROPERTY(EditAnywhere)
-	int32 MaxAmmo = 20.f;
+	int32 MaxTotalAmmo = 200.f;
 
 	UPROPERTY(EditAnywhere)
-	int32 NumOfLeftAmmo;
+	int32 TotalAmmo = 100.f;
+
+	UPROPERTY(EditAnywhere)
+	int32 MaxAmmoPerMag = 20.f;
+
+	UPROPERTY(EditAnywhere)
+	int32 LeftAmmoInCurrentMag;
 
 	FTimerHandle ReloadingTimer;
 protected:
@@ -310,8 +343,9 @@ protected:
 
 	void ConsumeAmmo();
 	void ReloadAmmo();
-	bool HasAmmo();
+	bool HasAmmoInCurrentMag();
 public:
+	bool AddAmmo(int32 NumAmmo);
 	void AutoReload();
 	virtual void ReloadingEnd() override; //Legacy
 #pragma endregion
@@ -376,8 +410,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponFireMode WeaponFireMode;
 protected:
-	void HandleSingleFire();
-	void HandleBurstFire();
+	void HandleSingleFire(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
+	void HandleBurstFire(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
 	void HandleFullAutoFire();
 #pragma endregion
 
@@ -388,13 +422,16 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float SingleShotDelay = 1.f;
 public:
-	void StartSingleShot(float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 NumPenetrable = 0);
+	void StartSingleShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 	void StopSingleShot();
 #pragma endregion
 
 #pragma region FireMode/BurstShot
 protected:
 	FTimerHandle BurstShotTimer;
+
+	UPROPERTY(EditAnywhere, Category = "BurstShot")
+	float BurstShotDelay = 1.f;
 
 	UPROPERTY(EditAnywhere)
 	float BurstShotFireRate = 0.1f;
@@ -405,8 +442,9 @@ protected:
 	int32 BurstShotFired = 0;
 
 protected:
-	void StartBurstFire(bool bMultiProjectile = false);
+	void StartBurstFire(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 	void StopBurstFire();
+	void EndBurstShot();
 #pragma endregion
 
 #pragma region FireMode/FullAuto
@@ -417,7 +455,7 @@ protected:
 	FTimerHandle FullAutoShotTimer;
 
 protected:
-	void StartFullAutoShot();
+	void StartFullAutoShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
 	void StopFullAutoShot();
 #pragma endregion
 
@@ -447,7 +485,7 @@ protected:
 protected:
 	void StartTargetDetection();
 	void UpdateTargetDetection(float DeltaTime);
-	void StopTargetDetection();
+	void StopTargetDetection(const TSubclassOf<ASuraProjectile>& InProjectileClass);
 
 	bool SearchOverlappedActor(FVector CenterLocation, float SearchRadius, TArray<AActor*>& OverlappedActors);
 	TTuple<FVector2D, bool> GetScreenPositionOfWorldLocation(const FVector& SearchLocation) const;
@@ -465,8 +503,8 @@ protected:
 	float MissileLaunchDelay = 0.2;
 	FTimerHandle MissileLaunchTimer;
 protected:
-	void StartMissileLaunch(TArray<AActor*> TargetActors);
-	void UpdateMissileLaunch();
+	void StartMissileLaunch(TArray<AActor*> TargetActors, const TSubclassOf<ASuraProjectile>& InProjectileClass);
+	void UpdateMissileLaunch(const TSubclassOf<ASuraProjectile>& InProjectileClass);
 	void StopMissileLaunch();
 #pragma endregion
 
@@ -481,7 +519,7 @@ protected:
 	float ChargingAdditionalRecoilAmountYawBase = 1.f;
 	float ChargingAdditionalProjectileRadiusBase = 20.f;
 
-	int32 MaxPenetrableObjectsNum = 4;
+	//int32 MaxPenetrableObjectsNum = 4;
 
 	float ElapsedChargeTime = 0.f;
 	FTimerHandle ChargingTimer;
@@ -489,6 +527,12 @@ protected:
 	void StartCharge();
 	void UpdateCharge();
 	void StopCharge();
+#pragma endregion
+
+#pragma region
+protected:
+	int32 MaxPenetrableObjectsNum_Left = 4;
+	int32 MaxPenetrableObjectsNum_Right = 4;
 #pragma endregion
 
 #pragma region Recoil
@@ -518,6 +562,36 @@ public:
 	void UpdateRecoil(float DeltaTime);
 #pragma endregion
 
+#pragma region Overheat
+protected:
+	UPROPERTY(EditAnywhere)
+	bool bIsOverheatMode = false;
+	UPROPERTY(EditAnywhere)
+	float OverheatBaseIncrement = 0.5f; //TODO: 총기 능력 사용 시간만큼 더해지도록 해야함. 그리고 우클릭 좌클릭 다르게 들어가도록
+	UPROPERTY(EditAnywhere)
+	float MaxOverheatValue = 5.f;
+	UPROPERTY(EditAnywhere)
+	float OverheatSpeed = 10.f;
+	UPROPERTY(EditAnywhere)
+	float OverheatRecoverSpeed = 10.f; //TODO: Reload Time을 사용할 수도 있어서 조금 지켜봐야함
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float OverheatRecoveryStartTime = 0.2f;
+
+	bool bIsOverheating = false;
+
+	float TotalTargetOverheatValue = 0.f;
+	float CurrentOverheatVaule = 0.f;
+	float OverheatRecoverTimer = 0.f;
+protected:
+	void AddOverheatValue();
+	void ApplyOverheat(float DeltaTime);
+	void RecoverOverheat(float DeltaTime);
+	void UpdateOverheat(float DeltaTime);
+
+
+#pragma endregion
+
 #pragma region Projectile/SingleProjectileSpread
 protected:
 	bool bIsSpreading = false;
@@ -540,6 +614,11 @@ protected:
 
 #pragma region Projectile/MultiProjectileSpread
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectile")
+	bool bEnableMultiProjectile_Left;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectile")
+	bool bEnableMultiProjectile_Right;
+
 	UPROPERTY(EditAnywhere)
 	int32 PelletsNum = 9;
 

@@ -12,7 +12,7 @@
 // delegate about inventory widget (writted by suhyeon)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponPickedUp, FName, WeaponName);
 
-class UACWeapon;
+class AWeapon;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SURAS_API UWeaponSystemComponent : public UActorComponent, public IWeaponInterface
@@ -59,6 +59,15 @@ private:
 	class UInputAction* SwitchWeaponDownAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SwitchWeapon1Action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SwitchWeapon2Action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SwitchWeapon3Action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LeftMouseButtonAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -97,9 +106,8 @@ public:
 
 public:
 	void PickUpWeapon();
-
 	bool ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp);
-
+	bool ObtainAmmo(ASuraWeaponPickUp* MagazinePickUp);
 #pragma endregion
 
 #pragma region Zoom
@@ -150,25 +158,32 @@ public:
 #pragma region SwitchWeapon
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapons")
-	TArray<UACWeapon*> WeaponInventory;
+	TArray<AWeapon*> WeaponInventory;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
-	UACWeapon* CurrentWeapon = nullptr;
+	AWeapon* CurrentWeapon = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	int32 CurrentWeaponIndex = 0;
 
 public:
-	UACWeapon* GetCurrentWeapon() { return CurrentWeapon; }
+	AWeapon* GetCurrentWeapon() { return CurrentWeapon; }
 
 	int32 GetWeaponNum() { return WeaponInventory.Num(); }
 
 	void SwitchToPreviousWeapon();
 	void SwitchToNextWeapon();
+	void SwitchToIndex1();
+	void SwitchToIndex2();
+	void SwitchToIndex3();
 
 	virtual void SwitchToOtherWeapon() override;
 
 	void ChangeWeapon(int32 WeaponIndex);
+
+	// suhyeon
+	UFUNCTION(BlueprintCallable, Category = "Weapons")
+	const TArray<AWeapon*>& GetWeaponInventory() const {return WeaponInventory; }
 #pragma endregion
 	
 };

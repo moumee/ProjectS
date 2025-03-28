@@ -12,8 +12,7 @@
 // Sets default values
 ASuraWeaponPickUp::ASuraWeaponPickUp()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	//Weapon = CreateDefaultSubobject<UACWeapon>(TEXT("Weapon"));
 	//Weapon->SetupAttachment(RootComponent);
@@ -49,6 +48,8 @@ void ASuraWeaponPickUp::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//TODO: 필요 없음. 비활성화 시켜야함
+
 }
 
 void ASuraWeaponPickUp::AttachToCharacter(ASuraCharacterPlayerWeapon* Character)
@@ -59,9 +60,9 @@ void ASuraWeaponPickUp::AttachToCharacter(ASuraCharacterPlayerWeapon* Character)
 }
 
 
-UACWeapon* ASuraWeaponPickUp::SpawnWeapon(ASuraCharacterPlayerWeapon* Character)
+AWeapon* ASuraWeaponPickUp::SpawnWeapon(ASuraCharacterPlayerWeapon* Character)
 {
-	UACWeapon* NewWeapon = nullptr;
+	AWeapon* NewWeapon = nullptr;
 	
 	if (WeaponClass != nullptr)
 	{
@@ -74,11 +75,12 @@ UACWeapon* ASuraWeaponPickUp::SpawnWeapon(ASuraCharacterPlayerWeapon* Character)
 			//FActorSpawnParameters ActorSpawnParams;
 			//ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-			NewWeapon = NewObject<UACWeapon>(Character, WeaponClass);
-			NewWeapon->RegisterComponent();
-			//NewWeapon->AttachToComponent(Character->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
+			//NewWeapon = NewObject<AWeapon>(Character, WeaponClass);
+			//NewWeapon->RegisterComponent();
 
-			//NewWeapon = World->SpawnActor<UACWeapon>(WeaponClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			NewWeapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass, GetActorTransform(), ActorSpawnParams);
 			NewWeapon->InitializeWeapon(Character);
 		}
 	}

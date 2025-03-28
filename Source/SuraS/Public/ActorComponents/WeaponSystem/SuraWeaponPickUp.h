@@ -10,7 +10,7 @@
 
 #include "SuraWeaponPickUp.generated.h"
 
-class UACWeapon;
+class AWeapon;
 class USuraPickUpComponent;
 class ASuraCharacterBase;
 class ASuraCharacterPlayerWeapon;
@@ -38,7 +38,7 @@ public:
 	void AttachToCharacter(ASuraCharacterPlayerWeapon* Character);
 
 	UFUNCTION()
-	UACWeapon* SpawnWeapon(ASuraCharacterPlayerWeapon* Character);
+	AWeapon* SpawnWeapon(ASuraCharacterPlayerWeapon* Character);
 
 	void DestroyWeaponPickUp();
 
@@ -50,10 +50,9 @@ public:
 
 
 protected:
-
 	/** Weapon class to spawn */
 	UPROPERTY(EditDefaultsOnly, Category = Weapon)
-	TSubclassOf<UACWeapon> WeaponClass;
+	TSubclassOf<AWeapon> WeaponClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* WeaponMesh;
@@ -61,15 +60,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponName WeaponName;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon, meta = (AllowPrivateAccess = "true"))
-	//UACWeapon* Weapon;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
 	USuraPickUpComponent* PickUpComponent;
-	
+protected:
+	UPROPERTY(EditAnywhere)
+	bool bIsMagazine = false;
+
+	UPROPERTY(EditAnywhere)
+	int32 NumAmmo = 10;
+
 public:
-	//UACWeapon* GetWeapon() const { return Weapon; }
-
 	EWeaponName GetWeaponName() const { return WeaponName; }
-
+	bool IsMagazine() const { return bIsMagazine; }
+	int32 GetAmmo() const { return NumAmmo; }
 };

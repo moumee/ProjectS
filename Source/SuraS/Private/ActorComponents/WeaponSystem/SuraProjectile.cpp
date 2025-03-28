@@ -66,14 +66,8 @@ ASuraProjectile::ASuraProjectile()
 	UE_LOG(LogTemp, Warning, TEXT("Projectile is Spawned!!!"));
 }
 
-void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, UACWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable) //TODO: 여기서 ProjectileType을 input으로 받아야 할 듯
+void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable)
 {
-	// Weapon에서 spawn projectile 할 때 처리를 해줘야 하나?
-	// 근데 어차피 projectile 종류별로 BP 따로 만들고, Mesh도 다른거 사용하는데 의미가 있나?
-
-	// 결론: 아래처럼 처음부터 Projectile의 type을 정해놓고 그에 맞는 DT low를 탐색하는 것이 아니라,
-	// BP에서 DT RowBase를 선택 가능하게 하고, 선택된 DT RowBase에 따라 속성값들을 불러오는 식으로 하기(Projectile의 Type Enum 또한 마찬가지로)
-
 	if (IsValid(OwnerWeapon))
 	{
 		Weapon = OwnerWeapon;
@@ -83,33 +77,11 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, UACWeapon*
 	{
 		ProjectileOwner = OwnerOfProjectile;
 
-		if (ProjectileType == EProjectileType::Projectile_Rifle)
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("Rifle Projectile!!!"));
-			LoadProjectileData("RifleProjectile");
-			SpawnTrailEffect();
-		}
-		else if (ProjectileType == EProjectileType::Projectile_ShotGun)
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("ShotGun Projectile!!!"));
-			LoadProjectileData("ShotGunProjectile");
-			SpawnTrailEffect();
-		}
-		else if (ProjectileType == EProjectileType::Projectile_BasicRocket)
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("BasicRocket Projectile!!!"));
-			LoadProjectileData("BasicRocketProjectile");
-			SpawnTrailEffect();
-		}
-		else if (ProjectileType == EProjectileType::Projectile_RailGun)
-		{
-			LoadProjectileData("RailGunProjectile");
-			SpawnTrailEffect();
-			//SpawnTrailEffect(true);
-		}
+		LoadProjectileData();
+		SpawnTrailEffect();
 	}
 
-	if (bCanPenetrate)
+	if (NumPenetrable > 0 || bCanPenetrate)
 	{
 		CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
 		CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
@@ -135,9 +107,10 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, UACWeapon*
 	UE_LOG(LogTemp, Warning, TEXT("Projectile MaxSpeed: %f"), ProjectileMovement->MaxSpeed);
 }
 
-void ASuraProjectile::LoadProjectileData(FName ProjectileID)
+void ASuraProjectile::LoadProjectileData()
 {
-	ProjectileData = ProjectileDataTable->FindRow<FProjectileData>(ProjectileID, TEXT(""));
+	//ProjectileData = ProjectileDataTable->FindRow<FProjectileData>(ProjectileID, TEXT(""));
+	ProjectileData = ProjectileDataTableHandle.GetRow<FProjectileData>("");
 	if (ProjectileData)
 	{
 		// <Effect>
@@ -155,6 +128,7 @@ void ASuraProjectile::LoadProjectileData(FName ProjectileID)
 
 		// <Explosive>
 		bIsExplosive = ProjectileData->bIsExplosive;
+		bVisualizeExplosionRadius = ProjectileData->bVisualizeExplosionRadius;
 		MaxExplosiveDamage = ProjectileData->MaxExplosiveDamage;
 		MaxExplosionRadius = ProjectileData->MaxExplosionRadius;
 
@@ -168,8 +142,7 @@ void ASuraProjectile::LoadProjectileData(FName ProjectileID)
 		CollisionComp->SetSphereRadius(InitialRadius);
 
 		// <Penetration>
-		bCanPenetrate = ProjectileData->bCanPenetrate;
-		//NumPenetrableObjects = ProjectileData->NumPenetrableObjects;
+		bCanPenetrate = ProjectileData->bCanPenetrate; //legacy
 	}
 }
 
@@ -223,6 +196,11 @@ void ASuraProjectile::ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector Cen
 				}
 				//UE_LOG(LogTemp, Error, TEXT("Explosive Damage!!!"));
 			}
+		}
+
+		if (bVisualizeExplosionRadius)
+		{
+			DrawSphere(CenterLocation, MaxExplosionRadius);
 		}
 	}
 }
@@ -330,7 +308,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (bCanPenetrate)
+	if (NumPenetrableObjects > 0 || bCanPenetrate)
 	{
 		if (OtherActor != nullptr)
 		{
@@ -426,7 +404,7 @@ void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Roc
 			TrailEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 				GetWorld(),
 				TrailEffect,
-				Weapon->GetSocketLocation(FName(TEXT("Muzzle"))),
+				Weapon->GetWeaponMesh()->GetSocketLocation(FName(TEXT("Muzzle"))),
 				FRotator(0.f, 0.f, 0.f));
 
 
@@ -487,6 +465,21 @@ void ASuraProjectile::UpdateTrailEffect()
 			TrailEffectComponent->SetVectorParameter(FName(TEXT("Beam End")), ProjectileMesh->GetSocketLocation(FName(TEXT("TrailStart"))));
 		}
 	}
+}
+
+void ASuraProjectile::DrawSphere(FVector Location, float Radius)
+{
+	DrawDebugSphere(
+		GetWorld(),                 // UWorld* World
+		Location,         // 위치 (Center)
+		Radius,                     // 반지름 (Radius)
+		12,                        // 세그먼트 수 (Segments)
+		FColor::Red,               // 색상
+		false,                     // 지속 시간 무한 (true면 지속적으로 표시됨)
+		5.0f,                      // 지속 시간 (초)
+		0,                         // Depth Priority
+		2.0f                       // 선 두께
+	);
 }
 
 #pragma region Penetration

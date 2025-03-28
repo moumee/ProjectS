@@ -10,7 +10,7 @@ void USuraWeaponAnimInstance::NativeInitializeAnimation()
 	Super::NativeInitializeAnimation();
 
 	//Weapon = Cast<UACWeapon>(TryGetPawnOwner());
-	Weapon = Cast<UACWeapon>(GetOwningComponent());
+	Weapon = Cast<AWeapon>(GetOwningComponent());
 }
 
 void USuraWeaponAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
