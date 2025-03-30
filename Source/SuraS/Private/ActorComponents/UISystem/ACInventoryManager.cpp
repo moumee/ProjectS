@@ -36,31 +36,18 @@ void UACInventoryManager::BeginPlay()
 
 void UACInventoryManager::SetPendingWeaponIndex(const int32 Index)
 {
+
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
+	FString::Printf(TEXT("PendingWeaponIndex: %d"), PendingWeaponIndex));
+	
 	PendingWeaponIndex = Index;
 	bWaitingForWeaponSwitch = true;
 
-	// if (GEngine)
-	// {
-	// 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("F 키를 누르면 무기가 교체 됩니다."));
-	// }
+	UpdateClickedWeaponWindow();
 }
 
 void UACInventoryManager::OnConfirmWeaponEquip()
 {
-	// if (!bWaitingForWeaponSwitch || PendingWeaponIndex < 0) return;
-	//
-	// ACharacter* OwnerCharacter = Cast<ACharacter>(GetOuter());
-	// if (!OwnerCharacter) return;
-	//
-	// UWeaponSystemComponent* WeaponSystem = OwnerCharacter->FindComponentByClass<UWeaponSystemComponent>();
-	// if (!WeaponSystem) return;
-	//
-	// WeaponSystem->ChangeWeapon(PendingWeaponIndex); // WeaponSystemComponent의 ChangeWeapon 함수 호출
-	// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("ChangeWeapon함수 호출됨"));
-	//
-	// bWaitingForWeaponSwitch = false;
-	// PendingWeaponIndex = -1;
-
 	if (!bWaitingForWeaponSwitch)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("bWaitingForWeaponSwitch == false"));
@@ -90,8 +77,7 @@ void UACInventoryManager::OnConfirmWeaponEquip()
 	const TArray<AWeapon*>& Inventory = WeaponSystem->GetWeaponInventory();
 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,
 		FString::Printf(TEXT("무기 인벤토리 개수: %d"), Inventory.Num()));
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-		FString::Printf(TEXT("PendingWeaponIndex: %d"), PendingWeaponIndex));
+
 
 	if (!Inventory.IsValidIndex(PendingWeaponIndex))
 	{
@@ -120,13 +106,47 @@ void UACInventoryManager::OnConfirmWeaponEquip()
 			break;
 	}
 
-	UpdateCurrentWeaponWindow();
+	//UpdateCurrentWeaponWindow();
 
 	bWaitingForWeaponSwitch = false;
 	PendingWeaponIndex = -1;
 
 	
 }
+
+void UACInventoryManager::UpdateClickedWeaponWindow()
+{
+	// weaponinventory랑 current index 정보를 써서 attribute창 업데이트! 호출은 inventory widget초기화때랑 current index가 바뀔 때?
+
+	TArray<AWeapon*> WeaponInventory = pWeaponSystemComponent->GetWeaponInventory();
+	// int32 CurrentWeaponIndex = pWeaponSystemComponent->GetCurrentWeaponIndex();
+
+
+	// UIManagerComponent 인스턴스 가져오기 (UIManagerComponent가 다른 컴포넌트라면 GetOwner()를 사용하거나 다른 방법으로 접근)
+	UACUIMangerComponent* UIManagerComponent = GetOwner()->FindComponentByClass<UACUIMangerComponent>();
+
+
+	if (UIManagerComponent)
+	{
+		// GetWidget을 사용하여 이미 생성된 UInventoryWidget 인스턴스를 가져옴
+		const UInventoryWidget* InventoryWidget = Cast<UInventoryWidget>(UIManagerComponent->GetWidget(EUIType::Inventory));
+
+		if (InventoryWidget && WeaponInventory.IsValidIndex(PendingWeaponIndex))
+		{
+			AWeapon* ClickedWeapon = WeaponInventory[PendingWeaponIndex];
+			if (ClickedWeapon && ClickedWeapon->WeaponData && ClickedWeapon->WeaponData->WeaponImage)
+			{
+				InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(ClickedWeapon->WeaponData->WeaponImage);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Weapon 또는 WeaponData 또는 WeaponImage가 nullptr입니다."));
+			}
+		}
+	}
+}
+
+
 
 void UACInventoryManager::UpdateCurrentWeaponWindow()
 {

@@ -22,6 +22,8 @@ void UInventoryWidget::NativeConstruct()
     CurrentTab = EInventoryTab::Weapon;
     SetActiveTab(CurrentTab);
 
+    
+
 #pragma region Weapon
     
     // Player의 UWeaponSystemComponent 가져오기
@@ -46,7 +48,16 @@ void UInventoryWidget::NativeConstruct()
     {
         UE_LOG(LogTemp, Warning, TEXT("Player is nullptr!"));
     }
-    
+
+    /** UpdateCurrentWeaponWindow 호출 **/
+    // InventoryManager 가져오는 코드
+    AActor* OwnerActor = GetOwningPlayerPawn();
+    if (!OwnerActor) return;
+
+    UACInventoryManager* InventoryManager = OwnerActor->FindComponentByClass<UACInventoryManager>();
+    if (!InventoryManager) return;
+
+    InventoryManager->UpdateCurrentWeaponWindow(); // ✅ 여기서 호출!
     
     
 #pragma endregion Weapon
@@ -117,16 +128,6 @@ FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
 
     if (InKeyEvent.GetKey() == EKeys::F)
     {
-        // 무기 교체 함수 호출
-        // APawn* OwnerPawn = GetOwningPlayerPawn();
-        // if (!OwnerPawn) return FReply::Unhandled();
-        //
-        // UACInventoryManager* Manager = OwnerPawn->FindComponentByClass<UACInventoryManager>();
-        // if (!Manager) return FReply::Unhandled();
-        //
-        // Manager->OnConfirmWeaponEquip();
-
-
        // GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("F 키 감지됨"));
 
         ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwningPlayerPawn());

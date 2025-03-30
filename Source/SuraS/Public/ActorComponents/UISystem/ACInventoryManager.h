@@ -23,6 +23,7 @@ public:
 	void OnConfirmWeaponEquip();
 
 	//Current Weapon Attribute window update
+	void UpdateClickedWeaponWindow();
 	void UpdateCurrentWeaponWindow();
 
 protected:
