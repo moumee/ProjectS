@@ -99,25 +99,44 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Movement|Walk")
 	float MaxStepHeight = 30.f;
 
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	float WallRunEnterZSpeedThreshold = 30.f;
+	
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	float WallRunMaxDuration = 2.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	float WallRunAcceleration = 3000.f;
+	
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	float WallRunDeceleration = 5000.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	float WallRunMaxSpeed = 1500.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	float WallRunBackwardMaxSpeed = 100.f;
+
 protected:
 
-	float WallJumpBuffer = 0.5f;
 	
+	UPROPERTY(VisibleAnywhere, Category = "Movement|WallRun")
+	float WallRunElapsedTime = 0.f;
+	float WallRunEnterSpeed2D;
+	float WallJumpBuffer = 0.5f;
 	EWallRunSide CurrentWallRunSide = EWallRunSide::EWRS_None;
-
 	FHitResult CurrentWallHit;
+	bool bShouldMoveUpWall = false;
+	bool bShouldMoveDownWall = false;
 	
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	bool bIsDashing = false;
-	
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	TArray<float> DashCooldowns;
-
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	int32 AvailableDashCount = 2;
 
 	float JumpZVelocity = 0.f;
-	
 	float JumpBuffer = 0.1f;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
@@ -171,6 +190,7 @@ protected:
 	void TickMove(float DeltaTime);
 
 	void TickSlide(float DeltaTime);
+	
 	bool CanWallRun();
 
 	void TickAirborne(float DeltaTime);

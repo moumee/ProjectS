@@ -30,6 +30,8 @@ public:
 
 	UCapsuleComponent* GetCapsuleComponent();
 
+	UCameraComponent* GetCameraComponent() const { return Camera; };
+
 protected:
 
 	UPROPERTY(EditAnywhere)

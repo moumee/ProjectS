@@ -47,12 +47,13 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 
 	
 
-	if (!PawnOwner || !UpdatedComponent || ShouldSkipUpdate(DeltaTime))
+	if (!PawnOwner || !UpdatedComponent)
 	{
 		return;
 	}
 
 	UpdateDashCooldowns(DeltaTime);
+
 
 	TickState(DeltaTime);
 
@@ -243,21 +244,17 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 
 	if (CanWallRun())
 	{
-		if ((CurrentWallRunSide == EWallRunSide::EWRS_Left && MovementInputVector.X < 0.f) ||
-			(CurrentWallRunSide == EWallRunSide::EWRS_Right && MovementInputVector.X > 0.f))
+		if (PreviousMovementState != EMovementState::EMS_WallRun)
 		{
-			if (PreviousMovementState != EMovementState::EMS_WallRun)
+			SetMovementState(EMovementState::EMS_WallRun);
+			return;
+		}
+		else
+		{
+			if (ElapsedTimeFromSurface > WallJumpBuffer)
 			{
 				SetMovementState(EMovementState::EMS_WallRun);
 				return;
-			}
-			else
-			{
-				if (ElapsedTimeFromSurface > WallJumpBuffer)
-				{
-					SetMovementState(EMovementState::EMS_WallRun);
-					return;
-				}
 			}
 		}
 	}
@@ -335,20 +332,16 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 
 void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 {
-	float EnterZSpeed = Velocity.Z;
-
-	// Implement later
-	if (EnterZSpeed >= 0.f && EnterZSpeed < 30.f)
+	if (WallRunElapsedTime < WallRunMaxDuration)
 	{
-		
-	}
-	else if (EnterZSpeed < 0.f && EnterZSpeed > -30.f)
-	{
-		
+		WallRunElapsedTime += DeltaTime;
 	}
 	else
 	{
-		
+		WallRunElapsedTime = 0.f;
+		Velocity += CurrentWallHit.ImpactNormal * 100.f;
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
 	}
 
 	FHitResult HitResult;
@@ -357,34 +350,81 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	FVector TraceStart = SuraPawnPlayer->GetActorLocation();
 	FVector TraceEnd = TraceStart - CurrentWallHit.ImpactNormal * 200.f;
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility,
-		Params);
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility, Params);
 	
-	if (bHit && HitResult.IsValidBlockingHit())
+	if (!bHit || !HitResult.IsValidBlockingHit())
 	{
-		CurrentWallHit = HitResult;
-		if (CurrentWallRunSide == EWallRunSide::EWRS_Left)
-		{
-			FVector VelocityDir = FVector::CrossProduct(CurrentWallHit.ImpactNormal, FVector::UpVector).GetSafeNormal();
-			Velocity = VelocityDir * 1000.f;
-		}
-		else if (CurrentWallRunSide == EWallRunSide::EWRS_Right)
-		{
-			FVector VelocityDir = FVector::CrossProduct(CurrentWallHit.ImpactNormal, FVector::DownVector).GetSafeNormal();
-			Velocity = VelocityDir * 1000.f;
-		}
+	    SetMovementState(EMovementState::EMS_Airborne);
+	    return;
+	}
+	
 
-		if (CurrentWallRunSide == EWallRunSide::EWRS_Left && MovementInputVector.X >= 0.f ||
-			CurrentWallRunSide == EWallRunSide::EWRS_Right && MovementInputVector.X <= 0.f)
+	// Wall was hit - continue with wall run logic
+	CurrentWallHit = HitResult;
+	FVector VelocityDir;
+
+	// Determine velocity direction based on which side we're running on
+	if (CurrentWallRunSide == EWallRunSide::EWRS_Left)
+	{
+	    VelocityDir = FVector::CrossProduct(CurrentWallHit.ImpactNormal, FVector::UpVector).GetSafeNormal();
+	    
+	    // Check if player wants to exit wall to the right
+	    if (MovementInputVector.X > 0.f)
+	    {
+	    	Velocity += CurrentWallHit.ImpactNormal * 100.f;
+	        SetMovementState(EMovementState::EMS_Airborne);
+	        return;
+	    }
+	}
+	else // EWRS_Right
+	{
+	    VelocityDir = FVector::CrossProduct(CurrentWallHit.ImpactNormal, FVector::DownVector).GetSafeNormal();
+	    
+	    // Check if player wants to exit wall to the left
+	    if (MovementInputVector.X < 0.f)
+	    {
+	    	Velocity += CurrentWallHit.ImpactNormal * 100.f;
+	        SetMovementState(EMovementState::EMS_Airborne);
+	        return;
+	    }
+	}
+
+	// Input W key (Forward)
+	if (MovementInputVector.Y > 0.f)
+	{
+		// If wall running forward direction
+		if (FVector::DotProduct(Velocity.GetSafeNormal(), VelocityDir) > 0.f)
 		{
-			SetMovementState(EMovementState::EMS_Airborne);
-			return;
+			float NewSpeed = FMath::Clamp(Velocity.Size() + WallRunAcceleration * DeltaTime, -WallRunBackwardMaxSpeed, WallRunMaxSpeed);
+			Velocity = NewSpeed * VelocityDir;
 		}
+		// If wall running backward direction
+		else
+		{
+			float NewSpeed = FMath::Clamp(Velocity.Size() - WallRunAcceleration * DeltaTime, -WallRunMaxSpeed, WallRunBackwardMaxSpeed);
+			Velocity = NewSpeed * -VelocityDir;
+		}
+	}
+	// Input S Key (Backward)
+	else if (MovementInputVector.Y < 0.f)
+	{
+		// If wall running forward direction
+	    if (FVector::DotProduct(Velocity.GetSafeNormal(), VelocityDir) > 0.f)
+	    {
+	        float NewSpeed = FMath::Clamp(Velocity.Size() - WallRunDeceleration * DeltaTime, -WallRunBackwardMaxSpeed, WallRunMaxSpeed);
+	        Velocity = NewSpeed * VelocityDir;
+	    }
+		// If wall running backward direction
+	    else
+	    {
+	        float NewSpeed = FMath::Clamp(Velocity.Size() + WallRunDeceleration * DeltaTime, -WallRunMaxSpeed, WallRunBackwardMaxSpeed);
+	        Velocity = NewSpeed * -VelocityDir;
+	    }
 	}
 	else
 	{
-		SetMovementState(EMovementState::EMS_Airborne);
-		return;
+	    float NewSpeed = FMath::Max(Velocity.Size() - WallRunDeceleration * DeltaTime, 0.f);
+	    Velocity = VelocityDir * NewSpeed;
 	}
 
 	if (bJumpPressed && CurrentJumpCount < MaxJumpCount)
@@ -399,6 +439,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 
 	if (bCrouchPressed)
 	{
+		Velocity += CurrentWallHit.ImpactNormal * 100.f;
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -411,6 +452,9 @@ void USuraPlayerMovementComponent::TickMantle(float DeltaTime){}
 
 bool USuraPlayerMovementComponent::CanWallRun()
 {
+	if (bCrouchPressed) return false;
+	
+
 	FCollisionQueryParams WallQueryParams;
 	WallQueryParams.AddIgnoredActor(SuraPawnPlayer);
 	
@@ -424,7 +468,8 @@ bool USuraPlayerMovementComponent::CanWallRun()
 
 	bool bRightWallRunnable = false;
 
-	if (bWallRightHit && WallRightHit.IsValidBlockingHit() && WallRightHit.ImpactNormal.Z < MinWalkableFloorZ)
+	if (bWallRightHit && WallRightHit.IsValidBlockingHit() && WallRightHit.ImpactNormal.Z < MinWalkableFloorZ &&
+		FVector::DotProduct(Velocity.GetSafeNormal2D(), WallRightHit.ImpactNormal.GetSafeNormal2D()) < 0.f)
 	{
 		bRightWallRunnable = true;
 	}
@@ -435,25 +480,29 @@ bool USuraPlayerMovementComponent::CanWallRun()
 
 	bool bLeftWallRunnable = false;
 
-	if (bWallLeftHit && WallLeftHit.IsValidBlockingHit() && WallLeftHit.ImpactNormal.Z < MinWalkableFloorZ)
+	if (bWallLeftHit && WallLeftHit.IsValidBlockingHit() && WallLeftHit.ImpactNormal.Z < MinWalkableFloorZ &&
+		FVector::DotProduct(Velocity.GetSafeNormal2D(), WallLeftHit.ImpactNormal.GetSafeNormal2D()) < 0.f)
 	{
 		bLeftWallRunnable = true;
 	}
 
 	if (bRightWallRunnable && bLeftWallRunnable)
 	{
+		WallRunEnterSpeed2D = Velocity.Size2D();
 		CurrentWallRunSide = WallLeftHit.Distance > WallRightHit.Distance ? EWallRunSide::EWRS_Right : EWallRunSide::EWRS_Left;
 		CurrentWallHit = WallLeftHit.Distance > WallRightHit.Distance ? WallRightHit : WallLeftHit;
 		return true;
 	}
 	else if (bLeftWallRunnable)
 	{
+		WallRunEnterSpeed2D = Velocity.Size2D();
 		CurrentWallRunSide = EWallRunSide::EWRS_Left;
 		CurrentWallHit = WallLeftHit;
 		return true;
 	}
 	else if (bRightWallRunnable)
 	{
+		WallRunEnterSpeed2D = Velocity.Size2D();
 		CurrentWallRunSide = EWallRunSide::EWRS_Right;
 		CurrentWallHit = WallRightHit;
 		return true;
@@ -465,12 +514,24 @@ bool USuraPlayerMovementComponent::CanWallRun()
 	return false;
 }
 
+
+
 void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldState, EMovementState NewState)
 {
 	if (OldState == EMovementState::EMS_Airborne)
 	{
 		ElapsedTimeFromSurface = 0.f;
 		CurrentJumpCount = 0;
+	}
+
+	if (NewState == EMovementState::EMS_WallRun)
+	{
+		Velocity = Velocity.GetSafeNormal2D() * WallRunEnterSpeed2D;
+	}
+
+	if (OldState == EMovementState::EMS_WallRun)
+	{
+		WallRunElapsedTime = 0.f;
 	}
 	
 }
