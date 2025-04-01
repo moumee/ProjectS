@@ -9,6 +9,14 @@
 class ASuraPawnPlayer;
 
 UENUM(Blueprintable)
+enum class EWallRunEnter : uint8
+{
+	EWRE_Upward,
+	EWRE_Downward,
+	EWRE_Neutral
+};
+
+UENUM(Blueprintable)
 enum class EMovementState : uint8
 {
 	EMS_Move,
@@ -64,7 +72,7 @@ protected:
 	float DashEndSpeed = 1500.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Dash")
-	float DashDecelerationTime = 0.25f;
+	float DashDecelerationTime = 0.4f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Dash")
 	float DashCooldown = 5.f;
@@ -85,7 +93,7 @@ protected:
 	float Deceleration = 8000.f;
 	
 	UPROPERTY(EditAnywhere, Category = "Movement|Air")
-	float AirAcceleration = 3000.f;
+	float AirAcceleration = 1500.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Air")
 	float AirDeceleration = 2000.f;
@@ -100,26 +108,29 @@ protected:
 	float MaxStepHeight = 30.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
-	float WallRunEnterZSpeedThreshold = 30.f;
-	
-	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
 	float WallRunMaxDuration = 2.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
-	float WallRunAcceleration = 3000.f;
+	float WallRunAcceleration = 4000.f;
 	
 	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
-	float WallRunDeceleration = 5000.f;
+	float WallRunDeceleration = 2000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
-	float WallRunMaxSpeed = 1500.f;
+	float WallRunMaxSpeed = 1400.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
 	float WallRunBackwardMaxSpeed = 100.f;
 
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	float WallRunJumpAirSpeed2D = 1800.f;
+
 protected:
 
-	
+	EWallRunEnter WallRunEnterMode;
+
+	bool bWallJumpAirBoost = false;
+	bool bIsDeceleratingZ = false;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|WallRun")
 	float WallRunElapsedTime = 0.f;
 	float WallRunEnterSpeed2D;
