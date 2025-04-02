@@ -35,6 +35,7 @@ private:
 	int spawnCount = 1;
 
 	FTimerHandle TimerHandler;
+	UPROPERTY()
 	UObjectPoolBase* Pool;
 
 };
