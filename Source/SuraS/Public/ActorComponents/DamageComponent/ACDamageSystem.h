@@ -28,14 +28,6 @@ public:
 	// Sets default values for this component's properties
 	UACDamageSystem();
 
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
 	// Setters
 	void SetHealth(float Health);
 	void SetMaxHealth(float MaxHealth);
@@ -48,7 +40,6 @@ public:
 	float GetMaxHealth() const { return MaxHealth; }
 
 	FOnDamaged OnDamaged;
-
 	FOnDeath OnDeath;
 
 	UFUNCTION(BlueprintCallable)
