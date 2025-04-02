@@ -19,6 +19,7 @@ class SURAS_API UEnemyPoolBase : public UObjectPoolBase
 	
 protected:
 	virtual void SpawnPooledObject(AActor*& spawnedObject) override;
+	UPROPERTY()
 	UBehaviorTree* BehaviorTree;
 
 public:

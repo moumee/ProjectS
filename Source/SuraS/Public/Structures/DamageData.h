@@ -15,11 +15,11 @@ struct SURAS_API FDamageData : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DamageAmount;
+	float DamageAmount = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EDamageType DamageType;
+	EDamageType DamageType = EDamageType::None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bCanForceDamage;
+	bool bCanForceDamage = false;
 };
