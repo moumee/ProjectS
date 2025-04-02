@@ -117,13 +117,13 @@ protected:
 	float WallRunDeceleration = 2000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
-	float WallRunMaxSpeed = 1400.f;
+	float WallRunMaxSpeed = 1200.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
 	float WallRunBackwardMaxSpeed = 100.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
-	float WallRunJumpAirSpeed2D = 1800.f;
+	float WallRunJumpAirSpeed2D = 1400.f;
 
 protected:
 
@@ -162,7 +162,7 @@ protected:
 	int32 CurrentJumpCount = 0;
 
 	UPROPERTY()
-	ASuraPawnPlayer* SuraPawnPlayer = nullptr;
+	TObjectPtr<ASuraPawnPlayer> SuraPawnPlayer = nullptr;
 
 	FVector GravityAcceleration;
 	

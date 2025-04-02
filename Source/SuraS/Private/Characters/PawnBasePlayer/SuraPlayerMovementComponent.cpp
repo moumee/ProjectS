@@ -3,7 +3,6 @@
 
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 
-#include "AnimNodes/AnimNode_RandomPlayer.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/CapsuleComponent.h"
 
@@ -479,7 +478,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		bJumpPressed = false;
 		CurrentJumpCount++;
 		FVector WallNormal2D = CurrentWallHit.ImpactNormal.GetSafeNormal2D();
-		Velocity += WallNormal2D * 500.f + FVector::UpVector * JumpZVelocity;
+		Velocity = FVector(Velocity.X, Velocity.Y, 0.f) + WallNormal2D * 500.f + FVector::UpVector * JumpZVelocity;
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
