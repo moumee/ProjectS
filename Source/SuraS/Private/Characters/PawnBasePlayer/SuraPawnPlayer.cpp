@@ -8,6 +8,7 @@
 #include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 
 ASuraPawnPlayer::ASuraPawnPlayer()
 {

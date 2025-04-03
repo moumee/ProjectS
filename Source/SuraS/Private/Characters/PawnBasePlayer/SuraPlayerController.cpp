@@ -18,10 +18,6 @@ void ASuraPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	InputComponent->BindAction("ToggleDebugPawn", IE_Pressed, this, &ASuraPlayerController::ToggleDebugPossession);
 }
 
-void ASuraPlayerController::ToggleDebugPossession()
-{
-	
-}
+

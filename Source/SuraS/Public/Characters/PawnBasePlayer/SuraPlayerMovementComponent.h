@@ -6,6 +6,7 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "SuraPlayerMovementComponent.generated.h"
 
+class ASuraPlayerController;
 class ASuraPawnPlayer;
 
 UENUM(Blueprintable)
@@ -164,6 +165,9 @@ protected:
 	UPROPERTY()
 	TObjectPtr<ASuraPawnPlayer> SuraPawnPlayer = nullptr;
 
+	UPROPERTY()
+	TObjectPtr<ASuraPlayerController> SuraPlayerController = nullptr;
+
 	FVector GravityAcceleration;
 	
 	FVector GravityDirection = FVector::DownVector;
@@ -189,8 +193,6 @@ protected:
 	bool bCrouchPressed = false;
 
 	bool IsGrounded() const;
-
-	bool TryStepUp(const FHitResult& Hit, const FVector& DeltaMove, float DeltaTime);
 
 	void SetMovementState(EMovementState NewState);
 

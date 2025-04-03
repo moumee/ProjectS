@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "SuraPawnPlayer.generated.h"
 
+class USpringArmComponent;
 class USuraPlayerMovementComponent;
 class UCameraComponent;
 class UCapsuleComponent;

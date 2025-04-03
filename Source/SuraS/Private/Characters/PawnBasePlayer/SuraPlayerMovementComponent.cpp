@@ -3,7 +3,9 @@
 
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 
+#include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
+#include "Characters/PawnBasePlayer/SuraPlayerController.h"
 #include "Components/CapsuleComponent.h"
 
 USuraPlayerMovementComponent::USuraPlayerMovementComponent()
@@ -23,7 +25,10 @@ void USuraPlayerMovementComponent::BeginPlay()
 	if (PawnOwner)
 	{
 		SuraPawnPlayer = Cast<ASuraPawnPlayer>(PawnOwner);
+		SuraPlayerController = Cast<ASuraPlayerController>(PawnOwner->GetController());
 	}
+
+	
 
 	GravityAcceleration = GravityDirection * GravityScale;
 	CurrentMovementState = EMovementState::EMS_Airborne;
@@ -53,7 +58,16 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 
 	UpdateDashCooldowns(DeltaTime);
 
-
+	if (CurrentMovementState != EMovementState::EMS_WallRun)
+	{
+		if (SuraPlayerController->GetControlRotation().Roll != 0.f)
+		{
+			FRotator CurrentControlRotation = SuraPawnPlayer->GetControlRotation();
+			FRotator NewRotation = FMath::RInterpTo(CurrentControlRotation, FRotator(CurrentControlRotation.Pitch, CurrentControlRotation.Yaw, 0.f), DeltaTime, 7.f);
+			SuraPlayerController->SetControlRotation(NewRotation);
+		}
+	}
+	
 	TickState(DeltaTime);
 
 	FVector DesiredTickMovement = Velocity * DeltaTime;
@@ -237,8 +251,6 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 				return;
 			}
 		}
-
-		
 	}
 
 	if (CanWallRun())
@@ -341,19 +353,45 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 
 void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 {
+
+	FVector WallRunDir;
+	if (CurrentWallRunSide == EWallRunSide::EWRS_Left)
+	{
+		WallRunDir = FVector::CrossProduct(CurrentWallHit.ImpactNormal, FVector::UpVector).GetSafeNormal();
+	}
+	else if (CurrentWallRunSide == EWallRunSide::EWRS_Right)
+	{
+		WallRunDir = FVector::CrossProduct(CurrentWallHit.ImpactNormal, FVector::DownVector).GetSafeNormal();
+	}
 	
+	float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(SuraPawnPlayer->GetActorForwardVector(), WallRunDir)));
+	float Alpha = FMath::Abs(Angle / 180.f);
+	float TargetRoll = 0.f;
+	
+	if (CurrentWallRunSide == EWallRunSide::EWRS_Left)
+	{
+		TargetRoll = FMath::Lerp(15, -15, Alpha);
+	}
+	else if (CurrentWallRunSide == EWallRunSide::EWRS_Right)
+	{
+		TargetRoll = FMath::Lerp(-15, 15, Alpha);
+	}
+
+	FRotator CurrentControlRotation = SuraPawnPlayer->GetControlRotation();
+	FRotator NewRotation = FMath::RInterpTo(CurrentControlRotation, FRotator(CurrentControlRotation.Pitch, CurrentControlRotation.Yaw, TargetRoll), DeltaTime, 5.f);
+	SuraPlayerController->SetControlRotation(NewRotation);
 
 	if (WallRunEnterMode == EWallRunEnter::EWRE_Upward && bIsDeceleratingZ)
 	{
-		Velocity.Z = FMath::Max(Velocity.Z - 0.8 * GravityScale * DeltaTime, 0.f);
+		Velocity.Z = FMath::Max(Velocity.Z - GravityScale * DeltaTime, 0.f);
 		if (Velocity.Z == 0.f)
 		{
 			bIsDeceleratingZ = false;
 		}
 	}
-	else if (WallRunEnterMode == EWallRunEnter::EWRE_Downward && Velocity.Z < 0.f && bIsDeceleratingZ)
+	else if (WallRunEnterMode == EWallRunEnter::EWRE_Downward && bIsDeceleratingZ)
 	{
-		Velocity.Z = FMath::Min(Velocity.Z + 0.8 * GravityScale * DeltaTime, 0.f);
+		Velocity.Z = FMath::Min(Velocity.Z + GravityScale * DeltaTime, 0.f);
 		if (Velocity.Z == 0.f)
 		{
 			bIsDeceleratingZ = false;
@@ -586,12 +624,12 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 		if (WallRunEnterMode == EWallRunEnter::EWRE_Upward)
 		{
 			bIsDeceleratingZ = true;
-			Velocity.Z = 600.f;
+			Velocity.Z = 700.f;
 		}
 		else if (WallRunEnterMode == EWallRunEnter::EWRE_Downward)
 		{
 			bIsDeceleratingZ = true;
-			Velocity.Z = -500.f;
+			Velocity.Z = -700.f;
 		}
 		else if (WallRunEnterMode == EWallRunEnter::EWRE_Neutral)
 		{
@@ -638,108 +676,6 @@ bool USuraPlayerMovementComponent::IsGrounded() const
 	{
 		return false;
 	}
-
-	return true;
-}
-
-bool USuraPlayerMovementComponent::TryStepUp(const FHitResult& Hit, const FVector& DeltaMove, float DeltaTime)
-{
-	if (!SuraPawnPlayer || MaxStepHeight <= 0.f)
-	{
-		return false;
-	}
-
-	const UCapsuleComponent* Capsule = SuraPawnPlayer->GetCapsuleComponent();
-
-	const FVector CurrentLocation = UpdatedComponent->GetComponentLocation();
-	const float CapsuleHalfHeight = Capsule->GetScaledCapsuleHalfHeight();
-	const float CapsuleRadius = Capsule->GetScaledCapsuleRadius();
-	const FVector HorizontalMoveDirection = DeltaMove.GetSafeNormal2D();
-
-	// --- 1. Initial Downward Check from slightly above impact point ---
-	// This confirms we hit something near our base, not high up the capsule
-	FVector CheckStart = Hit.ImpactPoint + Hit.ImpactNormal * 0.1f; // Start slightly away from surface
-	CheckStart.Z = CurrentLocation.Z; // Align Z with character center initially
-	FVector CheckEnd = CheckStart - FVector(0, 0, CapsuleHalfHeight + MaxStepHeight + 5.0f); // Check down further than max step height
-
-	FHitResult InitialDownHit;
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(PawnOwner);
-
-	if (!GetWorld()->LineTraceSingleByChannel(InitialDownHit, CheckStart, CheckEnd, ECC_Visibility, QueryParams))
-	{
-		// Didn't hit anything below impact point? Strange scenario, abort.
-		return false;
-	}
-
-    // Calculate height difference from character base to the initial impact point's floor
-	float InitialFloorZ = InitialDownHit.ImpactPoint.Z;
-	float InitialStepHeight = InitialFloorZ - (CurrentLocation.Z - CapsuleHalfHeight);
-
-    // If the floor below the impact point is already too high, it's not a step we can take
-	if (InitialStepHeight > MaxStepHeight || InitialStepHeight <= KINDA_SMALL_NUMBER)
-	{
-		return false;
-	}
-     if (InitialDownHit.ImpactNormal.Z < MinWalkableFloorZ)
-    {
-         return false; // Initial surface below impact isn't walkable
-    }
-
-
-	// --- 2. Upward Check for Clearance ---
-	// Check if there's space above the potential step ledge
-	FVector UpCheckStart = InitialDownHit.ImpactPoint + FVector(0, 0, 0.1f); // Start just above the found floor
-    FVector UpCheckEnd = UpCheckStart + FVector(0, 0, MaxStepHeight + CapsuleHalfHeight * 2.0f); // Check up high enough for capsule
-
-	FCollisionShape CapsuleShape = FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight);
-	FHitResult UpHit;
-
-
-	bool bHitUp = GetWorld()->SweepSingleByChannel(
-		UpHit,
-		UpCheckStart, // Start slightly above the potential step surface
-		UpCheckStart, // End at same location for a check, not a move trace
-		FQuat::Identity,
-		ECC_Visibility, // Or your character collision channel
-		CapsuleShape,
-		QueryParams
-	);
-
-	// If the upward check hits something right away, there's no room to step up.
-	if (bHitUp && UpHit.bBlockingHit)
-	{
-		return false;
-	}
-
-
-	// --- 3. Perform the Step Up ---
-	// We have confirmed a step of appropriate height and clearance above it.
-	const float TargetZ = InitialFloorZ + CapsuleHalfHeight + 1.0f; // Target center Z slightly above the step surface
-	const FVector TargetLocation = FVector(CurrentLocation.X, CurrentLocation.Y, TargetZ); // Keep X/Y for now
-
-	// Move the character vertically. Use TeleportPhysics to avoid physics interactions during the snap.
-	UpdatedComponent->SetWorldLocation(TargetLocation, false, nullptr, ETeleportType::TeleportPhysics);
-
-	// --- 4. Continue Horizontal Movement ---
-	// Since we consumed the initial hit time, calculate remaining time and move horizontally
-	float RemainingTime = DeltaTime * (1.f - Hit.Time);
-    if (RemainingTime > KINDA_SMALL_NUMBER)
-    {
-        FVector RemainingHorizontalMove = Velocity.GetSafeNormal2D() * Velocity.Size2D() * RemainingTime;
-        FHitResult MoveAfterStepHit;
-        SafeMoveUpdatedComponent(RemainingHorizontalMove, UpdatedComponent->GetComponentRotation(), true, MoveAfterStepHit);
-
-        // Optional: Handle sliding if we hit something *after* stepping up
-        if (MoveAfterStepHit.IsValidBlockingHit())
-        {
-            SlideAlongSurface(RemainingHorizontalMove, 1.f - MoveAfterStepHit.Time, MoveAfterStepHit.Normal, MoveAfterStepHit);
-        }
-    }
-
-
-	// Crucial: Reset velocity Z component after stepping up, otherwise gravity might be instantly reapplied too strongly
-	Velocity.Z = FMath::Max(0.f, Velocity.Z); // Don't want downward velocity right after step up
 
 	return true;
 }

@@ -15,8 +15,6 @@ class SURAS_API ASuraPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
-	bool bIsFirstPerson = true;
-
 	UPROPERTY()
 	ASuraPawnPlayer* SuraPawnPlayer = nullptr;
 
@@ -25,8 +23,6 @@ class SURAS_API ASuraPlayerController : public APlayerController
 	virtual void SetupInputComponent() override;
 	
 public:
-
-	void ToggleDebugPossession();
 
 	
 };
