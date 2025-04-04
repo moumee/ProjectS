@@ -45,14 +45,23 @@ public:
 	void OpenUI(EUIType UIType);
 
 	UBaseUIWidget* GetWidget(EUIType UIType);
+	void InitializeWidgets();
+	void InitializeMangers();
 
-	
+	UDataTable* GetWeaponDataTable() const
+	{
+		return DTWeapon;	
+	}
+
 private:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* OpenInventoryAction;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* OpenPauseMenuAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Data")
+	UDataTable* DTWeapon;
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TMap<EUIType, TSubclassOf<UBaseUIWidget>> UIWidgetClasses; // 위젯 블루프린트 클래스
@@ -67,8 +76,6 @@ private:
 	
 	// UPROPERTY()
 	// UACCrosshairManager* CrosshairManager;
-
-	//void InitializeMangers();
 
 	
 

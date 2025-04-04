@@ -1,5 +1,7 @@
 ﻿// InventoryManager.cpp
 #include "ActorComponents/UISystem/ACInventoryManager.h"
+
+#include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h" 
 #include "Components/Image.h"
@@ -23,7 +25,8 @@ void UACInventoryManager::BeginPlay()
 			UE_LOG(LogTemp, Error, TEXT("UWeaponSystemComponent를 찾을 수 없습니다."));
 		}
 	}
-	
+
+	DTWeapon = GetWeaponDataTable();
 }
 
 void UACInventoryManager::SetInventoryWidget(UInventoryWidget* InWidget)
@@ -34,6 +37,16 @@ void UACInventoryManager::SetInventoryWidget(UInventoryWidget* InWidget)
 UInventoryWidget* UACInventoryManager::GetInventoryWidget() const
 {
 	return InventoryWidget;
+}
+
+void UACInventoryManager::SetUIManager(UACUIMangerComponent* UIMangerComponent)
+{
+	UIManager = UIMangerComponent;
+}
+
+UDataTable* UACInventoryManager::GetWeaponDataTable() const
+{
+	return UIManager ? UIManager->GetWeaponDataTable() : nullptr;
 }
 
 
@@ -164,13 +177,13 @@ void UACInventoryManager::UpdateCurrentWeaponWindow()
 
 void UACInventoryManager::AllWeaponDiscard()
 {
-	if (!InventoryWidget->DTWeapon)
+	if (!DTWeapon)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("DTWeapon is not set in GameInstance!"));
 		return;
 	}
     
-	for (const auto& Row : InventoryWidget->DTWeapon->GetRowMap())
+	for (const auto& Row : DTWeapon->GetRowMap())
 	{
 		FWeaponData* WeaponData = (FWeaponData*)Row.Value;
 		if (WeaponData)
@@ -233,14 +246,14 @@ void UACInventoryManager::ChangeWeaponByName(const FString& WeaponNameStr)
 
 void UACInventoryManager::UnlockWeapon(FName WeaponName)
 {
-	if (!InventoryWidget->DTWeapon) return;
+	if (!DTWeapon) return;
 
 	// WeaponName_ 접두어를 제거하고, 실제 이름만 추출
 	FString WeaponNameStr = WeaponName.ToString().RightChop(24);  // "EWeaponName::WeaponName_"을 제거
 
 	// 수정된 WeaponNameStr을 사용하여 FindRow 호출
 	static const FString ContextString(TEXT("Weapon Unlock Context"));
-	FWeaponData* WeaponData = InventoryWidget->DTWeapon->FindRow<FWeaponData>(*WeaponNameStr, ContextString);
+	FWeaponData* WeaponData = DTWeapon->FindRow<FWeaponData>(*WeaponNameStr, ContextString);
 
 	if (WeaponData && !WeaponData->bIsWeaponOwned)
 	{

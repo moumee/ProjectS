@@ -22,14 +22,6 @@ void UInventoryWidget::NativeConstruct()
     CurrentTab = EInventoryTab::Weapon;
     SetActiveTab(CurrentTab);
 
-    // InventoryManger 초기화
-    APawn* PlayerPawn = GetOwningPlayerPawn();
-    if (PlayerPawn)
-    {
-        InventoryManager = PlayerPawn->FindComponentByClass<UACInventoryManager>();
-    }
-    
-
 #pragma region Weapon
     
     // Player의 UWeaponSystemComponent 가져오기
@@ -122,7 +114,6 @@ FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
 
     if (InKeyEvent.GetKey() == EKeys::Delete)
     {
-        // AllWeaponDiscard();
         InventoryManager->AllWeaponDiscard();
     }
 
@@ -139,6 +130,27 @@ FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
     }
 
     return FReply::Handled();  // Tab 키 기본 동작 방지
+}
+
+void UInventoryWidget::SetInventoryManager(UACInventoryManager* InManager)
+{
+    if (!InManager)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("InventoryManager is null in SetInventoryManager"));
+        return;
+    }
+
+    InventoryManager = InManager;
+
+    if (InventoryManager)
+    {
+        DTWeapon = InventoryManager->GetWeaponDataTable(); // 여기서 DTWeapon 세팅
+        
+    }
+
+    // 필요 시 초기화 로직 추가
+    // 예: 위젯이 초기화되었으면 매니저에게 상태 갱신 요청
+    // InventoryManager->UpdateCurrentWeaponWindow(); 등
 }
 
 
@@ -292,24 +304,6 @@ void UInventoryWidget::UpdateWeaponUI(FString WeaponNameStr)
         }
     }
 }
-
-// void UInventoryWidget::UnlockWeapon(FName WeaponName)
-// {
-//     if (!DTWeapon) return;
-//
-//     // WeaponName_ 접두어를 제거하고, 실제 이름만 추출
-//     FString WeaponNameStr = WeaponName.ToString().RightChop(24);  // "EWeaponName::WeaponName_"을 제거
-//
-//     // 수정된 WeaponNameStr을 사용하여 FindRow 호출
-//     static const FString ContextString(TEXT("Weapon Unlock Context"));
-//     FWeaponData* WeaponData = DTWeapon->FindRow<FWeaponData>(*WeaponNameStr, ContextString);
-//
-//     if (WeaponData && !WeaponData->bIsWeaponOwned)
-//     {
-//         WeaponData->bIsWeaponOwned = true;
-//         UpdateWeaponUI(WeaponNameStr);
-//     }
-// }
 
 void UInventoryWidget::OnWeaponPickedUp(FName WeaponName)
 {

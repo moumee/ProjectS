@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "SuraPlayerEnums.h"
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
-//#include "ActorComponents/UISystem/ACInventoryManager.h"
 #include "Characters/SuraCharacterBase.h"
 #include "Interfaces/Damageable.h"
 #include "Widgets/Player/PlayerHitWidget.h"
@@ -67,12 +66,6 @@ protected:
 	// UI component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
 	UACUIMangerComponent* UIManager;
-
-	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
-	// UACInventoryManager* InventoryManager;
-
-	
-
 
 
 #pragma region Input

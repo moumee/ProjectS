@@ -77,6 +77,9 @@ public:
 	
 	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
+	//InventoryManager초기화
+	void SetInventoryManager(UACInventoryManager* InVentoryManager);
+
 	// 탭 전환 함수
 	void SetActiveTab(EInventoryTab NewTab);
 
@@ -100,11 +103,10 @@ public:
 
 	void SwitchPage(int32 PageIndex);
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory")
-	UDataTable* DTWeapon;  // 블루프린트에서 데이터 테이블 할당
-
+	// DTWeapon 포인터 변수
+	UDataTable* DTWeapon;
+	
 	void UpdateWeaponUI(FString WeaponNameStr);
-	//void UnlockWeapon(FName WeaponName);
 
 	// // 모든 무기 소유 불값을 false로 만드는 함수
 	// void AllWeaponDiscard();

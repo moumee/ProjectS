@@ -15,8 +15,8 @@ UACUIMangerComponent::UACUIMangerComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 
-	InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("InventoryManager"));
 	
+	InitializeMangers();
 }
 
 
@@ -25,16 +25,8 @@ void UACUIMangerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	SetupInput();
-
-	// 위젯을 생성했는지 확인 후 전달
-	UInventoryWidget* InventoryWidget = Cast<UInventoryWidget>(GetWidget(EUIType::Inventory));
-	if (InventoryManager && InventoryWidget)
-	{
-		InventoryManager->SetInventoryWidget(InventoryWidget);
-	}
-	//InitializeMangers();
-
-	// GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "UImanager begin play called");
+	
+	InitializeWidgets();
 }
 
 void UACUIMangerComponent::SetupInput()
@@ -63,31 +55,61 @@ void UACUIMangerComponent::OpenUI(EUIType UIType)
 
 UBaseUIWidget* UACUIMangerComponent::GetWidget(EUIType UIType)
 {
-	// UIType에 해당하는 위젯이 이미 생성되어 있는지 확인
-	if (!UIWidgets.Contains(UIType))
+	if (UIWidgets.Contains(UIType))
 	{
-		// 위젯이 없다면 새로 생성
-		UBaseUIWidget* NewWidget = CreateWidget<UBaseUIWidget>(GetWorld(), UIWidgetClasses[UIType]);
-		UE_LOG(LogTemp, Warning, TEXT("Widget created"));
-        
-		// 새로 생성된 위젯이 있으면 UIWidgets에 저장
-		if (NewWidget)
-		{
-			UIWidgets.Add(UIType, NewWidget);
-		}
-		return NewWidget;
+		return UIWidgets[UIType];
 	}
 
-	// 이미 생성된 위젯이 있으면 반환
-	return UIWidgets[UIType];
+	UE_LOG(LogTemp, Warning, TEXT("Widget not initialized!"));
+	return nullptr;
 }
 
-// void UACUIMangerComponent::InitializeMangers()
-// {	
-// 	// // 인벤토리 매니저 생성 및 등록
-// 	InventoryManager = NewObject<UACInventoryManager>(this, UACInventoryManager::StaticClass());
-// 	InventoryManager->RegisterComponent();
-// }
+void UACUIMangerComponent::InitializeWidgets()
+{
+	for (const auto& Elem : UIWidgetClasses)
+	{
+		EUIType UIType = Elem.Key;
+		TSubclassOf<UBaseUIWidget> WidgetClass = Elem.Value;
 
+		if (!WidgetClass) continue;
 
+		UBaseUIWidget* NewWidget = CreateWidget<UBaseUIWidget>(GetWorld(), WidgetClass);
+		if (!NewWidget) continue;
 
+		UIWidgets.Add(UIType, NewWidget);
+
+		// 위젯 타입별로 매니저 연결
+		switch (UIType)
+		{
+		case EUIType::Inventory:
+			{
+				if (UInventoryWidget* IW = Cast<UInventoryWidget>(NewWidget))
+				{
+					IW->SetInventoryManager(InventoryManager); // InventoryWidget에 InventoryManager를 할당
+					InventoryManager->SetInventoryWidget(IW);  // InventoryManager에 InventoryWidget을 할당
+				}
+				break;
+			}
+
+		//case EUIType::HUD:
+			// HUD 위젯 초기화 및 매니저 연결
+				//break;
+
+		default:
+			break;
+		}
+	}
+}
+
+void UACUIMangerComponent::InitializeMangers()
+{
+	// 인벤토리 매니저 생성 및 등록 (생성자에서 호출되므로 문제 없음)
+	InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("InventoryManager"));
+
+	// UIComponentManager에 접근하기 위해 this를 파라미터로 전달
+	InventoryManager->SetUIManager(this);
+
+	
+	// HUDManager, PauseMenuManager 등도 여기에 추가
+
+}

@@ -7,6 +7,7 @@
 
 class UInventoryWidget;
 class UWeaponSystemComponent;
+class UACUIMangerComponent;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class SURAS_API UACInventoryManager : public UActorComponent
@@ -22,8 +23,10 @@ public:
 	void SetInventoryWidget(UInventoryWidget* InWidget);
 	UInventoryWidget* GetInventoryWidget() const;
 
-	// UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory")
-	// UDataTable* DTWeapon;  // 블루프린트에서 데이터 테이블 할당
+	// UIManagerComponent 할당
+	void SetUIManager(UACUIMangerComponent* UIMangerComponent);
+	
+	UDataTable* GetWeaponDataTable() const;
 	
 	void SetPendingWeaponIndex(int32 Index);
 	void OnConfirmWeaponEquip();
@@ -41,8 +44,11 @@ public:
 	// 무기 해금
 	void UnlockWeapon(FName WeaponName);
 
+	
+	
 
 private:
+	UACUIMangerComponent* UIManager;
 
 	//Inventory 위젯을 저장할 변수
 	UPROPERTY()
@@ -54,6 +60,8 @@ private:
 	// WeaponSystemComponent 포인터
 	UWeaponSystemComponent* pWeaponSystemComponent;
 
-	 // 블루프린트에서 데이터 테이블 할당
+	// DTWeapon 포인터 변수
+	UDataTable* DTWeapon;
+	
 	
 };
