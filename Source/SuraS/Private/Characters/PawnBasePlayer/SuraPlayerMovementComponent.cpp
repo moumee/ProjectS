@@ -442,6 +442,24 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	        SetMovementState(EMovementState::EMS_Airborne);
 	        return;
 	    }
+
+		float WallRunViewAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(VelocityDir, SuraPawnPlayer->GetActorForwardVector())));
+		bool bIsRight = FVector::CrossProduct(VelocityDir, SuraPawnPlayer->GetActorForwardVector()).GetSafeNormal().Z > 0;
+
+		if (WallRunViewAngle > 60.f && bIsRight)
+		{
+			Velocity += CurrentWallHit.ImpactNormal * 100.f;
+			SetMovementState(EMovementState::EMS_Airborne);
+			return;
+		}
+
+		// if (FMath::FindDeltaAngleDegrees(VelocityDir.Rotation().Yaw, SuraPawnPlayer->GetControlRotation().Yaw) < 0)
+		// {
+		// 	FRotator CurrentControllerRot = SuraPawnPlayer->GetControlRotation();
+		// 	float TargetYaw = VelocityDir.Rotation().Yaw;
+		// 	float NewYaw = FMath::FInterpTo(CurrentControlRotation.Yaw, TargetYaw, DeltaTime, 3.f);
+		// 	SuraPawnPlayer->GetController()->SetControlRotation(FRotator(CurrentControlRotation.Pitch, NewYaw, CurrentControlRotation.Roll));
+		// }
 	}
 	else // EWRS_Right
 	{
@@ -454,6 +472,24 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	        SetMovementState(EMovementState::EMS_Airborne);
 	        return;
 	    }
+
+		float WallRunViewAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(VelocityDir, SuraPawnPlayer->GetActorForwardVector())));
+		bool bIsLeft = FVector::CrossProduct(VelocityDir, SuraPawnPlayer->GetActorForwardVector()).GetSafeNormal().Z < 0;
+
+		if (WallRunViewAngle > 60.f && bIsLeft)
+		{
+			Velocity += CurrentWallHit.ImpactNormal * 100.f;
+			SetMovementState(EMovementState::EMS_Airborne);
+			return;
+		}
+
+		// if (FMath::FindDeltaAngleDegrees(VelocityDir.Rotation().Yaw, SuraPawnPlayer->GetControlRotation().Yaw) > 0)
+		// {
+		// 	FRotator CurrentControllerRot = SuraPawnPlayer->GetControlRotation();
+		// 	float TargetYaw = VelocityDir.Rotation().Yaw;
+		// 	float NewYaw = FMath::FInterpTo(CurrentControlRotation.Yaw, TargetYaw, DeltaTime, 3.f);
+		// 	SuraPawnPlayer->GetController()->SetControlRotation(FRotator(CurrentControlRotation.Pitch, NewYaw, CurrentControlRotation.Roll));
+		// }
 	}
 
 	// Input W key (Forward)
