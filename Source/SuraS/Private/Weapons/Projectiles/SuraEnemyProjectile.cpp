@@ -6,6 +6,20 @@
 #include "Interfaces/Damageable.h"
 #include "Structures/DamageData.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
+#include "Structures/Enemies/EnemyProjectileAttributesData.h"
+
+#define PROJECTILE_COLLISION ECC_EngineTraceChannel1
+#define CLIMBWALL_COLLISION ECC_EngineTraceChannel2
+#define WEAPON_COLLISION ECC_EngineTraceChannel3
+#define PLAYER_COLLISION ECC_EngineTraceChannel4
+#define ENEMY_COLLISION ECC_GameTraceChannel5
+
+void ASuraEnemyProjectile::BeginPlay()
+{
+	Super::BeginPlay();
+
+	InitializeProjectile();
+}
 
 // Sets default values
 ASuraEnemyProjectile::ASuraEnemyProjectile()
@@ -15,10 +29,6 @@ ASuraEnemyProjectile::ASuraEnemyProjectile()
 
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
-	//CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel1);
-	// CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); //Projectile
-	//CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Ignore); //Weapon
-	// CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel5, ECR_Ignore); //Enemies
 	CollisionComp->OnComponentHit.AddDynamic(this, &ASuraEnemyProjectile::OnHit);
 
 	// Prevent the player walking on the bullet
@@ -29,8 +39,6 @@ ASuraEnemyProjectile::ASuraEnemyProjectile()
 
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComp"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
-	ProjectileMovement->InitialSpeed = InitialSpeed;
-	ProjectileMovement->MaxSpeed = MaxSpeed;
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->bAutoActivate = false;
@@ -41,36 +49,50 @@ ASuraEnemyProjectile::ASuraEnemyProjectile()
 	ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	ProjectileMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 	ProjectileMesh->SetCastShadow(false);
+
+	ProjectileType = "Base";
 }
 
-void ASuraEnemyProjectile::InitializeProjectile(AActor* TheOwner, float TheAdditionalDamage, float AdditionalRadius)
+void ASuraEnemyProjectile::InitializeProjectile()
 {
-	if (IsValid(TheOwner))
-		ASuraEnemyProjectile::ProjectileOwner = TheOwner;
+	// CollisionComp->SetCollisionObjectType(PROJECTILE_COLLISION);
+	// CollisionComp->SetCollisionResponseToChannel(PROJECTILE_COLLISION, ECR_Ignore); //Projectile
+	// CollisionComp->SetCollisionResponseToChannel(WEAPON_COLLISION, ECR_Ignore); //Weapon
+	// CollisionComp->SetCollisionResponseToChannel(ENEMY_COLLISION, ECR_Ignore); //Enemies
+	
+	if (const auto ProjectileAttributeData = EnemyProjectileAttributesDT.DataTable->FindRow<FEnemyProjectileAttributesData>(ProjectileType, ""))
+	{
+		ProjectileMovement->InitialSpeed = ProjectileAttributeData->InitialSpeed;
+		ProjectileMovement->MaxSpeed = ProjectileAttributeData->MaxSpeed;
 
-	ASuraEnemyProjectile::AdditionalDamage = TheAdditionalDamage;
-
-	if (AdditionalRadius > 0.f)
-		CollisionComp->SetSphereRadius(InitialRadius + AdditionalRadius);
+		M_DamageAmount = ProjectileAttributeData->DamageAmount;
+		M_HeadshotAdditionalDamage = ProjectileAttributeData->HeadshotAdditionalDamage;
+		M_LifeSapn = ProjectileAttributeData->LifeSpan;
+		M_InitialRadius = ProjectileAttributeData->InitialRadius;
+		M_ExplosionRadius = ProjectileAttributeData->ExplosionRadius;
+		M_HomingAccelerationMagnitude = ProjectileAttributeData->HomingAccelerationMagnitude;
+	}
+	
+	CollisionComp->SetSphereRadius(M_InitialRadius);
 
 	CollisionComp->OnComponentHit.AddDynamic(this, &ASuraEnemyProjectile::OnHit);
 }
 
+void ASuraEnemyProjectile::SetOwner(AActor* TheOwner)
+{
+	Super::SetOwner(TheOwner);
+}
+
 void ASuraEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("hit"));
+	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("hit"));
 
 	if (OtherActor != nullptr && OtherActor != ProjectileOwner) 
 	{
 		if (OtherActor != this && OtherComp != nullptr && OtherComp->IsSimulatingPhysics())
 			OtherComp->AddImpulseAtLocation(GetVelocity() * 100.f, GetActorLocation());
 
-		if (ASuraCharacterPlayer* const Player = Cast<ASuraCharacterPlayer>(Hit.GetActor()))
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("poyo"));
-		}
-
-		ApplyDamage(OtherActor, DamageAmount + AdditionalDamage, EDamageType::Melee, false);
+		ApplyDamage(OtherActor, M_DamageAmount, EDamageType::Projectile, false);
 
 		Destroy();
 	}
@@ -94,10 +116,10 @@ void ASuraEnemyProjectile::ApplyDamage(AActor* OtherActor, float TheDamageAmount
 
 }
 
-void ASuraEnemyProjectile::SetHomingTarget(bool bIsHoming, AActor* Target)
+void ASuraEnemyProjectile::SetHomingTarget(const AActor* Target)
 {
-	ProjectileMovement->bIsHomingProjectile = bIsHoming;
-	ProjectileMovement->HomingAccelerationMagnitude = HomingAccelerationMagnitude;
+	ProjectileMovement->bIsHomingProjectile = true;
+	ProjectileMovement->HomingAccelerationMagnitude = M_HomingAccelerationMagnitude;
 	ProjectileMovement->HomingTargetComponent = Target->GetRootComponent();
 }
 

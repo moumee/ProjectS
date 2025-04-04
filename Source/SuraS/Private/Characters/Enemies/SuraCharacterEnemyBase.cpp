@@ -2,11 +2,16 @@
 
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 
+#include "BrainComponent.h"
+#include "ActorComponents/DamageComponent/ACDamageSystem.h"
+#include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 #include "Widgets/Enemies/EnemyHealthBarWidget.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
+#include "Weapons/SuraEnemyWeapon.h"
 
 ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 {
@@ -95,7 +100,8 @@ void ASuraCharacterEnemyBase::OnDamagedTriggered()
 	UpdateHealthBarValue();
 	HealthBarWidget->SetHiddenInGame(false);
 
-	Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject())->PlayFadeAnimtion();
+	if (!HealthBarWidget->bHiddenInGame)
+		Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject())->PlayFadeAnimtion();
 
 	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *(HitAnimation->GetFName()).ToString()));
 
@@ -131,7 +137,13 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 
 	GetWorldTimerManager().SetTimer(
 		DeathHandle,
-		FTimerDelegate::CreateLambda([&]() { SetActorHiddenInGame(true); }),
+		FTimerDelegate::CreateLambda([&]()
+		{
+			SetActorHiddenInGame(true);
+			
+			if (EnemyWeapon)
+				EnemyWeapon->SetActorHiddenInGame(true);
+		}),
 		3.f,
 		false
 	);
@@ -186,9 +198,7 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 		// GetCapsuleComponent()->SetVisibility(true);
 		// GetCapsuleComponent()->SetHiddenInGame(false);
 
-		const auto EnemyAttributesData = EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(EnemyType, "");
-
-		if (EnemyAttributesData)
+		if (const auto EnemyAttributesData = EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(EnemyType, ""))
 		{
 			GetDamageSystemComp()->SetMaxHealth(EnemyAttributesData->MaxHealth);
 			GetDamageSystemComp()->SetHealth(EnemyAttributesData->MaxHealth);

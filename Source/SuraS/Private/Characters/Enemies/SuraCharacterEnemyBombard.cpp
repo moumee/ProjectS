@@ -1,21 +1,21 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Characters/Enemies/SuraCharacterEnemyRifle.h"
+#include "Characters/Enemies/SuraCharacterEnemyBombard.h"
 
-#include "Weapons/Firearms/SuraFirearmRifle.h"
+#include "Weapons/Firearms/SuraFirearmMissileLauncher.h"
 
-ASuraCharacterEnemyRifle::ASuraCharacterEnemyRifle()
+ASuraCharacterEnemyBombard::ASuraCharacterEnemyBombard()
 {
-	EnemyType = "Rifle";
+	EnemyType = "Bombard";
 }
 
-void ASuraCharacterEnemyRifle::BeginPlay()
+void ASuraCharacterEnemyBombard::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Firearm = GetWorld()->SpawnActorDeferred<ASuraFirearmRifle>(RifleClass, GetActorTransform(), this);
-	Firearm->InitializeFirearem(this, 150, 30);
+	Firearm = GetWorld()->SpawnActorDeferred<ASuraFirearmMissileLauncher>(RifleClass, GetActorTransform(), this);
+	Firearm->InitializeFirearem(this, 30, 1);
 	Firearm->FinishSpawning(GetActorTransform(), true);
 
 	FActorSpawnParameters ActorSpawnParams;
@@ -27,7 +27,7 @@ void ASuraCharacterEnemyRifle::BeginPlay()
 	EnemyWeapon = Firearm;
 }
 
-void ASuraCharacterEnemyRifle::Attack(const ASuraCharacterPlayer* Player)
+void ASuraCharacterEnemyBombard::Attack(const ASuraCharacterPlayer* Player)
 {
 	if (AttackAnimation)
 	{
