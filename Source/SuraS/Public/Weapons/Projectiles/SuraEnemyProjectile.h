@@ -15,6 +15,10 @@ class SURAS_API ASuraEnemyProjectile : public AActor
 	GENERATED_BODY()
 
 protected:
+	FName ProjectileType;
+
+	virtual void BeginPlay() override;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile", meta = (AlowPrivateAccess = "true"))
 	UProjectileMovementComponent* ProjectileMovement;
 
@@ -26,33 +30,31 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	AActor* ProjectileOwner;
-
-	UPROPERTY(EditAnywhere, Category = "Projectile")
-	float DamageAmount = 1.f;
-
-	UPROPERTY(EditAnywhere, Category = "Projectile")
-	float InitialSpeed = 10000.f;
-
-	UPROPERTY(EditAnywhere, Category = "Projectile")
-	float MaxSpeed = 10000.f;
-
-	float LifeSapn = 10.f;
-	float AdditionalDamage;
-	float InitialRadius = 10.f;
-	float HomingAccelerationMagnitude = 3000.f;
+	
+	float M_DamageAmount;
+	float M_HeadshotAdditionalDamage;
+	float M_LifeSapn;
+	float M_InitialRadius;
+	float M_ExplosionRadius;
+	float M_HomingAccelerationMagnitude;
 
 public:	
 	// Sets default values for this actor's properties
 	ASuraEnemyProjectile();
 
-	void InitializeProjectile(AActor* TheOwner, float TheAdditionalDamage = 0.f, float AdditionalRadius = 0.f);
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (RowType = "EnemyProjectileAttributesData"))
+	FDataTableRowHandle EnemyProjectileAttributesDT;
+
+	void InitializeProjectile();
+	
+	void SetOwner(AActor* TheOwner);
 
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	void ApplyDamage(AActor* OtherActor, float TheDamageAmount, EDamageType DamageType, bool bCanForceDamage);
 
-	void SetHomingTarget(bool bIsHoming, AActor* Target);
+	void SetHomingTarget(const AActor* Target);
 
 	void LaunchProjectile();
 };

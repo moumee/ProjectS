@@ -23,7 +23,7 @@ void ASpawnerBase::SpawnWrapper()
 {
 	for (int i = 0; i < spawnCount; i++)
 	{
-		Pool->GetPooledObject(GetActorLocation(), FRotator().ZeroRotator);
+		Pool->GetPooledObject(GetActorLocation() + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator().ZeroRotator);
 	}
 }
 

@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Weapons/Firearms/SuraFirearmRifle.h"
+#include "Weapons/Firearms/SuraFirearmMissileLauncher.h"
 #include "Weapons/Projectiles/SuraEnemyProjectile.h"
 
-void ASuraFirearmRifle::Fire(AActor* FirearmOwner, const AActor* TargetActor)
+void ASuraFirearmMissileLauncher::Fire(AActor* FirearmOwner, const AActor* TargetActor)
 {
 	if (ProjectileClass)
 	{
@@ -17,6 +17,7 @@ void ASuraFirearmRifle::Fire(AActor* FirearmOwner, const AActor* TargetActor)
 		ASuraEnemyProjectile* Projectile = GetWorld()->SpawnActor<ASuraEnemyProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 
 		Projectile->SetOwner(FirearmOwner);
+		Projectile->SetHomingTarget(TargetActor);
 		Projectile->LaunchProjectile();
 	}
 }
