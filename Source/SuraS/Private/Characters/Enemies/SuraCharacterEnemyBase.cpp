@@ -198,9 +198,7 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 		// GetCapsuleComponent()->SetVisibility(true);
 		// GetCapsuleComponent()->SetHiddenInGame(false);
 
-		const auto EnemyAttributesData = EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(EnemyType, "");
-
-		if (EnemyAttributesData)
+		if (const auto EnemyAttributesData = EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(EnemyType, ""))
 		{
 			GetDamageSystemComp()->SetMaxHealth(EnemyAttributesData->MaxHealth);
 			GetDamageSystemComp()->SetHealth(EnemyAttributesData->MaxHealth);

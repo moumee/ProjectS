@@ -34,7 +34,7 @@ public:
 
 	void InitializeFirearem(ASuraCharacterEnemyBase* OwnerChar, int32 NewMaxAmmo, int32 NewMagsize); // should be called after being deferred spawned
 
-	virtual void Fire(AActor* FirearmOwner, const AActor* TargetActor, float AdditionalDamage, float AdditionalRadius, bool bIsHoming);
+	virtual void Fire(AActor* FirearmOwner, const AActor* TargetActor);
 
 	bool ShouldReload();
 	bool CanReload();
