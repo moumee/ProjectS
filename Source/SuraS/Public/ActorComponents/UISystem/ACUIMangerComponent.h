@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "UI/InventoryWidget.h"
 #include "ACUIMangerComponent.generated.h"
 
 class UInputAction;
@@ -65,11 +64,11 @@ private:
 	/** UI Manager들 **/
 	UPROPERTY()
 	UACInventoryManager* InventoryManager;
+	
+	// UPROPERTY()
+	// UACCrosshairManager* CrosshairManager;
 
-	UPROPERTY()
-	UACCrosshairManager* CrosshairManager;
-
-	void InitializeMangers();
+	//void InitializeMangers();
 
 	
 

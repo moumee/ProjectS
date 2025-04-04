@@ -3,8 +3,9 @@
 
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "EnhancedInputComponent.h"
-#include "ActorComponents/UISystem/ACCrosshairManager.h"
 #include "ActorComponents/UISystem/ACInventoryManager.h"
+#include "UI/InventoryWidget.h"
+
 
 
 // Sets default values for this component's properties
@@ -13,6 +14,8 @@ UACUIMangerComponent::UACUIMangerComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
+
+	InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("InventoryManager"));
 	
 }
 
@@ -23,9 +26,15 @@ void UACUIMangerComponent::BeginPlay()
 	Super::BeginPlay();
 	SetupInput();
 
-	InitializeMangers();
+	// 위젯을 생성했는지 확인 후 전달
+	UInventoryWidget* InventoryWidget = Cast<UInventoryWidget>(GetWidget(EUIType::Inventory));
+	if (InventoryManager && InventoryWidget)
+	{
+		InventoryManager->SetInventoryWidget(InventoryWidget);
+	}
+	//InitializeMangers();
 
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "UImanager begin play called");
+	// GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "UImanager begin play called");
 }
 
 void UACUIMangerComponent::SetupInput()
@@ -73,33 +82,12 @@ UBaseUIWidget* UACUIMangerComponent::GetWidget(EUIType UIType)
 	return UIWidgets[UIType];
 }
 
-void UACUIMangerComponent::InitializeMangers()
-{	// 크로스헤어는 재형님 코드에서 무기마다 호출. 따라서 여기서 컴포넌트 등록 필요 없음.
-	//CrosshairManager = NewObject<UACCrosshairManager>(this, UACCrosshairManager::StaticClass());
-	//CrosshairManager->RegisterComponent(); // 이 시점에서 해당 manager의 begin play가 호출됨.
-
-	
-
-	// // 인벤토리 매니저 생성 및 등록
-	InventoryManager = NewObject<UACInventoryManager>(this, UACInventoryManager::StaticClass());
-	InventoryManager->RegisterComponent();
-
-	// InventoryManager = GetOwner()->FindComponentByClass<UACInventoryManager>();
-	//
-	// if (!InventoryManager)
-	// {
-	// 	UE_LOG(LogTemp, Warning, TEXT("InventoryManager not found!"));
-	// 	return;
-	// }
-	//
-	// // Inventory 위젯 생성
-	// UInventoryWidget* InventoryWidget = Cast<UInventoryWidget>(GetWidget(EUIType::Inventory));
-	// if (InventoryWidget)
-	// {
-	// 	InventoryManager->SetInventoryWidget(InventoryWidget);
-	// }
-
-}
+// void UACUIMangerComponent::InitializeMangers()
+// {	
+// 	// // 인벤토리 매니저 생성 및 등록
+// 	InventoryManager = NewObject<UACInventoryManager>(this, UACInventoryManager::StaticClass());
+// 	InventoryManager->RegisterComponent();
+// }
 
 
 

@@ -1,13 +1,10 @@
 ﻿// InventoryManager.cpp
 #include "ActorComponents/UISystem/ACInventoryManager.h"
-
-#include "AsyncTreeDifferences.h"
-#include "SceneTextures.h"
-#include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
-#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h" // 정확한 경로로 바꿔주세요
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h" 
 #include "Components/Image.h"
 #include "GameFramework/Character.h"
+#include "UI/InventoryWidget.h"
 
 UACInventoryManager::UACInventoryManager()
 {
@@ -29,10 +26,16 @@ void UACInventoryManager::BeginPlay()
 	
 }
 
-// void UACInventoryManager::SetInventoryWidget(UInventoryWidget* InWidget)
-// {
-// 	InventoryWidget = InWidget; // InventoryWidget 참조.	UImanagerComponent에서 참조하는 걸 그대로 인자로 넘김.
-// }
+void UACInventoryManager::SetInventoryWidget(UInventoryWidget* InWidget)
+{
+	InventoryWidget = InWidget;
+}
+
+UInventoryWidget* UACInventoryManager::GetInventoryWidget() const
+{
+	return InventoryWidget;
+}
+
 
 void UACInventoryManager::SetPendingWeaponIndex(const int32 Index)
 {
@@ -119,29 +122,17 @@ void UACInventoryManager::UpdateClickedWeaponWindow()
 	// weaponinventory랑 current index 정보를 써서 attribute창 업데이트! 호출은 inventory widget초기화때랑 current index가 바뀔 때?
 
 	TArray<AWeapon*> WeaponInventory = pWeaponSystemComponent->GetWeaponInventory();
-	// int32 CurrentWeaponIndex = pWeaponSystemComponent->GetCurrentWeaponIndex();
-
-
-	// UIManagerComponent 인스턴스 가져오기 (UIManagerComponent가 다른 컴포넌트라면 GetOwner()를 사용하거나 다른 방법으로 접근)
-	UACUIMangerComponent* UIManagerComponent = GetOwner()->FindComponentByClass<UACUIMangerComponent>();
-
-
-	if (UIManagerComponent)
+	
+	if (InventoryWidget && WeaponInventory.IsValidIndex(PendingWeaponIndex))
 	{
-		// GetWidget을 사용하여 이미 생성된 UInventoryWidget 인스턴스를 가져옴
-		const UInventoryWidget* InventoryWidget = Cast<UInventoryWidget>(UIManagerComponent->GetWidget(EUIType::Inventory));
-
-		if (InventoryWidget && WeaponInventory.IsValidIndex(PendingWeaponIndex))
+		AWeapon* ClickedWeapon = WeaponInventory[PendingWeaponIndex];
+		if (ClickedWeapon && ClickedWeapon->WeaponData && ClickedWeapon->WeaponData->WeaponImage)
 		{
-			AWeapon* ClickedWeapon = WeaponInventory[PendingWeaponIndex];
-			if (ClickedWeapon && ClickedWeapon->WeaponData && ClickedWeapon->WeaponData->WeaponImage)
-			{
-				InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(ClickedWeapon->WeaponData->WeaponImage);
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Weapon 또는 WeaponData 또는 WeaponImage가 nullptr입니다."));
-			}
+			InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(ClickedWeapon->WeaponData->WeaponImage);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Weapon 또는 WeaponData 또는 WeaponImage가 nullptr입니다."));
 		}
 	}
 }
@@ -156,29 +147,106 @@ void UACInventoryManager::UpdateCurrentWeaponWindow()
 	int32 CurrentWeaponIndex = pWeaponSystemComponent->GetCurrentWeaponIndex();
 
 
-	// UIManagerComponent 인스턴스 가져오기 (UIManagerComponent가 다른 컴포넌트라면 GetOwner()를 사용하거나 다른 방법으로 접근)
-	UACUIMangerComponent* UIManagerComponent = GetOwner()->FindComponentByClass<UACUIMangerComponent>();
-
-
-	if (UIManagerComponent)
+	if (InventoryWidget && WeaponInventory.IsValidIndex(CurrentWeaponIndex))
 	{
-		// GetWidget을 사용하여 이미 생성된 UInventoryWidget 인스턴스를 가져옴
-		const UInventoryWidget* InventoryWidget = Cast<UInventoryWidget>(UIManagerComponent->GetWidget(EUIType::Inventory));
-
-		if (InventoryWidget && WeaponInventory.IsValidIndex(CurrentWeaponIndex))
+		AWeapon* CurrentWeapon = WeaponInventory[CurrentWeaponIndex];
+		if (CurrentWeapon && CurrentWeapon->WeaponData && CurrentWeapon->WeaponData->WeaponImage)
 		{
-			AWeapon* CurrentWeapon = WeaponInventory[CurrentWeaponIndex];
-			if (CurrentWeapon && CurrentWeapon->WeaponData && CurrentWeapon->WeaponData->WeaponImage)
-			{
-				InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(CurrentWeapon->WeaponData->WeaponImage);
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Weapon 또는 WeaponData 또는 WeaponImage가 nullptr입니다."));
-			}
+			InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(CurrentWeapon->WeaponData->WeaponImage);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Weapon 또는 WeaponData 또는 WeaponImage가 nullptr입니다."));
 		}
 	}
 
+}
+
+void UACInventoryManager::AllWeaponDiscard()
+{
+	if (!InventoryWidget->DTWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("DTWeapon is not set in GameInstance!"));
+		return;
+	}
+    
+	for (const auto& Row : InventoryWidget->DTWeapon->GetRowMap())
+	{
+		FWeaponData* WeaponData = (FWeaponData*)Row.Value;
+		if (WeaponData)
+		{
+			WeaponData->bIsWeaponOwned = false;
+			
+			InventoryWidget->UpdateWeaponUI(Row.Key.ToString());
+		}
+	}
+    
+	UE_LOG(LogTemp, Warning, TEXT("All weapons have been discarded."));
+}
+
+void UACInventoryManager::ChangeWeaponByName(const FString& WeaponNameStr)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Cyan,
+        FString::Printf(TEXT("요청된 무기 이름: %s"), *WeaponNameStr));
+
+    if (!pWeaponSystemComponent)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("WeaponSystemComponent 찾기 실패"));
+        return;
+    }
+
+    const TArray<AWeapon*>& Inventory = pWeaponSystemComponent->GetWeaponInventory();
+    GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
+        FString::Printf(TEXT("WeaponInventory에 있는 무기 수: %d"), Inventory.Num()));
+
+    // 무기 인벤토리 탐색
+    for (int32 i = 0; i < Inventory.Num(); ++i)
+    {
+        AWeapon* Weapon = Inventory[i];
+        if (!Weapon || !Weapon->WeaponData)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow,
+                FString::Printf(TEXT("[%d] 무기 또는 WeaponData가 nullptr"), i));
+            continue;
+        }
+
+        FString WeaponEnumStr = UEnum::GetDisplayValueAsText(Weapon->WeaponData->WeaponName).ToString();
+
+        // GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White,
+        //     FString::Printf(TEXT("[%d] 무기 이름: %s"), i, *WeaponEnumStr));
+
+        if (WeaponEnumStr == WeaponNameStr)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
+                FString::Printf(TEXT("일치하는 무기 인덱스: %d"), i));
+
+            GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, FString::Printf(TEXT("무기를 교체하려면 F키를 눌러주세요")));
+
+            SetPendingWeaponIndex(i);
+            return;
+        }
+    }
+
+    GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
+        FString::Printf(TEXT("'%s' 무기를 WeaponInventory에서 찾을 수 없음"), *WeaponNameStr));
+}
+
+void UACInventoryManager::UnlockWeapon(FName WeaponName)
+{
+	if (!InventoryWidget->DTWeapon) return;
+
+	// WeaponName_ 접두어를 제거하고, 실제 이름만 추출
+	FString WeaponNameStr = WeaponName.ToString().RightChop(24);  // "EWeaponName::WeaponName_"을 제거
+
+	// 수정된 WeaponNameStr을 사용하여 FindRow 호출
+	static const FString ContextString(TEXT("Weapon Unlock Context"));
+	FWeaponData* WeaponData = InventoryWidget->DTWeapon->FindRow<FWeaponData>(*WeaponNameStr, ContextString);
+
+	if (WeaponData && !WeaponData->bIsWeaponOwned)
+	{
+		WeaponData->bIsWeaponOwned = true;
+		InventoryWidget->UpdateWeaponUI(WeaponNameStr);
+	}
 }
 
 

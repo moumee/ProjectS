@@ -4,7 +4,6 @@
 #include "ActorComponents/UISystem/ACCrosshairManager.h"
 
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
-#include "Characters/Player/SuraCharacterPlayer.h"
 #include "Components/Overlay.h"
 
 // Sets default values for this component's properties

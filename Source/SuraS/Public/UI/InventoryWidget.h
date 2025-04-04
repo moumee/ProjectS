@@ -13,6 +13,7 @@ class FReply;
 class UWidgetSwitcher;
 class UImage;
 class UButton;
+class UACInventoryManager;
 
 /**
  * 
@@ -46,6 +47,9 @@ class SURAS_API UInventoryWidget : public UBaseUIWidget
 	GENERATED_BODY()
 
 protected:
+	// InventoryManger reference variable
+	UACInventoryManager* InventoryManager;
+	
 	/**  탭관련  **/
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* TabWeapon;
@@ -100,18 +104,19 @@ public:
 	UDataTable* DTWeapon;  // 블루프린트에서 데이터 테이블 할당
 
 	void UpdateWeaponUI(FString WeaponNameStr);
-	void UnlockWeapon(FName WeaponName);
+	//void UnlockWeapon(FName WeaponName);
 
-	// 모든 무기 소유 불값을 false로 만드는 함수
-	void AllWeaponDiscard();
+	// // 모든 무기 소유 불값을 false로 만드는 함수
+	// void AllWeaponDiscard();
 
+	
 	// 총 버튼 클릭시 이벤트 함수
 	UFUNCTION() void OnWeaponButtonClicked_Rifle();
 	UFUNCTION() void OnWeaponButtonClicked_ShotGun();
 	UFUNCTION() void OnWeaponButtonClicked_MissileLauncher();
 
 	// 무기 변경 요청하는 함수
-	void RequestWeaponChangeByName(const FString& WeaponNameStr);
+	void RequestChangeWeaponByName(const char* Str);
 	
 	/** 총기 UI 요소 맵 */
 	TMap<FString, FWeaponUI> WeaponUIElements;
