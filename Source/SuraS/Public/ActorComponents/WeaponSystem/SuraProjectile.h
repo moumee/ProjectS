@@ -24,13 +24,15 @@ class UNiagaraSystem;
 DECLARE_DELEGATE(FHeadShotDelegate);
 DECLARE_DELEGATE(FBodyShotDelegate);
 
-UCLASS(config = Game) //TODO: ¹«½¼ ¼Ó¼ºÀÎÁö ¾Ë¾ÆºÁ¾ßÇÔ
+UCLASS(config = Game) //TODO: ï¿½ï¿½ï¿½ï¿½ ï¿½Ó¼ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¾Æºï¿½ï¿½ï¿½ï¿½ï¿½
 class SURAS_API ASuraProjectile : public AActor
 {
 	GENERATED_BODY()
 public:
 	FHeadShotDelegate OnHeadShot;
 	FBodyShotDelegate OnBodyShot;
+	// suhyeon
+	const FProjectileData* GetProjectileData() const { return ProjectileData; }
 protected:
 	UPROPERTY(EditAnywhere, Category = Projectile)
 	EProjectileType ProjectileType = EProjectileType::Projectile_Rifle;
@@ -162,7 +164,7 @@ protected:
 #pragma region Homing
 protected:
 
-	//TODO: DTÈ­ ½ÃÅ°±â
+	//TODO: DTÈ­ ï¿½ï¿½Å°ï¿½ï¿½
 	float ExlosionTriggerRadius = 10.f;
 
 	UPROPERTY()

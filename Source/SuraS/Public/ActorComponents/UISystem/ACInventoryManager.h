@@ -8,6 +8,7 @@
 class UInventoryWidget;
 class UWeaponSystemComponent;
 class UACUIMangerComponent;
+class AWeapon;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class SURAS_API UACInventoryManager : public UActorComponent
@@ -27,11 +28,13 @@ public:
 	void SetUIManager(UACUIMangerComponent* UIMangerComponent);
 	
 	UDataTable* GetWeaponDataTable() const;
+	//UDataTable* GetProjectileDataTable() const;
 	
 	void SetPendingWeaponIndex(int32 Index);
 	void OnConfirmWeaponEquip();
 
 	//Current Weapon Attribute window update
+	void UpdateWeaponAttributeUI(AWeapon* Weapon);
 	void UpdateClickedWeaponWindow();
 	void UpdateCurrentWeaponWindow();
 
@@ -62,6 +65,9 @@ private:
 
 	// DTWeapon 포인터 변수
 	UDataTable* DTWeapon;
+
+	// DTProjectile 포인터 변수
+	//UDataTable* DTProjectile;
 	
 	
 };

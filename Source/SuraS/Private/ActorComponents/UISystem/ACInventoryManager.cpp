@@ -3,10 +3,13 @@
 
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
+#include "ActorComponents/WeaponSystem/SuraProjectile.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h" 
 #include "Components/Image.h"
+#include "Components/ProgressBar.h"
 #include "GameFramework/Character.h"
 #include "UI/InventoryWidget.h"
+#include "Components/TextBlock.h"
 
 UACInventoryManager::UACInventoryManager()
 {
@@ -27,6 +30,7 @@ void UACInventoryManager::BeginPlay()
 	}
 
 	DTWeapon = GetWeaponDataTable();
+	// DTProjectile = GetProjectileDataTable();
 }
 
 void UACInventoryManager::SetInventoryWidget(UInventoryWidget* InWidget)
@@ -48,6 +52,11 @@ UDataTable* UACInventoryManager::GetWeaponDataTable() const
 {
 	return UIManager ? UIManager->GetWeaponDataTable() : nullptr;
 }
+
+// UDataTable* UACInventoryManager::GetProjectileDataTable() const
+// {
+// 	return UIManager ? UIManager->GetProjectileDataTable() : nullptr;
+// }
 
 
 void UACInventoryManager::SetPendingWeaponIndex(const int32 Index)
@@ -130,24 +139,84 @@ void UACInventoryManager::OnConfirmWeaponEquip()
 	
 }
 
+void UACInventoryManager::UpdateWeaponAttributeUI(AWeapon* Weapon)
+{
+	if (!Weapon || !Weapon->WeaponData || !Weapon->WeaponData->WeaponImage || !InventoryWidget)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Weapon 또는 WeaponData 또는 WeaponImage 또는 InventoryWidget이 nullptr입니다."));
+		return;
+	}
+
+	// 무기 이미지 표시
+	InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(Weapon->WeaponData->WeaponImage);
+
+	// ProjectileData 접근 (CDO + 강제 Load)
+	const ASuraProjectile* ProjectileCDO = nullptr;
+	if (Weapon->WeaponData->LeftProjectileClass)
+	{
+		ProjectileCDO = Weapon->WeaponData->LeftProjectileClass->GetDefaultObject<ASuraProjectile>();
+		if (ProjectileCDO)
+		{
+			const_cast<ASuraProjectile*>(ProjectileCDO)->LoadProjectileData();
+			const FProjectileData* ProjectileData = ProjectileCDO->GetProjectileData();
+			if (ProjectileData)
+			{
+				const float Damage = ProjectileData->DefaultDamage;
+				if (InventoryWidget->CurrentWeaponDamage)
+				{
+					InventoryWidget->CurrentWeaponDamage->SetPercent(Damage / 100.f);
+				}
+				if (InventoryWidget->CurrentWeaponDamageText)
+				{
+					InventoryWidget->CurrentWeaponDamageText->SetText(FText::AsNumber(Damage));
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("ProjectileData가 nullptr입니다."));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Projectile의 CDO 가져오기 실패 (GetDefaultObject)"));
+		}
+	}
+
+	// FireRate
+	const float FireRate = Weapon->WeaponData->FullAutoShotFireRate;
+	if (InventoryWidget->CurrentWeaponFireRate)
+	{
+		InventoryWidget->CurrentWeaponFireRate->SetPercent(FireRate);
+	}
+	if (InventoryWidget->CurrentWeaponFireRateText)
+	{
+		InventoryWidget->CurrentWeaponFireRateText->SetText(FText::AsNumber(FireRate * 100.0f));
+	}
+
+	// HandleSpeed (Recoil)
+	const float Recoil = Weapon->WeaponData->DefaultRecoil.RecoilAmountPitch;
+	if (InventoryWidget->CurrentWeaponRecoil)
+	{
+		InventoryWidget->CurrentWeaponRecoil->SetPercent(Recoil / 10.f);
+	}
+	if (InventoryWidget->CurrentWeaponRecoilText)
+	{
+		InventoryWidget->CurrentWeaponRecoilText->SetText(FText::AsNumber(Recoil * 10.f));
+	}
+}
+
 void UACInventoryManager::UpdateClickedWeaponWindow()
 {
 	// weaponinventory랑 current index 정보를 써서 attribute창 업데이트! 호출은 inventory widget초기화때랑 current index가 바뀔 때?
 
 	TArray<AWeapon*> WeaponInventory = pWeaponSystemComponent->GetWeaponInventory();
-	
-	if (InventoryWidget && WeaponInventory.IsValidIndex(PendingWeaponIndex))
+
+	if (WeaponInventory.IsValidIndex(PendingWeaponIndex))
 	{
 		AWeapon* ClickedWeapon = WeaponInventory[PendingWeaponIndex];
-		if (ClickedWeapon && ClickedWeapon->WeaponData && ClickedWeapon->WeaponData->WeaponImage)
-		{
-			InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(ClickedWeapon->WeaponData->WeaponImage);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Weapon 또는 WeaponData 또는 WeaponImage가 nullptr입니다."));
-		}
+		UpdateWeaponAttributeUI(ClickedWeapon);
 	}
+	
 }
 
 
@@ -159,18 +228,10 @@ void UACInventoryManager::UpdateCurrentWeaponWindow()
 	TArray<AWeapon*> WeaponInventory = pWeaponSystemComponent->GetWeaponInventory();
 	int32 CurrentWeaponIndex = pWeaponSystemComponent->GetCurrentWeaponIndex();
 
-
-	if (InventoryWidget && WeaponInventory.IsValidIndex(CurrentWeaponIndex))
+	if (WeaponInventory.IsValidIndex(CurrentWeaponIndex))
 	{
 		AWeapon* CurrentWeapon = WeaponInventory[CurrentWeaponIndex];
-		if (CurrentWeapon && CurrentWeapon->WeaponData && CurrentWeapon->WeaponData->WeaponImage)
-		{
-			InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(CurrentWeapon->WeaponData->WeaponImage);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Weapon 또는 WeaponData 또는 WeaponImage가 nullptr입니다."));
-		}
+		UpdateWeaponAttributeUI(CurrentWeapon);
 	}
 
 }

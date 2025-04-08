@@ -53,6 +53,11 @@ public:
 		return DTWeapon;	
 	}
 
+	// UDataTable* GetProjectileDataTable() const
+	// {
+	// 	return DTProjectile;
+	// }
+
 private:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* OpenInventoryAction;
@@ -62,6 +67,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
 	UDataTable* DTWeapon;
+
+	// UPROPERTY(EditDefaultsOnly, Category = "Data")
+	// UDataTable* DTProjectile;
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TMap<EUIType, TSubclassOf<UBaseUIWidget>> UIWidgetClasses; // 위젯 블루프린트 클래스

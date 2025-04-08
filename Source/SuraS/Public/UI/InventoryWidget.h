@@ -14,6 +14,7 @@ class UWidgetSwitcher;
 class UImage;
 class UButton;
 class UACInventoryManager;
+class UProgressBar;
 
 /**
  * 
@@ -144,12 +145,16 @@ public:
 
 	/** 현재 선택 중인 무기 속성창 **/
 	UPROPERTY(meta = (BindWidget)) UImage* CurrentWeaponImage;
-	//damage
-	//speed
-	//rebound
+	UPROPERTY(meta = (BindWidget)) UProgressBar* CurrentWeaponDamage; // damage
+	UPROPERTY(meta = (BindWidget)) UProgressBar* CurrentWeaponFireRate; // fire rate
+	UPROPERTY(meta = (BindWidget)) UProgressBar* CurrentWeaponRecoil; // Recoil
 	//handle speed
 	//magazine
 	//firing method
+
+	UPROPERTY(meta = (BindWidget)) UTextBlock* CurrentWeaponDamageText;
+	UPROPERTY(meta = (BindWidget)) UTextBlock* CurrentWeaponFireRateText;
+	UPROPERTY(meta = (BindWidget)) UTextBlock* CurrentWeaponRecoilText;
 	
 	UFUNCTION()
 	void OnWeaponPickedUp(FName WeaponName);
