@@ -128,8 +128,9 @@ protected:
 
 protected:
 
-	EWallRunEnter WallRunEnterMode;
+	
 
+	EWallRunEnter WallRunEnterMode;
 	bool bWallJumpAirBoost = false;
 	bool bIsDeceleratingZ = false;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|WallRun")

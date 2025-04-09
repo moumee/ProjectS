@@ -1,9 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+// TODO: Make and assign custom trace channels for geometry
+// TODO: WallRun 90 degree case handling, WallRun camera yaw handling
+
 
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 
-#include "Camera/CameraComponent.h"
+#include "KismetTraceUtils.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Characters/PawnBasePlayer/SuraPlayerController.h"
 #include "Components/CapsuleComponent.h"
@@ -191,6 +194,59 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		}
 	}
 
+	TArray<FHitResult> StepHits;
+	FCollisionQueryParams StepParams;
+	StepParams.AddIgnoredActor(SuraPawnPlayer);
+
+	FVector StepTraceStart = SuraPawnPlayer->GetActorLocation() + FVector(0, 0, -1) * (SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() - 5.f);
+	FVector StepTraceEnd = StepTraceStart + SuraPawnPlayer->GetActorForwardVector() * SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleRadius();
+	FCollisionShape StepShape = FCollisionShape::MakeSphere(5.f);
+	bool bStepHit = GetWorld()->SweepMultiByChannel(StepHits, StepTraceStart, StepTraceEnd, FQuat::Identity, ECC_WorldStatic, StepShape, StepParams);
+
+	DrawDebugSphereTraceMulti(GetWorld(), StepTraceStart, StepTraceEnd,
+		5.f, EDrawDebugTrace::ForDuration, bStepHit, StepHits, FLinearColor::Red, FLinearColor::Green, 1.f);
+	
+
+	if (bStepHit)
+	{
+		FHitResult StepWall;
+		bool bFoundStepWall = false;
+		for (const FHitResult& StepHit : StepHits)
+		{
+			if (StepHit.IsValidBlockingHit() && StepHit.ImpactNormal.Z < MinWalkableFloorZ)
+			{
+				bFoundStepWall = true;
+				StepWall = StepHit;
+				break;
+			}
+		}
+
+		if (bFoundStepWall)
+		{
+			FCollisionShape CapsuleShape = SuraPawnPlayer->GetCapsuleComponent()->GetCollisionShape();
+			float StepHeightZ = SuraPawnPlayer->GetActorLocation().Z + MaxStepHeight;
+			FVector DownStepTraceStart = FVector(StepWall.ImpactPoint.X, StepWall.ImpactPoint.Y, StepHeightZ) + SuraPawnPlayer->GetActorForwardVector() * 3.f;
+			FVector DownStepTraceEnd = DownStepTraceStart + FVector(0, 0, -1) * (StepHeightZ + 10.f);
+
+			FHitResult StepFloorHit;
+			FCollisionQueryParams StepFloorParams;
+			StepFloorParams.AddIgnoredActor(SuraPawnPlayer);
+
+			bool bStepFloorHit = GetWorld()->SweepSingleByChannel(StepFloorHit, DownStepTraceStart, DownStepTraceEnd, FQuat::Identity, ECC_WorldStatic,
+				CapsuleShape, StepFloorParams);
+
+			DrawDebugCapsuleTraceSingle(GetWorld(), DownStepTraceStart, DownStepTraceEnd, 40.f, 90.f, EDrawDebugTrace::ForDuration, bStepFloorHit,
+				StepFloorHit, FLinearColor::Green, FLinearColor::Red, 1.f);
+
+			if (bStepFloorHit && StepFloorHit.IsValidBlockingHit() && StepFloorHit.ImpactNormal.Z >= MinWalkableFloorZ)
+			{
+				SuraPawnPlayer->SetActorLocation(StepFloorHit.Location);
+			}
+		}
+	}
+
+	
+
 	if (bJumpPressed && CurrentJumpCount < MaxJumpCount)
 	{
 		bJumpPressed = false;
@@ -270,6 +326,8 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		
 		if (PreviousMovementState != EMovementState::EMS_WallRun)
 		{
+			bIsDashing = false;
+			ElapsedTimeFromDash = 0.f;
 			SetMovementState(EMovementState::EMS_WallRun);
 			return;
 		}
@@ -277,6 +335,8 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		{
 			if (ElapsedTimeFromSurface > WallJumpBuffer)
 			{
+				bIsDashing = false;
+				ElapsedTimeFromDash = 0.f;
 				SetMovementState(EMovementState::EMS_WallRun);
 				return;
 			}
