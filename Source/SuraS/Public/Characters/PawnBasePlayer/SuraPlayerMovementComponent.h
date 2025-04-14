@@ -128,7 +128,7 @@ protected:
 
 protected:
 
-	
+	FHitResult GroundHit;
 
 	EWallRunEnter WallRunEnterMode;
 	bool bWallJumpAirBoost = false;
@@ -193,7 +193,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Crouch")
 	bool bCrouchPressed = false;
 
-	bool IsGrounded() const;
+	bool IsGrounded();
 
 	void SetMovementState(EMovementState NewState);
 

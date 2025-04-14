@@ -178,19 +178,13 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		}
 	}
 
-	FHitResult Hit;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(SuraPawnPlayer);
+	
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, SuraPawnPlayer->GetActorLocation(),
-		SuraPawnPlayer->GetActorLocation() - FVector(0, 0, SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 20.f),
-		ECC_WorldStatic, Params);
-
-	if (bHit && Hit.IsValidBlockingHit() && !bIsDashing)
+	if (!bIsDashing)
 	{
-		if (Hit.ImpactNormal.Z >= MinWalkableFloorZ)
+		if (GroundHit.ImpactNormal.Z >= MinWalkableFloorZ)
 		{
-			Velocity = FVector::VectorPlaneProject(Velocity, Hit.ImpactNormal).GetSafeNormal() * Velocity.Size();
+			Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * Velocity.Size();
 		}
 	}
 
@@ -199,12 +193,12 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 	StepParams.AddIgnoredActor(SuraPawnPlayer);
 
 	FVector StepTraceStart = SuraPawnPlayer->GetActorLocation() + FVector(0, 0, -1) * (SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() - 5.f);
-	FVector StepTraceEnd = StepTraceStart + SuraPawnPlayer->GetActorForwardVector() * SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleRadius();
+	FVector StepTraceEnd = StepTraceStart + FVector::VectorPlaneProject(InputDirection, GroundHit.ImpactNormal).GetSafeNormal() * SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleRadius();
 	FCollisionShape StepShape = FCollisionShape::MakeSphere(5.f);
 	bool bStepHit = GetWorld()->SweepMultiByChannel(StepHits, StepTraceStart, StepTraceEnd, FQuat::Identity, ECC_WorldStatic, StepShape, StepParams);
 
-	DrawDebugSphereTraceMulti(GetWorld(), StepTraceStart, StepTraceEnd,
-		5.f, EDrawDebugTrace::ForDuration, bStepHit, StepHits, FLinearColor::Red, FLinearColor::Green, 1.f);
+	// DrawDebugSphereTraceMulti(GetWorld(), StepTraceStart, StepTraceEnd,
+	// 	5.f, EDrawDebugTrace::ForDuration, bStepHit, StepHits, FLinearColor::Red, FLinearColor::Green, 1.f);
 	
 
 	if (bStepHit)
@@ -224,8 +218,13 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		if (bFoundStepWall)
 		{
 			FCollisionShape CapsuleShape = SuraPawnPlayer->GetCapsuleComponent()->GetCollisionShape();
-			float StepHeightZ = SuraPawnPlayer->GetActorLocation().Z + MaxStepHeight;
-			FVector DownStepTraceStart = FVector(StepWall.ImpactPoint.X, StepWall.ImpactPoint.Y, StepHeightZ) + SuraPawnPlayer->GetActorForwardVector() * 3.f;
+			FPlane GroundPlane(GroundHit.ImpactPoint, GroundHit.ImpactNormal);
+			float PlanePointZ = (GroundPlane.W - GroundPlane.X * StepWall.ImpactPoint.X - GroundPlane.Y * StepWall.ImpactPoint.Y) / GroundPlane.Z;
+			float StepHeightZ = PlanePointZ + CapsuleShape.GetCapsuleHalfHeight() + MaxStepHeight;
+			
+			FVector DownStepTraceStart = 
+				FVector(StepWall.ImpactPoint.X, StepWall.ImpactPoint.Y, StepHeightZ) +
+				FVector::VectorPlaneProject(InputDirection, GroundHit.ImpactNormal).GetSafeNormal() * 3.f;
 			FVector DownStepTraceEnd = DownStepTraceStart + FVector(0, 0, -1) * (StepHeightZ + 10.f);
 
 			FHitResult StepFloorHit;
@@ -235,8 +234,8 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 			bool bStepFloorHit = GetWorld()->SweepSingleByChannel(StepFloorHit, DownStepTraceStart, DownStepTraceEnd, FQuat::Identity, ECC_WorldStatic,
 				CapsuleShape, StepFloorParams);
 
-			DrawDebugCapsuleTraceSingle(GetWorld(), DownStepTraceStart, DownStepTraceEnd, 40.f, 90.f, EDrawDebugTrace::ForDuration, bStepFloorHit,
-				StepFloorHit, FLinearColor::Green, FLinearColor::Red, 1.f);
+			// DrawDebugCapsuleTraceSingle(GetWorld(), DownStepTraceStart, DownStepTraceEnd, 40.f, 90.f, EDrawDebugTrace::ForDuration, bStepFloorHit,
+			// 	StepFloorHit, FLinearColor::Green, FLinearColor::Red, 1.f);
 
 			if (bStepFloorHit && StepFloorHit.IsValidBlockingHit() && StepFloorHit.ImpactNormal.Z >= MinWalkableFloorZ)
 			{
@@ -749,9 +748,8 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 
 
 
-bool USuraPlayerMovementComponent::IsGrounded() const
+bool USuraPlayerMovementComponent::IsGrounded()
 {
-	FHitResult GroundSweepHit;
 	FCollisionQueryParams GroundSweepParams;
 	GroundSweepParams.AddIgnoredActor(PawnOwner);
 	
@@ -759,16 +757,16 @@ bool USuraPlayerMovementComponent::IsGrounded() const
 	FVector SweepEnd = SuraPawnPlayer->GetActorLocation() +
 		FVector::DownVector * (SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 	
-	bool bHit = GetWorld()->SweepSingleByChannel(GroundSweepHit, SweepStart, SweepEnd, FQuat::Identity, ECC_WorldStatic,
+	bool bHit = GetWorld()->SweepSingleByChannel(GroundHit, SweepStart, SweepEnd, FQuat::Identity, ECC_WorldStatic,
 		FCollisionShape::MakeSphere(15.f), GroundSweepParams);
 	
 
-	if (!bHit || !GroundSweepHit.bBlockingHit)
+	if (!bHit || !GroundHit.bBlockingHit)
 	{
 		return false;
 	}
 
-	if (GroundSweepHit.ImpactNormal.Z < MinWalkableFloorZ)
+	if (GroundHit.ImpactNormal.Z < MinWalkableFloorZ)
 	{
 		return false;
 	}
