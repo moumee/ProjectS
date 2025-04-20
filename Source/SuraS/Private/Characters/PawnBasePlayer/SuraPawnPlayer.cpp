@@ -35,6 +35,9 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 
 	MovementComponent = CreateDefaultSubobject<USuraPlayerMovementComponent>(TEXT("Movement Component"));
 	MovementComponent->UpdatedComponent = RootComponent;
+	MovementComponent->SetDefaultCapsuleValues(CapsuleComponent->GetScaledCapsuleRadius(), CapsuleComponent->GetScaledCapsuleHalfHeight());
+
+	
 
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 

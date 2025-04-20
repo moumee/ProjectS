@@ -58,7 +58,22 @@ public:
 
 	void SetCrouchPressed(bool bPressed);
 
+	void SetDefaultCapsuleValues(float Radius, float HalfHeight)
+	{
+		DefaultCapsuleRadius = Radius;
+		DefaultCapsuleHalfHeight = HalfHeight;
+	}
+
 protected:
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Capsule")
+	float DefaultCapsuleRadius;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Capsule")
+	float DefaultCapsuleHalfHeight;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Capsule")
+	float CrouchCapsuleHalfHeight = 45.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Gravity")
 	float GravityScale = 1500.f;
@@ -83,6 +98,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Movement|Crouch")
 	float CrouchSpeed = 400.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Crouch")
+	float CrouchHeightScale = 0.5f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Jump")
 	float JumpHeight = 200.f;
@@ -128,8 +146,13 @@ protected:
 
 protected:
 
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	bool bIsCrouching = false;
+
 	FHitResult GroundHit;
 
+#pragma region WallRun
+	
 	EWallRunEnter WallRunEnterMode;
 	bool bWallJumpAirBoost = false;
 	bool bIsDeceleratingZ = false;
@@ -142,26 +165,32 @@ protected:
 	bool bShouldMoveUpWall = false;
 	bool bShouldMoveDownWall = false;
 	
+#pragma endregion WallRun
+
+#pragma region Dash
+	
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	bool bIsDashing = false;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	TArray<float> DashCooldowns;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	int32 AvailableDashCount = 2;
-
-	float JumpZVelocity = 0.f;
-	float JumpBuffer = 0.1f;
-
-	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
-	float ElapsedTimeFromSurface = 0.f;
-
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	float ElapsedTimeFromDash = 0.f;
 
-	int32 MaxJumpCount = 2;
+#pragma endregion Dash
 
+#pragma region Jump
+	
+	float JumpZVelocity = 0.f;
+	float JumpBuffer = 0.1f;
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
+	float ElapsedTimeFromSurface = 0.f;
+	int32 MaxJumpCount = 2;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
 	int32 CurrentJumpCount = 0;
+
+#pragma endregion Jump	
 
 	UPROPERTY()
 	TObjectPtr<ASuraPawnPlayer> SuraPawnPlayer = nullptr;
@@ -200,6 +229,10 @@ protected:
 	void OnMovementStateChanged(EMovementState OldState, EMovementState NewState);
 
 	void TickState(float DeltaTime);
+	
+	void CrouchCapsule(float DeltaTime);
+
+	void UnCrouchCapsule(float DeltaTime);
 
 	void TickMove(float DeltaTime);
 

@@ -7,6 +7,7 @@
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 
 #include "KismetTraceUtils.h"
+#include "Chaos/Convex.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Characters/PawnBasePlayer/SuraPlayerController.h"
 #include "Components/CapsuleComponent.h"
@@ -127,6 +128,33 @@ void USuraPlayerMovementComponent::TickState(float DeltaTime)
 	}
 }
 
+void USuraPlayerMovementComponent::CrouchCapsule(float DeltaTime)
+{
+	UCapsuleComponent* PlayerCapsule = SuraPawnPlayer->GetCapsuleComponent();
+	float CurrentHalfHeight = PlayerCapsule->GetScaledCapsuleHalfHeight();
+	if (CurrentHalfHeight > CrouchCapsuleHalfHeight)
+	{
+		float NewHeight = FMath::FInterpTo(CurrentHalfHeight, CrouchCapsuleHalfHeight, DeltaTime, 7.f);
+		float HeightDelta = CurrentHalfHeight - NewHeight;
+		PlayerCapsule->SetCapsuleHalfHeight(NewHeight);
+		SuraPawnPlayer->AddActorWorldOffset(FVector(0, 0, -HeightDelta));
+	}
+}
+
+void USuraPlayerMovementComponent::UnCrouchCapsule(float DeltaTime)
+{
+	UCapsuleComponent* PlayerCapsule = SuraPawnPlayer->GetCapsuleComponent();
+	float CurrentHalfHeight = PlayerCapsule->GetScaledCapsuleHalfHeight();
+	if (CurrentHalfHeight < DefaultCapsuleHalfHeight)
+	{
+		float NewHeight = FMath::FInterpTo(CurrentHalfHeight, DefaultCapsuleHalfHeight, DeltaTime, 7.f);
+		float HeightDelta = NewHeight - CurrentHalfHeight;
+		SuraPawnPlayer->AddActorWorldOffset(FVector(0, 0, HeightDelta));
+		PlayerCapsule->SetCapsuleHalfHeight(NewHeight);
+		
+	}
+}
+
 void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 {
 
@@ -137,6 +165,57 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 	}
 	
 	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();
+
+	if (bCrouchPressed)
+	{
+
+		bIsCrouching = true;
+		
+		// if (Velocity.Size() > RunSpeed)
+		// {
+		// 	SetMovementState(EMovementState::EMS_Slide);
+		// 	return;
+		// }
+
+		CrouchCapsule(DeltaTime);
+	}
+	else
+	{
+		float CurrentCapsuleHalfHeight = SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+		if (GetWorld() && CurrentCapsuleHalfHeight < DefaultCapsuleHalfHeight)
+		{
+			FHitResult UnCrouchHitResult;
+			FCollisionQueryParams UnCrouchParams;
+			UnCrouchParams.AddIgnoredActor(SuraPawnPlayer);
+
+			
+
+			FVector UnCrouchSweepStart = SuraPawnPlayer->GetActorLocation();
+			// (DefaultHalfHeight - CurrentHalfHeight) for default height assumed actor location adjustment
+			// (DefaultHalfHeight - DefaultRadius) for default capsule half height excluding hemisphere
+			// 5.f for offset
+			// (DefaultHalfHeight - CurrentHalfHeight) + (DefaultHalfHeight - DefaultRadius) + 5.f
+			// There is a built-in function to get the half height without hemisphere but didn't want to make another member var
+			FVector UnCrouchSweepEnd = UnCrouchSweepStart + FVector::UpVector * (2 * DefaultCapsuleHalfHeight - CurrentCapsuleHalfHeight - DefaultCapsuleRadius + 5.f); 
+			
+			bool bUnCrouchHit = GetWorld()->SweepSingleByChannel(
+				UnCrouchHitResult,
+				UnCrouchSweepStart,
+				UnCrouchSweepEnd,
+				FQuat::Identity,
+				ECC_Visibility,
+				FCollisionShape::MakeSphere(DefaultCapsuleRadius),
+				UnCrouchParams);
+
+			if (!bUnCrouchHit)
+			{
+				bIsCrouching = false;
+
+				UnCrouchCapsule(DeltaTime);
+			}
+			
+		}
+	}
 
 	if (!bIsDashing)
 	{
@@ -157,7 +236,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		}
 		else
 		{
-			float WishSpeed = MovementInputVector.Y > 0.f ? RunSpeed : WalkSpeed;
+			float WishSpeed = bIsCrouching ? CrouchSpeed : (MovementInputVector.Y > 0.f ? RunSpeed : WalkSpeed);
 			Velocity = (Velocity + InputDirection * Acceleration * DeltaTime).GetClampedToMaxSize2D(WishSpeed);
 		}
 	}
@@ -307,6 +386,8 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			}
 		}
 	}
+
+	
 
 	if (CanWallRun())
 	{
