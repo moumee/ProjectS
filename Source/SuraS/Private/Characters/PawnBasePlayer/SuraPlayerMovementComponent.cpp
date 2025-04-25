@@ -131,6 +131,7 @@ void USuraPlayerMovementComponent::TickState(float DeltaTime)
 void USuraPlayerMovementComponent::CrouchCapsule(float DeltaTime)
 {
 	UCapsuleComponent* PlayerCapsule = SuraPawnPlayer->GetCapsuleComponent();
+	if (!PlayerCapsule) return;
 	float CurrentHalfHeight = PlayerCapsule->GetScaledCapsuleHalfHeight();
 	if (CurrentHalfHeight > CrouchCapsuleHalfHeight)
 	{
@@ -171,11 +172,13 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 		bIsCrouching = true;
 		
-		// if (Velocity.Size() > RunSpeed)
-		// {
-		// 	SetMovementState(EMovementState::EMS_Slide);
-		// 	return;
-		// }
+		if (Velocity.Size() >= RunSpeed - 50.f)
+		{
+			FVector SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
+			Velocity = SlideStartDirection * (Velocity.Size() + 400.f);
+			SetMovementState(EMovementState::EMS_Slide);
+			return;
+		}
 
 		CrouchCapsule(DeltaTime);
 	}
@@ -357,6 +360,61 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 {
+	if (!IsGrounded() || GroundHit.ImpactNormal.Z < MinWalkableFloorZ)
+	{
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
+	}
+
+	if (!bCrouchPressed)
+	{
+		bIsCrouching = false;
+		SetMovementState(EMovementState::EMS_Move);
+		return;
+	}
+
+	CrouchCapsule(DeltaTime);
+	
+	bool bIsSlidingDown = false;
+	FVector DownwardDirection = FVector::VectorPlaneProject(FVector::DownVector, GroundHit.ImpactNormal).GetSafeNormal();
+	if (DownwardDirection.IsZero())
+	{
+		DownwardDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
+		bIsSlidingDown = false;
+	}
+	else
+	{
+		FVector ProjectedVelocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
+		if (FVector::DotProduct(ProjectedVelocity, DownwardDirection) >= 0.f)
+		{
+			bIsSlidingDown = true;
+		}
+		else
+		{
+			bIsSlidingDown = false;
+		}
+	}
+	
+	FVector InterpDirection = FMath::VInterpNormalRotationTo(Velocity.GetSafeNormal(), DownwardDirection, DeltaTime, 40.f);
+
+	if (bIsSlidingDown)
+	{
+		Velocity = Velocity.Size() * InterpDirection;
+	}
+	else
+	{
+		float DecelerationAmount = 800.f * FMath::Abs(FVector::DotProduct(DownwardDirection, Velocity.GetSafeNormal())) * DeltaTime;
+		float NewSpeed = Velocity.Size() - DecelerationAmount;
+		if (NewSpeed <= CrouchSpeed)
+		{
+			Velocity = CrouchSpeed * InterpDirection;
+			SetMovementState(EMovementState::EMS_Move);
+			return;
+		}
+
+		Velocity = NewSpeed * InterpDirection; 
+	}
+	
 	
 }
 
@@ -384,6 +442,51 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 				SetMovementState(EMovementState::EMS_Move);
 				return;
 			}
+		}
+	}
+
+	if (bCrouchPressed)
+	{
+	
+		bIsCrouching = true;
+		
+		CrouchCapsule(DeltaTime);
+	}
+	else
+	{
+		float CurrentCapsuleHalfHeight = SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+		if (GetWorld() && CurrentCapsuleHalfHeight < DefaultCapsuleHalfHeight)
+		{
+			FHitResult UnCrouchHitResult;
+			FCollisionQueryParams UnCrouchParams;
+			UnCrouchParams.AddIgnoredActor(SuraPawnPlayer);
+	
+			
+	
+			FVector UnCrouchSweepStart = SuraPawnPlayer->GetActorLocation();
+			// (DefaultHalfHeight - CurrentHalfHeight) for default height assumed actor location adjustment
+			// (DefaultHalfHeight - DefaultRadius) for default capsule half height excluding hemisphere
+			// 5.f for offset
+			// (DefaultHalfHeight - CurrentHalfHeight) + (DefaultHalfHeight - DefaultRadius) + 5.f
+			// There is a built-in function to get the half height without hemisphere but didn't want to make another member var
+			FVector UnCrouchSweepEnd = UnCrouchSweepStart + FVector::UpVector * (2 * DefaultCapsuleHalfHeight - CurrentCapsuleHalfHeight - DefaultCapsuleRadius + 5.f); 
+			
+			bool bUnCrouchHit = GetWorld()->SweepSingleByChannel(
+				UnCrouchHitResult,
+				UnCrouchSweepStart,
+				UnCrouchSweepEnd,
+				FQuat::Identity,
+				ECC_Visibility,
+				FCollisionShape::MakeSphere(DefaultCapsuleRadius),
+				UnCrouchParams);
+	
+			if (!bUnCrouchHit)
+			{
+				bIsCrouching = false;
+	
+				UnCrouchCapsule(DeltaTime);
+			}
+			
 		}
 	}
 

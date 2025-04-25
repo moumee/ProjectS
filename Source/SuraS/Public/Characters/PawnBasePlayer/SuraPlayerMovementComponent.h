@@ -73,7 +73,7 @@ protected:
 	float DefaultCapsuleHalfHeight;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Capsule")
-	float CrouchCapsuleHalfHeight = 45.f;
+	float CrouchCapsuleHalfHeight = 40.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Gravity")
 	float GravityScale = 1500.f;
@@ -144,6 +144,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
 	float WallRunJumpAirSpeed2D = 1400.f;
 
+	UPROPERTY(EditAnywhere, Category = "Movement|Sldie")
+	float SlideReduction = 1400.f;
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
@@ -190,7 +193,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
 	int32 CurrentJumpCount = 0;
 
-#pragma endregion Jump	
+#pragma endregion Jump
+
+#pragma region Slide
+
+	
+
+	
+#pragma endregion Slide
 
 	UPROPERTY()
 	TObjectPtr<ASuraPawnPlayer> SuraPawnPlayer = nullptr;
