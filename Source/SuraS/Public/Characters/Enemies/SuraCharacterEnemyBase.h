@@ -97,6 +97,10 @@ public:
 
 	virtual void Attack(const ASuraCharacterPlayer* Player) override;
 
+	virtual void Climb(const FVector& Destination);
+
+	virtual void OnClimbEnded(UAnimMontage* AnimMontage, bool bInterrupted);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	UAnimMontage* HitAnimation;
 
@@ -105,6 +109,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	UAnimMontage* AttackAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
+	UAnimMontage* ClimbAnimation;
+
 
 	//poolsystem
 	bool isInitialized = false;
