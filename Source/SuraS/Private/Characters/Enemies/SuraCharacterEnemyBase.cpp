@@ -172,6 +172,36 @@ void ASuraCharacterEnemyBase::Attack(const ASuraCharacterPlayer* Player)
 	}
 }
 
+void ASuraCharacterEnemyBase::Climb(const FVector& Destination)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("climb"));
+
+	// GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+	AddMovementInput(FVector(Destination.X, Destination.Y, Destination.Z), true);
+
+	FOnMontageEnded OnClimbMontageEnded;
+
+	OnClimbMontageEnded.BindUObject(this, &ASuraCharacterEnemyBase::OnClimbEnded);
+
+	if (ClimbAnimation)
+	{
+		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
+		
+		// SetActorRotation(FRotator(90.f, GetActorRotation().Yaw, GetActorRotation().Roll));
+		
+		EnemyAnimInstance->Montage_Play(ClimbAnimation);
+	}
+
+	GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(OnClimbMontageEnded); // montage interrupted
+	GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(OnClimbMontageEnded); // montage ended
+}
+
+void ASuraCharacterEnemyBase::OnClimbEnded(UAnimMontage* AnimMontage, bool bInterrupted)
+{
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+}
+
 void ASuraCharacterEnemyBase::InitializeEnemy()
 {
 	if (isInitialized)
@@ -198,9 +228,7 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 		// GetCapsuleComponent()->SetVisibility(true);
 		// GetCapsuleComponent()->SetHiddenInGame(false);
 
-		const auto EnemyAttributesData = EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(EnemyType, "");
-
-		if (EnemyAttributesData)
+		if (const auto EnemyAttributesData = EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(EnemyType, ""))
 		{
 			GetDamageSystemComp()->SetMaxHealth(EnemyAttributesData->MaxHealth);
 			GetDamageSystemComp()->SetHealth(EnemyAttributesData->MaxHealth);
@@ -212,6 +240,7 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 			HitAnimation = EnemyAttributesData->HitAnimation;
 			DeathAnimation = EnemyAttributesData->DeathAnimation;
 			AttackAnimation = EnemyAttributesData->AttackAnimation;
+			ClimbAnimation = EnemyAttributesData->ClimbAnimation;
 		}
 
 		PlayerController = GetWorld()->GetFirstPlayerController();

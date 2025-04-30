@@ -3,43 +3,37 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "EnemyAttributesData.generated.h"
+#include "EnemyProjectileAttributesData.generated.h"
 
 /**
- *
+ * 
  */
 USTRUCT(BlueprintType)
-struct SURAS_API FEnemyAttributesData : public FTableRowBase
+struct SURAS_API FEnemyProjectileAttributesData : public FTableRowBase
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxHealth;
+	float DamageAmount;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxWalkSpeed;
+	float HeadshotAdditionalDamage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float StrafeRadius;
+	float LifeSpan;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float AttackRadius;
+	float InitialSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float AttackRate;
+	float MaxSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float AttackDamageAmount;
+	float InitialRadius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UAnimMontage* HitAnimation;
+	float ExplosionRadius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UAnimMontage* DeathAnimation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UAnimMontage* AttackAnimation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UAnimMontage* ClimbAnimation;
+	float HomingAccelerationMagnitude;
 };

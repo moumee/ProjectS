@@ -20,7 +20,7 @@ void ASuraFirearmBase::InitializeFirearem(ASuraCharacterEnemyBase* OwnerChar, in
 	Reload();
 }
 
-void ASuraFirearmBase::Fire(AActor* FirearmOwner, const AActor* TargetActor, float AdditionalDamage, float AdditionalRadius, bool bIsHoming)
+void ASuraFirearmBase::Fire(AActor* FirearmOwner, const AActor* TargetActor)
 {
 	return;
 }
