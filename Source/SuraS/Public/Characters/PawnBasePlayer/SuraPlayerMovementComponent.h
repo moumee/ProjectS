@@ -144,8 +144,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
 	float WallRunJumpAirSpeed2D = 1400.f;
 
-	UPROPERTY(EditAnywhere, Category = "Movement|Sldie")
-	float SlideReduction = 1400.f;
+	UPROPERTY(EditAnywhere, Category = "Movement|Slide")
+	float SlideInitialWindow = 0.65f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Slide")
+	float SlideMaxDuration = 1.25f;
 
 protected:
 
@@ -197,7 +200,27 @@ protected:
 
 #pragma region Slide
 
-	
+	// Used for determining when to lerp slide direction.
+	// Reset to 0 whenever exiting slide state
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Slide")
+	float SlideStateElapsedTime = 0.f;
+
+	// Used for max slide time cap
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Slide")
+	float SlideElapsedTime = 0.f;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Slide")
+	float SlideResetTimer = 0.f;
+
+	float SlideBoostResetDelay = 0.35f;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Slide")
+	float SlideDecelerationAmount = 1600.f;
+
+	FVector SlideStartDirection;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Slide")
+	bool bHasRecentlySlid = false;
 
 	
 #pragma endregion Slide

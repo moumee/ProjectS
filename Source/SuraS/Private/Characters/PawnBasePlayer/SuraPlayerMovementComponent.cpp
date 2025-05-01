@@ -51,7 +51,9 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 		0, 0.f, FColor::Cyan, FString::Printf(TEXT("Current State : %s"), *UEnum::GetValueAsString(CurrentMovementState)));
 
 	GEngine->AddOnScreenDebugMessage(
-		1, 0.f, FColor::Cyan, FString::Printf(TEXT("Velocity : (%f, %f, %f) / Size2D : %f "), Velocity.X, Velocity.Y, Velocity.Z, Velocity.Size2D()));
+		1, 0.f, FColor::Cyan, FString::Printf(TEXT("Velocity : (%f, %f, %f) / Size : %f / Size2D : %f "), Velocity.X, Velocity.Y, Velocity.Z, Velocity.Size(), Velocity.Size2D()));
+
+	
 
 	
 
@@ -161,6 +163,10 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 	if (!IsGrounded())
 	{
+		if (CurrentJumpCount > 0)
+		{
+			CurrentJumpCount--;
+		}
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -172,10 +178,13 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 		bIsCrouching = true;
 		
-		if (Velocity.Size() >= RunSpeed - 50.f)
+		if (Velocity.Size() >= RunSpeed - 50.f && GroundHit.ImpactNormal.Z >= MinWalkableFloorZ)
 		{
-			FVector SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
-			Velocity = SlideStartDirection * (Velocity.Size() + 400.f);
+			SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
+			Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + 700.f);
+			bIsDashing = false;
+			ElapsedTimeFromDash = 0.f;
+			SlideResetTimer = 0.;
 			SetMovementState(EMovementState::EMS_Slide);
 			return;
 		}
@@ -220,6 +229,17 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		}
 	}
 
+	if (bHasRecentlySlid)
+	{
+		SlideResetTimer += DeltaTime;
+		if (SlideResetTimer >= SlideBoostResetDelay)
+		{
+			bHasRecentlySlid = false;
+			SlideElapsedTime = 0.f;
+			SlideResetTimer = 0.;
+		}
+	}
+
 	if (!bIsDashing)
 	{
 		if (MovementInputVector.IsNearlyZero())
@@ -240,7 +260,9 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		else
 		{
 			float WishSpeed = bIsCrouching ? CrouchSpeed : (MovementInputVector.Y > 0.f ? RunSpeed : WalkSpeed);
-			Velocity = (Velocity + InputDirection * Acceleration * DeltaTime).GetClampedToMaxSize2D(WishSpeed);
+			
+			FVector AcceleratedVelocity = Velocity + InputDirection * Acceleration * DeltaTime;
+			Velocity = AcceleratedVelocity.Size() > WishSpeed ? AcceleratedVelocity.GetSafeNormal() * WishSpeed : AcceleratedVelocity;
 		}
 	}
 	else
@@ -373,6 +395,8 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		return;
 	}
 
+	SlideStateElapsedTime += DeltaTime;
+
 	CrouchCapsule(DeltaTime);
 	
 	bool bIsSlidingDown = false;
@@ -396,23 +420,47 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 	}
 	
 	FVector InterpDirection = FMath::VInterpNormalRotationTo(Velocity.GetSafeNormal(), DownwardDirection, DeltaTime, 40.f);
+	FVector ProjectedSlideStartDirection = FVector::VectorPlaneProject(SlideStartDirection, GroundHit.ImpactNormal).GetSafeNormal();
+	FVector SlideDirection = SlideStateElapsedTime > SlideInitialWindow ? InterpDirection : ProjectedSlideStartDirection;
+	
 
 	if (bIsSlidingDown)
 	{
-		Velocity = Velocity.Size() * InterpDirection;
+		Velocity = Velocity.Size() * SlideDirection;
 	}
 	else
 	{
-		float DecelerationAmount = 800.f * FMath::Abs(FVector::DotProduct(DownwardDirection, Velocity.GetSafeNormal())) * DeltaTime;
+		if (SlideElapsedTime + DeltaTime < SlideMaxDuration)
+		{
+			SlideElapsedTime += DeltaTime;
+		}
+		else
+		{
+			bHasRecentlySlid = false;
+			SlideElapsedTime = 0.f;
+		}
+		
+		float DecelerationAmount = SlideDecelerationAmount * DeltaTime;
 		float NewSpeed = Velocity.Size() - DecelerationAmount;
 		if (NewSpeed <= CrouchSpeed)
 		{
-			Velocity = CrouchSpeed * InterpDirection;
+			Velocity = CrouchSpeed * SlideDirection;
+			bHasRecentlySlid = false;
+			SlideElapsedTime = 0.f;
 			SetMovementState(EMovementState::EMS_Move);
 			return;
 		}
 
-		Velocity = NewSpeed * InterpDirection; 
+		Velocity = NewSpeed * SlideDirection; 
+	}
+
+	if (bJumpPressed && CurrentJumpCount < MaxJumpCount)
+	{
+		bJumpPressed = false;
+		CurrentJumpCount++;
+		Velocity.Z = JumpZVelocity;
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
 	}
 	
 	
@@ -432,6 +480,10 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	{
 		if (PreviousMovementState != EMovementState::EMS_Move)
 		{
+			if (GroundHit.ImpactNormal.Z >= MinWalkableFloorZ)
+			{
+				Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * RunSpeed;
+			}
 			SetMovementState(EMovementState::EMS_Move);
 			return;
 		}
@@ -439,6 +491,10 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		{
 			if (ElapsedTimeFromSurface > JumpBuffer)
 			{
+				if (GroundHit.ImpactNormal.Z >= MinWalkableFloorZ)
+				{
+					Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * RunSpeed;
+				}
 				SetMovementState(EMovementState::EMS_Move);
 				return;
 			}
@@ -535,11 +591,27 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		float MaxHorizontalSpeed = bWallJumpAirBoost ? WallRunJumpAirSpeed2D : RunSpeed;
 		if (Velocity.Size2D() > MaxHorizontalSpeed)
 		{
-			Velocity = (Velocity - Velocity.GetSafeNormal() * AirDeceleration * DeltaTime).GetClampedToSize2D(MaxHorizontalSpeed, FLT_MAX);
+			FVector VelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+			FVector NewVelocityXY = VelocityXY - VelocityXY.GetSafeNormal() * AirDeceleration * DeltaTime;
+			if (NewVelocityXY.Size() < MaxHorizontalSpeed)
+			{
+				NewVelocityXY = NewVelocityXY.GetSafeNormal() * MaxHorizontalSpeed;
+			}
+
+			Velocity.X = NewVelocityXY.X;
+			Velocity.Y = NewVelocityXY.Y;
 		}
 		else
 		{
-			Velocity = (Velocity + InputDirection * AirAcceleration * DeltaTime).GetClampedToMaxSize2D(MaxHorizontalSpeed);
+			FVector VelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+			FVector NewVelocityXY = VelocityXY + InputDirection * AirAcceleration * DeltaTime;
+			if (NewVelocityXY.Size() > MaxHorizontalSpeed)
+			{
+				NewVelocityXY = NewVelocityXY.GetSafeNormal() * MaxHorizontalSpeed;
+			}
+			
+			Velocity.X = NewVelocityXY.X;
+			Velocity.Y = NewVelocityXY.Y;
 		}
 	}
 	else
@@ -568,6 +640,8 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		bJumpPressed = false;
 		if (CurrentJumpCount < MaxJumpCount)
 		{
+			bHasRecentlySlid = false;
+			SlideElapsedTime = 0.f;
 			CurrentJumpCount++;
 			Velocity.Z = JumpZVelocity;
 		}
@@ -887,6 +961,24 @@ bool USuraPlayerMovementComponent::CanWallRun()
 
 void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldState, EMovementState NewState)
 {
+	if (OldState == EMovementState::EMS_Slide)
+	{
+		// This is for slide direction.
+		SlideStateElapsedTime = 0.f;
+	}
+
+	if (NewState == EMovementState::EMS_Slide)
+	{
+		bHasRecentlySlid = true;
+		SlideDecelerationAmount = (Velocity.Size() - CrouchSpeed) / FMath::Max(SlideMaxDuration - SlideElapsedTime, 0.1f);
+	}
+
+	if (OldState == EMovementState::EMS_Move)
+	{
+		SlideResetTimer = 0.f;
+	}
+
+	
 	if (OldState == EMovementState::EMS_Airborne)
 	{
 		bWallJumpAirBoost = false;
@@ -897,6 +989,9 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 
 	if (NewState == EMovementState::EMS_WallRun)
 	{
+		bHasRecentlySlid = false;
+		SlideElapsedTime = 0.f; 
+		
 		Velocity.X = Velocity.GetSafeNormal2D().X * WallRunEnterSpeed2D;
 		Velocity.Y = Velocity.GetSafeNormal2D().Y * WallRunEnterSpeed2D;
 
@@ -927,6 +1022,7 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 			bWallJumpAirBoost = true;
 		}
 	}
+	
 	
 }
 
