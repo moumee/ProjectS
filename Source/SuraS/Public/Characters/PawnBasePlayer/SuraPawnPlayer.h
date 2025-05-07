@@ -26,6 +26,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	virtual void PossessedBy(AController* NewController) override;
 	
 	virtual void BeginPlay() override;
 

@@ -112,7 +112,7 @@ protected:
 	float Deceleration = 8000.f;
 	
 	UPROPERTY(EditAnywhere, Category = "Movement|Air")
-	float AirAcceleration = 1500.f;
+	float AirAcceleration = 2000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Air")
 	float AirDeceleration = 2000.f;
@@ -224,6 +224,15 @@ protected:
 
 	
 #pragma endregion Slide
+
+#pragma region Mantle
+
+	FHitResult MantleWallHit;
+
+	FHitResult MantleFloorHit;
+
+	
+#pragma endregion Mantle
 
 	UPROPERTY()
 	TObjectPtr<ASuraPawnPlayer> SuraPawnPlayer = nullptr;

@@ -7,10 +7,11 @@
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 
 #include "KismetTraceUtils.h"
-#include "Chaos/Convex.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Characters/PawnBasePlayer/SuraPlayerController.h"
 #include "Components/CapsuleComponent.h"
+
+#define WALL_TRACE_CHANNEL ECC_GameTraceChannel2
 
 USuraPlayerMovementComponent::USuraPlayerMovementComponent()
 {
@@ -581,10 +582,40 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			}
 		}
 	}
-
-	
 	
 	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();
+
+	// Mantle Sweep Section
+	FCollisionShape PlayerCapsule = SuraPawnPlayer->GetCapsuleComponent()->GetCollisionShape();
+	FCollisionQueryParams MantleParams;
+	MantleParams.AddIgnoredActor(SuraPawnPlayer);
+	FVector MantleSweepEnd = SuraPawnPlayer->GetActorLocation() + SuraPawnPlayer->GetActorForwardVector() * 75.f;
+	bool bMantleWallHit = GetWorld()->SweepSingleByChannel(MantleWallHit, SuraPawnPlayer->GetActorLocation(),
+		MantleSweepEnd, FQuat::Identity, WALL_TRACE_CHANNEL, PlayerCapsule, MantleParams);
+
+	if (bMantleWallHit && MantleWallHit.bBlockingHit && MantleWallHit.ImpactNormal.Z < MinWalkableFloorZ)
+	{
+		if (MovementInputVector.Y > 0.f && !bCrouchPressed)
+		{
+			// TODO: Make Mantle Available Height as a variable 50.f
+			FVector FloorHitStart = SuraPawnPlayer->GetActorLocation() + SuraPawnPlayer->GetActorForwardVector() * 75.f +
+				FVector::UpVector * (PlayerCapsule.GetCapsuleHalfHeight() + 100.f);
+			FVector FloorHitEnd = FloorHitStart + FVector::DownVector * (2 * PlayerCapsule.GetCapsuleHalfHeight() + 100.f); 
+			bool bMantleFloorHit = GetWorld()->SweepSingleByChannel(MantleFloorHit, FloorHitStart, FloorHitEnd, FQuat::Identity, ECC_WorldStatic, PlayerCapsule,
+				MantleParams);
+
+			DrawDebugCapsuleTraceSingle(GetWorld(), FloorHitStart, FloorHitEnd, PlayerCapsule.GetCapsuleRadius(),
+				PlayerCapsule.GetCapsuleHalfHeight(), EDrawDebugTrace::ForDuration, bMantleFloorHit && MantleFloorHit.IsValidBlockingHit(), MantleFloorHit, FLinearColor::Red, FLinearColor::Green, 1.f);
+
+			if (bMantleFloorHit && MantleFloorHit.IsValidBlockingHit() && MantleFloorHit.ImpactNormal.Z >= MinWalkableFloorZ)
+			{
+				bIsDashing = false;
+				ElapsedTimeFromDash = 0.f;
+				SetMovementState(EMovementState::EMS_Mantle);
+				return;
+			}
+		}
+	}
 
 	if (!bIsDashing)
 	{
@@ -770,13 +801,10 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 			return;
 		}
 
-		// if (FMath::FindDeltaAngleDegrees(VelocityDir.Rotation().Yaw, SuraPawnPlayer->GetControlRotation().Yaw) < 0)
-		// {
-		// 	FRotator CurrentControllerRot = SuraPawnPlayer->GetControlRotation();
-		// 	float TargetYaw = VelocityDir.Rotation().Yaw;
-		// 	float NewYaw = FMath::FInterpTo(CurrentControlRotation.Yaw, TargetYaw, DeltaTime, 3.f);
-		// 	SuraPawnPlayer->GetController()->SetControlRotation(FRotator(CurrentControlRotation.Pitch, NewYaw, CurrentControlRotation.Roll));
-		// }
+		if (FMath::FindDeltaAngleDegrees(VelocityDir.Rotation().Yaw, SuraPawnPlayer->GetControlRotation().Yaw) < 0)
+		{
+			SuraPawnPlayer->AddControllerYawInput(20.f * DeltaTime);
+		}
 	}
 	else // EWRS_Right
 	{
@@ -800,13 +828,10 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 			return;
 		}
 
-		// if (FMath::FindDeltaAngleDegrees(VelocityDir.Rotation().Yaw, SuraPawnPlayer->GetControlRotation().Yaw) > 0)
-		// {
-		// 	FRotator CurrentControllerRot = SuraPawnPlayer->GetControlRotation();
-		// 	float TargetYaw = VelocityDir.Rotation().Yaw;
-		// 	float NewYaw = FMath::FInterpTo(CurrentControlRotation.Yaw, TargetYaw, DeltaTime, 3.f);
-		// 	SuraPawnPlayer->GetController()->SetControlRotation(FRotator(CurrentControlRotation.Pitch, NewYaw, CurrentControlRotation.Roll));
-		// }
+		if (FMath::FindDeltaAngleDegrees(VelocityDir.Rotation().Yaw, SuraPawnPlayer->GetControlRotation().Yaw) > 0)
+		{
+			SuraPawnPlayer->AddControllerYawInput(-20.f * DeltaTime);
+		}
 	}
 
 	// Input W key (Forward)
@@ -832,21 +857,65 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	// Input S Key (Backward)
 	else if (MovementInputVector.Y < 0.f)
 	{
-		// Always accelerate in the backward wall run direction when pressing S
+		// // Always accelerate in the backward wall run direction when pressing S
+		// float CurrentSpeed = Velocity.Size2D();
+		// float NewSpeed;
+		// if (CurrentSpeed > WallRunBackwardMaxSpeed)
+		// {
+		// 	NewSpeed = FMath::Max(CurrentSpeed - WallRunDeceleration * DeltaTime, WallRunBackwardMaxSpeed);
+		// }
+		// else
+		// {
+		// 	NewSpeed = FMath::Min(CurrentSpeed + WallRunAcceleration * DeltaTime, WallRunBackwardMaxSpeed);
+		// }
+  //   
+		// // Always set velocity in backward wall run direction when pressing S
+		// Velocity.X = NewSpeed * -VelocityDir.X;
+		// Velocity.Y = NewSpeed * -VelocityDir.Y;
+
+		// Calculate if we're already moving backward along the wall
+		bool bIsMovingBackward = (FVector2D::DotProduct(FVector2D(Velocity), FVector2D(VelocityDir)) < 0);
 		float CurrentSpeed = Velocity.Size2D();
 		float NewSpeed;
-		if (CurrentSpeed > WallRunBackwardMaxSpeed)
+
+		// If already moving backward and above max speed
+		if (bIsMovingBackward && CurrentSpeed > WallRunBackwardMaxSpeed)
 		{
-			NewSpeed = FMath::Max(CurrentSpeed - WallRunDeceleration * DeltaTime, WallRunBackwardMaxSpeed);
+			// Allow a more gradual deceleration when entering with high backward speed
+			// Apply a smaller deceleration rate initially to preserve momentum
+			float InitialDecelRate = WallRunDeceleration * 0.5f;
+			NewSpeed = FMath::Max(CurrentSpeed - InitialDecelRate * DeltaTime, WallRunBackwardMaxSpeed);
 		}
-		else
+		// Standard backward acceleration/deceleration
+		else if (bIsMovingBackward)
 		{
 			NewSpeed = FMath::Min(CurrentSpeed + WallRunAcceleration * DeltaTime, WallRunBackwardMaxSpeed);
 		}
-    
-		// Always set velocity in backward wall run direction when pressing S
-		Velocity.X = NewSpeed * -VelocityDir.X;
-		Velocity.Y = NewSpeed * -VelocityDir.Y;
+		// Moving forward but pressing S, decelerate and then reverse
+		else
+		{
+			// First decelerate to zero
+			NewSpeed = FMath::Max(CurrentSpeed - WallRunDeceleration * 1.5f * DeltaTime, 0.f);
+        
+			// If completely decelerated, start moving backward
+			if (NewSpeed <= 0.1f)
+			{
+				NewSpeed = FMath::Min(WallRunAcceleration * 0.5f * DeltaTime, WallRunBackwardMaxSpeed);
+				bIsMovingBackward = true;
+			}
+		}
+
+		// Apply velocity in the correct direction
+		if (bIsMovingBackward)
+		{
+			Velocity.X = NewSpeed * -VelocityDir.X;
+			Velocity.Y = NewSpeed * -VelocityDir.Y;
+		}
+		else
+		{
+			Velocity.X = NewSpeed * VelocityDir.X;
+			Velocity.Y = NewSpeed * VelocityDir.Y;
+		}
 	}
 	else
 	{
@@ -891,7 +960,18 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 
 void USuraPlayerMovementComponent::TickHang(float DeltaTime){}
 
-void USuraPlayerMovementComponent::TickMantle(float DeltaTime){}
+void USuraPlayerMovementComponent::TickMantle(float DeltaTime)
+{
+	FVector TargetPos = MantleFloorHit.Location;
+	if (FVector::Distance(SuraPawnPlayer->GetActorLocation(), TargetPos) < 5.f)
+	{
+		Velocity = FVector::ZeroVector;
+		SetMovementState(EMovementState::EMS_Move);
+		return;
+	}
+	
+	Velocity = FVector(TargetPos - SuraPawnPlayer->GetActorLocation()).GetSafeNormal() * 800.f;
+}
 
 bool USuraPlayerMovementComponent::CanWallRun()
 {
@@ -902,12 +982,13 @@ bool USuraPlayerMovementComponent::CanWallRun()
 	WallQueryParams.AddIgnoredActor(SuraPawnPlayer);
 	
 	FVector WallTraceStart = PawnOwner->GetActorLocation();
-	FVector WallTraceRightEnd = WallTraceStart + PawnOwner->GetActorRightVector() * 100.f;
-	FVector WallTraceLeftEnd = WallTraceStart - PawnOwner->GetActorRightVector() * 100.f;
+	FVector WallTraceRightEnd = WallTraceStart + PawnOwner->GetActorRightVector() * 70.f;
+	FVector WallTraceLeftEnd = WallTraceStart - PawnOwner->GetActorRightVector() * 70.f;
+	
 
 	FHitResult WallRightHit;
-	bool bWallRightHit = GetWorld()->LineTraceSingleByChannel(WallRightHit, WallTraceStart, WallTraceRightEnd,
-															  ECC_GameTraceChannel2, WallQueryParams);
+	bool bWallRightHit = GetWorld()->SweepSingleByChannel(WallRightHit, WallTraceStart, WallTraceRightEnd, FQuat::Identity,
+															  WALL_TRACE_CHANNEL, FCollisionShape::MakeSphere(10.f), WallQueryParams);
 
 	bool bRightWallRunnable = false;
 
@@ -918,8 +999,8 @@ bool USuraPlayerMovementComponent::CanWallRun()
 	}
 
 	FHitResult WallLeftHit;
-	bool bWallLeftHit = GetWorld()->LineTraceSingleByChannel(WallLeftHit, WallTraceStart, WallTraceLeftEnd,
-															 ECC_WorldStatic, WallQueryParams);
+	bool bWallLeftHit = GetWorld()->SweepSingleByChannel(WallLeftHit, WallTraceStart, WallTraceLeftEnd, FQuat::Identity,
+															 WALL_TRACE_CHANNEL, FCollisionShape::MakeSphere(10.f), WallQueryParams);
 
 	bool bLeftWallRunnable = false;
 
@@ -984,6 +1065,12 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 		bWallJumpAirBoost = false;
 		ElapsedTimeFromSurface = 0.f;
 		CurrentJumpCount = 0;
+	}
+
+	if (NewState == EMovementState::EMS_Mantle)
+	{
+		bHasRecentlySlid = false;
+		SlideElapsedTime = 0.f;
 	}
 	
 
