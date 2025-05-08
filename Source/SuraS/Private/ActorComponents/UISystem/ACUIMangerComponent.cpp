@@ -4,6 +4,7 @@
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "EnhancedInputComponent.h"
 #include "ActorComponents/UISystem/ACInventoryManager.h"
+#include "ActorComponents/UISystem/ACKillLogManager.h"
 #include "UI/InventoryWidget.h"
 
 
@@ -109,6 +110,8 @@ void UACUIMangerComponent::InitializeMangers()
 	// UIComponentManager에 접근하기 위해 this를 파라미터로 전달
 	InventoryManager->SetUIManager(this);
 
+	KillLogManager = CreateDefaultSubobject<UACKillLogManager>(TEXT("KillLog"));
+	KillLogManager->SetUIManager(this);
 	
 	// HUDManager, PauseMenuManager 등도 여기에 추가
 

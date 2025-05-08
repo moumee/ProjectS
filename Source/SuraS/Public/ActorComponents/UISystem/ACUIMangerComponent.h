@@ -11,7 +11,7 @@ class UEnhancedInputComponent;
 class UBaseUIWidget;
 class UACInventoryManager;
 class UACCrosshairManager;
-
+class UACKillLogManager;
 
 UENUM(BlueprintType)
 enum class EUIType : uint8
@@ -81,6 +81,9 @@ private:
 	/** UI Manager들 **/
 	UPROPERTY()
 	UACInventoryManager* InventoryManager;
+
+	UPROPERTY()
+	UACKillLogManager* KillLogManager;
 	
 	// UPROPERTY()
 	// UACCrosshairManager* CrosshairManager;
