@@ -8,6 +8,9 @@
 
 class UVerticalBox;
 class UACKillLogManager;
+class UHorizontalBox;
+class UTextBlock;
+class UTexture2D;
 
 /**
  * 
@@ -18,18 +21,36 @@ class SURAS_API UKillLogWidget : public UBaseUIWidget
 	GENERATED_BODY()
 
 public:
-	void AddKillLogUI(const FString& Killer, const FString& Victim);
+	// void AddKillLogUI(const FString& Killer, const FString& Victim);
 	void SetKillLogManager(UACKillLogManager* InManager);
+
+	void AddSkull();
+	void AddScoreEntry(const FString& Reason, int32 Value);
+	void UpdateTotalScore(int32 AddedScore);
+	void SetSkullTexture(UTexture2D* InTexture);
 
 protected:
 	virtual void NativeConstruct() override;
 
 	UPROPERTY(meta = (BindWidget))
-	UVerticalBox* KillLogBox;
+	UHorizontalBox* SkullBox;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* TotalScoreText;
+
+	UPROPERTY(meta = (BindWidget))
+	UVerticalBox* ScoreBox;
+
+	
 	
 private:
 	UPROPERTY()
 	UACKillLogManager* KillLogManager;
+
+	UPROPERTY()
+	UTexture2D* SkullTexture;
+
+	int32 TotalScore = 0;
 	
 	
 };

@@ -24,9 +24,15 @@ public:
 	// Sets default values for this component's properties
 	UACKillLogManager();
 
-	void AddKillLog(const FString& Killer, const FString& Victim);
+	//void AddKillLog(const FString& Killer, const FString& Victim);
 	void SetKillLogWidget(UKillLogWidget* InWidget);
 	void SetUIManager(UACUIMangerComponent* InManager);
+	void AddKillLog(const FString& Killer, const FString& Victim);
+
+	UKillLogWidget* GetKillLogWidget()
+	{
+		return KillLogWidget;
+	}
 
 protected:
 	// Called when the game starts

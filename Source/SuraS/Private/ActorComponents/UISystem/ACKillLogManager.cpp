@@ -36,13 +36,6 @@ void UACKillLogManager::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	// ...
 }
 
-void UACKillLogManager::AddKillLog(const FString& Killer, const FString& Victim)
-{
-	if (KillLogWidget)
-	{
-		KillLogWidget->AddKillLogUI(Killer, Victim);
-	}
-}
 
 void UACKillLogManager::SetKillLogWidget(UKillLogWidget* InWidget)
 {
@@ -52,4 +45,21 @@ void UACKillLogManager::SetKillLogWidget(UKillLogWidget* InWidget)
 void UACKillLogManager::SetUIManager(UACUIMangerComponent* InManager)
 {
 	UIManager = InManager;
+}
+
+void UACKillLogManager::AddKillLog(const FString& Killer, const FString& Victim)
+{
+	if (!KillLogWidget) return;
+
+	// 1. 해골 이미지 추가
+	KillLogWidget->AddSkull();
+
+	// 2. 점수 로그 항목 추가
+	KillLogWidget->AddScoreEntry(TEXT("적 처치"), 100);
+
+	// 3. 총 점수 업데이트
+	KillLogWidget->UpdateTotalScore(100);
+
+	// (선택) 디버그 메시지
+	UE_LOG(LogTemp, Log, TEXT("KillLog: %s killed %s"), *Killer, *Victim);
 }

@@ -6,7 +6,7 @@
 #include "ActorComponents/UISystem/ACInventoryManager.h"
 #include "ActorComponents/UISystem/ACKillLogManager.h"
 #include "UI/InventoryWidget.h"
-
+#include "UI/KillLogWidget.h"
 
 
 // Sets default values for this component's properties
@@ -17,7 +17,7 @@ UACUIMangerComponent::UACUIMangerComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	
-	InitializeMangers();
+	InitializeManagers();
 }
 
 
@@ -38,6 +38,9 @@ void UACUIMangerComponent::SetupInput()
 		{
 			EnhancedInput->BindAction(OpenInventoryAction, ETriggerEvent::Started, this, &UACUIMangerComponent::OpenUI, EUIType::Inventory);
 			//EnhancedInput->BindAction(OpenPauseMenuAction, ETriggerEvent::Started, this, &UACBaseUIComponent::ToggleUI, EUIType::PauseMenu);
+
+			// 테스트 바인딩 (예: TestKillLogAction은 키 1에 매핑된 EnhancedInputAction)
+			EnhancedInput->BindAction(TestKillLogAction, ETriggerEvent::Started, this, &UACUIMangerComponent::TestKillLog);
 		}
 	}
 }
@@ -92,6 +95,17 @@ void UACUIMangerComponent::InitializeWidgets()
 				break;
 			}
 
+		case EUIType::KillLog:
+			{
+				if (UKillLogWidget* KLW = Cast<UKillLogWidget>(NewWidget))
+				{
+					KillLogManager->SetKillLogWidget(KLW);
+					KLW->SetKillLogManager(KillLogManager);
+					KLW->AddToViewport(); // ✅ 반드시 필요
+				}
+				break;
+			}
+
 		//case EUIType::HUD:
 			// HUD 위젯 초기화 및 매니저 연결
 				//break;
@@ -102,7 +116,7 @@ void UACUIMangerComponent::InitializeWidgets()
 	}
 }
 
-void UACUIMangerComponent::InitializeMangers()
+void UACUIMangerComponent::InitializeManagers()
 {
 	// 인벤토리 매니저 생성 및 등록 (생성자에서 호출되므로 문제 없음)
 	InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("InventoryManager"));
@@ -115,4 +129,18 @@ void UACUIMangerComponent::InitializeMangers()
 	
 	// HUDManager, PauseMenuManager 등도 여기에 추가
 
+}
+
+void UACUIMangerComponent::TestKillLog()
+{
+	if (!KillLogManager) return;
+
+	KillLogManager->AddKillLog(TEXT("Player"), TEXT("Enemy"));
+
+	if (UKillLogWidget* KLW = KillLogManager->GetKillLogWidget())
+	{
+		KLW->AddSkull();
+		KLW->AddScoreEntry(TEXT("적 처치"), 100);
+		KLW->UpdateTotalScore(100);
+	}
 }
