@@ -37,10 +37,6 @@ void UACUIMangerComponent::SetupInput()
 		if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PC->InputComponent))
 		{
 			EnhancedInput->BindAction(OpenInventoryAction, ETriggerEvent::Started, this, &UACUIMangerComponent::OpenUI, EUIType::Inventory);
-			//EnhancedInput->BindAction(OpenPauseMenuAction, ETriggerEvent::Started, this, &UACBaseUIComponent::ToggleUI, EUIType::PauseMenu);
-
-			// 테스트 바인딩 (예: TestKillLogAction은 키 1에 매핑된 EnhancedInputAction)
-			EnhancedInput->BindAction(TestKillLogAction, ETriggerEvent::Started, this, &UACUIMangerComponent::TestKillLog);
 		}
 	}
 }
@@ -102,6 +98,8 @@ void UACUIMangerComponent::InitializeWidgets()
 					KillLogManager->SetKillLogWidget(KLW);
 					KLW->SetKillLogManager(KillLogManager);
 					KLW->AddToViewport(); // ✅ 반드시 필요
+
+					UE_LOG(LogTemp, Warning, TEXT("✔ KillLogWidget Viewport에 추가됨"));
 				}
 				break;
 			}
@@ -120,7 +118,6 @@ void UACUIMangerComponent::InitializeManagers()
 {
 	// 인벤토리 매니저 생성 및 등록 (생성자에서 호출되므로 문제 없음)
 	InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("InventoryManager"));
-
 	// UIComponentManager에 접근하기 위해 this를 파라미터로 전달
 	InventoryManager->SetUIManager(this);
 
@@ -133,14 +130,9 @@ void UACUIMangerComponent::InitializeManagers()
 
 void UACUIMangerComponent::TestKillLog()
 {
+	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("🔹 IA_KILLLOG 입력 감지됨!"));
+	
 	if (!KillLogManager) return;
 
 	KillLogManager->AddKillLog(TEXT("Player"), TEXT("Enemy"));
-
-	if (UKillLogWidget* KLW = KillLogManager->GetKillLogWidget())
-	{
-		KLW->AddSkull();
-		KLW->AddScoreEntry(TEXT("적 처치"), 100);
-		KLW->UpdateTotalScore(100);
-	}
 }

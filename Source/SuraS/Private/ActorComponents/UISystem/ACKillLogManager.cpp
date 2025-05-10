@@ -39,6 +39,12 @@ void UACKillLogManager::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 void UACKillLogManager::SetKillLogWidget(UKillLogWidget* InWidget)
 {
+	if (KillLogWidget && KillLogWidget != InWidget)
+	{
+		UE_LOG(LogTemp, Error, TEXT("❌ KillLogWidget이 중복으로 설정됨! 기존: %s, 새로: %s"),
+			*KillLogWidget->GetName(), *InWidget->GetName());
+	}
+
 	KillLogWidget = InWidget;
 }
 
@@ -49,7 +55,13 @@ void UACKillLogManager::SetUIManager(UACUIMangerComponent* InManager)
 
 void UACKillLogManager::AddKillLog(const FString& Killer, const FString& Victim)
 {
-	if (!KillLogWidget) return;
+	// UE_LOG(LogTemp, Warning, TEXT("✅ AddKillLog() 호출됨: %s killed %s"), *Killer, *Victim);
+
+	// if (!KillLogWidget)
+	// {
+	// 	UE_LOG(LogTemp, Error, TEXT("❌ KillLogWidget is null"));
+	// 	return;
+	// }
 
 	// 1. 해골 이미지 추가
 	KillLogWidget->AddSkull();
@@ -59,7 +71,4 @@ void UACKillLogManager::AddKillLog(const FString& Killer, const FString& Victim)
 
 	// 3. 총 점수 업데이트
 	KillLogWidget->UpdateTotalScore(100);
-
-	// (선택) 디버그 메시지
-	UE_LOG(LogTemp, Log, TEXT("KillLog: %s killed %s"), *Killer, *Victim);
 }

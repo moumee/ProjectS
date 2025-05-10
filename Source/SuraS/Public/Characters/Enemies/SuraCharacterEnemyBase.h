@@ -109,4 +109,7 @@ public:
 	//poolsystem
 	bool isInitialized = false;
 	void InitializeEnemy();
+
+	//killLog Binding
+	void BindKillLogOnDeath() const;
 };

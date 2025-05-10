@@ -49,6 +49,9 @@ public:
 	void InitializeWidgets();
 	void InitializeManagers();
 
+	UFUNCTION(BlueprintCallable)
+	UACKillLogManager* GetKillLogManager() const { return KillLogManager; }
+
 	UDataTable* GetWeaponDataTable() const
 	{
 		return DTWeapon;	
@@ -59,9 +62,6 @@ public:
 private:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* OpenInventoryAction;
-
-	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* TestKillLogAction;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* OpenPauseMenuAction;
@@ -85,6 +85,10 @@ private:
 
 	UPROPERTY()
 	UACKillLogManager* KillLogManager;
+
+
+	
+
 	
 	// UPROPERTY()
 	// UACCrosshairManager* CrosshairManager;
