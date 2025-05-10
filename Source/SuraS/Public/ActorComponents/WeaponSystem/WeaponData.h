@@ -95,6 +95,8 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	bool bEnableMultiProjectile_Right;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectile")
 	float MaxAngleOfMultiProjectileSpread = 15.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectile")
+	int32 PelletsNum = 9;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
 	FWeaponRecoilStruct DefaultRecoil;
@@ -135,6 +137,8 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	float ChargingAdditionalRecoilAmountYawBase = 1.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging")
 	float ChargingAdditionalProjectileRadiusBase = 20.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging")
+	int32 ChargingAdditionalPelletMaxNum = 0;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
 	int32 MaxPenetrableObjectsNum_Left = 4;

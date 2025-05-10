@@ -347,6 +347,7 @@ void AWeapon::LoadWeaponData()
 		bEnableMultiProjectile_Left = WeaponData->bEnableMultiProjectile_Left;
 		bEnableMultiProjectile_Right = WeaponData->bEnableMultiProjectile_Right;
 		MaxAngleOfMultiProjectileSpread = WeaponData->MaxAngleOfMultiProjectileSpread;
+		PelletsNum = WeaponData->PelletsNum;
 
 		// <Recoil>
 		DefaultRecoil = WeaponData->DefaultRecoil;
@@ -373,6 +374,7 @@ void AWeapon::LoadWeaponData()
 		ChargingAdditionalRecoilAmountPitchBase = WeaponData->ChargingAdditionalRecoilAmountPitchBase;
 		ChargingAdditionalRecoilAmountYawBase = WeaponData->ChargingAdditionalRecoilAmountYawBase;
 		ChargingAdditionalProjectileRadiusBase = WeaponData->ChargingAdditionalProjectileRadiusBase;
+		ChargingAdditionalPelletMaxNum = WeaponData->ChargingAdditionalPelletMaxNum;
 
 		// <Penetration>
 		MaxPenetrableObjectsNum_Left = WeaponData->MaxPenetrableObjectsNum_Left;
@@ -621,7 +623,7 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 	}
 }
 
-void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
+void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 AdditionalPellet, bool bIsHoming, AActor* HomingTarget)
 {
 	if (CurrentState != UnequippedState)
 	{
@@ -668,7 +670,7 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 				{
 					const FVector SpawnLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
 
-					for (int pellet = 0; pellet < PelletsNum; pellet++)
+					for (int pellet = 0; pellet < (PelletsNum + AdditionalPellet); pellet++)
 					{
 						const FRotator SpawnRotation = UKismetMathLibrary::RandomUnitVectorInConeInDegrees((TargetLocationOfProjectile - SpawnLocation).GetSafeNormal(), MaxAngleOfMultiProjectileSpread).Rotation();
 
@@ -682,6 +684,7 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 
 						//TODO: 나중에는 Multi Homing Projectile도 가능하게 만들예정. 자동 타겟팅으로
 					}
+					UE_LOG(LogTemp, Error, TEXT("Pellet Num: %d"), (PelletsNum + AdditionalPellet));
 
 					SpawnMuzzleFireEffect(SpawnLocation, (TargetLocationOfProjectile - SpawnLocation).GetSafeNormal().Rotation());
 				}
@@ -1475,28 +1478,28 @@ void AWeapon::HandleFullAutoFire() //TODO: 안쓰임. 삭제 요망
 #pragma endregion
 
 #pragma region FireMode/SingleShot
-void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
+void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 AdditionalPellet)
 {
 	if (bIsLeftInput)
 	{
 		if (bSingleProjectile)
 		{
-			FireSingleProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+			FireSingleProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, false);
 		}
 		else
 		{
-			FireMultiProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+			FireMultiProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, AdditionalPellet, false);
 		}
 	}
 	else
 	{
 		if (bSingleProjectile)
 		{
-			FireSingleProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+			FireSingleProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, false);
 		}
 		else
 		{
-			FireMultiProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+			FireMultiProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, AdditionalPellet, false);
 		}
 	}
 
@@ -1521,7 +1524,7 @@ void AWeapon::StartBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 Nu
 			}
 			else
 			{
-				FireMultiProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+				FireMultiProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, 0, false);
 			}
 		}
 		else
@@ -1532,7 +1535,7 @@ void AWeapon::StartBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 Nu
 			}
 			else
 			{
-				FireMultiProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+				FireMultiProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, 0, false);
 			}
 		}
 		BurstShotFired++;
@@ -2015,6 +2018,7 @@ void AWeapon::StopCharge()
 		float AdditionalRecoilAmountYaw = 0.f;
 		float AdditionalProjectileRadius = 0.f;
 		int32 PenetrableObjectsNum = 0;
+		int32 AdditionalPelletNum = 0;
 		if (ElapsedChargeTime > ChargeTimeThreshold)
 		{
 			// TODO: Clamp 해줘야함...(안해도 될듯?)
@@ -2023,11 +2027,22 @@ void AWeapon::StopCharge()
 			AdditionalRecoilAmountYaw = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalRecoilAmountYawBase;
 			AdditionalProjectileRadius = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalProjectileRadiusBase;
 			PenetrableObjectsNum = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * MaxPenetrableObjectsNum_Left; //TODO: 오른쪽 왼쪽 달리 해야함
+			AdditionalPelletNum = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalPelletMaxNum;
 			UE_LOG(LogTemp, Error, TEXT("Penetrable Num: %d"), PenetrableObjectsNum);
+			//UE_LOG(LogTemp, Error, TEXT("Pellet Num: %d"), AdditionalPelletNum);
 		}
 
-		//TODO: Charge도 커스텀화 하니까 이 코드도 달리 표현해야함
-		StartSingleShot(true, true, PenetrableObjectsNum, ChargingAdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
+		if (AdditionalPelletNum == 0 || ChargingAdditionalPelletMaxNum == 0)
+		{
+			//TODO: Charge도 커스텀화 하니까 이 코드도 달리 표현해야함
+			StartSingleShot(true, true, PenetrableObjectsNum, ChargingAdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
+		}
+		else
+		{
+			//TODO: 좌우 구분해야함
+			StartSingleShot(false, false, PenetrableObjectsNum, ChargingAdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, AdditionalPelletNum);
+		}
+
 
 		ElapsedChargeTime = 0.f;
 	}
