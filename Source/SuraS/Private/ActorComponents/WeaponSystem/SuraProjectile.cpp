@@ -122,6 +122,9 @@ void ASuraProjectile::LoadProjectileData()
 		InitialLifeSpan = ProjectileData->InitialLifeSpan; //TODO 이렇게는 적용이 안됨. 삭제 요망
 		SetLifeSpan(ProjectileData->InitialLifeSpan);
 
+		// <Sound>
+		HitSound = ProjectileData->HitSound;
+
 		// <Damage>
 		DefaultDamage = ProjectileData->DefaultDamage;
 		HeadShotAdditionalDamage = ProjectileData->HeadShotAdditionalDamage;
@@ -143,6 +146,10 @@ void ASuraProjectile::LoadProjectileData()
 
 		// <Penetration>
 		bCanPenetrate = ProjectileData->bCanPenetrate; //legacy
+
+		// <Impulse>
+		bCanApplyImpulseToEnemy = ProjectileData->bCanApplyImpulseToEnemy;
+		HitImpulseToEnemy = ProjectileData->HitImpulseToEnemy;
 	}
 }
 
@@ -262,6 +269,10 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 				SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 				SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 
+				if (HitSound != nullptr)
+				{
+					UGameplayStatics::PlaySoundAtLocation(this, HitSound, Hit.ImpactPoint);
+				}
 
 				if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(Hit))
 				{
@@ -286,6 +297,11 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 				}
 
 				ApplyExplosiveDamage(bIsExplosive, Hit.ImpactPoint);
+
+				if (bCanApplyImpulseToEnemy)
+				{
+					AddImpulseToEnemy(OtherActor, GetVelocity().GetSafeNormal()*HitImpulseToEnemy);
+				}
 
 				Destroy();
 			}
@@ -349,6 +365,11 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 				}
 
 				ApplyExplosiveDamage(bIsExplosive, SweepResult.ImpactPoint);
+
+				if (bCanApplyImpulseToEnemy)
+				{
+					AddImpulseToEnemy(OtherActor, GetVelocity().GetSafeNormal() * HitImpulseToEnemy);
+				}
 
 				UpdatePenetration();
 				if (NumPenetratedObjects > NumPenetrableObjects)
@@ -567,6 +588,22 @@ void ASuraProjectile::UpdateTargetInfo()
 	}
 }
 #pragma endregion
+
+#pragma region Impulse
+void ASuraProjectile::AddImpulseToEnemy(AActor* OtherActor, FVector Force)
+{
+	if (OtherActor != nullptr && IsValid(OtherActor))
+	{
+		ACharacter* Enemy = Cast<ACharacter>(OtherActor);
+		if (Enemy)
+		{
+			Enemy->LaunchCharacter(Force, false, false);
+		}
+	}
+}
+#pragma endregion
+
+
 //// Called when the game starts or when spawned
 //void ASuraProjectile::BeginPlay()
 //{

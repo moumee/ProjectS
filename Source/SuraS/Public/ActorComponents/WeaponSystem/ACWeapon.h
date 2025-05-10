@@ -132,8 +132,8 @@ public:
 
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
-	void FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 	void SpawnProjectile();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
@@ -332,6 +332,11 @@ protected:
 	UPROPERTY(EditAnywhere)
 	int32 LeftAmmoInCurrentMag;
 
+	UPROPERTY(EditAnywhere)
+	int32 AmmoConsumedPerShot_Left = 1;
+	UPROPERTY(EditAnywhere)
+	int32 AmmoConsumedPerShot_Right = 1;
+
 	FTimerHandle ReloadingTimer;
 protected:
 	void HandleReload();
@@ -341,9 +346,10 @@ public:
 protected:
 	void StopReload();
 
-	void ConsumeAmmo();
+	void ConsumeAmmo(int32 AmmoCost = 1);
 	void ReloadAmmo();
 	bool HasAmmoInCurrentMag();
+	bool HasAmmoInCurrentMag(int32 AmmoCost);
 public:
 	bool AddAmmo(int32 NumAmmo);
 	void AutoReload();
@@ -422,7 +428,7 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float SingleShotDelay = 1.f;
 public:
-	void StartSingleShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
+	void StartSingleShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0);
 	void StopSingleShot();
 #pragma endregion
 
@@ -456,6 +462,7 @@ protected:
 
 protected:
 	void StartFullAutoShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
+	void UpdateFullAutoShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
 	void StopFullAutoShot();
 #pragma endregion
 
@@ -519,6 +526,7 @@ protected:
 	float ChargingAdditionalRecoilAmountYawBase = 1.f;
 	float ChargingAdditionalProjectileRadiusBase = 20.f;
 
+	int32 ChargingAdditionalPelletMaxNum = 0;
 	//int32 MaxPenetrableObjectsNum = 4;
 
 	float ElapsedChargeTime = 0.f;
