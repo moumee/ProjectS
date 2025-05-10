@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "SuraPlayerController.generated.h"
 
+class ASuraPawnPlayer;
 /**
  * 
  */
@@ -15,11 +16,13 @@ class SURAS_API ASuraPlayerController : public APlayerController
 	GENERATED_BODY()
 
 	UPROPERTY()
-	ASpectatorPawn* SpawnedDebugPawn = nullptr;
+	ASuraPawnPlayer* SuraPawnPlayer = nullptr;
+
+	virtual void BeginPlay() override;
 
 	virtual void SetupInputComponent() override;
 	
 public:
 
-	void ToggleDebugPossession();
+	
 };

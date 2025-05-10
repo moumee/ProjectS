@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "SuraPawnPlayer.generated.h"
 
+class USpringArmComponent;
 class USuraPlayerMovementComponent;
 class UCameraComponent;
 class UCapsuleComponent;
@@ -25,42 +26,46 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	virtual void PossessedBy(AController* NewController) override;
 	
 	virtual void BeginPlay() override;
 
 	UCapsuleComponent* GetCapsuleComponent();
 
+	UCameraComponent* GetCameraComponent() const { return Camera; };
+
 protected:
 
 	UPROPERTY(EditAnywhere)
-	UCapsuleComponent* CapsuleComponent;
+	TObjectPtr<UCapsuleComponent> CapsuleComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	USkeletalMeshComponent* ArmMesh;
+	TObjectPtr<USkeletalMeshComponent> ArmMesh;
 
 	UPROPERTY(EditAnywhere)
-	UCameraComponent* Camera;
+	TObjectPtr<UCameraComponent> Camera;
 
 	UPROPERTY(EditAnywhere)
-	USuraPlayerMovementComponent* MovementComponent;
+	TObjectPtr<USuraPlayerMovementComponent> MovementComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputMappingContext* DefaultMappingContext;
+	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputAction* MoveAction;
+	TObjectPtr<UInputAction> MoveAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputAction* LookAction;
+	TObjectPtr<UInputAction> LookAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputAction* JumpAction;
+	TObjectPtr<UInputAction> JumpAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputAction* DashAction;
+	TObjectPtr<UInputAction> DashAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputAction* CrouchAction;
+	TObjectPtr<UInputAction> CrouchAction;
 
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);
