@@ -27,7 +27,10 @@ struct SURAS_API FProjectileData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	UMaterialInterface* HoleDecal;
-
+	//--------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* HitSound;
+	//--------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 	float DefaultDamage;
 
@@ -63,6 +66,11 @@ struct SURAS_API FProjectileData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
 	bool bCanPenetrate = false;
+	//--------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Impulse")
+	bool bCanApplyImpulseToEnemy = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Impulse")
+	float HitImpulseToEnemy = 100.f;
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
 	//int32 NumPenetrableObjects = 4;

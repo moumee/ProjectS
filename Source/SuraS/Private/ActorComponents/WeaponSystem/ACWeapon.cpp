@@ -325,6 +325,8 @@ void AWeapon::LoadWeaponData()
 		TotalAmmo = MaxTotalAmmo;
 		MaxAmmoPerMag = WeaponData->MaxAmmoPerMag;
 		LeftAmmoInCurrentMag = MaxAmmoPerMag;
+		AmmoConsumedPerShot_Left = WeaponData->AmmoConsumedPerShot_Left;
+		AmmoConsumedPerShot_Right = WeaponData->AmmoConsumedPerShot_Right;
 
 		// <SingleShot>
 		SingleShotDelay = WeaponData->SingleShotDelay;
@@ -384,7 +386,6 @@ void AWeapon::BeginPlay()
 	Super::BeginPlay();
 
 	//TODO: WeaponType에 따라서 생성되는 State 객체들이 달라지도록 설정하기
-	// 예를들어, 호밍 런쳐 같은 경우에는, ChargingState 혹은 TargetingState 등이 추가될 수 있음
 	IdleState = NewObject<USuraWeaponIdleState>(this, USuraWeaponIdleState::StaticClass());
 	FiringState = NewObject<USuraWeaponFiringState>(this, USuraWeaponFiringState::StaticClass());
 	UnequippedState = NewObject<USuraWeaponUnequippedState>(this, USuraWeaponUnequippedState::StaticClass());
@@ -1136,7 +1137,7 @@ void AWeapon::SetInputActionBinding()
 				{
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						LeftFullAutoShotAction,
-						ETriggerEvent::Started,
+						ETriggerEvent::Triggered,
 						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
 						{
 							StartFullAutoShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
@@ -1559,52 +1560,45 @@ void AWeapon::StartFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int32
 	if (CurrentState == IdleState)
 	{
 		ChangeState(FiringState);
-
-		UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Started!!!"));
-		if (!GetWorld()->GetTimerManager().IsTimerActive(FullAutoShotTimer))
+		UpdateFullAutoShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
+	}
+}
+void AWeapon::UpdateFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
+{
+	if (bSingleProjectile)
+	{
+		if (bIsLeftInput)
 		{
-			if (bIsLeftInput)
-			{
-				if (bSingleProjectile)
-				{
-					FireSingleProjectile(LeftProjectileClass, NumPenetrable);
-					int32 PenetrableNum = NumPenetrable;
-					bool bShouldConsumeAmmo = true;
-					float AdditionalDamage = 0.f;
-					bool bCanHoming = false;
-					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, PenetrableNum, bShouldConsumeAmmo, AdditionalDamage, bCanHoming]() {FireSingleProjectile(LeftProjectileClass, PenetrableNum, bShouldConsumeAmmo, AdditionalDamage, bCanHoming); }, FullAutoShotFireRate, true);
-				}
-				else
-				{
-					FireMultiProjectile(LeftProjectileClass, NumPenetrable);
-					int32 PenetrableNum = NumPenetrable;
-					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, PenetrableNum]() {FireMultiProjectile(LeftProjectileClass, PenetrableNum); }, FullAutoShotFireRate, true);
-				}
-			}
-			else
-			{
-				if (bSingleProjectile)
-				{
-					FireSingleProjectile(RightProjectileClass, NumPenetrable);
-					int32 PenetrableNum = NumPenetrable;
-					bool bShouldConsumeAmmo = true;
-					float AdditionalDamage = 0.f;
-					bool bCanHoming = false;
-					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, PenetrableNum, bShouldConsumeAmmo, AdditionalDamage, bCanHoming]() {FireSingleProjectile(RightProjectileClass, PenetrableNum, bShouldConsumeAmmo, AdditionalDamage, bCanHoming); }, FullAutoShotFireRate, true);
-				}
-				else
-				{
-					FireMultiProjectile(RightProjectileClass, NumPenetrable);
-					int32 PenetrableNum = NumPenetrable;
-					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, PenetrableNum]() {FireMultiProjectile(RightProjectileClass, PenetrableNum); }, FullAutoShotFireRate, true);
-				}
-			}
+			FireSingleProjectile(LeftProjectileClass, NumPenetrable);
 		}
+		else
+		{
+			FireSingleProjectile(RightProjectileClass, NumPenetrable);
+		}
+	}
+	else
+	{
+		if (bIsLeftInput)
+		{
+			FireMultiProjectile(LeftProjectileClass, NumPenetrable);
+		}
+		else
+		{
+			FireMultiProjectile(RightProjectileClass, NumPenetrable);
+		}	
+	}
+
+	if (HasAmmoInCurrentMag())
+	{
+		GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, bIsLeftInput, bSingleProjectile, NumPenetrable]() {UpdateFullAutoShot(bIsLeftInput, bSingleProjectile, NumPenetrable); }, FullAutoShotFireRate, false);
+	}
+	else
+	{
+		StopFullAutoShot();
 	}
 }
 void AWeapon::StopFullAutoShot()
 {
-	//TODO: 방식에 마음에 안듦. 다른 방법 생각해보기
 	if (CurrentState == FiringState)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Ended!!!"));

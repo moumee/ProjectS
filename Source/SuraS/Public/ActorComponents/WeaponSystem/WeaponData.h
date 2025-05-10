@@ -66,6 +66,10 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	int32 MaxAmmoPerMag = 10.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
 	int32 MaxTotalAmmo = 200.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
+	int32 AmmoConsumedPerShot_Left = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
+	int32 AmmoConsumedPerShot_Right = 1;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SingleShot")
 	float SingleShotDelay = 1.f;

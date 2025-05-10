@@ -332,6 +332,11 @@ protected:
 	UPROPERTY(EditAnywhere)
 	int32 LeftAmmoInCurrentMag;
 
+	UPROPERTY(EditAnywhere)
+	int32 AmmoConsumedPerShot_Left = 1;
+	UPROPERTY(EditAnywhere)
+	int32 AmmoConsumedPerShot_Right = 1;
+
 	FTimerHandle ReloadingTimer;
 protected:
 	void HandleReload();
@@ -456,6 +461,7 @@ protected:
 
 protected:
 	void StartFullAutoShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
+	void UpdateFullAutoShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
 	void StopFullAutoShot();
 #pragma endregion
 
