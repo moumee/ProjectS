@@ -498,7 +498,7 @@ void AWeapon::DetachWeaponFromPlayer()
 	}
 }
 
-void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable, bool bShouldConsumeAmmo, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
+void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
 {
 	if (CurrentState != UnequippedState)
 	{
@@ -507,9 +507,9 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 			return;
 		}
 
-		if (bShouldConsumeAmmo)
+		if (AmmoCost > 0)
 		{
-			if (!HasAmmoInCurrentMag())
+			if (!HasAmmoInCurrentMag(AmmoCost))
 			{
 				return;
 			}
@@ -596,9 +596,9 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 
 
 		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
-		if (bShouldConsumeAmmo)
+		if (AmmoCost > 0)
 		{
-			ConsumeAmmo();
+			ConsumeAmmo(AmmoCost);
 		}
 
 		// <Overheat>
@@ -621,7 +621,7 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 	}
 }
 
-void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable, bool bShouldConsumeAmmo, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
+void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
 {
 	if (CurrentState != UnequippedState)
 	{
@@ -630,7 +630,7 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 			return;
 		}
 
-		if (HasAmmoInCurrentMag())
+		if (HasAmmoInCurrentMag(AmmoCost))
 		{
 			if (bIsZoomIn)
 			{
@@ -695,9 +695,9 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 
 			StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
 
-			if (bShouldConsumeAmmo)
+			if (AmmoCost > 0)
 			{
-				ConsumeAmmo();
+				ConsumeAmmo(AmmoCost);
 			}
 
 			// <Overheat>
@@ -1292,11 +1292,11 @@ void AWeapon::StopReload()
 	ChangeState(IdleState);
 }
 
-void AWeapon::ConsumeAmmo()
+void AWeapon::ConsumeAmmo(int32 AmmoCost)
 {
 	if (LeftAmmoInCurrentMag > 0)
 	{
-		LeftAmmoInCurrentMag--;
+		LeftAmmoInCurrentMag -= AmmoCost;
 		if (AmmoCounterWidget)
 		{
 			AmmoCounterWidget->UpdateAmmoCount(LeftAmmoInCurrentMag);
@@ -1335,6 +1335,10 @@ void AWeapon::ReloadAmmo()
 bool AWeapon::HasAmmoInCurrentMag()
 {
 	return (LeftAmmoInCurrentMag > 0);
+}
+bool AWeapon::HasAmmoInCurrentMag(int32 AmmoCost)
+{
+	return (LeftAmmoInCurrentMag - AmmoCost >= 0);
 }
 bool AWeapon::AddAmmo(int32 NumAmmo)
 {
@@ -1477,22 +1481,22 @@ void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, int32 N
 	{
 		if (bSingleProjectile)
 		{
-			FireSingleProjectile(LeftProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+			FireSingleProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 		}
 		else
 		{
-			FireMultiProjectile(LeftProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+			FireMultiProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 		}
 	}
 	else
 	{
 		if (bSingleProjectile)
 		{
-			FireSingleProjectile(RightProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+			FireSingleProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 		}
 		else
 		{
-			FireMultiProjectile(RightProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+			FireMultiProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 		}
 	}
 
@@ -1513,22 +1517,22 @@ void AWeapon::StartBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 Nu
 		{
 			if (bSingleProjectile)
 			{
-				FireSingleProjectile(LeftProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+				FireSingleProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 			}
 			else
 			{
-				FireMultiProjectile(LeftProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+				FireMultiProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 			}
 		}
 		else
 		{
 			if (bSingleProjectile)
 			{
-				FireSingleProjectile(RightProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+				FireSingleProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 			}
 			else
 			{
-				FireMultiProjectile(RightProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+				FireMultiProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 			}
 		}
 		BurstShotFired++;
@@ -1569,22 +1573,22 @@ void AWeapon::UpdateFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int3
 	{
 		if (bIsLeftInput)
 		{
-			FireSingleProjectile(LeftProjectileClass, NumPenetrable);
+			FireSingleProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left);
 		}
 		else
 		{
-			FireSingleProjectile(RightProjectileClass, NumPenetrable);
+			FireSingleProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right);
 		}
 	}
 	else
 	{
 		if (bIsLeftInput)
 		{
-			FireMultiProjectile(LeftProjectileClass, NumPenetrable);
+			FireMultiProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left);
 		}
 		else
 		{
-			FireMultiProjectile(RightProjectileClass, NumPenetrable);
+			FireMultiProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right);
 		}	
 	}
 
@@ -1936,7 +1940,7 @@ void AWeapon::StartMissileLaunch(TArray<AActor*> TargetActors, const TSubclassOf
 }
 void AWeapon::UpdateMissileLaunch(const TSubclassOf<ASuraProjectile>& InProjectileClass)
 {
-	FireSingleProjectile(InProjectileClass, 0, false, 0.f, 0.f, 0.f, 0.f, true, ConfirmedTargets[CurrentTargetIndex]);
+	FireSingleProjectile(InProjectileClass, 0, 0, 0.f, 0.f, 0.f, 0.f, true, ConfirmedTargets[CurrentTargetIndex]);
 	CurrentTargetIndex++;
 	if (ConfirmedTargets.Num() <= CurrentTargetIndex)
 	{
