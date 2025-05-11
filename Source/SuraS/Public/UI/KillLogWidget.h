@@ -31,6 +31,7 @@ public:
 
 protected:
 	virtual void NativeConstruct() override;
+	
 
 	UPROPERTY(meta = (BindWidget))
 	UHorizontalBox* SkullBox;
@@ -41,7 +42,14 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	UVerticalBox* ScoreBox;
 
+	UPROPERTY(meta = (BindWidget))
+	UVerticalBox* KillLogBox;
+
+	FTimerHandle AutoHideTimer;
 	
+	FTimerHandle TotalScoreFadeOutTimer;
+
+
 	
 private:
 	UPROPERTY()
