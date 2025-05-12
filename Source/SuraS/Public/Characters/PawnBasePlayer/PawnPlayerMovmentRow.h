@@ -1,0 +1,96 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Engine/DataTable.h"
+#include "PawnPlayerMovmentRow.generated.h"
+
+USTRUCT(BlueprintType)
+struct SURAS_API FPawnPlayerMovementRow : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Gravity")
+	float GravityScale = 1500.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Walk")
+	float WalkSpeed = 600.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Dash")
+	float DashStartSpeed = 3000.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Dash")
+	float DashEndSpeed = 1500.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Dash")
+	float DashDecelerationTime = 0.4f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Dash")
+	float DashCooldown = 5.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Run")
+	float RunSpeed = 1000.f;
+	
+	UPROPERTY(EditAnywhere, Category = "Movement|Crouch")
+	float CrouchSpeed = 400.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Crouch")
+	float CrouchHeightScale = 0.5f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Jump")
+	float PrimaryJumpHeight = 200.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Jump")
+	float DoubleJumpHeight = 300.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Jump")
+	float WallJumpHeight = 200.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float Acceleration = 8000.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float Deceleration = 8000.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Air")
+	float AirDirectionInterpSpeed = 10.f;
+	
+	UPROPERTY(EditAnywhere, Category = "Movement|Air")
+	float AirAcceleration = 5000.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Air")
+	float AirDeceleration = 2000.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Air")
+	float MaxFallVerticalSpeed = 3000.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Walk")
+	float MaxWalkableFloorAngle = 50.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Walk")
+	float MaxStepHeight = 30.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	float WallRunMaxDuration = 2.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	float WallRunAcceleration = 4000.f;
+	
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	float WallRunDeceleration = 2000.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	float WallRunMaxSpeed = 1200.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	float WallRunBackwardMaxSpeed = 100.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	float WallRunJumpAirSpeed2D = 1400.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Slide")
+	float SlideInitialWindow = 0.65f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Slide")
+	float SlideMaxDuration = 1.25f;
+	
+};
