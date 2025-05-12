@@ -7,6 +7,7 @@
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 
 #include "KismetTraceUtils.h"
+#include "Characters/PawnBasePlayer/PawnPlayerMovmentRow.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Characters/PawnBasePlayer/SuraPlayerController.h"
 #include "Components/CapsuleComponent.h"
@@ -33,12 +34,48 @@ void USuraPlayerMovementComponent::BeginPlay()
 		SuraPlayerController = Cast<ASuraPlayerController>(PawnOwner->GetController());
 	}
 
-	
+	InitMovementData();
 
 	GravityAcceleration = GravityDirection * GravityScale;
 	CurrentMovementState = EMovementState::EMS_Airborne;
-	JumpZVelocity = FMath::Sqrt(2 * GravityScale * JumpHeight);
+	PrimaryJumpZVelocity = FMath::Sqrt(2 * GravityScale * PrimaryJumpHeight);
+	DoubleJumpZVelocity = FMath::Sqrt(2 * GravityScale * DoubleJumpHeight);
+	WallJumpZVelocity = FMath::Sqrt(2 * GravityScale * WallJumpHeight);
 
+}
+
+void USuraPlayerMovementComponent::InitMovementData()
+{
+	FPawnPlayerMovementRow* Row = MovementDataTable->FindRow<FPawnPlayerMovementRow>("Player", "");
+	if (!Row) return;
+	GravityScale = Row->GravityScale;
+	WalkSpeed = Row->WalkSpeed;
+	DashStartSpeed = Row->DashStartSpeed;
+	DashEndSpeed = Row->DashEndSpeed;
+	DashDecelerationTime = Row->DashDecelerationTime;
+	DashCooldown = Row->DashCooldown;
+	RunSpeed = Row->RunSpeed;
+	CrouchSpeed = Row->CrouchSpeed;
+	CrouchHeightScale = Row->CrouchHeightScale;
+	PrimaryJumpHeight = Row->PrimaryJumpHeight;
+	DoubleJumpHeight = Row->DoubleJumpHeight;
+	WallJumpHeight = Row->WallJumpHeight;
+	Acceleration = Row->Acceleration;
+	Deceleration = Row->Deceleration;
+	AirDirectionInterpSpeed = Row->AirDirectionInterpSpeed;
+	AirAcceleration = Row->AirAcceleration;
+	AirDeceleration = Row->AirDeceleration;
+	MaxFallVerticalSpeed = Row->MaxFallVerticalSpeed;
+	MaxWalkableFloorAngle = Row->MaxWalkableFloorAngle;
+	MaxStepHeight = Row->MaxStepHeight;
+	WallRunMaxDuration = Row->WallRunMaxDuration;
+	WallRunAcceleration = Row->WallRunAcceleration;
+	WallRunDeceleration = Row->WallRunDeceleration;
+	WallRunMaxSpeed = Row->WallRunMaxSpeed;
+	WallRunBackwardMaxSpeed = Row->WallRunBackwardMaxSpeed;
+	WallRunJumpAirSpeed2D = Row->WallRunJumpAirSpeed2D;
+	SlideInitialWindow = Row->SlideInitialWindow;
+	SlideMaxDuration = Row->SlideMaxDuration;
 }
 
 
@@ -355,7 +392,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 	{
 		bJumpPressed = false;
 		CurrentJumpCount++;
-		Velocity.Z = JumpZVelocity;
+		Velocity.Z = PrimaryJumpZVelocity;
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -459,7 +496,7 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 	{
 		bJumpPressed = false;
 		CurrentJumpCount++;
-		Velocity.Z = JumpZVelocity;
+		Velocity.Z = PrimaryJumpZVelocity;
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -622,15 +659,27 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		float MaxHorizontalSpeed = bWallJumpAirBoost ? WallRunJumpAirSpeed2D : RunSpeed;
 		if (Velocity.Size2D() > MaxHorizontalSpeed)
 		{
-			FVector VelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
-			FVector NewVelocityXY = VelocityXY - VelocityXY.GetSafeNormal() * AirDeceleration * DeltaTime;
-			if (NewVelocityXY.Size() < MaxHorizontalSpeed)
+			if (!InputDirection.IsNearlyZero()) 
 			{
-				NewVelocityXY = NewVelocityXY.GetSafeNormal() * MaxHorizontalSpeed;
-			}
+				FVector CurrentDir2D = FVector(Velocity.X, Velocity.Y, 0.f).GetSafeNormal(); 
+				FVector TargetDir2D = InputDirection;  
 
-			Velocity.X = NewVelocityXY.X;
-			Velocity.Y = NewVelocityXY.Y;
+				// Interpolate current direction towards target input direction
+				FVector NewDirection = FMath::VInterpTo(CurrentDir2D, TargetDir2D, DeltaTime, AirDirectionInterpSpeed); 
+				
+				Velocity.X = NewDirection.X * MaxHorizontalSpeed;
+				Velocity.Y = NewDirection.Y * MaxHorizontalSpeed;
+			}
+			
+			// FVector VelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+			// FVector NewVelocityXY = VelocityXY - VelocityXY.GetSafeNormal() * AirDeceleration * DeltaTime;
+			// if (NewVelocityXY.Size() < MaxHorizontalSpeed)
+			// {
+			// 	NewVelocityXY = NewVelocityXY.GetSafeNormal() * MaxHorizontalSpeed;
+			// }
+			//
+			// Velocity.X = NewVelocityXY.X;
+			// Velocity.Y = NewVelocityXY.Y;
 		}
 		else
 		{
@@ -674,7 +723,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			bHasRecentlySlid = false;
 			SlideElapsedTime = 0.f;
 			CurrentJumpCount++;
-			Velocity.Z = JumpZVelocity;
+			Velocity.Z = DoubleJumpZVelocity;
 		}
 	}
 
@@ -938,7 +987,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		bJumpPressed = false;
 		CurrentJumpCount++;
 		FVector WallNormal2D = CurrentWallHit.ImpactNormal.GetSafeNormal2D();
-		Velocity = FVector(Velocity.X, Velocity.Y, 0.f) + WallNormal2D * 500.f + FVector::UpVector * JumpZVelocity;
+		Velocity = FVector(Velocity.X, Velocity.Y, 0.f) + WallNormal2D * 500.f + FVector::UpVector * WallJumpZVelocity;
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -1112,6 +1161,8 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 	
 	
 }
+
+
 
 
 

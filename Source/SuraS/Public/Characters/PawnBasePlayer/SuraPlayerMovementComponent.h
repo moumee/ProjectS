@@ -66,6 +66,9 @@ public:
 
 protected:
 
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	TObjectPtr<UDataTable> MovementDataTable;
+
 	UPROPERTY(EditAnywhere, Category = "Movement|Capsule")
 	float DefaultCapsuleRadius;
 
@@ -103,16 +106,26 @@ protected:
 	float CrouchHeightScale = 0.5f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Jump")
-	float JumpHeight = 200.f;
+	float PrimaryJumpHeight = 200.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Jump")
+	float DoubleJumpHeight = 300.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Jump")
+	float WallJumpHeight = 200.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float Acceleration = 8000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float Deceleration = 8000.f;
+
+	// Interp speed when over MaxHorizontalSpeed in air
+	UPROPERTY(EditAnywhere, Category = "Movement|Air")
+	float AirDirectionInterpSpeed = 10.f;
 	
 	UPROPERTY(EditAnywhere, Category = "Movement|Air")
-	float AirAcceleration = 2000.f;
+	float AirAcceleration = 5000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Air")
 	float AirDeceleration = 2000.f;
@@ -187,8 +200,10 @@ protected:
 #pragma endregion Dash
 
 #pragma region Jump
-	
-	float JumpZVelocity = 0.f;
+
+	float WallJumpZVelocity = 0.f;
+	float DoubleJumpZVelocity = 0.f;
+	float PrimaryJumpZVelocity = 0.f;
 	float JumpBuffer = 0.1f;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
 	float ElapsedTimeFromSurface = 0.f;
@@ -263,6 +278,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Crouch")
 	bool bCrouchPressed = false;
+
+	void InitMovementData();
 
 	bool IsGrounded();
 
