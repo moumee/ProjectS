@@ -17,7 +17,7 @@
 USuraPlayerMovementComponent::USuraPlayerMovementComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	PrimaryComponentTick.TickGroup = TG_PrePhysics;
+	PrimaryComponentTick.TickGroup = TG_DuringPhysics;
 
 	MinWalkableFloorZ = FMath::Cos(FMath::DegreesToRadians(MaxWalkableFloorAngle));
 
@@ -37,7 +37,11 @@ void USuraPlayerMovementComponent::BeginPlay()
 	InitMovementData();
 
 	GravityAcceleration = GravityDirection * GravityScale;
+	
+	// Start as airborne state
 	CurrentMovementState = EMovementState::EMS_Airborne;
+	OnAirborne.Broadcast();
+	
 	PrimaryJumpZVelocity = FMath::Sqrt(2 * GravityScale * PrimaryJumpHeight);
 	DoubleJumpZVelocity = FMath::Sqrt(2 * GravityScale * DoubleJumpHeight);
 	WallJumpZVelocity = FMath::Sqrt(2 * GravityScale * WallJumpHeight);
@@ -205,6 +209,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		{
 			CurrentJumpCount--;
 		}
+		OnAirborne.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -223,6 +228,8 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 			bIsDashing = false;
 			ElapsedTimeFromDash = 0.f;
 			SlideResetTimer = 0.;
+			
+			OnSlide.Broadcast();
 			SetMovementState(EMovementState::EMS_Slide);
 			return;
 		}
@@ -393,15 +400,17 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		bJumpPressed = false;
 		CurrentJumpCount++;
 		Velocity.Z = PrimaryJumpZVelocity;
+		
+		OnPrimaryJump.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
 
 	if (bDashPressed && AvailableDashCount > 0)
 	{
+		OnDash.Broadcast();
 		bDashPressed = false;
 		bIsDashing = true;
-		
 		for (int32 i = 0; i < DashCooldowns.Num(); i++)
 		{
 			if (DashCooldowns[i] == 0.f)
@@ -422,6 +431,7 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 {
 	if (!IsGrounded() || GroundHit.ImpactNormal.Z < MinWalkableFloorZ)
 	{
+		OnAirborne.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -429,6 +439,7 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 	if (!bCrouchPressed)
 	{
 		bIsCrouching = false;
+		OnMove.Broadcast();
 		SetMovementState(EMovementState::EMS_Move);
 		return;
 	}
@@ -497,6 +508,7 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		bJumpPressed = false;
 		CurrentJumpCount++;
 		Velocity.Z = PrimaryJumpZVelocity;
+		OnPrimaryJump.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -522,6 +534,8 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			{
 				Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * RunSpeed;
 			}
+			OnLand.Broadcast(Velocity.Z);
+			OnMove.Broadcast();
 			SetMovementState(EMovementState::EMS_Move);
 			return;
 		}
@@ -533,6 +547,8 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 				{
 					Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * RunSpeed;
 				}
+				OnLand.Broadcast(Velocity.Z);
+				OnMove.Broadcast();
 				SetMovementState(EMovementState::EMS_Move);
 				return;
 			}
@@ -605,6 +621,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		{
 			bIsDashing = false;
 			ElapsedTimeFromDash = 0.f;
+			OnWallRun.Broadcast();
 			SetMovementState(EMovementState::EMS_WallRun);
 			return;
 		}
@@ -614,6 +631,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			{
 				bIsDashing = false;
 				ElapsedTimeFromDash = 0.f;
+				OnWallRun.Broadcast();
 				SetMovementState(EMovementState::EMS_WallRun);
 				return;
 			}
@@ -648,6 +666,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			{
 				bIsDashing = false;
 				ElapsedTimeFromDash = 0.f;
+				OnMantle.Broadcast();
 				SetMovementState(EMovementState::EMS_Mantle);
 				return;
 			}
@@ -723,12 +742,14 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			bHasRecentlySlid = false;
 			SlideElapsedTime = 0.f;
 			CurrentJumpCount++;
+			OnDoubleJump.Broadcast();
 			Velocity.Z = DoubleJumpZVelocity;
 		}
 	}
 
 	if (bDashPressed && AvailableDashCount > 0)
 	{
+		OnDash.Broadcast();
 		bDashPressed = false;
 		bIsDashing = true;
 		
@@ -803,6 +824,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	{
 		WallRunElapsedTime = 0.f;
 		Velocity += CurrentWallHit.ImpactNormal * 100.f;
+		OnAirborne.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -818,6 +840,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	
 	if (!bHit || !HitResult.IsValidBlockingHit())
 	{
+		OnAirborne.Broadcast();
 	    SetMovementState(EMovementState::EMS_Airborne);
 	    return;
 	}
@@ -836,6 +859,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	    if (MovementInputVector.X > 0.f)
 	    {
 	    	Velocity += CurrentWallHit.ImpactNormal * 100.f;
+	    	OnAirborne.Broadcast();
 	        SetMovementState(EMovementState::EMS_Airborne);
 	        return;
 	    }
@@ -846,6 +870,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		if (WallRunViewAngle > 60.f && bIsRight)
 		{
 			Velocity += CurrentWallHit.ImpactNormal * 100.f;
+			OnAirborne.Broadcast();
 			SetMovementState(EMovementState::EMS_Airborne);
 			return;
 		}
@@ -863,6 +888,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	    if (MovementInputVector.X < 0.f)
 	    {
 	    	Velocity += CurrentWallHit.ImpactNormal * 100.f;
+	    	OnAirborne.Broadcast();
 	        SetMovementState(EMovementState::EMS_Airborne);
 	        return;
 	    }
@@ -873,6 +899,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		if (WallRunViewAngle > 60.f && bIsLeft)
 		{
 			Velocity += CurrentWallHit.ImpactNormal * 100.f;
+			OnAirborne.Broadcast();
 			SetMovementState(EMovementState::EMS_Airborne);
 			return;
 		}
@@ -988,6 +1015,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		CurrentJumpCount++;
 		FVector WallNormal2D = CurrentWallHit.ImpactNormal.GetSafeNormal2D();
 		Velocity = FVector(Velocity.X, Velocity.Y, 0.f) + WallNormal2D * 500.f + FVector::UpVector * WallJumpZVelocity;
+		OnWallJump.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -995,12 +1023,14 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	if (bCrouchPressed)
 	{
 		Velocity += CurrentWallHit.ImpactNormal * 100.f;
+		OnAirborne.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
 
 	if (IsGrounded())
 	{
+		OnMove.Broadcast();
 		SetMovementState(EMovementState::EMS_Move);
 		return;
 	}
@@ -1015,6 +1045,7 @@ void USuraPlayerMovementComponent::TickMantle(float DeltaTime)
 	if (FVector::Distance(SuraPawnPlayer->GetActorLocation(), TargetPos) < 5.f)
 	{
 		Velocity = FVector::ZeroVector;
+		OnMove.Broadcast();
 		SetMovementState(EMovementState::EMS_Move);
 		return;
 	}

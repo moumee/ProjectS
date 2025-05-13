@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "SuraPawnPlayer.generated.h"
 
+class USuraPlayerCameraComponent;
 class USpringArmComponent;
 class USuraPlayerMovementComponent;
 class UCameraComponent;
@@ -35,6 +36,8 @@ public:
 
 	UCameraComponent* GetCameraComponent() const { return Camera; };
 
+	USuraPlayerMovementComponent* GetPlayerMovementComponent() { return MovementComponent; };
+
 protected:
 
 	UPROPERTY(EditAnywhere)
@@ -48,6 +51,11 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<USuraPlayerMovementComponent> MovementComponent;
+
+	// This actor component is for handling camera shakes and state based movement
+	// IT IS NOT THE CAMERA!!
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<USuraPlayerCameraComponent> CameraMovementComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
@@ -66,6 +74,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	TObjectPtr<UInputAction> CrouchAction;
+	
 
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);

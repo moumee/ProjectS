@@ -36,6 +36,19 @@ enum class EWallRunSide : uint8
 	EWRS_Right,
 };
 
+DECLARE_MULTICAST_DELEGATE(FOnMove);
+DECLARE_MULTICAST_DELEGATE(FOnWallRun);
+DECLARE_MULTICAST_DELEGATE(FOnAirborne);
+DECLARE_MULTICAST_DELEGATE(FOnSlide);
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnLand, float);
+DECLARE_MULTICAST_DELEGATE(FOnPrimaryJump);
+DECLARE_MULTICAST_DELEGATE(FOnDoubleJump);
+DECLARE_MULTICAST_DELEGATE(FOnWallJump);
+DECLARE_MULTICAST_DELEGATE(FOnMantle);
+DECLARE_MULTICAST_DELEGATE(FOnDash);
+
+
 
 UCLASS()
 class SURAS_API USuraPlayerMovementComponent : public UPawnMovementComponent
@@ -63,6 +76,36 @@ public:
 		DefaultCapsuleRadius = Radius;
 		DefaultCapsuleHalfHeight = HalfHeight;
 	}
+
+	FVector2D GetMovementInputVector() const { return MovementInputVector;};
+
+	UFUNCTION(BlueprintCallable)
+	bool IsGrounded();
+	
+	virtual bool IsCrouching() const override { return bIsCrouching; }
+
+	UFUNCTION(BlueprintCallable)
+	bool IsDashing() const { return bIsDashing; }
+
+	UFUNCTION(BlueprintCallable)
+	float GetRunSpeed() const { return RunSpeed; }
+
+	UFUNCTION(BlueprintCallable)
+	float GetWalkSpeed() const { return WalkSpeed; }
+
+	EMovementState GetMovementState() const { return CurrentMovementState; }
+
+	FOnMove	OnMove;
+	FOnWallRun OnWallRun;
+	FOnAirborne OnAirborne;
+	FOnSlide OnSlide;
+	
+	FOnLand OnLand;
+	FOnPrimaryJump OnPrimaryJump;
+	FOnDoubleJump OnDoubleJump;
+	FOnWallJump OnWallJump;
+	FOnMantle OnMantle;
+	FOnDash OnDash;
 
 protected:
 
@@ -281,7 +324,7 @@ protected:
 
 	void InitMovementData();
 
-	bool IsGrounded();
+
 
 	void SetMovementState(EMovementState NewState);
 
