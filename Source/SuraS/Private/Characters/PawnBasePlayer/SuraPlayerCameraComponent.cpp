@@ -180,7 +180,7 @@ void USuraPlayerCameraComponent::OnLand(float ZVelocity)
 	{
 		PlayOneShotCameraShake(MediumLandCameraShake);
 	}
-	else if (ZVelocity < 0.f)
+	else if (ZVelocity <= 0.f)
 	{
 		PlayOneShotCameraShake(LightLandCameraShake);
 	}

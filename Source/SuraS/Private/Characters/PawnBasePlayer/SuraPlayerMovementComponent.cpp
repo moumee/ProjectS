@@ -318,6 +318,13 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 			float T = ElapsedTimeFromDash / DashDecelerationTime;
 			FVector CalculatedVelocity = Velocity.GetSafeNormal() * FMath::InterpEaseIn(DashStartSpeed, DashEndSpeed, T, 2.f);
 			Velocity = CalculatedVelocity;
+
+			if (FVector::DotProduct(InputDirection, Velocity.GetSafeNormal2D()) < 0.f)
+			{
+				bIsDashing = false;
+				ElapsedTimeFromDash = 0.f;
+				Velocity = FVector::ZeroVector;
+			}
 		}
 		else
 		{
@@ -400,6 +407,8 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		bJumpPressed = false;
 		CurrentJumpCount++;
 		Velocity.Z = PrimaryJumpZVelocity;
+
+		if (bIsDashing) bHasDashedInAir = true;
 		
 		OnPrimaryJump.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
@@ -420,7 +429,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 				break;
 			}
 		}
-
+		
 		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
 		Velocity = DashDirection * DashStartSpeed;
 		OnDash.Broadcast(MovementInputVector);
@@ -676,7 +685,18 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 
 	if (!bIsDashing)
 	{
-		float MaxHorizontalSpeed = bWallJumpAirBoost ? WallRunJumpAirSpeed2D : RunSpeed;
+		// float MaxHorizontalSpeed = bWallJumpAirBoost ? WallRunJumpAirSpeed2D : RunSpeed;
+
+		float MaxHorizontalSpeed = RunSpeed;
+		if (bWallJumpAirBoost)
+		{
+			MaxHorizontalSpeed = WallRunJumpAirSpeed2D;
+		}
+		else if (bHasDashedInAir)
+		{
+			MaxHorizontalSpeed = DashEndSpeed;
+		}
+		
 		if (Velocity.Size2D() > MaxHorizontalSpeed)
 		{
 			if (!InputDirection.IsNearlyZero()) 
@@ -753,6 +773,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		
 		bDashPressed = false;
 		bIsDashing = true;
+		bHasDashedInAir = true;
 		
 		for (int32 i = 0; i < DashCooldowns.Num(); i++)
 		{
@@ -1144,6 +1165,7 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 	
 	if (OldState == EMovementState::EMS_Airborne)
 	{
+		bHasDashedInAir = false;
 		bWallJumpAirBoost = false;
 		ElapsedTimeFromSurface = 0.f;
 		CurrentJumpCount = 0;

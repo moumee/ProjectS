@@ -204,7 +204,7 @@ protected:
 	float SlideInitialWindow = 0.65f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Slide")
-	float SlideMaxDuration = 1.25f;
+	float SlideMaxDuration = 1.f;
 
 protected:
 
@@ -239,6 +239,8 @@ protected:
 	int32 AvailableDashCount = 2;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	float ElapsedTimeFromDash = 0.f;
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
+	bool bHasDashedInAir = false;
 
 #pragma endregion Dash
 
