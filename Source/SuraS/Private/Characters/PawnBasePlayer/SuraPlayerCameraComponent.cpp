@@ -190,9 +190,58 @@ void USuraPlayerCameraComponent::OnLand(float ZVelocity)
 
 
 
-void USuraPlayerCameraComponent::OnDash()
+void USuraPlayerCameraComponent::OnDash(FVector2D MovementInput)
 {
-	PlayOneShotCameraShake(DashCameraShake);
+	if (MovementInput.IsNearlyZero(0.001))
+	{
+		PlayOneShotCameraShake(ForwardDashCameraShake);
+	}
+	else if (MovementInput.Y > 0.f)
+	{
+		if (MovementInput.X > 0.f)
+		{
+			PlayOneShotCameraShake(ForwardRightDashCameraShake);
+		}
+		else if (MovementInput.X < 0.f)
+		{
+			PlayOneShotCameraShake(ForwardLeftDashCameraShake);
+		}
+		else
+		{
+			PlayOneShotCameraShake(ForwardDashCameraShake);
+		}
+	}
+	else if (MovementInput.Y < 0.f)
+	{
+		if (MovementInput.X > 0.f)
+		{
+			PlayOneShotCameraShake(BackwardRightDashCameraShake);
+		}
+		else if (MovementInput.X < 0.f)
+		{
+			PlayOneShotCameraShake(BackwardLeftDashCameraShake);
+		}
+		else
+		{
+			PlayOneShotCameraShake(BackwardDashCameraShake);
+		}
+	}
+	else
+	{
+		if (MovementInput.X > 0.f)
+		{
+			PlayOneShotCameraShake(RightDashCameraShake);
+		}
+		else if (MovementInput.X < 0.f)
+		{
+			PlayOneShotCameraShake(LeftDashCameraShake);
+		}
+		else
+		{
+			PlayOneShotCameraShake(ForwardDashCameraShake);
+		}
+	}
+	
 }
 
 void USuraPlayerCameraComponent::InitCameraShakes()
@@ -216,7 +265,14 @@ void USuraPlayerCameraComponent::InitCameraShakes()
 	StrongLandCameraShake = Row->StrongLandCameraShake;
 	WallLandCameraShake = Row->WallLandCameraShake;
 	MantleCameraShake = Row->MantleCameraShake;
-	DashCameraShake = Row->DashCameraShake;
+	ForwardDashCameraShake = Row->ForwardDashCameraShake;
+	ForwardRightDashCameraShake = Row->ForwardRightDashCameraShake;
+	ForwardLeftDashCameraShake = Row->ForwardLeftDashCameraShake;
+	LeftDashCameraShake = Row->LeftDashCameraShake;
+	RightDashCameraShake = Row->RightDashCameraShake;
+	BackwardDashCameraShake = Row->BackwardDashCameraShake;
+	BackwardRightDashCameraShake = Row->BackwardRightDashCameraShake;
+	BackwardLeftDashCameraShake = Row->BackwardLeftDashCameraShake;
 }
 
 

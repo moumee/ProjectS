@@ -408,7 +408,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 	if (bDashPressed && AvailableDashCount > 0)
 	{
-		OnDash.Broadcast();
+		
 		bDashPressed = false;
 		bIsDashing = true;
 		for (int32 i = 0; i < DashCooldowns.Num(); i++)
@@ -423,6 +423,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
 		Velocity = DashDirection * DashStartSpeed;
+		OnDash.Broadcast(MovementInputVector);
 	}
 	
 }
@@ -749,7 +750,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 
 	if (bDashPressed && AvailableDashCount > 0)
 	{
-		OnDash.Broadcast();
+		
 		bDashPressed = false;
 		bIsDashing = true;
 		
@@ -764,7 +765,8 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		}
 
 		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
-		Velocity = DashDirection.GetSafeNormal2D() * DashStartSpeed + Velocity.Z;
+		Velocity = DashDirection.GetSafeNormal2D() * DashStartSpeed + FVector(0, 0, Velocity.Z);
+		OnDash.Broadcast(MovementInputVector);
 	}
 	
 }

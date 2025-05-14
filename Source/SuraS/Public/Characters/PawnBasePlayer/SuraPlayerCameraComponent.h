@@ -74,7 +74,21 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|One Shot")
 	TSubclassOf<UCameraShakeBase> MantleCameraShake;
 	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|One Shot")
-	TSubclassOf<UCameraShakeBase> DashCameraShake;
+	TSubclassOf<UCameraShakeBase> ForwardDashCameraShake;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|One Shot")
+	TSubclassOf<UCameraShakeBase> ForwardRightDashCameraShake;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|One Shot")
+	TSubclassOf<UCameraShakeBase> ForwardLeftDashCameraShake;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|One Shot")
+	TSubclassOf<UCameraShakeBase> RightDashCameraShake;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|One Shot")
+	TSubclassOf<UCameraShakeBase> LeftDashCameraShake;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|One Shot")
+	TSubclassOf<UCameraShakeBase> BackwardDashCameraShake;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|One Shot")
+	TSubclassOf<UCameraShakeBase> BackwardRightDashCameraShake;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|One Shot")
+	TSubclassOf<UCameraShakeBase> BackwardLeftDashCameraShake;
 
 	UPROPERTY(VisibleAnywhere, Category="Camera Shake")
 	TSubclassOf<UCameraShakeBase> CurrentLoopShake;
@@ -95,7 +109,7 @@ protected:
 	void OnDoubleJump();
 	void OnWallJump();
 	void OnMantle();
-	void OnDash();
+	void OnDash(FVector2D MovementInput);
 
 	void InitCameraShakes();
 };
