@@ -20,7 +20,9 @@
 
 #include "ACWeapon.generated.h"
 
-class ASuraCharacterPlayerWeapon;
+//class ASuraCharacterPlayerWeapon;
+class ASuraPawnPlayer;
+
 class USuraWeaponBaseState;
 class USuraWeaponIdleState;
 class USuraWeaponFiringState;
@@ -118,14 +120,14 @@ public:
 
 	AWeapon();
 
-	void InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter);
-	void InitializeCamera(ASuraCharacterPlayerWeapon* NewCharacter);
+	void InitializeWeapon(ASuraPawnPlayer* NewCharacter);
+	void InitializeCamera(ASuraPawnPlayer* NewCharacter);
 	void InitializeUI();
 
 	void LoadWeaponData();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	bool AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter);
+	bool AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void DetachWeaponFromPlayer();
@@ -193,7 +195,7 @@ public:
 
 protected:
 	/** The Character holding this weapon*/
-	ASuraCharacterPlayerWeapon* Character;
+	ASuraPawnPlayer* Character;
 	
 	APlayerController* CharacterController;
 		
@@ -304,10 +306,10 @@ protected:
 	float WeaponSwitchingRate = 1.f;
 	FTimerHandle SwitchingTimer;
 public:
-	void SwitchWeapon(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip);
-	void EndWeaponSwitch(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip);
-	void EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter);
-	void UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter);
+	void SwitchWeapon(ASuraPawnPlayer* TargetCharacter, bool bEquip);
+	void EndWeaponSwitch(ASuraPawnPlayer* TargetCharacter, bool bEquip);
+	void EquipWeapon(ASuraPawnPlayer* TargetCharacter);
+	void UnequipWeapon(ASuraPawnPlayer* TargetCharacter);
 	void SetInputActionBinding();
 	void ResetInputActionBinding();
 #pragma endregion

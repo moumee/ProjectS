@@ -41,7 +41,7 @@ private:
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "WeaponSystem|PlayerReference", Meta = (AllowPrivateAccess = "true"))
-	class ASuraCharacterPlayerWeapon* PlayerOwner;
+	class ASuraPawnPlayer* PlayerOwner;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "WeaponSystem|PlayerReference", Meta = (AllowPrivateAccess = "true"))
 	class APlayerController* PlayerController;

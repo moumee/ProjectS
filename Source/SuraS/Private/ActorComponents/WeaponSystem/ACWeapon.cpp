@@ -1,7 +1,8 @@
 
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 //#include "Characters/Player/SuraCharacterPlayer.h"
-#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
+//#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
+#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 
 #include "ActorComponents/WeaponSystem/SuraProjectile.h"
 #include "ActorComponents/WeaponSystem/WeaponInterface.h"
@@ -173,7 +174,7 @@ AWeapon::AWeapon()
 
 }
 
-void AWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
+void AWeapon::InitializeWeapon(ASuraPawnPlayer* NewCharacter)
 {
 	Character = NewCharacter;
 	if (Character)
@@ -201,13 +202,13 @@ void AWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
 	SetAimSocketRelativeTransform();
 }
 
-void AWeapon::InitializeCamera(ASuraCharacterPlayerWeapon* NewCharacter)
+void AWeapon::InitializeCamera(ASuraPawnPlayer* NewCharacter)
 {
 	if (NewCharacter)
 	{
-		CamSetting_Default.CameraRelativeLocation = NewCharacter->GetCamera()->GetRelativeLocation();
-		CamSetting_Default.CameraRelativeRotation = NewCharacter->GetCamera()->GetRelativeRotation();
-		CamSetting_Default.FOV = NewCharacter->GetCamera()->FieldOfView;
+		CamSetting_Default.CameraRelativeLocation = NewCharacter->GetCameraComponent()->GetRelativeLocation();
+		CamSetting_Default.CameraRelativeRotation = NewCharacter->GetCameraComponent()->GetRelativeRotation();
+		CamSetting_Default.FOV = NewCharacter->GetCameraComponent()->FieldOfView;
 	}
 }
 
@@ -432,7 +433,7 @@ void AWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-bool AWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter)
+bool AWeapon::AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter)
 {
 	Character = TargetCharacter;
 
@@ -466,9 +467,9 @@ bool AWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter)
 	//TODO: 더 좋은 방법을 생각해 봐야함
 	//RightHandToAimSocketOffset = this->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetMesh()->GetSocketLocation(FName("Gun"));
 	RightHandToAimSocketOffset = WeaponMesh->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetArmMesh()->GetBoneLocation(FName(TEXT("hand_r")));
-	if (Character->GetWeaponSystem() && Character->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
+	if (Character->GetWeaponSystemComponent() && Character->GetWeaponSystemComponent()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 	{
-		Character->GetWeaponSystem()->SetRightHandToAimSocketOffset(RightHandToAimSocketOffset);
+		Character->GetWeaponSystemComponent()->SetRightHandToAimSocketOffset(RightHandToAimSocketOffset);
 	}
 
 	// Set AimSocketTransform
@@ -517,14 +518,14 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 			}
 		}
 
-		FVector LineTraceStartLocation = Character->GetCamera()->GetComponentLocation();
-		FVector LineTraceDirection = Character->GetCamera()->GetForwardVector();
+		FVector LineTraceStartLocation = Character->GetCameraComponent()->GetComponentLocation();
+		FVector LineTraceDirection = Character->GetCameraComponent()->GetForwardVector();
 
 		if (bIsZoomIn)
 		{
 			if (ZoomSpread.bEnableProjectileSpread)
 			{
-				LineTraceDirection = GetRandomSpreadVector(Character->GetCamera()->GetForwardVector());
+				LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
 			}
 
 			if (ZoomSpread.bEnableProjectileSpread || ZoomSpread.bEnableAimUISpread)
@@ -536,7 +537,7 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 		{
 			if (DefaultSpread.bEnableProjectileSpread)
 			{
-				LineTraceDirection = GetRandomSpreadVector(Character->GetCamera()->GetForwardVector());
+				LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
 			}
 
 			if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
@@ -649,8 +650,8 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 				}
 			}
 
-			FVector LineTraceStartLocation = Character->GetCamera()->GetComponentLocation();
-			FVector LineTraceDirection = Character->GetCamera()->GetForwardVector();
+			FVector LineTraceStartLocation = Character->GetCameraComponent()->GetComponentLocation();
+			FVector LineTraceDirection = Character->GetCameraComponent()->GetForwardVector();
 			FVector LineTraceHitLocation;
 
 			if (PerformSphereTrace(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, SphereTraceRadius, LineTraceHitLocation))
@@ -752,9 +753,9 @@ void AWeapon::ZoomIn()
 	bIsZoomIn = true;
 
 	//TODO: 아래에서 런타임 에러 발생했음. 수정해야함
-	if (Character->GetWeaponSystem() && Character->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
+	if (Character->GetWeaponSystemComponent() && Character->GetWeaponSystemComponent()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 	{
-		Character->GetWeaponSystem()->ZoomIn(true);
+		Character->GetWeaponSystemComponent()->ZoomIn(true);
 		StartCameraSettingChange(&CamSetting_ZoomIn);
 	}
 	ActivateCrosshairWidget(false);
@@ -764,9 +765,9 @@ void AWeapon::ZoomOut()
 {
 	bIsZoomIn = false;
 
-	if (Character->GetWeaponSystem() && Character->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
+	if (Character->GetWeaponSystemComponent() && Character->GetWeaponSystemComponent()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 	{
-		Character->GetWeaponSystem()->ZoomIn(false);
+		Character->GetWeaponSystemComponent()->ZoomIn(false);
 		StartCameraSettingChange(&CamSetting_Default);
 	}
 	ActivateCrosshairWidget(true);
@@ -1046,7 +1047,7 @@ FTransform AWeapon::GetAimSocketRelativeTransform()
 }
 
 #pragma region Equip/Unequip
-void AWeapon::SwitchWeapon(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip)
+void AWeapon::SwitchWeapon(ASuraPawnPlayer* TargetCharacter, bool bEquip)
 {
 	//TODO: Reloading 중이였다면, CancelReload 해줘야함
 	if (CurrentState == ReloadingState)
@@ -1068,7 +1069,7 @@ void AWeapon::SwitchWeapon(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEq
 		StartAnimation(AM_Unequip_Character, nullptr, WeaponSwitchingRate, WeaponSwitchingRate);
 	}
 }
-void AWeapon::EndWeaponSwitch(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip)
+void AWeapon::EndWeaponSwitch(ASuraPawnPlayer* TargetCharacter, bool bEquip)
 {
 	if (bEquip)
 	{
@@ -1078,14 +1079,14 @@ void AWeapon::EndWeaponSwitch(ASuraCharacterPlayerWeapon* TargetCharacter, bool 
 	{
 		UnequipWeapon(TargetCharacter);
 		//TODO: 이걸 굳이 Interface로 처리했어야 했나? 다른 방법이 더 좋을 것 같음
-		if (TargetCharacter && TargetCharacter->GetWeaponSystem()
-			&& TargetCharacter->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
+		if (TargetCharacter && TargetCharacter->GetWeaponSystemComponent()
+			&& TargetCharacter->GetWeaponSystemComponent()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 		{
-			Cast<IWeaponInterface>(TargetCharacter->GetWeaponSystem())->SwitchToOtherWeapon();
+			Cast<IWeaponInterface>(TargetCharacter->GetWeaponSystemComponent())->SwitchToOtherWeapon();
 		}
 	}
 }
-void AWeapon::EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
+void AWeapon::EquipWeapon(ASuraPawnPlayer* TargetCharacter)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Equip Weapon!!!"));
 
@@ -1094,7 +1095,7 @@ void AWeapon::EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 	ChangeState(IdleState);
 }
 
-void AWeapon::UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
+void AWeapon::UnequipWeapon(ASuraPawnPlayer* TargetCharacter)
 {
 	ResetInputActionBinding();
 	DetachWeaponFromPlayer();
@@ -2337,7 +2338,7 @@ void AWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSe
 {
 	if (Character)
 	{
-		UCameraComponent* Camera = Character->GetCamera();
+		UCameraComponent* Camera = Character->GetCameraComponent();
 		if (Camera)
 		{
 			FRotator NewCamRotation = FMath::RInterpTo(Camera->GetRelativeRotation(), CamSetting->CameraRelativeRotation, DeltaTime, CamSetting->CameraRelativeRotation_InterpSpeed_ToThisState);

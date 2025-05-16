@@ -3,7 +3,9 @@
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 
-#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h" //TODO: Player Class �����ϱ�
+//#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h" //TODO: Player Class �����ϱ�
+#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
+
 #include "ActorComponents/WeaponSystem/SuraWeaponPickUp.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponName.h"
@@ -50,7 +52,7 @@ void UWeaponSystemComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 #pragma region PlayerReference
 void UWeaponSystemComponent::InitializePlayerReference()
 {
-	ASuraCharacterPlayerWeapon* NewPlayerOwner = Cast<ASuraCharacterPlayerWeapon>(GetOwner());
+	ASuraPawnPlayer* NewPlayerOwner = Cast<ASuraPawnPlayer>(GetOwner());
 	if (IsValid(NewPlayerOwner))
 	{
 		PlayerOwner = NewPlayerOwner;
@@ -361,7 +363,7 @@ FVector UWeaponSystemComponent::CalculateTargetRightHandPosition()
 {
 	const FVector AimLocation = CalculateScreenCenterWorldPositionAndDirection(ScreenCenterWorldLocation, ScreenCenterWorldDirection);
 
-	const FRotator MeshRotation = PlayerOwner->GetMesh()->GetComponentRotation();
+	const FRotator MeshRotation = PlayerOwner->GetArmMesh()->GetComponentRotation();
 
 	const FVector TargetRightHandLocation = AimLocation - MeshRotation.RotateVector(RightHandToAimSocketOffset);
 

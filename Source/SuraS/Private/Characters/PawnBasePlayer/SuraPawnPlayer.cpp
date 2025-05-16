@@ -10,6 +10,8 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
+
 ASuraPawnPlayer::ASuraPawnPlayer()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -39,6 +41,10 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
+	// <WeaponSystem>
+	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
+	CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+	ArmMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ASuraPawnPlayer::BeginPlay()
@@ -51,6 +57,25 @@ void ASuraPawnPlayer::BeginPlay()
 UCapsuleComponent* ASuraPawnPlayer::GetCapsuleComponent()
 {
 	return CapsuleComponent;
+}
+
+bool ASuraPawnPlayer::HasWeapon() const
+{
+	if (WeaponSystem)
+	{
+		return WeaponSystem->GetCurrentWeapon() != nullptr;
+	}
+	return false;
+}
+
+void ASuraPawnPlayer::UpdateLookInputVector2D(const FInputActionValue& InputValue)
+{
+	PlayerLookInputVector2D = InputValue.Get<FVector2D>();
+}
+
+void ASuraPawnPlayer::SetLookInputVector2DZero()
+{
+	PlayerLookInputVector2D = FVector2D::ZeroVector;
 }
 
 
@@ -75,8 +100,11 @@ void ASuraPawnPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopDashInput);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartCrouchInput);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopCrouchInput);
-	}
 
+		// <WeaponSystem>
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::UpdateLookInputVector2D);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::None, this, &ASuraPawnPlayer::SetLookInputVector2DZero);
+	}
 }
 
 void ASuraPawnPlayer::PossessedBy(AController* NewController)
