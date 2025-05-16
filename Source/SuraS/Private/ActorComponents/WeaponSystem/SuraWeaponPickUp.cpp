@@ -6,7 +6,8 @@
 #include "ActorComponents/WeaponSystem/WeaponName.h"
 
 #include "Characters/SuraCharacterBase.h"
-#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
+//#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
+#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 
 
 // Sets default values
@@ -52,7 +53,7 @@ void ASuraWeaponPickUp::Tick(float DeltaTime)
 
 }
 
-void ASuraWeaponPickUp::AttachToCharacter(ASuraCharacterPlayerWeapon* Character)
+void ASuraWeaponPickUp::AttachToCharacter(ASuraPawnPlayer* Character)
 {
 	//Weapon->AttachWeaponToPlayer(Character);
 
@@ -60,7 +61,7 @@ void ASuraWeaponPickUp::AttachToCharacter(ASuraCharacterPlayerWeapon* Character)
 }
 
 
-AWeapon* ASuraWeaponPickUp::SpawnWeapon(ASuraCharacterPlayerWeapon* Character)
+AWeapon* ASuraWeaponPickUp::SpawnWeapon(ASuraPawnPlayer* Character)
 {
 	AWeapon* NewWeapon = nullptr;
 	

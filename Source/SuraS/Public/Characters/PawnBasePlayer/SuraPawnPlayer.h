@@ -10,6 +10,7 @@
 class USuraPlayerCameraComponent;
 class USpringArmComponent;
 class USuraPlayerMovementComponent;
+class UWeaponSystemComponent;
 class UCameraComponent;
 class UCapsuleComponent;
 struct FInputActionValue;
@@ -36,6 +37,15 @@ public:
 
 	UCameraComponent* GetCameraComponent() const { return Camera; };
 
+	UWeaponSystemComponent* GetWeaponSystemComponent() const { return WeaponSystem; }  // <WeaponSystem>
+
+	USkeletalMeshComponent* GetArmMesh() { return ArmMesh; }  // <WeaponSystem>
+
+	bool HasWeapon() const;  // <WeaponSystem>s
+
+	void UpdateLookInputVector2D(const FInputActionValue& InputValue);  // <WeaponSystem>
+	void SetLookInputVector2DZero();  // <WeaponSystem>
+	FVector2D GetPlayerLookInputVector() const { return PlayerLookInputVector2D; } // <WeaponSystem>
 	USuraPlayerMovementComponent* GetPlayerMovementComponent() { return MovementComponent; };
 
 protected:
@@ -52,6 +62,8 @@ protected:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<USuraPlayerMovementComponent> MovementComponent;
 
+	UPROPERTY(EditAnywhere, Category = "WeaponSystem")
+	TObjectPtr<UWeaponSystemComponent> WeaponSystem;  // <WeaponSystem>
 	// This actor component is for handling camera shakes and state based movement
 	// IT IS NOT THE CAMERA!!
 	UPROPERTY(EditAnywhere)
@@ -75,6 +87,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	TObjectPtr<UInputAction> CrouchAction;
 	
+
+	FVector2D PlayerLookInputVector2D; // <WeaponSystem>
 
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);

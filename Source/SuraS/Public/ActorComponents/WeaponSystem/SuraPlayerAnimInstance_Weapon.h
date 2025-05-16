@@ -9,7 +9,8 @@
 #include "SuraPlayerAnimInstance_Weapon.generated.h"
 
 class USuraPlayerBaseState;
-class ASuraCharacterPlayerWeapon;
+// class ASuraCharacterPlayerWeapon;
+class ASuraPawnPlayer;
 class AWeapon;
 /**
  * 
@@ -26,7 +27,7 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaTime) override;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Player")
-	ASuraCharacterPlayerWeapon* Character;
+	ASuraPawnPlayer* Character;
 
 
 	//-------------------------------------------------
