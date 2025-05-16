@@ -36,6 +36,19 @@ enum class EWallRunSide : uint8
 	EWRS_Right,
 };
 
+DECLARE_MULTICAST_DELEGATE(FOnMove);
+DECLARE_MULTICAST_DELEGATE(FOnWallRun);
+DECLARE_MULTICAST_DELEGATE(FOnAirborne);
+DECLARE_MULTICAST_DELEGATE(FOnSlide);
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnLand, float);
+DECLARE_MULTICAST_DELEGATE(FOnPrimaryJump);
+DECLARE_MULTICAST_DELEGATE(FOnDoubleJump);
+DECLARE_MULTICAST_DELEGATE(FOnWallJump);
+DECLARE_MULTICAST_DELEGATE(FOnMantle);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnDash, FVector2D);
+
+
 
 UCLASS()
 class SURAS_API USuraPlayerMovementComponent : public UPawnMovementComponent
@@ -64,7 +77,40 @@ public:
 		DefaultCapsuleHalfHeight = HalfHeight;
 	}
 
+	FVector2D GetMovementInputVector() const { return MovementInputVector;};
+
+	UFUNCTION(BlueprintCallable)
+	bool IsGrounded();
+	
+	virtual bool IsCrouching() const override { return bIsCrouching; }
+
+	UFUNCTION(BlueprintCallable)
+	bool IsDashing() const { return bIsDashing; }
+
+	UFUNCTION(BlueprintCallable)
+	float GetRunSpeed() const { return RunSpeed; }
+
+	UFUNCTION(BlueprintCallable)
+	float GetWalkSpeed() const { return WalkSpeed; }
+
+	EMovementState GetMovementState() const { return CurrentMovementState; }
+
+	FOnMove	OnMove;
+	FOnWallRun OnWallRun;
+	FOnAirborne OnAirborne;
+	FOnSlide OnSlide;
+	
+	FOnLand OnLand;
+	FOnPrimaryJump OnPrimaryJump;
+	FOnDoubleJump OnDoubleJump;
+	FOnWallJump OnWallJump;
+	FOnMantle OnMantle;
+	FOnDash OnDash;
+
 protected:
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	TObjectPtr<UDataTable> MovementDataTable;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Capsule")
 	float DefaultCapsuleRadius;
@@ -103,16 +149,26 @@ protected:
 	float CrouchHeightScale = 0.5f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Jump")
-	float JumpHeight = 200.f;
+	float PrimaryJumpHeight = 200.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Jump")
+	float DoubleJumpHeight = 300.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|Jump")
+	float WallJumpHeight = 200.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float Acceleration = 8000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float Deceleration = 8000.f;
+
+	// Interp speed when over MaxHorizontalSpeed in air
+	UPROPERTY(EditAnywhere, Category = "Movement|Air")
+	float AirDirectionInterpSpeed = 10.f;
 	
 	UPROPERTY(EditAnywhere, Category = "Movement|Air")
-	float AirAcceleration = 2000.f;
+	float AirAcceleration = 5000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Air")
 	float AirDeceleration = 2000.f;
@@ -148,7 +204,7 @@ protected:
 	float SlideInitialWindow = 0.65f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Slide")
-	float SlideMaxDuration = 1.25f;
+	float SlideMaxDuration = 1.f;
 
 protected:
 
@@ -183,12 +239,16 @@ protected:
 	int32 AvailableDashCount = 2;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	float ElapsedTimeFromDash = 0.f;
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
+	bool bHasDashedInAir = false;
 
 #pragma endregion Dash
 
 #pragma region Jump
-	
-	float JumpZVelocity = 0.f;
+
+	float WallJumpZVelocity = 0.f;
+	float DoubleJumpZVelocity = 0.f;
+	float PrimaryJumpZVelocity = 0.f;
 	float JumpBuffer = 0.1f;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
 	float ElapsedTimeFromSurface = 0.f;
@@ -264,7 +324,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Crouch")
 	bool bCrouchPressed = false;
 
-	bool IsGrounded();
+	void InitMovementData();
+
+
 
 	void SetMovementState(EMovementState NewState);
 

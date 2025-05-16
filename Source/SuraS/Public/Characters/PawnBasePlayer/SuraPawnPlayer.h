@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "SuraPawnPlayer.generated.h"
 
+class USuraPlayerCameraComponent;
 class USpringArmComponent;
 class USuraPlayerMovementComponent;
 class UWeaponSystemComponent;
@@ -45,6 +46,7 @@ public:
 	void UpdateLookInputVector2D(const FInputActionValue& InputValue);  // <WeaponSystem>
 	void SetLookInputVector2DZero();  // <WeaponSystem>
 	FVector2D GetPlayerLookInputVector() const { return PlayerLookInputVector2D; } // <WeaponSystem>
+	USuraPlayerMovementComponent* GetPlayerMovementComponent() { return MovementComponent; };
 
 protected:
 
@@ -62,6 +64,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "WeaponSystem")
 	TObjectPtr<UWeaponSystemComponent> WeaponSystem;  // <WeaponSystem>
+	// This actor component is for handling camera shakes and state based movement
+	// IT IS NOT THE CAMERA!!
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<USuraPlayerCameraComponent> CameraMovementComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
@@ -80,6 +86,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	TObjectPtr<UInputAction> CrouchAction;
+	
 
 	FVector2D PlayerLookInputVector2D; // <WeaponSystem>
 
