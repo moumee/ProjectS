@@ -205,10 +205,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 	if (!IsGrounded())
 	{
-		if (CurrentJumpCount > 0)
-		{
-			CurrentJumpCount--;
-		}
+		CurrentJumpCount++;
 		OnAirborne.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
@@ -417,7 +414,6 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 	if (bDashPressed && AvailableDashCount > 0)
 	{
-		
 		bDashPressed = false;
 		bIsDashing = true;
 		for (int32 i = 0; i < DashCooldowns.Num(); i++)
@@ -770,7 +766,6 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 
 	if (bDashPressed && AvailableDashCount > 0)
 	{
-		
 		bDashPressed = false;
 		bIsDashing = true;
 		bHasDashedInAir = true;
@@ -848,6 +843,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		WallRunElapsedTime = 0.f;
 		Velocity += CurrentWallHit.ImpactNormal * 100.f;
 		OnAirborne.Broadcast();
+		CurrentJumpCount++;
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -883,6 +879,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	    {
 	    	Velocity += CurrentWallHit.ImpactNormal * 100.f;
 	    	OnAirborne.Broadcast();
+	    	CurrentJumpCount++;
 	        SetMovementState(EMovementState::EMS_Airborne);
 	        return;
 	    }
@@ -894,6 +891,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		{
 			Velocity += CurrentWallHit.ImpactNormal * 100.f;
 			OnAirborne.Broadcast();
+			CurrentJumpCount++;
 			SetMovementState(EMovementState::EMS_Airborne);
 			return;
 		}
@@ -923,6 +921,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		{
 			Velocity += CurrentWallHit.ImpactNormal * 100.f;
 			OnAirborne.Broadcast();
+			CurrentJumpCount++;
 			SetMovementState(EMovementState::EMS_Airborne);
 			return;
 		}
