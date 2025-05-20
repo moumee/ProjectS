@@ -1,13 +1,45 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Curves/CurveVector.h"
 #include "Engine/DataTable.h"
 #include "PlayerCameraMovementRow.generated.h"
+
+USTRUCT(BlueprintType)
+struct FGroundMovementCameraData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ToolTip="목표 시야각"))
+	float TargetFOV;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ToolTip="시야각 전환 속도"))
+	float FOVInterpSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ToolTip="목표 초점 거리"))
+	float TargetFocalDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ToolTip="초점 전환 속도"))
+	float FocalDistanceInterpSpeed;
+
+};
 
 USTRUCT(BlueprintType)
 struct SURAS_API FPlayerCameraMovementRow : public FTableRowBase
 {
 	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
+	FGroundMovementCameraData IdleCameraData;
+
+	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
+	FGroundMovementCameraData WalkHorizontalCameraData;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
+	FGroundMovementCameraData WalkBackwardCameraData;
+
+	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
+	FGroundMovementCameraData RunCameraData;
 
 	// Loops
 	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|Loop")
@@ -61,6 +93,7 @@ struct SURAS_API FPlayerCameraMovementRow : public FTableRowBase
 	TSubclassOf<UCameraShakeBase> BackwardRightDashCameraShake;
 	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|One Shot")
 	TSubclassOf<UCameraShakeBase> BackwardLeftDashCameraShake;
+	
 
 	
 	

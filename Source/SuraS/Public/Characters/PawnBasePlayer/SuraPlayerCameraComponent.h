@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PlayerCameraMovementRow.h"
 #include "Components/ActorComponent.h"
 #include "SuraPlayerCameraComponent.generated.h"
 
@@ -36,6 +37,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<APlayerController> PlayerController;
+
+	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
+	FGroundMovementCameraData IdleCameraData;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
+	FGroundMovementCameraData WalkHorizontalCameraData;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
+	FGroundMovementCameraData WalkBackwardCameraData;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
+	FGroundMovementCameraData RunCameraData;
 	
 	// Loop cam shakes
 	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|Loop")
@@ -96,7 +106,7 @@ protected:
 
 	void ChangeCameraLoopShake(const TSubclassOf<UCameraShakeBase>& InShake);
 	void PlayOneShotCameraShake(const TSubclassOf<UCameraShakeBase>& InShake);
-	void TickMoveStateLoopShake();
+	void TickMoveStateLoopShake(float DeltaTime);
 
 	void OnAirborne();
 	void OnMove();

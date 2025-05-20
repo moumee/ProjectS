@@ -2,6 +2,8 @@
 
 
 #include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
+
+#include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/PlayerCameraMovementRow.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
@@ -64,7 +66,7 @@ void USuraPlayerCameraComponent::PlayOneShotCameraShake(const TSubclassOf<UCamer
 }
 
 
-void USuraPlayerCameraComponent::TickMoveStateLoopShake()
+void USuraPlayerCameraComponent::TickMoveStateLoopShake(float DeltaTime)
 {
 	if (bIsMoveState && MovementComponent->GetMovementState() == EMovementState::EMS_Move)
 	{
@@ -93,6 +95,11 @@ void USuraPlayerCameraComponent::TickMoveStateLoopShake()
 				{
 					ChangeCameraLoopShake(IdleCameraShake);
 				}
+				
+				PlayerCamera->SetFieldOfView(FMath::FInterpTo(PlayerCamera->FieldOfView, IdleCameraData.TargetFOV, DeltaTime, IdleCameraData.FOVInterpSpeed));
+				PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance =
+					FMath::FInterpTo(PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance,
+						IdleCameraData.TargetFocalDistance, DeltaTime, IdleCameraData.FocalDistanceInterpSpeed);
 			}
 			else if (MovementComponent->GetMovementInputVector().Y > 0.f)
 			{
@@ -100,12 +107,40 @@ void USuraPlayerCameraComponent::TickMoveStateLoopShake()
 				{
 					ChangeCameraLoopShake(RunCameraShake);
 				}
+
+				PlayerCamera->SetFieldOfView(FMath::FInterpTo(PlayerCamera->FieldOfView, RunCameraData.TargetFOV, DeltaTime, RunCameraData.FOVInterpSpeed));
+				PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance =
+					FMath::FInterpTo(PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance,
+						RunCameraData.TargetFocalDistance, DeltaTime, RunCameraData.FocalDistanceInterpSpeed);
 			}
 			else
 			{
 				if (CurrentLoopShake != WallRunCameraShake)
 				{
 					ChangeCameraLoopShake(WalkCameraShake);
+
+				}
+
+				if (MovementComponent->GetMovementInputVector().Y < 0.f)
+				{
+					PlayerCamera->SetFieldOfView(FMath::FInterpTo(PlayerCamera->FieldOfView, WalkBackwardCameraData.TargetFOV, DeltaTime, WalkBackwardCameraData.FOVInterpSpeed));
+					PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance =
+						FMath::FInterpTo(PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance,
+							WalkBackwardCameraData.TargetFocalDistance, DeltaTime, WalkBackwardCameraData.FocalDistanceInterpSpeed);
+				}
+				else if (MovementComponent->GetMovementInputVector().IsZero())
+				{
+					PlayerCamera->SetFieldOfView(FMath::FInterpTo(PlayerCamera->FieldOfView, IdleCameraData.TargetFOV, DeltaTime, IdleCameraData.FOVInterpSpeed));
+					PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance =
+						FMath::FInterpTo(PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance,
+							IdleCameraData.TargetFocalDistance, DeltaTime, IdleCameraData.FocalDistanceInterpSpeed);
+				}
+				else
+				{
+					PlayerCamera->SetFieldOfView(FMath::FInterpTo(PlayerCamera->FieldOfView, WalkHorizontalCameraData.TargetFOV, DeltaTime, WalkHorizontalCameraData.FOVInterpSpeed));
+					PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance =
+						FMath::FInterpTo(PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance,
+							WalkHorizontalCameraData.TargetFocalDistance, DeltaTime, WalkHorizontalCameraData.FocalDistanceInterpSpeed);
 				}
 			}
 		}
@@ -118,7 +153,7 @@ void USuraPlayerCameraComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 
-	TickMoveStateLoopShake();
+	TickMoveStateLoopShake(DeltaTime);
 	
 	
 }
@@ -249,6 +284,10 @@ void USuraPlayerCameraComponent::InitCameraShakes()
 	FPlayerCameraMovementRow* Row = CameraDataTable->FindRow<FPlayerCameraMovementRow>("Player", "");
 	if (!Row) return;
 
+	IdleCameraData = Row->IdleCameraData;
+	WalkHorizontalCameraData = Row->WalkHorizontalCameraData;
+	WalkBackwardCameraData = Row->WalkBackwardCameraData;
+	RunCameraData = Row->RunCameraData;
 	IdleCameraShake = Row->IdleCameraShake;
 	WalkCameraShake = Row->WalkCameraShake;
 	RunCameraShake = Row->RunCameraShake;
