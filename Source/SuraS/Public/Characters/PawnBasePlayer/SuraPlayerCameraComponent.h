@@ -39,13 +39,21 @@ protected:
 	TObjectPtr<APlayerController> PlayerController;
 
 	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
-	FGroundMovementCameraData IdleCameraData;
+	FMovementCameraData IdleCameraData;
 	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
-	FGroundMovementCameraData WalkHorizontalCameraData;
+	FMovementCameraData WalkHorizontalCameraData;
 	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
-	FGroundMovementCameraData WalkBackwardCameraData;
+	FMovementCameraData WalkBackwardCameraData;
 	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
-	FGroundMovementCameraData RunCameraData;
+	FMovementCameraData RunCameraData;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
+	FMovementCameraData WallRunCameraData;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
+	FMovementCameraData SlideCameraData;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
+	FMovementCameraData FallCameraData;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Transition")
+	FMovementCameraData CrouchCameraData;
 	
 	// Loop cam shakes
 	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|Loop")
@@ -106,7 +114,12 @@ protected:
 
 	void ChangeCameraLoopShake(const TSubclassOf<UCameraShakeBase>& InShake);
 	void PlayOneShotCameraShake(const TSubclassOf<UCameraShakeBase>& InShake);
-	void TickMoveStateLoopShake(float DeltaTime);
+	void TickMoveStateCamera(float DeltaTime);
+	void TickWallRunStateCamera(float DeltaTime);
+	void TickSlideStateCamera(float DeltaTime);
+	void TickAirborneStateCamera(float DeltaTime);
+
+	void InterpCameraData(const FMovementCameraData& InData, float DeltaTime);
 
 	void OnAirborne();
 	void OnMove();

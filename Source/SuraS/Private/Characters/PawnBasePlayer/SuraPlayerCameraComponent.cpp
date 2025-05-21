@@ -66,9 +66,9 @@ void USuraPlayerCameraComponent::PlayOneShotCameraShake(const TSubclassOf<UCamer
 }
 
 
-void USuraPlayerCameraComponent::TickMoveStateLoopShake(float DeltaTime)
+void USuraPlayerCameraComponent::TickMoveStateCamera(float DeltaTime)
 {
-	if (bIsMoveState && MovementComponent->GetMovementState() == EMovementState::EMS_Move)
+	if (MovementComponent->GetMovementState() == EMovementState::EMS_Move)
 	{
 		if (MovementComponent->IsCrouching())
 		{
@@ -86,6 +86,8 @@ void USuraPlayerCameraComponent::TickMoveStateLoopShake(float DeltaTime)
 					ChangeCameraLoopShake(CrouchMoveCameraShake);
 				}
 			}
+
+			InterpCameraData(CrouchCameraData, DeltaTime);
 		}
 		else
 		{
@@ -96,10 +98,7 @@ void USuraPlayerCameraComponent::TickMoveStateLoopShake(float DeltaTime)
 					ChangeCameraLoopShake(IdleCameraShake);
 				}
 				
-				PlayerCamera->SetFieldOfView(FMath::FInterpTo(PlayerCamera->FieldOfView, IdleCameraData.TargetFOV, DeltaTime, IdleCameraData.FOVInterpSpeed));
-				PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance =
-					FMath::FInterpTo(PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance,
-						IdleCameraData.TargetFocalDistance, DeltaTime, IdleCameraData.FocalDistanceInterpSpeed);
+				InterpCameraData(IdleCameraData, DeltaTime);
 			}
 			else if (MovementComponent->GetMovementInputVector().Y > 0.f)
 			{
@@ -108,10 +107,7 @@ void USuraPlayerCameraComponent::TickMoveStateLoopShake(float DeltaTime)
 					ChangeCameraLoopShake(RunCameraShake);
 				}
 
-				PlayerCamera->SetFieldOfView(FMath::FInterpTo(PlayerCamera->FieldOfView, RunCameraData.TargetFOV, DeltaTime, RunCameraData.FOVInterpSpeed));
-				PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance =
-					FMath::FInterpTo(PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance,
-						RunCameraData.TargetFocalDistance, DeltaTime, RunCameraData.FocalDistanceInterpSpeed);
+				InterpCameraData(RunCameraData, DeltaTime);
 			}
 			else
 			{
@@ -123,28 +119,62 @@ void USuraPlayerCameraComponent::TickMoveStateLoopShake(float DeltaTime)
 
 				if (MovementComponent->GetMovementInputVector().Y < 0.f)
 				{
-					PlayerCamera->SetFieldOfView(FMath::FInterpTo(PlayerCamera->FieldOfView, WalkBackwardCameraData.TargetFOV, DeltaTime, WalkBackwardCameraData.FOVInterpSpeed));
-					PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance =
-						FMath::FInterpTo(PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance,
-							WalkBackwardCameraData.TargetFocalDistance, DeltaTime, WalkBackwardCameraData.FocalDistanceInterpSpeed);
+					InterpCameraData(WalkBackwardCameraData, DeltaTime);
 				}
 				else if (MovementComponent->GetMovementInputVector().IsZero())
 				{
-					PlayerCamera->SetFieldOfView(FMath::FInterpTo(PlayerCamera->FieldOfView, IdleCameraData.TargetFOV, DeltaTime, IdleCameraData.FOVInterpSpeed));
-					PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance =
-						FMath::FInterpTo(PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance,
-							IdleCameraData.TargetFocalDistance, DeltaTime, IdleCameraData.FocalDistanceInterpSpeed);
+					InterpCameraData(IdleCameraData, DeltaTime);
 				}
 				else
 				{
-					PlayerCamera->SetFieldOfView(FMath::FInterpTo(PlayerCamera->FieldOfView, WalkHorizontalCameraData.TargetFOV, DeltaTime, WalkHorizontalCameraData.FOVInterpSpeed));
-					PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance =
-						FMath::FInterpTo(PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance,
-							WalkHorizontalCameraData.TargetFocalDistance, DeltaTime, WalkHorizontalCameraData.FocalDistanceInterpSpeed);
+					InterpCameraData(WalkHorizontalCameraData, DeltaTime);
 				}
 			}
 		}
 	}
+}
+
+void USuraPlayerCameraComponent::TickWallRunStateCamera(float DeltaTime)
+{
+	if (MovementComponent->GetMovementState() == EMovementState::EMS_WallRun)
+	{
+		InterpCameraData(WallRunCameraData, DeltaTime);
+	}
+}
+
+void USuraPlayerCameraComponent::TickSlideStateCamera(float DeltaTime)
+{
+	if (MovementComponent->GetMovementState() == EMovementState::EMS_Slide)
+	{
+		InterpCameraData(SlideCameraData, DeltaTime);
+	}
+}
+
+void USuraPlayerCameraComponent::TickAirborneStateCamera(float DeltaTime)
+{
+	if (MovementComponent->GetMovementState() == EMovementState::EMS_Airborne)
+	{
+		InterpCameraData(FallCameraData, DeltaTime);
+	}
+}
+
+void USuraPlayerCameraComponent::InterpCameraData(const FMovementCameraData& InData, float DeltaTime)
+{
+	PlayerCamera->SetFieldOfView(FMath::FInterpTo(PlayerCamera->FieldOfView, InData.TargetFOV, DeltaTime, InData.FOVInterpSpeed));
+	PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance =
+		FMath::FInterpTo(PlayerCamera->PostProcessSettings.DepthOfFieldFocalDistance,
+			InData.TargetFocalDistance, DeltaTime, InData.FocalDistanceInterpSpeed);
+	PlayerCamera->SetRelativeLocation(FMath::VInterpTo(PlayerCamera->GetRelativeLocation(),
+		InData.TargetCameraPosition, DeltaTime, InData.CameraPositionInterpSpeed));
+
+	if (MovementComponent->GetMovementState() != EMovementState::EMS_WallRun)
+	{
+		FRotator CurrentControlRot = PlayerController->GetControlRotation();
+		FRotator NewControlRot = FMath::RInterpTo(CurrentControlRot, FRotator(CurrentControlRot.Pitch, CurrentControlRot.Yaw, InData.TargetCameraRoll),
+			DeltaTime, InData.CameraRotationInterpSpeed);
+		PlayerController->SetControlRotation(NewControlRot);
+	}
+	
 }
 
 // Called every frame
@@ -153,39 +183,38 @@ void USuraPlayerCameraComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 
-	TickMoveStateLoopShake(DeltaTime);
+	TickMoveStateCamera(DeltaTime);
+	TickWallRunStateCamera(DeltaTime);
+	TickSlideStateCamera(DeltaTime);
+	TickAirborneStateCamera(DeltaTime);
 	
 	
 }
 
 void USuraPlayerCameraComponent::OnAirborne()
 {
-	bIsMoveState = false;
 	ChangeCameraLoopShake(AirborneCameraShake);
 	
 }
 
 void USuraPlayerCameraComponent::OnMove()
 {
-	bIsMoveState = true;
+	
 }
 
 void USuraPlayerCameraComponent::OnWallRun()
 {
-	bIsMoveState = false;
 	PlayOneShotCameraShake(WallLandCameraShake);
 	ChangeCameraLoopShake(WallRunCameraShake);
 }
 
 void USuraPlayerCameraComponent::OnSlide()
 {
-	bIsMoveState = false;
 	ChangeCameraLoopShake(SlideCameraShake);
 }
 
 void USuraPlayerCameraComponent::OnMantle()
 {
-	bIsMoveState = false;
 	PlayOneShotCameraShake(MantleCameraShake);
 }
 
@@ -288,6 +317,10 @@ void USuraPlayerCameraComponent::InitCameraShakes()
 	WalkHorizontalCameraData = Row->WalkHorizontalCameraData;
 	WalkBackwardCameraData = Row->WalkBackwardCameraData;
 	RunCameraData = Row->RunCameraData;
+	WallRunCameraData = Row->WallRunCameraData;
+	SlideCameraData = Row->SlideCameraData;
+	FallCameraData = Row->FallCameraData;
+	CrouchCameraData = Row->CrouchCameraData;
 	IdleCameraShake = Row->IdleCameraShake;
 	WalkCameraShake = Row->WalkCameraShake;
 	RunCameraShake = Row->RunCameraShake;
