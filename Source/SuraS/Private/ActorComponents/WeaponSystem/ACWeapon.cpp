@@ -1,7 +1,8 @@
 
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 //#include "Characters/Player/SuraCharacterPlayer.h"
-#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
+//#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
+#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 
 #include "ActorComponents/WeaponSystem/SuraProjectile.h"
 #include "ActorComponents/WeaponSystem/WeaponInterface.h"
@@ -173,7 +174,7 @@ AWeapon::AWeapon()
 
 }
 
-void AWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
+void AWeapon::InitializeWeapon(ASuraPawnPlayer* NewCharacter)
 {
 	Character = NewCharacter;
 	if (Character)
@@ -201,13 +202,13 @@ void AWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
 	SetAimSocketRelativeTransform();
 }
 
-void AWeapon::InitializeCamera(ASuraCharacterPlayerWeapon* NewCharacter)
+void AWeapon::InitializeCamera(ASuraPawnPlayer* NewCharacter)
 {
 	if (NewCharacter)
 	{
-		CamSetting_Default.CameraRelativeLocation = NewCharacter->GetCamera()->GetRelativeLocation();
-		CamSetting_Default.CameraRelativeRotation = NewCharacter->GetCamera()->GetRelativeRotation();
-		CamSetting_Default.FOV = NewCharacter->GetCamera()->FieldOfView;
+		CamSetting_Default.CameraRelativeLocation = NewCharacter->GetCameraComponent()->GetRelativeLocation();
+		CamSetting_Default.CameraRelativeRotation = NewCharacter->GetCameraComponent()->GetRelativeRotation();
+		CamSetting_Default.FOV = NewCharacter->GetCameraComponent()->FieldOfView;
 	}
 }
 
@@ -325,6 +326,8 @@ void AWeapon::LoadWeaponData()
 		TotalAmmo = MaxTotalAmmo;
 		MaxAmmoPerMag = WeaponData->MaxAmmoPerMag;
 		LeftAmmoInCurrentMag = MaxAmmoPerMag;
+		AmmoConsumedPerShot_Left = WeaponData->AmmoConsumedPerShot_Left;
+		AmmoConsumedPerShot_Right = WeaponData->AmmoConsumedPerShot_Right;
 
 		// <SingleShot>
 		SingleShotDelay = WeaponData->SingleShotDelay;
@@ -345,6 +348,7 @@ void AWeapon::LoadWeaponData()
 		bEnableMultiProjectile_Left = WeaponData->bEnableMultiProjectile_Left;
 		bEnableMultiProjectile_Right = WeaponData->bEnableMultiProjectile_Right;
 		MaxAngleOfMultiProjectileSpread = WeaponData->MaxAngleOfMultiProjectileSpread;
+		PelletsNum = WeaponData->PelletsNum;
 
 		// <Recoil>
 		DefaultRecoil = WeaponData->DefaultRecoil;
@@ -371,6 +375,7 @@ void AWeapon::LoadWeaponData()
 		ChargingAdditionalRecoilAmountPitchBase = WeaponData->ChargingAdditionalRecoilAmountPitchBase;
 		ChargingAdditionalRecoilAmountYawBase = WeaponData->ChargingAdditionalRecoilAmountYawBase;
 		ChargingAdditionalProjectileRadiusBase = WeaponData->ChargingAdditionalProjectileRadiusBase;
+		ChargingAdditionalPelletMaxNum = WeaponData->ChargingAdditionalPelletMaxNum;
 
 		// <Penetration>
 		MaxPenetrableObjectsNum_Left = WeaponData->MaxPenetrableObjectsNum_Left;
@@ -384,7 +389,6 @@ void AWeapon::BeginPlay()
 	Super::BeginPlay();
 
 	//TODO: WeaponType에 따라서 생성되는 State 객체들이 달라지도록 설정하기
-	// 예를들어, 호밍 런쳐 같은 경우에는, ChargingState 혹은 TargetingState 등이 추가될 수 있음
 	IdleState = NewObject<USuraWeaponIdleState>(this, USuraWeaponIdleState::StaticClass());
 	FiringState = NewObject<USuraWeaponFiringState>(this, USuraWeaponFiringState::StaticClass());
 	UnequippedState = NewObject<USuraWeaponUnequippedState>(this, USuraWeaponUnequippedState::StaticClass());
@@ -429,7 +433,7 @@ void AWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-bool AWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter)
+bool AWeapon::AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter)
 {
 	Character = TargetCharacter;
 
@@ -463,9 +467,9 @@ bool AWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter)
 	//TODO: 더 좋은 방법을 생각해 봐야함
 	//RightHandToAimSocketOffset = this->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetMesh()->GetSocketLocation(FName("Gun"));
 	RightHandToAimSocketOffset = WeaponMesh->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetArmMesh()->GetBoneLocation(FName(TEXT("hand_r")));
-	if (Character->GetWeaponSystem() && Character->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
+	if (Character->GetWeaponSystemComponent() && Character->GetWeaponSystemComponent()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 	{
-		Character->GetWeaponSystem()->SetRightHandToAimSocketOffset(RightHandToAimSocketOffset);
+		Character->GetWeaponSystemComponent()->SetRightHandToAimSocketOffset(RightHandToAimSocketOffset);
 	}
 
 	// Set AimSocketTransform
@@ -497,7 +501,7 @@ void AWeapon::DetachWeaponFromPlayer()
 	}
 }
 
-void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable, bool bShouldConsumeAmmo, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
+void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
 {
 	if (CurrentState != UnequippedState)
 	{
@@ -506,22 +510,22 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 			return;
 		}
 
-		if (bShouldConsumeAmmo)
+		if (AmmoCost > 0)
 		{
-			if (!HasAmmoInCurrentMag())
+			if (!HasAmmoInCurrentMag(AmmoCost))
 			{
 				return;
 			}
 		}
 
-		FVector LineTraceStartLocation = Character->GetCamera()->GetComponentLocation();
-		FVector LineTraceDirection = Character->GetCamera()->GetForwardVector();
+		FVector LineTraceStartLocation = Character->GetCameraComponent()->GetComponentLocation();
+		FVector LineTraceDirection = Character->GetCameraComponent()->GetForwardVector();
 
 		if (bIsZoomIn)
 		{
 			if (ZoomSpread.bEnableProjectileSpread)
 			{
-				LineTraceDirection = GetRandomSpreadVector(Character->GetCamera()->GetForwardVector());
+				LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
 			}
 
 			if (ZoomSpread.bEnableProjectileSpread || ZoomSpread.bEnableAimUISpread)
@@ -533,7 +537,7 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 		{
 			if (DefaultSpread.bEnableProjectileSpread)
 			{
-				LineTraceDirection = GetRandomSpreadVector(Character->GetCamera()->GetForwardVector());
+				LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
 			}
 
 			if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
@@ -595,9 +599,9 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 
 
 		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
-		if (bShouldConsumeAmmo)
+		if (AmmoCost > 0)
 		{
-			ConsumeAmmo();
+			ConsumeAmmo(AmmoCost);
 		}
 
 		// <Overheat>
@@ -620,7 +624,7 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 	}
 }
 
-void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable, bool bShouldConsumeAmmo, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
+void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 AdditionalPellet, bool bIsHoming, AActor* HomingTarget)
 {
 	if (CurrentState != UnequippedState)
 	{
@@ -629,7 +633,7 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 			return;
 		}
 
-		if (HasAmmoInCurrentMag())
+		if (HasAmmoInCurrentMag(AmmoCost))
 		{
 			if (bIsZoomIn)
 			{
@@ -646,8 +650,8 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 				}
 			}
 
-			FVector LineTraceStartLocation = Character->GetCamera()->GetComponentLocation();
-			FVector LineTraceDirection = Character->GetCamera()->GetForwardVector();
+			FVector LineTraceStartLocation = Character->GetCameraComponent()->GetComponentLocation();
+			FVector LineTraceDirection = Character->GetCameraComponent()->GetForwardVector();
 			FVector LineTraceHitLocation;
 
 			if (PerformSphereTrace(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, SphereTraceRadius, LineTraceHitLocation))
@@ -667,7 +671,7 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 				{
 					const FVector SpawnLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
 
-					for (int pellet = 0; pellet < PelletsNum; pellet++)
+					for (int pellet = 0; pellet < (PelletsNum + AdditionalPellet); pellet++)
 					{
 						const FRotator SpawnRotation = UKismetMathLibrary::RandomUnitVectorInConeInDegrees((TargetLocationOfProjectile - SpawnLocation).GetSafeNormal(), MaxAngleOfMultiProjectileSpread).Rotation();
 
@@ -681,6 +685,7 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 
 						//TODO: 나중에는 Multi Homing Projectile도 가능하게 만들예정. 자동 타겟팅으로
 					}
+					UE_LOG(LogTemp, Error, TEXT("Pellet Num: %d"), (PelletsNum + AdditionalPellet));
 
 					SpawnMuzzleFireEffect(SpawnLocation, (TargetLocationOfProjectile - SpawnLocation).GetSafeNormal().Rotation());
 				}
@@ -694,9 +699,9 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 
 			StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
 
-			if (bShouldConsumeAmmo)
+			if (AmmoCost > 0)
 			{
-				ConsumeAmmo();
+				ConsumeAmmo(AmmoCost);
 			}
 
 			// <Overheat>
@@ -748,9 +753,9 @@ void AWeapon::ZoomIn()
 	bIsZoomIn = true;
 
 	//TODO: 아래에서 런타임 에러 발생했음. 수정해야함
-	if (Character->GetWeaponSystem() && Character->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
+	if (Character->GetWeaponSystemComponent() && Character->GetWeaponSystemComponent()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 	{
-		Character->GetWeaponSystem()->ZoomIn(true);
+		Character->GetWeaponSystemComponent()->ZoomIn(true);
 		StartCameraSettingChange(&CamSetting_ZoomIn);
 	}
 	ActivateCrosshairWidget(false);
@@ -760,9 +765,9 @@ void AWeapon::ZoomOut()
 {
 	bIsZoomIn = false;
 
-	if (Character->GetWeaponSystem() && Character->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
+	if (Character->GetWeaponSystemComponent() && Character->GetWeaponSystemComponent()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 	{
-		Character->GetWeaponSystem()->ZoomIn(false);
+		Character->GetWeaponSystemComponent()->ZoomIn(false);
 		StartCameraSettingChange(&CamSetting_Default);
 	}
 	ActivateCrosshairWidget(true);
@@ -1042,7 +1047,7 @@ FTransform AWeapon::GetAimSocketRelativeTransform()
 }
 
 #pragma region Equip/Unequip
-void AWeapon::SwitchWeapon(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip)
+void AWeapon::SwitchWeapon(ASuraPawnPlayer* TargetCharacter, bool bEquip)
 {
 	//TODO: Reloading 중이였다면, CancelReload 해줘야함
 	if (CurrentState == ReloadingState)
@@ -1064,7 +1069,7 @@ void AWeapon::SwitchWeapon(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEq
 		StartAnimation(AM_Unequip_Character, nullptr, WeaponSwitchingRate, WeaponSwitchingRate);
 	}
 }
-void AWeapon::EndWeaponSwitch(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip)
+void AWeapon::EndWeaponSwitch(ASuraPawnPlayer* TargetCharacter, bool bEquip)
 {
 	if (bEquip)
 	{
@@ -1074,14 +1079,14 @@ void AWeapon::EndWeaponSwitch(ASuraCharacterPlayerWeapon* TargetCharacter, bool 
 	{
 		UnequipWeapon(TargetCharacter);
 		//TODO: 이걸 굳이 Interface로 처리했어야 했나? 다른 방법이 더 좋을 것 같음
-		if (TargetCharacter && TargetCharacter->GetWeaponSystem()
-			&& TargetCharacter->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
+		if (TargetCharacter && TargetCharacter->GetWeaponSystemComponent()
+			&& TargetCharacter->GetWeaponSystemComponent()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 		{
-			Cast<IWeaponInterface>(TargetCharacter->GetWeaponSystem())->SwitchToOtherWeapon();
+			Cast<IWeaponInterface>(TargetCharacter->GetWeaponSystemComponent())->SwitchToOtherWeapon();
 		}
 	}
 }
-void AWeapon::EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
+void AWeapon::EquipWeapon(ASuraPawnPlayer* TargetCharacter)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Equip Weapon!!!"));
 
@@ -1090,7 +1095,7 @@ void AWeapon::EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 	ChangeState(IdleState);
 }
 
-void AWeapon::UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
+void AWeapon::UnequipWeapon(ASuraPawnPlayer* TargetCharacter)
 {
 	ResetInputActionBinding();
 	DetachWeaponFromPlayer();
@@ -1136,7 +1141,7 @@ void AWeapon::SetInputActionBinding()
 				{
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						LeftFullAutoShotAction,
-						ETriggerEvent::Started,
+						ETriggerEvent::Triggered,
 						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
 						{
 							StartFullAutoShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
@@ -1291,11 +1296,11 @@ void AWeapon::StopReload()
 	ChangeState(IdleState);
 }
 
-void AWeapon::ConsumeAmmo()
+void AWeapon::ConsumeAmmo(int32 AmmoCost)
 {
 	if (LeftAmmoInCurrentMag > 0)
 	{
-		LeftAmmoInCurrentMag--;
+		LeftAmmoInCurrentMag -= AmmoCost;
 		if (AmmoCounterWidget)
 		{
 			AmmoCounterWidget->UpdateAmmoCount(LeftAmmoInCurrentMag);
@@ -1334,6 +1339,10 @@ void AWeapon::ReloadAmmo()
 bool AWeapon::HasAmmoInCurrentMag()
 {
 	return (LeftAmmoInCurrentMag > 0);
+}
+bool AWeapon::HasAmmoInCurrentMag(int32 AmmoCost)
+{
+	return (LeftAmmoInCurrentMag - AmmoCost >= 0);
 }
 bool AWeapon::AddAmmo(int32 NumAmmo)
 {
@@ -1470,28 +1479,28 @@ void AWeapon::HandleFullAutoFire() //TODO: 안쓰임. 삭제 요망
 #pragma endregion
 
 #pragma region FireMode/SingleShot
-void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
+void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 AdditionalPellet)
 {
 	if (bIsLeftInput)
 	{
 		if (bSingleProjectile)
 		{
-			FireSingleProjectile(LeftProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+			FireSingleProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, false);
 		}
 		else
 		{
-			FireMultiProjectile(LeftProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+			FireMultiProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, AdditionalPellet, false);
 		}
 	}
 	else
 	{
 		if (bSingleProjectile)
 		{
-			FireSingleProjectile(RightProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+			FireSingleProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, false);
 		}
 		else
 		{
-			FireMultiProjectile(RightProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+			FireMultiProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, AdditionalPellet, false);
 		}
 	}
 
@@ -1512,22 +1521,22 @@ void AWeapon::StartBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 Nu
 		{
 			if (bSingleProjectile)
 			{
-				FireSingleProjectile(LeftProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+				FireSingleProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 			}
 			else
 			{
-				FireMultiProjectile(LeftProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+				FireMultiProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, 0, false);
 			}
 		}
 		else
 		{
 			if (bSingleProjectile)
 			{
-				FireSingleProjectile(RightProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+				FireSingleProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 			}
 			else
 			{
-				FireMultiProjectile(RightProjectileClass, NumPenetrable, true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+				FireMultiProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, 0, false);
 			}
 		}
 		BurstShotFired++;
@@ -1559,52 +1568,45 @@ void AWeapon::StartFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int32
 	if (CurrentState == IdleState)
 	{
 		ChangeState(FiringState);
-
-		UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Started!!!"));
-		if (!GetWorld()->GetTimerManager().IsTimerActive(FullAutoShotTimer))
+		UpdateFullAutoShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
+	}
+}
+void AWeapon::UpdateFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
+{
+	if (bSingleProjectile)
+	{
+		if (bIsLeftInput)
 		{
-			if (bIsLeftInput)
-			{
-				if (bSingleProjectile)
-				{
-					FireSingleProjectile(LeftProjectileClass, NumPenetrable);
-					int32 PenetrableNum = NumPenetrable;
-					bool bShouldConsumeAmmo = true;
-					float AdditionalDamage = 0.f;
-					bool bCanHoming = false;
-					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, PenetrableNum, bShouldConsumeAmmo, AdditionalDamage, bCanHoming]() {FireSingleProjectile(LeftProjectileClass, PenetrableNum, bShouldConsumeAmmo, AdditionalDamage, bCanHoming); }, FullAutoShotFireRate, true);
-				}
-				else
-				{
-					FireMultiProjectile(LeftProjectileClass, NumPenetrable);
-					int32 PenetrableNum = NumPenetrable;
-					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, PenetrableNum]() {FireMultiProjectile(LeftProjectileClass, PenetrableNum); }, FullAutoShotFireRate, true);
-				}
-			}
-			else
-			{
-				if (bSingleProjectile)
-				{
-					FireSingleProjectile(RightProjectileClass, NumPenetrable);
-					int32 PenetrableNum = NumPenetrable;
-					bool bShouldConsumeAmmo = true;
-					float AdditionalDamage = 0.f;
-					bool bCanHoming = false;
-					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, PenetrableNum, bShouldConsumeAmmo, AdditionalDamage, bCanHoming]() {FireSingleProjectile(RightProjectileClass, PenetrableNum, bShouldConsumeAmmo, AdditionalDamage, bCanHoming); }, FullAutoShotFireRate, true);
-				}
-				else
-				{
-					FireMultiProjectile(RightProjectileClass, NumPenetrable);
-					int32 PenetrableNum = NumPenetrable;
-					GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, PenetrableNum]() {FireMultiProjectile(RightProjectileClass, PenetrableNum); }, FullAutoShotFireRate, true);
-				}
-			}
+			FireSingleProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left);
 		}
+		else
+		{
+			FireSingleProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right);
+		}
+	}
+	else
+	{
+		if (bIsLeftInput)
+		{
+			FireMultiProjectile(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left);
+		}
+		else
+		{
+			FireMultiProjectile(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right);
+		}	
+	}
+
+	if (HasAmmoInCurrentMag())
+	{
+		GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, bIsLeftInput, bSingleProjectile, NumPenetrable]() {UpdateFullAutoShot(bIsLeftInput, bSingleProjectile, NumPenetrable); }, FullAutoShotFireRate, false);
+	}
+	else
+	{
+		StopFullAutoShot();
 	}
 }
 void AWeapon::StopFullAutoShot()
 {
-	//TODO: 방식에 마음에 안듦. 다른 방법 생각해보기
 	if (CurrentState == FiringState)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Ended!!!"));
@@ -1942,7 +1944,7 @@ void AWeapon::StartMissileLaunch(TArray<AActor*> TargetActors, const TSubclassOf
 }
 void AWeapon::UpdateMissileLaunch(const TSubclassOf<ASuraProjectile>& InProjectileClass)
 {
-	FireSingleProjectile(InProjectileClass, 0, false, 0.f, 0.f, 0.f, 0.f, true, ConfirmedTargets[CurrentTargetIndex]);
+	FireSingleProjectile(InProjectileClass, 0, 0, 0.f, 0.f, 0.f, 0.f, true, ConfirmedTargets[CurrentTargetIndex]);
 	CurrentTargetIndex++;
 	if (ConfirmedTargets.Num() <= CurrentTargetIndex)
 	{
@@ -2017,6 +2019,7 @@ void AWeapon::StopCharge()
 		float AdditionalRecoilAmountYaw = 0.f;
 		float AdditionalProjectileRadius = 0.f;
 		int32 PenetrableObjectsNum = 0;
+		int32 AdditionalPelletNum = 0;
 		if (ElapsedChargeTime > ChargeTimeThreshold)
 		{
 			// TODO: Clamp 해줘야함...(안해도 될듯?)
@@ -2025,11 +2028,22 @@ void AWeapon::StopCharge()
 			AdditionalRecoilAmountYaw = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalRecoilAmountYawBase;
 			AdditionalProjectileRadius = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalProjectileRadiusBase;
 			PenetrableObjectsNum = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * MaxPenetrableObjectsNum_Left; //TODO: 오른쪽 왼쪽 달리 해야함
+			AdditionalPelletNum = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalPelletMaxNum;
 			UE_LOG(LogTemp, Error, TEXT("Penetrable Num: %d"), PenetrableObjectsNum);
+			//UE_LOG(LogTemp, Error, TEXT("Pellet Num: %d"), AdditionalPelletNum);
 		}
 
-		//TODO: Charge도 커스텀화 하니까 이 코드도 달리 표현해야함
-		StartSingleShot(true, true, PenetrableObjectsNum, ChargingAdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
+		if (AdditionalPelletNum == 0 || ChargingAdditionalPelletMaxNum == 0)
+		{
+			//TODO: Charge도 커스텀화 하니까 이 코드도 달리 표현해야함
+			StartSingleShot(true, true, PenetrableObjectsNum, ChargingAdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
+		}
+		else
+		{
+			//TODO: 좌우 구분해야함
+			StartSingleShot(false, false, PenetrableObjectsNum, ChargingAdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, AdditionalPelletNum);
+		}
+
 
 		ElapsedChargeTime = 0.f;
 	}
@@ -2324,7 +2338,7 @@ void AWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSe
 {
 	if (Character)
 	{
-		UCameraComponent* Camera = Character->GetCamera();
+		UCameraComponent* Camera = Character->GetCameraComponent();
 		if (Camera)
 		{
 			FRotator NewCamRotation = FMath::RInterpTo(Camera->GetRelativeRotation(), CamSetting->CameraRelativeRotation, DeltaTime, CamSetting->CameraRelativeRotation_InterpSpeed_ToThisState);

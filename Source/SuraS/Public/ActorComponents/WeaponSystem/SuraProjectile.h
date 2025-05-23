@@ -66,6 +66,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
 	UMaterialInterface* DecalMaterial;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* HitSound; //TODO: Play different sound per object type
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float DefaultDamage = 0.f;
 
@@ -174,6 +177,16 @@ protected:
 	bool IsTargetValid();
 	bool IsTargetWithInRange();
 	void UpdateTargetInfo();
+#pragma endregion
+
+#pragma region Impulse
+protected:
+	bool bCanApplyImpulseToEnemy = false;
+	float HitImpulseToEnemy = 100.f;
+protected:
+	void AddImpulseToEnemy(AActor* OtherActor, FVector Force);
+
+
 #pragma endregion
 
 };

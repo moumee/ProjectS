@@ -7,7 +7,10 @@
 #include "GameFramework/Pawn.h"
 #include "SuraPawnPlayer.generated.h"
 
+class USuraPlayerCameraComponent;
+class USpringArmComponent;
 class USuraPlayerMovementComponent;
+class UWeaponSystemComponent;
 class UCameraComponent;
 class UCapsuleComponent;
 struct FInputActionValue;
@@ -25,42 +28,67 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	virtual void PossessedBy(AController* NewController) override;
 	
 	virtual void BeginPlay() override;
 
 	UCapsuleComponent* GetCapsuleComponent();
 
+	UCameraComponent* GetCameraComponent() const { return Camera; };
+
+	UWeaponSystemComponent* GetWeaponSystemComponent() const { return WeaponSystem; }  // <WeaponSystem>
+
+	USkeletalMeshComponent* GetArmMesh() { return ArmMesh; }  // <WeaponSystem>
+
+	bool HasWeapon() const;  // <WeaponSystem>s
+
+	void UpdateLookInputVector2D(const FInputActionValue& InputValue);  // <WeaponSystem>
+	void SetLookInputVector2DZero();  // <WeaponSystem>
+	FVector2D GetPlayerLookInputVector() const { return PlayerLookInputVector2D; } // <WeaponSystem>
+	USuraPlayerMovementComponent* GetPlayerMovementComponent() { return MovementComponent; };
+
 protected:
 
 	UPROPERTY(EditAnywhere)
-	UCapsuleComponent* CapsuleComponent;
+	TObjectPtr<UCapsuleComponent> CapsuleComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	USkeletalMeshComponent* ArmMesh;
+	TObjectPtr<USkeletalMeshComponent> ArmMesh;
 
 	UPROPERTY(EditAnywhere)
-	UCameraComponent* Camera;
+	TObjectPtr<UCameraComponent> Camera;
 
 	UPROPERTY(EditAnywhere)
-	USuraPlayerMovementComponent* MovementComponent;
+	TObjectPtr<USuraPlayerMovementComponent> MovementComponent;
+
+	UPROPERTY(EditAnywhere, Category = "WeaponSystem")
+	TObjectPtr<UWeaponSystemComponent> WeaponSystem;  // <WeaponSystem>
+	// This actor component is for handling camera shakes and state based movement
+	// IT IS NOT THE CAMERA!!
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<USuraPlayerCameraComponent> CameraMovementComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputMappingContext* DefaultMappingContext;
+	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputAction* MoveAction;
+	TObjectPtr<UInputAction> MoveAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputAction* LookAction;
+	TObjectPtr<UInputAction> LookAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputAction* JumpAction;
+	TObjectPtr<UInputAction> JumpAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputAction* DashAction;
+	TObjectPtr<UInputAction> DashAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputAction* CrouchAction;
+	TObjectPtr<UInputAction> CrouchAction;
+	
+
+	FVector2D PlayerLookInputVector2D; // <WeaponSystem>
 
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);

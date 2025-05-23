@@ -6,8 +6,12 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
+#include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 
 ASuraPawnPlayer::ASuraPawnPlayer()
 {
@@ -34,27 +38,47 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 
 	MovementComponent = CreateDefaultSubobject<USuraPlayerMovementComponent>(TEXT("Movement Component"));
 	MovementComponent->UpdatedComponent = RootComponent;
+	MovementComponent->SetDefaultCapsuleValues(CapsuleComponent->GetScaledCapsuleRadius(), CapsuleComponent->GetScaledCapsuleHalfHeight());
 
+	CameraMovementComponent = CreateDefaultSubobject<USuraPlayerCameraComponent>(TEXT("CameraMovement Component"));
+	
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
+	// <WeaponSystem>
+	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
+	CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+	ArmMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ASuraPawnPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		}
-	}
+	
 }
 
 UCapsuleComponent* ASuraPawnPlayer::GetCapsuleComponent()
 {
 	return CapsuleComponent;
+}
+
+bool ASuraPawnPlayer::HasWeapon() const
+{
+	if (WeaponSystem)
+	{
+		return WeaponSystem->GetCurrentWeapon() != nullptr;
+	}
+	return false;
+}
+
+void ASuraPawnPlayer::UpdateLookInputVector2D(const FInputActionValue& InputValue)
+{
+	PlayerLookInputVector2D = InputValue.Get<FVector2D>();
+}
+
+void ASuraPawnPlayer::SetLookInputVector2DZero()
+{
+	PlayerLookInputVector2D = FVector2D::ZeroVector;
 }
 
 
@@ -79,8 +103,24 @@ void ASuraPawnPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopDashInput);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartCrouchInput);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopCrouchInput);
-	}
 
+		// <WeaponSystem>
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::UpdateLookInputVector2D);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::None, this, &ASuraPawnPlayer::SetLookInputVector2DZero);
+	}
+}
+
+void ASuraPawnPlayer::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+		}
+	}
 }
 
 void ASuraPawnPlayer::HandleMoveInput(const FInputActionValue& Value)
