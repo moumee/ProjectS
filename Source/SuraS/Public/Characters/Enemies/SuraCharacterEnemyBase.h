@@ -8,6 +8,7 @@
 #include "Interfaces/Damageable.h"
 #include "Structures/DamageData.h"
 #include "Interfaces/Enemies/EnemyActions.h"
+#include "Utilities/EnemyPatrolRoute.h"
 
 #include "SuraCharacterEnemyBase.generated.h"
 
@@ -71,6 +72,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (RowType = "EnemyAttributesData"))
 	FDataTableRowHandle EnemyAttributesDT;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	AEnemyPatrolRoute* PatrolRoute;
+
 	// ai controller getter
 	FORCEINLINE AEnemyBaseAIController* GetAIController() const { return AIController; }
 
@@ -87,7 +91,7 @@ public:
 	FORCEINLINE float GetAttackDamageAmount() const { return AttackDamageAmount; }
 
 	// behavior tree getter
-	UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
+	FORCEINLINE UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
 
 	FORCEINLINE FName GetEnemyType() const { return EnemyType; }
 

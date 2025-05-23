@@ -11,6 +11,7 @@
 #include "SuraCharacterPlayer.generated.h"
 
 class UACDamageSystem;
+class UACPlayerAttackTokens;
 class USuraPlayerSlidingState;
 class USphereComponent;
 class USuraPlayerWallRunningState;
@@ -46,7 +47,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponSystem")
 	UWeaponSystemComponent* WeaponSystem;
 
-
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Attack Tokens")
+	UACPlayerAttackTokens* AttackTokensComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Damage")
 	UACDamageSystem* DamageSystemComponent;
@@ -313,6 +315,8 @@ public:
 	void InterpCapsuleHeight(float TargetScale, float DeltaTime);
 
 	UACDamageSystem* GetDamageSystemComponent() const { return DamageSystemComponent; }
+
+	UACPlayerAttackTokens* GetAttackTokensComponent() const { return AttackTokensComponent; }
 	
 	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
 

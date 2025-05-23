@@ -11,6 +11,7 @@
 
 #include "Widgets/Enemies/EnemyHealthBarWidget.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
+#include "Utilities/EnemyPatrolRoute.h"
 #include "Weapons/SuraEnemyWeapon.h"
 
 ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
