@@ -71,6 +71,15 @@ struct SURAS_API FProjectileData : public FTableRowBase
 	bool bCanApplyImpulseToEnemy = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Impulse")
 	float HitImpulseToEnemy = 100.f;
+	//--------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ricochet")
+	bool bCanSimpleBounce = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ricochet")
+	int32 MaxRicochetCount = 4;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ricochet")
+	float MinIncidenceAngle = 5.f;
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
 	//int32 NumPenetrableObjects = 4;
