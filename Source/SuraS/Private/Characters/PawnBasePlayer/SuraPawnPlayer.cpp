@@ -32,6 +32,7 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	Camera->SetupAttachment(CapsuleComponent);
 	Camera->SetRelativeLocation(FVector(0.f, 0.f, 70.f));
 	Camera->bUsePawnControlRotation = true;
+	Camera->PostProcessSettings.bOverride_DepthOfFieldFocalDistance = true;
 
 	ArmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arm Mesh"));
 	ArmMesh->SetupAttachment(Camera);
