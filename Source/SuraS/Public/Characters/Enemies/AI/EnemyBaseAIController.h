@@ -33,7 +33,7 @@ public:
 
 	void InitializeBlackBoard(float StrafeRadius, float AttackRadius, float AttackRate);
 
-	EEnemyState GetCurrentState() const { return CurrentState; }
+	FORCEINLINE EEnemyState GetCurrentState() const { return CurrentState; }
 
 	void UpdateCurrentState(EEnemyState NewState);
 };
