@@ -9,7 +9,6 @@
 #include "SuraPlayerAnimInstance_Weapon.generated.h"
 
 class USuraPlayerBaseState;
-// class ASuraCharacterPlayerWeapon;
 class ASuraPawnPlayer;
 class AWeapon;
 /**
@@ -85,6 +84,12 @@ public:
 	FTransform AimPointRelativeTransform;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	FTransform LeftHandTransform;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	FTransform TargetLeftHandSocketTransform;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	FVector AimPointLocation;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
@@ -115,6 +120,8 @@ public:
 
 
 
+
+
 public:
 	void UpdateWeapon();
 
@@ -127,4 +134,9 @@ public:
 	void SetTargetRightHandTransform();
 
 	void LogTransform(const FTransform& Transform, const FString& TransformName = TEXT("Transform"));
+
+	//---------------------------
+	FTransform GetLeftHandTransform();
+	FTransform GetTargetLeftHandTransfrom();
+
 };

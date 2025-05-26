@@ -3,7 +3,6 @@
 //<ÀÌÀçÇü>
 #include "ActorComponents/WeaponSystem/SuraPlayerAnimInstance_Weapon.h"
 
-//#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
@@ -37,11 +36,6 @@ void USuraPlayerAnimInstance_Weapon::NativeInitializeAnimation()
 
 	if (Character)
 	{
-		//// <½ÂÈ¯´Ô>
-		//RunSpeed = Character->GetPlayerMovementData()->GetRunSpeed();
-
-		//--------------------------------------
-		// <ÀÌÀçÇü>
 		SetAimPoint();
 		CurrentWeaponStateType = EWeaponStateType::WeaponStateType_None;
 	}
@@ -58,47 +52,11 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 
 	if (Character)
 	{
-		//Velocity = Character->GetCharacterMovement()->Velocity;
-
-		//GroundSpeed = UKismetMathLibrary::VSizeXY(Character->GetCharacterMovement()->Velocity);
-
-		//Direction = UKismetAnimationLibrary::CalculateDirection(Character->GetCharacterMovement()->Velocity,
-		//	Character->GetActorRotation());
-
-		//Pitch = UKismetMathLibrary::NormalizeAxis(Character->GetControlRotation().Pitch);
-
-		//if (Character->GetCurrentState())
-		//{
-		//	CurrentState = Character->GetCurrentState();
-		//	CurrentStateType = Character->GetCurrentState()->GetStateType();
-		//	bCrouchTriggered = Character->bCrouchTriggered;
-		//}
-
-		//if (Character->GetCharacterMovement()->MovementMode == MOVE_Flying)
-		//{
-		//	bIsInAir = true;
-		//}
-		//else
-		//{
-		//	if (Character->GetCharacterMovement()->IsFalling())
-		//	{
-		//		bIsInAir = true;
-		//	}
-		//	else
-		//	{
-		//		bIsInAir = false;
-		//	}
-		//}
-
 		//-----------------------------------------------
 		// <Related to Weapon System>
-
 		bIsZoomIn = Character->GetWeaponSystemComponent()->IsZoomIn();
-
 		//ScreenCenterWorldLocation = Character->GetWeaponSystem()->GetScreenCenterWorldPosition();
-
 		//TargetRightHandWorldLocation = Character->GetWeaponSystem()->GetTargetRightHandWorldLocation();
-
 		SetTargetRightHandTransform();
 
 
@@ -110,13 +68,13 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 			//SetAimSocket();
 			SetAimPoint();
 			UpdateWeapon();
+
+			LeftHandTransform = GetLeftHandTransform();
+			TargetLeftHandSocketTransform = GetTargetLeftHandTransfrom();
 		}
 
 		// DefalutCameraRelativeTransform = Character->GetCamera()->GetRelativeTransform();
-
-
 		// LogTransform(AimSocketRelativeTransform);
-
 	}
 }
 
@@ -268,4 +226,22 @@ void USuraPlayerAnimInstance_Weapon::LogTransform(const FTransform& Transform, c
 		Location.X, Location.Y, Location.Z,
 		Rotation.Pitch, Rotation.Yaw, Rotation.Roll,
 		Scale.X, Scale.Y, Scale.Z);
+}
+
+FTransform USuraPlayerAnimInstance_Weapon::GetLeftHandTransform()
+{
+	return Character->GetArmMesh()->GetSocketTransform(FName("hand_l"));
+}
+
+FTransform USuraPlayerAnimInstance_Weapon::GetTargetLeftHandTransfrom()
+{
+	if (Character)
+	{
+		CurrentWeapon = Character->GetWeaponSystemComponent()->GetCurrentWeapon();
+		if (CurrentWeapon)
+		{
+			return CurrentWeapon->GetWeaponMesh()->GetSocketTransform(FName("LeftHand"));
+		}
+	}
+	return FTransform();
 }
