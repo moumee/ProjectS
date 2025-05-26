@@ -278,6 +278,8 @@ protected:
 
 	FVector RightHandToAimSocketOffset;
 
+
+	FTransform RightHandOffset;
 protected:
 	float LineTraceMaxDistance = 10000.f;
 

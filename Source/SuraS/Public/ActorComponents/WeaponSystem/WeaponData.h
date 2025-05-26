@@ -51,6 +51,9 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* ChargeSound;
 	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IK")
+	FTransform RightHandOffset;
+	//-----------------------------------------------------------------
 
 	/** Start Suhyeon  **/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
