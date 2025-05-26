@@ -380,6 +380,9 @@ void AWeapon::LoadWeaponData()
 		// <Penetration>
 		MaxPenetrableObjectsNum_Left = WeaponData->MaxPenetrableObjectsNum_Left;
 		MaxPenetrableObjectsNum_Right = WeaponData->MaxPenetrableObjectsNum_Right;
+
+		// <IK>
+		RightHandOffset = WeaponData->RightHandOffset;
 	}
 }
 
@@ -448,7 +451,23 @@ bool AWeapon::AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter)
 	//TODO: BP에서 입력하도록 해야함
 	if (WeaponName == EWeaponName::WeaponName_Rifle)
 	{
-		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_Rifle")));
+		//AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_Rifle")));
+		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun")));
+
+		//FTransform MeshRelativeTransform = WeaponMesh->GetRelativeTransform();
+		//FTransform MeshRelativeTransform = GetRootComponent()->GetRelativeTransform();
+		//FTransform RightHandSocketRelativeTransform = WeaponMesh->GetSocketTransform(FName(TEXT("RightHand")), ERelativeTransformSpace::RTS_Component);
+
+		//FRotator RelativeRotation = MeshRelativeTransform.Rotator() + RightHandSocketRelativeTransform.Rotator();
+
+		//GetRootComponent()->SetRelativeRotation(RelativeRotation * (-1));
+
+		//GetRootComponent()->SetRelativeTransform(RightHandOffset);
+
+		//WeaponMesh->SetRelativeTransform(RightHandOffset);
+		
+
+		//AttachToComponent()
 	}
 	else if (WeaponName == EWeaponName::WeaponName_ShotGun)
 	{
