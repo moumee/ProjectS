@@ -82,6 +82,9 @@ protected:
 	TObjectPtr<UInputAction> LookAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	TObjectPtr<UInputAction> RunAction;
+
+	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	TObjectPtr<UInputAction> JumpAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
