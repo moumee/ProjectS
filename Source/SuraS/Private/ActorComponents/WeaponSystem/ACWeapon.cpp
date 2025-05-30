@@ -26,7 +26,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Animation/AnimInstance.h"
-#include "Engine/LocalPlayer.h" //TODO: ¹«¾ùÀ» À§ÇÑ headerÀÎÁö ¾Ë¾ÆºÁ¾ßÇÔ
+#include "Engine/LocalPlayer.h" //TODO: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ headerï¿½ï¿½ï¿½ï¿½ ï¿½Ë¾Æºï¿½ï¿½ï¿½ï¿½ï¿½
 #include "Engine/World.h"
 
 #include "Camera/CameraComponent.h"
@@ -53,18 +53,19 @@ AWeapon::AWeapon()
 	PrimaryActorTick.bCanEverTick = true;
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
+	SetRootComponent(WeaponMesh); // suhyeon
 	WeaponMesh->SetupAttachment(GetRootComponent(), FName(TEXT("WeaponMesh")));
 	WeaponMesh->SetVisibility(false);
-
+	
 	WeaponAnimInstance = WeaponMesh->GetAnimInstance();
 
-	//TODO: Muzzle OffsetÀº weapon Type¿¡ µû¶ó¼­ ´Ù¸¦µí
-	// ÇöÀç´Â ±âº»ÀûÀ¸·Î Weapon MeshÀÇ"Muzzle" SocketÀÇ À§Ä¡¸¦ ÀÌ¿ëÇÏ°í ÀÖ¾î¼­ MuzzleOffset´Â »ç¿ë ¾ÈÇÏ´Â ÁßÀÓ
+	//TODO: Muzzle Offsetï¿½ï¿½ weapon Typeï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¸ï¿½ï¿½ï¿½
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½âº»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Weapon Meshï¿½ï¿½"Muzzle" Socketï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Ì¿ï¿½ï¿½Ï°ï¿½ ï¿½Ö¾î¼­ MuzzleOffsetï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
 	// Default offset from the character location for projectiles to spawn
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 
 	// Fire Mode
-	//TODO: ÀÏ´ÜÀº ±âº» Single·Î ÇÏ´Âµ¥, WeaponName¿¡ µû¶ó¼­ »ı¼ºÀÚ¿¡¼­ ÁöÁ¤ÇØÁÖ´Â ½ÄÀ¸·Î ¼öÁ¤ÇÏ±â
+	//TODO: ï¿½Ï´ï¿½ï¿½ï¿½ ï¿½âº» Singleï¿½ï¿½ ï¿½Ï´Âµï¿½, WeaponNameï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½
 	WeaponName = EWeaponName::WeaponName_Rifle;
 	WeaponType = EWeaponType::WeaponType_Rifle;
 	WeaponFireMode = EWeaponFireMode::WeaponFireMode_Single;
@@ -189,7 +190,7 @@ void AWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
 	if (CharacterController)
 	{
 	
-		//TODO: ¾Æ·¡ ÄÚµå¿¡ ´ëÇØ¼­ ¾Ë¾ÆºÁ¾ßÇÔ. Multi Play¸¦ À§ÇÑ °ÍÀÎ°¡?
+		//TODO: ï¿½Æ·ï¿½ ï¿½Úµå¿¡ ï¿½ï¿½ï¿½Ø¼ï¿½ ï¿½Ë¾Æºï¿½ï¿½ï¿½ï¿½ï¿½. Multi Playï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Î°ï¿½?
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(CharacterController->GetLocalPlayer()))
 		{
 			// Set the priority of the mapping to 1, so that it overrides the Jump action with the Fire action when using touch input
@@ -383,8 +384,8 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//TODO: WeaponType¿¡ µû¶ó¼­ »ı¼ºµÇ´Â State °´Ã¼µéÀÌ ´Ş¶óÁöµµ·Ï ¼³Á¤ÇÏ±â
-	// ¿¹¸¦µé¾î, È£¹Ö ·±ÃÄ °°Àº °æ¿ì¿¡´Â, ChargingState È¤Àº TargetingState µîÀÌ Ãß°¡µÉ ¼ö ÀÖÀ½
+	//TODO: WeaponTypeï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç´ï¿½ State ï¿½ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½ ï¿½Ş¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, È£ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ì¿¡ï¿½ï¿½, ChargingState È¤ï¿½ï¿½ TargetingState ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	IdleState = NewObject<USuraWeaponIdleState>(this, USuraWeaponIdleState::StaticClass());
 	FiringState = NewObject<USuraWeaponFiringState>(this, USuraWeaponFiringState::StaticClass());
 	UnequippedState = NewObject<USuraWeaponUnequippedState>(this, USuraWeaponUnequippedState::StaticClass());
@@ -398,8 +399,8 @@ void AWeapon::BeginPlay()
 
 	CurrentState = UnequippedState;
 
-	//TODO: BeginPlay¿¡¼­ ChangeState¸¦ »ç¿ëÇÏ¸é, ChangeState -> EnterState -> ¿©±â¿¡ ¹«¾ğ°¡ ÀÖÀ» ¶§ ¿À·ù°¡ ¹ß»ıÇÔ
-	// »ı¼º°ü·Ã ¿À·ùÀÎ °Í °°Àºµ¥, ¾ÆÁ÷ Á¤È®ÇÑ ÀÌÀ¯¸¦ Ã£Áö ¸øÇßÀ½
+	//TODO: BeginPlayï¿½ï¿½ï¿½ï¿½ ChangeStateï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½, ChangeState -> EnterState -> ï¿½ï¿½ï¿½â¿¡ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß»ï¿½ï¿½ï¿½
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	//ChangeState(UnequippedState);
 
 
@@ -421,7 +422,7 @@ void AWeapon::Tick(float DeltaTime)
 
 	UpdateSpread(DeltaTime);
 
-	UpdateOverheat(DeltaTime); //TODO: Overheat ±â´ÉÀº ¾È¾µ°Å¶ó°í ÇÏ´Âµ¥, È¤½Ã mesh¿¡ °ú¿­ È¿°ú Àû¿ëÇÒ ¼öµµ ÀÖÀ¸´Ï±î ÀÏ´ÜÀº ³öµÒ
+	UpdateOverheat(DeltaTime); //TODO: Overheat ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½È¾ï¿½ï¿½Å¶ï¿½ï¿½ ï¿½Ï´Âµï¿½, È¤ï¿½ï¿½ meshï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È¿ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½ ï¿½Ï´ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 }
 
 void AWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -441,7 +442,7 @@ bool AWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter)
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 
-	//TODO: BP¿¡¼­ ÀÔ·ÂÇÏµµ·Ï ÇØ¾ßÇÔ
+	//TODO: BPï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½Ïµï¿½ï¿½ï¿½ ï¿½Ø¾ï¿½ï¿½ï¿½
 	if (WeaponName == EWeaponName::WeaponName_Rifle)
 	{
 		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_Rifle")));
@@ -460,7 +461,7 @@ bool AWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter)
 	}
 
 
-	//TODO: ´õ ÁÁÀº ¹æ¹ıÀ» »ı°¢ÇØ ºÁ¾ßÇÔ
+	//TODO: ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	//RightHandToAimSocketOffset = this->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetMesh()->GetSocketLocation(FName("Gun"));
 	RightHandToAimSocketOffset = WeaponMesh->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetArmMesh()->GetBoneLocation(FName(TEXT("hand_r")));
 	if (Character->GetWeaponSystem() && Character->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
@@ -472,11 +473,11 @@ bool AWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter)
 	SetAimSocketTransform();
 
 	// Set Up Widget UI Class
-	// TODO: WidgetInstance »ı¼ºÀº Weapon Initialize¿¡¼­¸¸ ÁøÇàÇÏ°í, Å°°í ²ô´Â ±â´É¸¸ ActivateCrosshairWidget¿¡¼­ ÇÏ±â
+	// TODO: WidgetInstance ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Weapon Initializeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½, Å°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½É¸ï¿½ ActivateCrosshairWidgetï¿½ï¿½ï¿½ï¿½ ï¿½Ï±ï¿½
 	ActivateCrosshairWidget(true);
 	ActivateAmmoCounterWidget(true);
 
-	//TODO: BP¿¡¼­ ºÎ°¡ÀûÀ¸·Î ºÎÂøÇÑ Meshµéµµ Visibility¸¦ °ü¸®ÇØ¾ßÇÔ. ±Ùµ¥ ¿¡µğÅÍ¿¡¼­ WeaponMesh°¡ ºÎ¸ğ ¼ÒÄÏÀ¸·Î µÇ¾îÀÖÀ¸¸é ÇÏÀ§ÀÇ °ÍµéÀº ¾Ë¾Æ¼­ Ã³¸®µÇ´Â µí?
+	//TODO: BPï¿½ï¿½ï¿½ï¿½ ï¿½Î°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Meshï¿½éµµ Visibilityï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ø¾ï¿½ï¿½ï¿½. ï¿½Ùµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¿ï¿½ï¿½ï¿½ WeaponMeshï¿½ï¿½ ï¿½Î¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Íµï¿½ï¿½ï¿½ ï¿½Ë¾Æ¼ï¿½ Ã³ï¿½ï¿½ï¿½Ç´ï¿½ ï¿½ï¿½?
 	WeaponMesh->SetVisibility(true);
 
 	return true;
@@ -679,7 +680,7 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 						SetUpAimUIDelegateBinding(Projectile);
 						Projectile->LaunchProjectile();
 
-						//TODO: ³ªÁß¿¡´Â Multi Homing Projectileµµ °¡´ÉÇÏ°Ô ¸¸µé¿¹Á¤. ÀÚµ¿ Å¸°ÙÆÃÀ¸·Î
+						//TODO: ï¿½ï¿½ï¿½ß¿ï¿½ï¿½ï¿½ Multi Homing Projectileï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½é¿¹ï¿½ï¿½. ï¿½Úµï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 					}
 
 					SpawnMuzzleFireEffect(SpawnLocation, (TargetLocationOfProjectile - SpawnLocation).GetSafeNormal().Rotation());
@@ -722,8 +723,8 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 
 void AWeapon::SpawnProjectile()
 {
-	//TODO: Weapon name¿¡ µû¶ó ´Ù¸¥ ProjectileÀ» spawn ÇÏµµ·Ï ÇÏ·Á°í Çß´Âµ¥,
-	//±×³É BP¿¡¼­ ÃÊ±â¿¡ Projectile Å¬·¡½º¸¦ ÁöÁ¤ÇØÁÖ¸é µÇ´Â °ÍÀÌ¿©¼­ ÀÏ´ÜÀº º¸·ùÁßÀÓ.
+	//TODO: Weapon nameï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¸ï¿½ Projectileï¿½ï¿½ spawn ï¿½Ïµï¿½ï¿½ï¿½ ï¿½Ï·ï¿½ï¿½ï¿½ ï¿½ß´Âµï¿½,
+	//ï¿½×³ï¿½ BPï¿½ï¿½ï¿½ï¿½ ï¿½Ê±â¿¡ Projectile Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½Ì¿ï¿½ï¿½ï¿½ ï¿½Ï´ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
 }
 
 void AWeapon::ZoomToggle()
@@ -747,7 +748,7 @@ void AWeapon::ZoomIn()
 {
 	bIsZoomIn = true;
 
-	//TODO: ¾Æ·¡¿¡¼­ ·±Å¸ÀÓ ¿¡·¯ ¹ß»ıÇßÀ½. ¼öÁ¤ÇØ¾ßÇÔ
+	//TODO: ï¿½Æ·ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ß»ï¿½ï¿½ï¿½ï¿½ï¿½. ï¿½ï¿½ï¿½ï¿½ï¿½Ø¾ï¿½ï¿½ï¿½
 	if (Character->GetWeaponSystem() && Character->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 	{
 		Character->GetWeaponSystem()->ZoomIn(true);
@@ -782,6 +783,104 @@ void AWeapon::ChangeState(USuraWeaponBaseState* NewState)
 }
 #pragma endregion
 
+void AWeapon::SetWeaponData(FWeaponData* InWeaponData)
+{
+	if (!InWeaponData) return;
+
+	// ì›ë³¸ ë°ì´í„° ì°¸ì¡° ì €ì¥
+	WeaponData = InWeaponData;
+
+	if (WeaponData)
+	{
+		// <Action>
+		LeftMouseAction = WeaponData->LeftMouseAction;
+		RightMouseAction = WeaponData->RightMouseAction;
+
+		// <Projectile>
+		LeftProjectileClass = WeaponData->LeftProjectileClass;
+		RightProjectileClass = WeaponData->RightProjectileClass;
+
+		// <Sound>
+		FireSound = WeaponData->FireSound;
+		ChargeSound = WeaponData->ChargeSound;
+
+		// <Effect>
+		MuzzleFireEffect = WeaponData->FireEffect;
+		ChargeEffect = WeaponData->ChargeEffect;
+		ChargeEffectLocation = WeaponData->ChargeEffectLocation;
+		ChargeEffectRotation = WeaponData->ChargeEffectRotation;
+		ChargeEffenctScale = WeaponData->ChargeEffenctScale;
+
+		// <Reload>
+		MaxTotalAmmo = WeaponData->MaxTotalAmmo;
+		TotalAmmo = MaxTotalAmmo;
+		MaxAmmoPerMag = WeaponData->MaxAmmoPerMag;
+		LeftAmmoInCurrentMag = MaxAmmoPerMag;
+
+		// <SingleShot>
+		SingleShotDelay = WeaponData->SingleShotDelay;
+
+		// <BurstShot>
+		BurstShotDelay = WeaponData->BurstShotDelay;
+		BurstShotFireRate = WeaponData->BurstShotFireRate;
+		BurstShotCount = WeaponData->BurstShotCount;
+
+		// <FullAutoShot>
+		FullAutoShotFireRate = WeaponData->FullAutoShotFireRate;
+
+		// <ProjectileSpread>
+		DefaultSpread = WeaponData->DefaultSpread;
+		ZoomSpread = WeaponData->ZoomSpread;
+
+		// <MultiProjectileSpread>
+		bEnableMultiProjectile_Left = WeaponData->bEnableMultiProjectile_Left;
+		bEnableMultiProjectile_Right = WeaponData->bEnableMultiProjectile_Right;
+		MaxAngleOfMultiProjectileSpread = WeaponData->MaxAngleOfMultiProjectileSpread;
+
+		// <Recoil>
+		DefaultRecoil = WeaponData->DefaultRecoil;
+		ZoomRecoil = WeaponData->ZoomRecoil;
+
+		// <Camera Shake>
+		DefaultCameraShakeClass = WeaponData->DefaultCameraShakeClass;
+		ZoomCameraShakeClass = WeaponData->ZoomCameraShakeClass;
+		ChargingCameraShakeClass = WeaponData->ChargingCameraShakeClass;
+
+		// <Targeting(Homing)>
+		MissileLaunchDelay = WeaponData->MissileLaunchDelay;
+		MaxTargetNum = WeaponData->MaxTargetNum;
+		MaxTargetDetectionRadius = WeaponData->MaxTargetDetectionRadius;
+		MaxTargetDetectionAngle = WeaponData->MaxTargetDetectionAngle;
+		MaxTargetDetectionTime = WeaponData->MaxTargetDetectionTime;
+		TimeToReachMaxTargetDetectionRange = WeaponData->TimeToReachMaxTargetDetectionRange;
+
+		// <Charging>
+		bAutoFireAtMaxChargeTime = WeaponData->bAutoFireAtMaxChargeTime;
+		ChargeTimeThreshold = WeaponData->ChargeTimeThreshold;
+		MaxChargeTime = WeaponData->MaxChargeTime;
+		ChargingAdditionalDamageBase = WeaponData->ChargingAdditionalDamageBase;
+		ChargingAdditionalRecoilAmountPitchBase = WeaponData->ChargingAdditionalRecoilAmountPitchBase;
+		ChargingAdditionalRecoilAmountYawBase = WeaponData->ChargingAdditionalRecoilAmountYawBase;
+		ChargingAdditionalProjectileRadiusBase = WeaponData->ChargingAdditionalProjectileRadiusBase;
+
+		// <Penetration>
+		MaxPenetrableObjectsNum_Left = WeaponData->MaxPenetrableObjectsNum_Left;
+		MaxPenetrableObjectsNum_Right = WeaponData->MaxPenetrableObjectsNum_Right;
+	}
+}
+
+void AWeapon::SetCharacter(class ASuraCharacterPlayerWeapon* InCharacter)
+{
+	if (!InCharacter)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SetCharacter í˜¸ì¶œ: ì „ë‹¬ëœ ìºë¦­í„°ê°€ nullì…ë‹ˆë‹¤."));
+		return;
+	}
+
+	Character = InCharacter;
+	UE_LOG(LogTemp, Log, TEXT("SetCharacter ì™„ë£Œ: %sì— í• ë‹¹ë¨"), *Character->GetName());
+}
+
 #pragma region Animation
 void AWeapon::StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMontage* WeaponFireAnimation)
 {
@@ -811,7 +910,7 @@ void AWeapon::StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* Wea
 	{
 		if (!CharacterAnimInstance->Montage_IsPlaying(CharacterAnimation))
 		{
-			//TODO: Blend ¼¼ÆÃ Á¦´ë·Î ÇØ¾ßÇÔ
+			//TODO: Blend ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ø¾ï¿½ï¿½ï¿½
 			//FMontageBlendSettings BlendSettings;
 			//BlendSettings.Blend.BlendTime = 0.1f;
 
@@ -931,11 +1030,11 @@ bool AWeapon::PerformLineTrace(FVector StartLocation, FVector LineDirection, flo
 	ResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel3, ECR_Ignore);
 
 	bool bHit = GetWorld()->LineTraceSingleByChannel(
-		HitResult,           // Ãæµ¹ °á°ú ÀúÀå
-		Start,               // ½ÃÀÛ ÁöÁ¡
-		End,                 // ³¡ ÁöÁ¡
-		ECC_Visibility,      // Ãæµ¹ Ã¤³Î
-		Params,              // Äõ¸® ¸Å°³º¯¼ö
+		HitResult,           // ï¿½æµ¹ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+		Start,               // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+		End,                 // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+		ECC_Visibility,      // ï¿½æµ¹ Ã¤ï¿½ï¿½
+		Params,              // ï¿½ï¿½ï¿½ï¿½ ï¿½Å°ï¿½ï¿½ï¿½ï¿½ï¿½
 		ResponseParams
 	);
 
@@ -1004,19 +1103,19 @@ FVector AWeapon::CalculateScreenCenterWorldPositionAndDirection(FVector& OutWorl
 		return FVector::ZeroVector;
 	}
 
-	// È­¸é Å©±â °¡Á®¿À±â
+	// È­ï¿½ï¿½ Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	FVector2D ViewportSize = GEngine->GameViewport->Viewport->GetSizeXY();
 
-	// È­¸é Áß¾Ó ÁÂÇ¥ °è»ê
+	// È­ï¿½ï¿½ ï¿½ß¾ï¿½ ï¿½ï¿½Ç¥ ï¿½ï¿½ï¿½
 	FVector2D ScreenCenter(ViewportSize.X / 2.0f, ViewportSize.Y / 2.0f);
 
-	// È­¸é Áß½ÉÀÇ ¿ùµå À§Ä¡¿Í ¹æÇâ °¡Á®¿À±â
+	// È­ï¿½ï¿½ ï¿½ß½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	FVector WorldPosition, WorldDirection;
 	if (CharacterController->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, WorldPosition, WorldDirection))
 	{
 		OutWorldPosition = WorldPosition;
 		OutWorldDirection = WorldDirection;
-		return WorldPosition + (WorldDirection * 15.0f); // TODO: ÀÓÀÇ °Å¸®¸¦ »ç¿ëÇßÀ½. ¼öÄ¡ Á¶Àı °¡´ÉÇÏµµ·Ï ±¸ÇöÇÏ±â
+		return WorldPosition + (WorldDirection * 15.0f); // TODO: ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½. ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½
 	}
 
 	return FVector::ZeroVector;
@@ -1044,7 +1143,7 @@ FTransform AWeapon::GetAimSocketRelativeTransform()
 #pragma region Equip/Unequip
 void AWeapon::SwitchWeapon(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip)
 {
-	//TODO: Reloading ÁßÀÌ¿´´Ù¸é, CancelReload ÇØÁà¾ßÇÔ
+	//TODO: Reloading ï¿½ï¿½ï¿½Ì¿ï¿½ï¿½Ù¸ï¿½, CancelReload ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	if (CurrentState == ReloadingState)
 	{
 		CancelReload();
@@ -1073,7 +1172,7 @@ void AWeapon::EndWeaponSwitch(ASuraCharacterPlayerWeapon* TargetCharacter, bool 
 	else
 	{
 		UnequipWeapon(TargetCharacter);
-		//TODO: ÀÌ°É ±»ÀÌ Interface·Î Ã³¸®Çß¾î¾ß Çß³ª? ´Ù¸¥ ¹æ¹ıÀÌ ´õ ÁÁÀ» °Í °°À½
+		//TODO: ï¿½Ì°ï¿½ ï¿½ï¿½ï¿½ï¿½ Interfaceï¿½ï¿½ Ã³ï¿½ï¿½ï¿½ß¾ï¿½ï¿½ ï¿½ß³ï¿½? ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		if (TargetCharacter && TargetCharacter->GetWeaponSystem()
 			&& TargetCharacter->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 		{
@@ -1261,7 +1360,7 @@ void AWeapon::HandleReload()
 	{
 		if (LeftAmmoInCurrentMag < MaxAmmoPerMag && TotalAmmo > 0)
 		{
-			//TODO: ReloadingStateÀÇ EnterState¿¡¼­ StartReload ÇØµµ µÉ µí
+			//TODO: ReloadingStateï¿½ï¿½ EnterStateï¿½ï¿½ï¿½ï¿½ StartReload ï¿½Øµï¿½ ï¿½ï¿½ ï¿½ï¿½
 			ChangeState(ReloadingState);
 			//StartReload();
 		}
@@ -1281,7 +1380,7 @@ void AWeapon::StartReload()
 		ZoomOut();
 	}
 
-	// TODO: ¿©±â¼­ ÀÏ¹İ ReloadingÀÎÁö OverHitting RecoverÀÎÁö ±¸ºĞÇØ¼­ ´Ù¸¥ Ã³¸®¸¦ ÇØÁà¾ßÇÔ
+	// TODO: ï¿½ï¿½ï¿½â¼­ ï¿½Ï¹ï¿½ Reloadingï¿½ï¿½ï¿½ï¿½ OverHitting Recoverï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ø¼ï¿½ ï¿½Ù¸ï¿½ Ã³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	StartAnimation(AM_Reload_Character, AM_Reload_Weapon, ReloadingTime, ReloadingTime);
 	GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopReload, ReloadingTime, false);
 }
@@ -1360,7 +1459,7 @@ void AWeapon::AutoReload()
 		}
 	}
 }
-void AWeapon::ReloadingEnd() //Legacy: »ç¿ë ¾ÈÇÔ. animationÀÌ ³¡³¯ ¶§ÀÇ Ã³¸®¸¦ À§ÇØ ³²°Ü µÒ.
+void AWeapon::ReloadingEnd() //Legacy: ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½. animationï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½.
 {
 	UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
 }
@@ -1368,13 +1467,13 @@ void AWeapon::ReloadingEnd() //Legacy: »ç¿ë ¾ÈÇÔ. animationÀÌ ³¡³¯ ¶§ÀÇ Ã³¸®¸¦ À
 
 void AWeapon::Create3DUI()
 {
-	////RenderTarget »ı¼º
+	////RenderTarget ï¿½ï¿½ï¿½ï¿½
 	//RenderTarget = NewObject<UTextureRenderTarget2D>();
-	//RenderTarget->InitAutoFormat(512, 512); // UI ÇØ»óµµ ¼³Á¤
+	//RenderTarget->InitAutoFormat(512, 512); // UI ï¿½Ø»ï¿½ ï¿½ï¿½ï¿½ï¿½
 	//RenderTarget->ClearColor = FLinearColor::Transparent;
 	//RenderTarget->UpdateResource();
 
-	////UUserWidgetÀ» RenderTarget¿¡ ±×¸®±â
+	////UUserWidgetï¿½ï¿½ RenderTargetï¿½ï¿½ ï¿½×¸ï¿½ï¿½ï¿½
 	//UUserWidget* AmmoCounterWidget = CreateWidget<UUserWidget>(GetWorld(), LoadClass<UUserWidget>(nullptr, TEXT("/Game/UI/AmmoCounterWidget_BP.AmmoCounterWidget_BP_C")));
 	//if (AmmoCounterWidget)
 	//{
@@ -1388,7 +1487,7 @@ void AWeapon::Create3DUI()
 	//	AmmoCounterWidget->AddToViewport();
 	//}
 
-	////¸ÓÆ¼¸®¾ó µ¿Àû ÀÎ½ºÅÏ½º »ı¼º ¹× RenderTarget Àû¿ë
+	////ï¿½ï¿½Æ¼ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Î½ï¿½ï¿½Ï½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ RenderTarget ï¿½ï¿½ï¿½ï¿½
 	//UMaterialInterface* BaseMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_UI_BaseMaterial.M_UI_BaseMaterial"));
 	//if (BaseMaterial)
 	//{
@@ -1459,7 +1558,7 @@ void AWeapon::HandleBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 N
 		StartBurstFire(bIsLeftInput, bSingleProjectile, NumPenetrable);
 	}
 }
-void AWeapon::HandleFullAutoFire() //TODO: ¾È¾²ÀÓ. »èÁ¦ ¿ä¸Á
+void AWeapon::HandleFullAutoFire() //TODO: ï¿½È¾ï¿½ï¿½ï¿½. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 {
 	if (CurrentState == IdleState)
 	{
@@ -1604,7 +1703,7 @@ void AWeapon::StartFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int32
 }
 void AWeapon::StopFullAutoShot()
 {
-	//TODO: ¹æ½Ä¿¡ ¸¶À½¿¡ ¾Èµê. ´Ù¸¥ ¹æ¹ı »ı°¢ÇØº¸±â
+	//TODO: ï¿½ï¿½Ä¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Èµï¿½. ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Øºï¿½ï¿½ï¿½
 	if (CurrentState == FiringState)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Ended!!!"));
@@ -1626,7 +1725,7 @@ void AWeapon::StartTargetDetection()
 		UpdateTargetDetection(GetWorld()->GetDeltaSeconds());
 	}
 }
-void AWeapon::UpdateTargetDetection(float DeltaTime) //TODO: ÇØ´ç Å¸°Ù È¤Àº ±âÁ¸ Å¸°ÙÀÇ »ıÁ¸ ¿©ºÎµµ ÆÇ´ÜÇØ¼­ Update ÇØ¾ßÇÔ
+void AWeapon::UpdateTargetDetection(float DeltaTime) //TODO: ï¿½Ø´ï¿½ Å¸ï¿½ï¿½ È¤ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Îµï¿½ ï¿½Ç´ï¿½ï¿½Ø¼ï¿½ Update ï¿½Ø¾ï¿½ï¿½ï¿½
 {
 	ElapsedTimeAfterTargetingStarted += DeltaTime;
 
@@ -1638,8 +1737,8 @@ void AWeapon::UpdateTargetDetection(float DeltaTime) //TODO: ÇØ´ç Å¸°Ù È¤Àº ±âÁ¸
 	SearchOverlappedActor(Character->GetActorLocation(), CurrentTargetDetectionRadius, NewOverlappedActors);
 
 
-	//TODO: Targets¿¡ ´ëÇÑ Update°¡ ÇÊ¿äÇÔ. Á×¾úÀ¸¸é Targets¿¡¼­ Á¦¿Ü½ÃÄÑ¾ßÇÔ
-	// TargetMarkerÀÇ °æ¿ì¿¡´Â Visibility¸¸ false·Î ¹Ù²ãÁÖ´Â ½ÄÀ¸·Î °ü¸®ÇÏ±â
+	//TODO: Targetsï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Updateï¿½ï¿½ ï¿½Ê¿ï¿½ï¿½ï¿½. ï¿½×¾ï¿½ï¿½ï¿½ï¿½ï¿½ Targetsï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ü½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½
+	// TargetMarkerï¿½ï¿½ ï¿½ï¿½ì¿¡ï¿½ï¿½ Visibilityï¿½ï¿½ falseï¿½ï¿½ ï¿½Ù²ï¿½ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½
 
 	for (TSet<AActor*>::TIterator It = Targets.CreateIterator(); It; ++It)
 	{
@@ -1824,21 +1923,21 @@ float AWeapon::GetUnsignedAngleBetweenVectors(const FVector& VectorA, const FVec
 	FVector NormalizedA = VectorA.GetSafeNormal();
 	FVector NormalizedB = VectorB.GetSafeNormal();
 
-	//µÎ º¤ÅÍ »çÀÌÀÇ È¸ÀüÀ» ³ªÅ¸³»´Â ÄõÅÍ´Ï¾ğ »ı¼º
+	//ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Í´Ï¾ï¿½ ï¿½ï¿½ï¿½ï¿½
 	FQuat Quat = FQuat::FindBetweenNormals(NormalizedA, NormalizedB);
 
-	//È¸Àü Ãà¿¡ ´ëÇÑ ¹æÇâ¼ºÀ» °í·ÁÇÑ °¢µµ °è»ê
-	float Angle = Quat.GetAngle();  // ±âº»ÀûÀ¸·Î ¶óµğ¾È ´ÜÀ§·Î °¢µµ¸¦ ¹İÈ¯
+	//È¸ï¿½ï¿½ ï¿½à¿¡ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½â¼ºï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+	float Angle = Quat.GetAngle();  // ï¿½âº»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
 
-	//ÄõÅÍ´Ï¾ğÀ» Ãà¿¡ Åõ¿µÇÏ¿© ¹æÇâ °áÁ¤
-	FVector RotationAxis = Quat.GetAxisZ();  // ÄõÅÍ´Ï¾ğÀÇ È¸Àü ÃàÀ» ±¸ÇÔ (ÃàÀº X, Y, Z Áß ÇÏ³ª¸¦ ¼±ÅÃ °¡´É)
+	//ï¿½ï¿½ï¿½Í´Ï¾ï¿½ï¿½ï¿½ ï¿½à¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	FVector RotationAxis = Quat.GetAxisZ();  // ï¿½ï¿½ï¿½Í´Ï¾ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ X, Y, Z ï¿½ï¿½ ï¿½Ï³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
 
 	float DotProduct = FVector::DotProduct(RotationAxis, Axis);
 
-	// DotProduct°¡ ¾ç¼ö¸é °¢µµ´Â ±×´ë·Î, À½¼ö¸é ¹İ´ë ¹æÇâÀ¸·Î °¢µµ ºÎÈ£¸¦ º¯°æ
+	// DotProductï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½×´ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½İ´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È£ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	float SignedAngle = Angle * FMath::Sign(DotProduct);
 
-	//°¢µµ¸¦ µµ ´ÜÀ§·Î º¯È¯
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
 	return FMath::RadiansToDegrees(Angle);
 }
 bool AWeapon::CheckIfTargetIsBlockedByObstacle(AActor* target)
@@ -1981,14 +2080,14 @@ void AWeapon::UpdateCharge()
 	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
 	ElapsedChargeTime += DeltaSeconds;
 
-	float ChargingCamShakeScale = FMath::Clamp((ElapsedChargeTime / MaxChargeTime), 0.1f, 3.f); //TODO: Max´Â ¸â¹öº¯¼ö·Î ÁöÁ¤ÇÏ´ø°¡ ÇØ¾ßÇÔ
+	float ChargingCamShakeScale = FMath::Clamp((ElapsedChargeTime / MaxChargeTime), 0.1f, 3.f); //TODO: Maxï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ï¿½ï¿½ ï¿½Ø¾ï¿½ï¿½ï¿½
 	ApplyCameraShake(ChargingCameraShakeClass, ChargingCamShakeScale);
 
 	if (bAutoFireAtMaxChargeTime)
 	{
 		if (ElapsedChargeTime > MaxChargeTime)
 		{
-			//TODO: Timer·Î °è»êÇÑ ½Ã°£ÀÌ¶û ½ÇÁ¦ ½Ã°£ÀÌ¶û ´Ù¸¥ °Í °°À½. Log·Î È®ÀÎÇØºÁ¾ßÇÔ -> Tick ¿¡¼­ °è»êÇÑ ½Ã°£ÀÌ¶û ¿©±â¼­ °è»êÇÑ ½Ã°£ÀÌ¶û ºñ±³ÇØºÁ¾ßÇÔ
+			//TODO: Timerï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ï¿½Ì¶ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ï¿½Ì¶ï¿½ ï¿½Ù¸ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½. Logï¿½ï¿½ È®ï¿½ï¿½ï¿½Øºï¿½ï¿½ï¿½ï¿½ï¿½ -> Tick ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ï¿½Ì¶ï¿½ ï¿½ï¿½ï¿½â¼­ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ï¿½Ì¶ï¿½ ï¿½ï¿½ï¿½Øºï¿½ï¿½ï¿½ï¿½ï¿½
 			StopCharge();
 		}
 		else
@@ -2019,16 +2118,16 @@ void AWeapon::StopCharge()
 		int32 PenetrableObjectsNum = 0;
 		if (ElapsedChargeTime > ChargeTimeThreshold)
 		{
-			// TODO: Clamp ÇØÁà¾ßÇÔ...(¾ÈÇØµµ µÉµí?)
+			// TODO: Clamp ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½...(ï¿½ï¿½ï¿½Øµï¿½ ï¿½Éµï¿½?)
 			ChargingAdditionalDamage = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalDamageBase;
 			AdditionalRecoilAmountPitch = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalRecoilAmountPitchBase;
 			AdditionalRecoilAmountYaw = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalRecoilAmountYawBase;
 			AdditionalProjectileRadius = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalProjectileRadiusBase;
-			PenetrableObjectsNum = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * MaxPenetrableObjectsNum_Left; //TODO: ¿À¸¥ÂÊ ¿ŞÂÊ ´Ş¸® ÇØ¾ßÇÔ
+			PenetrableObjectsNum = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * MaxPenetrableObjectsNum_Left; //TODO: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ş¸ï¿½ ï¿½Ø¾ï¿½ï¿½ï¿½
 			UE_LOG(LogTemp, Error, TEXT("Penetrable Num: %d"), PenetrableObjectsNum);
 		}
 
-		//TODO: Chargeµµ Ä¿½ºÅÒÈ­ ÇÏ´Ï±î ÀÌ ÄÚµåµµ ´Ş¸® Ç¥ÇöÇØ¾ßÇÔ
+		//TODO: Chargeï¿½ï¿½ Ä¿ï¿½ï¿½ï¿½ï¿½È­ ï¿½Ï´Ï±ï¿½ ï¿½ï¿½ ï¿½Úµåµµ ï¿½Ş¸ï¿½ Ç¥ï¿½ï¿½ï¿½Ø¾ï¿½ï¿½ï¿½
 		StartSingleShot(true, true, PenetrableObjectsNum, ChargingAdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
 
 		ElapsedChargeTime = 0.f;
@@ -2169,7 +2268,7 @@ void AWeapon::AddOverheatValue()
 	bIsOverheating = true;
 	OverheatRecoverTimer = 0.f;
 
-	TotalTargetOverheatValue += OverheatBaseIncrement; // TODO: ÃÑ±â ´É·Â »ç¿ë ½Ã°£ ¸¸Å­ ´õÇØÁ®¾ßÇÔ
+	TotalTargetOverheatValue += OverheatBaseIncrement; // TODO: ï¿½Ñ±ï¿½ ï¿½É·ï¿½ ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½Å­ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	TotalTargetOverheatValue = FMath::Clamp(TotalTargetOverheatValue, 0.f, MaxOverheatValue);
 }
 void AWeapon::ApplyOverheat(float DeltaTime)
@@ -2193,7 +2292,7 @@ void AWeapon::RecoverOverheat(float DeltaTime)
 
 		bIsOverheating = false;
 
-		//TODO: Overheat UI ¾÷µ¥ÀÌÆ® ÇØ¾ßÇÔ
+		//TODO: Overheat UI ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Ø¾ï¿½ï¿½ï¿½
 	}
 }
 void AWeapon::UpdateOverheat(float DeltaTime)
@@ -2383,3 +2482,4 @@ void AWeapon::ApplyCameraShake(TSubclassOf<UWeaponCameraShakeBase> CamShakeClass
 	}
 }
 #pragma endregion
+

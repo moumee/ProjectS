@@ -3,7 +3,9 @@
 
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
+#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "ActorComponents/WeaponSystem/SuraProjectile.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponPickUp.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h" 
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
@@ -31,6 +33,8 @@ void UACInventoryManager::BeginPlay()
 
 	DTWeapon = GetWeaponDataTable();
 	// DTProjectile = GetProjectileDataTable();
+
+	InitializeOwnedWeaponsFromDT(); // dt_weapon에서 소유한 무기들을 weapon inventory에 동기화
 }
 
 void UACInventoryManager::SetInventoryWidget(UInventoryWidget* InWidget)
@@ -322,6 +326,59 @@ void UACInventoryManager::UnlockWeapon(FName WeaponName)
 		InventoryWidget->UpdateWeaponUI(WeaponNameStr);
 	}
 }
+
+void UACInventoryManager::CreateAndAddWeaponFromData(FWeaponData* WeaponData)
+{
+	if (!WeaponData || !WeaponData->bIsWeaponOwned) return;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	// 📌 1. SuraWeaponPickUp 임시 생성
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = GetOwner();
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	ASuraWeaponPickUp* TempPickUp = World->SpawnActor<ASuraWeaponPickUp>(ASuraWeaponPickUp::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	if (!TempPickUp) return;
+
+	// 📌 2. 무기 정보 입력
+	TempPickUp->SetWeaponClass(WeaponData->WeaponClass); // Setter 만들어야 함
+	TempPickUp->SetWeaponName(WeaponData->WeaponName);   // Setter 만들어야 함
+
+	// 📌 3. 무기 생성
+	AWeapon* NewWeapon = TempPickUp->SpawnWeapon(Cast<ASuraCharacterPlayerWeapon>(GetOwner()));
+	TempPickUp->Destroy(); // PickUp 액터 제거
+
+	if (!NewWeapon) return;
+
+	// 📌 4. 무기 인벤토리에 추가
+	pWeaponSystemComponent->GetWeaponInventory().Add(NewWeapon);
+}
+
+
+void UACInventoryManager::InitializeOwnedWeaponsFromDT()
+{
+	if (!DTWeapon) return;
+
+	const TMap<FName, uint8*>& RowMap = DTWeapon->GetRowMap();
+
+	for (const auto& Pair : RowMap)
+	{
+		FWeaponData* WeaponData = reinterpret_cast<FWeaponData*>(Pair.Value);
+		if (WeaponData && WeaponData->bIsWeaponOwned)
+		{
+			CreateAndAddWeaponFromData(WeaponData);
+		}
+	}
+
+	// 자동 장착
+	if (pWeaponSystemComponent && pWeaponSystemComponent->GetWeaponInventory().Num() > 0)
+	{
+		pWeaponSystemComponent->EquipFirstWeapon();
+	}
+}
+
 
 
 

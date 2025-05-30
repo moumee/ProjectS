@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ActorComponents/WeaponSystem/WeaponData.h"
 #include "Components/ActorComponent.h"
 #include "ACInventoryManager.generated.h"
 
@@ -47,7 +48,11 @@ public:
 	// 무기 해금
 	void UnlockWeapon(FName WeaponName);
 
-	
+	// 무기 액터 스폰해서 weaponinventory에 넣기 위한 함수
+	void CreateAndAddWeaponFromData(FWeaponData* WeaponData);
+
+	// DT_Weapon에서 소유중인 무기를 weapon inventory에 동기화
+	void InitializeOwnedWeaponsFromDT();
 	
 
 private:

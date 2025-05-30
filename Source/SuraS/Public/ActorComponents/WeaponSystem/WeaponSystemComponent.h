@@ -183,9 +183,11 @@ public:
 
 	/** suhyeon **/
 	UFUNCTION(BlueprintCallable, Category = "Weapons")
-	const TArray<AWeapon*>& GetWeaponInventory() const {return WeaponInventory; }
+	TArray<AWeapon*>& GetWeaponInventory() {return WeaponInventory; }
 
 	int32 GetCurrentWeaponIndex() const {return CurrentWeaponIndex; }
+
+	void EquipFirstWeapon();
 	/** suhyeon**/
 #pragma endregion
 	

@@ -16,7 +16,7 @@ USTRUCT(BlueprintType)
 struct SURAS_API FWeaponData : public FTableRowBase
 {
 	GENERATED_BODY()
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Name")
 	EWeaponName WeaponName;
 	//-----------------------------------------------------------------
@@ -58,6 +58,9 @@ struct SURAS_API FWeaponData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsWeaponOwned; // 총기 소유 불값
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class AWeapon> WeaponClass; // weaponinventory 동기화 위해서
 	
 	/** End Suhyeon **/
 
