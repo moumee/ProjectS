@@ -189,7 +189,7 @@ void UKillLogWidget::AddScoreEntry(const FString& Reason, int32 Value)
 		ScoreBox->RemoveChildAt(0); // 가장 오래된 항목 제거
 	}
 
-	// [7] 1.5초 뒤 → 자연스럽게 제거
+	// [7] 5.0초 뒤 → 자연스럽게 제거
 	FTimerHandle FadeTimer;
 	GetWorld()->GetTimerManager().SetTimer(FadeTimer, [this, WeakScoreText]()
 	{
@@ -212,9 +212,35 @@ void UKillLogWidget::UpdateTotalScore(int32 AddedScore)
 	if (TotalScoreText)
 	{
 		FString ScoreText = FString::Printf(TEXT("%d"), TotalScore);
-
 		TotalScoreText->SetText(FText::FromString(ScoreText));
+		TotalScoreText->SetRenderOpacity(1.0f); // 점수 갱신 시 항상 보이도록
+
+		// 기존 Fade 타이머 초기화 후 다시 설정
+		if (FadeTotalScoreTimerHandle.IsValid())
+		{
+			GetWorld()->GetTimerManager().ClearTimer(FadeTotalScoreTimerHandle);
+		}
+
+		const float DelayBeforeFadeOut = 5.0f;
+		const float FadeDuration = 0.5f;
+		const float FadeInterval = 0.02f;
+		const int32 FadeSteps = FadeDuration / FadeInterval;
+
+		TWeakObjectPtr<UTextBlock> WeakTotalScore = TotalScoreText;
+
+		GetWorld()->GetTimerManager().SetTimer(FadeTotalScoreTimerHandle, [WeakTotalScore, StepCounter = 0, FadeSteps]() mutable
+		{
+			if (!WeakTotalScore.IsValid()) return;
+
+			float Progress = FMath::Clamp(static_cast<float>(StepCounter) / FadeSteps, 0.f, 1.f);
+			float NewOpacity = FMath::Lerp(1.f, 0.f, Progress);
+
+			WeakTotalScore->SetRenderOpacity(NewOpacity);
+
+			StepCounter++;
+		}, FadeInterval, true, DelayBeforeFadeOut);
 	}
+	
 }
 
 void UKillLogWidget::NativeConstruct()

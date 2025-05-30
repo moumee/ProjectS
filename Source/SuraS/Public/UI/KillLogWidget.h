@@ -48,6 +48,8 @@ protected:
 	FTimerHandle AutoHideTimer;
 	
 	FTimerHandle TotalScoreFadeOutTimer;
+	
+	FTimerHandle FadeTotalScoreTimerHandle;
 
 
 	
