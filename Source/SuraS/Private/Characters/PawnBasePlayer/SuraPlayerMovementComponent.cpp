@@ -538,12 +538,14 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		{
 			if (GroundHit.ImpactNormal.Z >= MinWalkableFloorZ)
 			{
-				if (bCrouchPressed)
+				if (bCrouchPressed || !MovementInputVector.IsZero())
 				{
+					UE_LOG(LogTemp, Warning, TEXT("Projected"));
 					Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * RunSpeed;
 				}
 				else
 				{
+					UE_LOG(LogTemp, Warning, TEXT("Zero"));
 					Velocity = FVector::ZeroVector;
 				}
 			}
@@ -558,12 +560,14 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			{
 				if (GroundHit.ImpactNormal.Z >= MinWalkableFloorZ)
 				{
-					if (bCrouchPressed)
+					if (bCrouchPressed || !MovementInputVector.IsZero())
 					{
+						UE_LOG(LogTemp, Warning, TEXT("Projected"));
 						Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * RunSpeed;
 					}
 					else
 					{
+						UE_LOG(LogTemp, Warning, TEXT("Zero"));
 						Velocity = FVector::ZeroVector;
 					}
 					

@@ -52,6 +52,7 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UCapsuleComponent> CapsuleComponent;
+	
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	TObjectPtr<USkeletalMeshComponent> ArmMesh;
