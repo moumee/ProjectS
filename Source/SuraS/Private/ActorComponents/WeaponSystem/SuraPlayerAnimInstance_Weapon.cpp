@@ -90,6 +90,8 @@ void USuraPlayerAnimInstance_Weapon::UpdateWeapon()
 			&& IsValid(SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon())
 			&& SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon() != nullptr)
 		{
+			bHasWeapon = true;
+
 			AimSocketRelativeTransform = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetAimSocketRelativeTransform();
 
 			//-------------------------------------------------------------

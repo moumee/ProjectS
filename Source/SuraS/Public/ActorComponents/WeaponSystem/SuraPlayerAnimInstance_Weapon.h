@@ -85,6 +85,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	AWeapon* CurrentWeapon;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	bool bHasWeapon = false;
+
 	//--------------------------
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
