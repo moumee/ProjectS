@@ -22,6 +22,7 @@ class UInputMappingContext;
 class UACDamageSystem;
 class UACPlayerAttackTokens;
 class UPlayerHitWidget;
+class UACUIMangerComponent;
 
 UCLASS()
 class SURAS_API ASuraPawnPlayer : public APawn, public IDamageable
@@ -94,6 +95,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Attack Tokens")
 	UACPlayerAttackTokens* AttackTokensComponent;
+
+	// UI component - suhyeon
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
+	UACUIMangerComponent* UIManager;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;

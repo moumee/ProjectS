@@ -287,7 +287,7 @@ void ASuraCharacterEnemyBase::BindKillLogOnDeath() const
 			APlayerController* PC = GetWorld()->GetFirstPlayerController();
 			if (!PC) return;
 
-			ASuraCharacterPlayerWeapon* Player = Cast<ASuraCharacterPlayerWeapon>(PC->GetPawn());
+			ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(PC->GetPawn());
 			if (!Player) return;
 
 			// 4. UIManager → KillLogManager 가져와서 호출

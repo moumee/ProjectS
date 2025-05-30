@@ -7,6 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "ActorComponents/AttackComponents/ACPlayerAttackTokens.h"
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
+#include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
@@ -63,6 +64,9 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 
 	// Hit Effect Class Init - by Yoony
 	static ConstructorHelpers::FClassFinder<UPlayerHitWidget> WidgetClass{ TEXT("/Game/UI/Player/WBP_PlayerHit") };
+
+	// UIManager actor components - suhyeon
+	UIManager = CreateDefaultSubobject<UACUIMangerComponent>(TEXT("UI Manager Component"));
 
 	if (WidgetClass.Succeeded())
 		HitEffectWidgetClass = WidgetClass.Class;

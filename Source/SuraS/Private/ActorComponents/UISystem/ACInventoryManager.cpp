@@ -3,10 +3,10 @@
 
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
-#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "ActorComponents/WeaponSystem/SuraProjectile.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponPickUp.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h" 
+#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "GameFramework/Character.h"
@@ -77,6 +77,8 @@ void UACInventoryManager::SetPendingWeaponIndex(const int32 Index)
 
 void UACInventoryManager::OnConfirmWeaponEquip()
 {
+	UE_LOG(LogTemp, Warning, TEXT("✅ OnConfirmWeaponEquip 호출됨"));
+	
 	if (!bWaitingForWeaponSwitch)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("bWaitingForWeaponSwitch == false"));
@@ -89,14 +91,14 @@ void UACInventoryManager::OnConfirmWeaponEquip()
 		return;
 	}
 
-	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner()); // ← 여기! GetOuter() 대신 GetOwner() 써야 안전
-	if (!OwnerCharacter)
+	ASuraPawnPlayer* OwnerPawn = Cast<ASuraPawnPlayer>(GetOwner());
+	if (!OwnerPawn)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("OwnerCharacter null"));
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("OwnerPawn null"));
 		return;
 	}
 
-	UWeaponSystemComponent* WeaponSystem = OwnerCharacter->FindComponentByClass<UWeaponSystemComponent>();
+	UWeaponSystemComponent* WeaponSystem = OwnerPawn->FindComponentByClass<UWeaponSystemComponent>();
 	if (!WeaponSystem)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("WeaponSystemComponent 못 찾음"));
@@ -347,7 +349,7 @@ void UACInventoryManager::CreateAndAddWeaponFromData(FWeaponData* WeaponData)
 	TempPickUp->SetWeaponName(WeaponData->WeaponName);   // Setter 만들어야 함
 
 	// 📌 3. 무기 생성
-	AWeapon* NewWeapon = TempPickUp->SpawnWeapon(Cast<ASuraCharacterPlayerWeapon>(GetOwner()));
+	AWeapon* NewWeapon = TempPickUp->SpawnWeapon(Cast<ASuraPawnPlayer>(GetOwner()));
 	TempPickUp->Destroy(); // PickUp 액터 제거
 
 	if (!NewWeapon) return;
