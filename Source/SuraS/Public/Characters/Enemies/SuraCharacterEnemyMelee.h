@@ -16,7 +16,8 @@ class SURAS_API ASuraCharacterEnemyMelee : public ASuraCharacterEnemyBase
 
 	FTimerHandle RotationHandle;
 
-	const ASuraCharacterPlayer* Player;
+	UPROPERTY()
+	const ASuraPawnPlayer* Player;
 
 	void RotateTowardPlayer();
 	
@@ -26,5 +27,5 @@ protected:
 public:
 	ASuraCharacterEnemyMelee();
 
-	virtual void Attack(const ASuraCharacterPlayer* Player) override;
+	virtual void Attack(const ASuraPawnPlayer* Player) override;
 };

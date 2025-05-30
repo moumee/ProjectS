@@ -5,6 +5,8 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "ActorComponents/AttackComponents/ACPlayerAttackTokens.h"
+#include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
@@ -12,6 +14,7 @@
 #include "GameFramework/SpringArmComponent.h"
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
+#include "Widgets/Player/PlayerHitWidget.h"
 
 ASuraPawnPlayer::ASuraPawnPlayer()
 {
@@ -53,13 +56,36 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
 	CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
 	ArmMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// for damage interactions with enemies
+	AttackTokensComponent = CreateDefaultSubobject<UACPlayerAttackTokens>(TEXT("Attack Tokens Component"));
+	DamageSystemComponent = CreateDefaultSubobject<UACDamageSystem>(TEXT("Damage System Component"));
+
+	// Hit Effect Class Init - by Yoony
+	static ConstructorHelpers::FClassFinder<UPlayerHitWidget> WidgetClass{ TEXT("/Game/UI/Player/WBP_PlayerHit") };
+
+	if (WidgetClass.Succeeded())
+		HitEffectWidgetClass = WidgetClass.Class;
 }
 
 void ASuraPawnPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
+	GetDamageSystemComponent()->OnDamaged.AddUObject(this, &ASuraPawnPlayer::OnDamaged);
+	GetDamageSystemComponent()->OnDeath.AddUObject(this, &ASuraPawnPlayer::OnDeath);
+
+	// Hit Effect Widget Init - by Yoony
+	if (IsValid(HitEffectWidgetClass))
+	{
+		HitEffectWidget = Cast<UPlayerHitWidget>(CreateWidget<UPlayerHitWidget>(GetWorld(), HitEffectWidgetClass));
+		
+		if (IsValid(HitEffectWidget))
+		{
+			HitEffectWidget->AddToViewport();
+			HitEffectWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
 }
 
 UCapsuleComponent* ASuraPawnPlayer::GetCapsuleComponent()
@@ -222,6 +248,22 @@ void ASuraPawnPlayer::StopCrouchInput()
 	}
 	
 	MovementComponent->SetCrouchPressed(false);
+}
+
+bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
+{
+	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
+}
+
+void ASuraPawnPlayer::OnDamaged()
+{
+	HitEffectWidget->SetVisibility(ESlateVisibility::Visible);
+	HitEffectWidget->PlayFadeAnimtion();
+}
+
+void ASuraPawnPlayer::OnDeath()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Player Dead"));
 }
 
 

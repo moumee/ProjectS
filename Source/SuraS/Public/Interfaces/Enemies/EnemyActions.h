@@ -4,7 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "Characters/Player/SuraCharacterPlayer.h"
+#include "Characters/PawnBAsePlayer/SuraPawnPlayer.h"
+#include "Enumerations/Enemies/EnemyEnums.h"
 #include "EnemyActions.generated.h"
 
 // This class does not need to be modified.
@@ -23,5 +24,6 @@ class SURAS_API IEnemyActions
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void Attack(const ASuraCharacterPlayer* Player) = 0;
+	virtual void Attack(const ASuraPawnPlayer* Player) = 0;
+	virtual void SetMovementSpeed(EEnemySpeed Speed) = 0;
 };

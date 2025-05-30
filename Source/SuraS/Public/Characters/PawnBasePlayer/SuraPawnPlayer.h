@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "GameFramework/Pawn.h"
+#include "Interfaces/Damageable.h"
 #include "SuraPawnPlayer.generated.h"
 
 class USuraPlayerCameraComponent;
@@ -17,10 +18,20 @@ struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
 
+// for interactions with enemies - must keep - by Yoony
+class UACDamageSystem;
+class UACPlayerAttackTokens;
+class UPlayerHitWidget;
+
 UCLASS()
-class SURAS_API ASuraPawnPlayer : public APawn
+class SURAS_API ASuraPawnPlayer : public APawn, public IDamageable
 {
 	GENERATED_BODY()
+
+	TSubclassOf<class UUserWidget> HitEffectWidgetClass;
+
+	UPROPERTY()
+	UPlayerHitWidget* HitEffectWidget;
 
 public:
 	ASuraPawnPlayer();
@@ -48,6 +59,11 @@ public:
 	FVector2D GetPlayerLookInputVector() const { return PlayerLookInputVector2D; } // <WeaponSystem>
 	USuraPlayerMovementComponent* GetPlayerMovementComponent() { return MovementComponent; };
 
+	// for damage system comp and interactions with enemies
+	UACDamageSystem* GetDamageSystemComponent() const { return DamageSystemComponent; }
+	UACPlayerAttackTokens* GetAttackTokensComponent() const { return AttackTokensComponent; }
+	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
+
 protected:
 
 	UPROPERTY(EditAnywhere)
@@ -72,6 +88,12 @@ protected:
 	// IT IS NOT THE CAMERA!!
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<USuraPlayerCameraComponent> CameraMovementComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Damage")
+	UACDamageSystem* DamageSystemComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Attack Tokens")
+	UACPlayerAttackTokens* AttackTokensComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
@@ -106,6 +128,9 @@ protected:
 	void StartCrouchInput();
 	void StopCrouchInput();
 
+	// Damage Comp Event Delegate Functions
+	void OnDamaged();
+	void OnDeath();
 };
 
 

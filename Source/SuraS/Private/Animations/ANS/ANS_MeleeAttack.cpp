@@ -42,7 +42,7 @@ void UANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 		{
 			// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("poyo"));
 
-			if (ASuraCharacterPlayer* const Player = Cast<ASuraCharacterPlayer>(Hit.GetActor()))
+			if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(Hit.GetActor()))
 			{
 
 				FDamageData DamageData;

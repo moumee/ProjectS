@@ -16,6 +16,9 @@ class SURAS_API AEnemyPatrolRoute : public AActor
 	UPROPERTY()
 	USplineComponent* PatrolRoute;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol Route", meta=(AllowPrivateAccess = "true"))
+	bool bIsRouteLooped = false;
+
 	int _PatrolIndex = 0;
 	int _Direction = 1;
 
@@ -28,5 +31,5 @@ protected:
 
 public:
 	void IncrementPatrolRoute();
-	FVector GetSplinePointAsWorldPosition() const;
+	FVector GetCurrentPatrolIndexPosition() const;
 };
