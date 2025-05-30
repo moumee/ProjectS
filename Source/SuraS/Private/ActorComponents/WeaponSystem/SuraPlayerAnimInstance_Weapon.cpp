@@ -1,9 +1,8 @@
 
-//---------------------------------------------------
-//<이재형>
 #include "ActorComponents/WeaponSystem/SuraPlayerAnimInstance_Weapon.h"
 
-#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
+#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
+
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponBaseState.h"
@@ -13,38 +12,30 @@
 #include "Camera/CameraComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
-//<승환님>
-#include "ActorComponents/ACPlayerMovmentData.h"
-#include "Characters/Player/SuraPlayerBaseState.h"
-#include "Characters/Player/SuraPlayerCrouchingState.h"
-
-
-//SuraPlayerAnimInstance_Weapon::SuraPlayerAnimInstance_Weapon()
-//{
-//}
-//
-//SuraPlayerAnimInstance_Weapon::~SuraPlayerAnimInstance_Weapon()
-//{
-//}
 
 void USuraPlayerAnimInstance_Weapon::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
 
-	Character = Cast<ASuraCharacterPlayerWeapon>(TryGetPawnOwner());
+	SuraPlayer = Cast<ASuraPawnPlayer>(TryGetPawnOwner());
 
-	if (Character)
+	if (SuraPlayer)
 	{
-		// <승환님>
-		RunSpeed = Character->GetPlayerMovementData()->GetRunSpeed();
+		// <Character Movement>
+		MovementState = SuraPlayer->GetPlayerMovementComponent()->GetMovementState();
+		bIsCrouching = SuraPlayer->GetPlayerMovementComponent()->IsCrouching();
+		bIsDashing = SuraPlayer->GetPlayerMovementComponent()->IsDashing();
+		Velocity = SuraPlayer->GetPlayerMovementComponent()->Velocity;
+		MovementInputVector = SuraPlayer->GetPlayerMovementComponent()->GetMovementInputVector();
 
-		//--------------------------------------
-		// <이재형>
+
+		//-------------------------------------------
+		// <weapon System>
 		SetAimPoint();
 		CurrentWeaponStateType = EWeaponStateType::WeaponStateType_None;
 	}
 
-	if (Character && Character->GetWeaponSystem())
+	if (SuraPlayer && SuraPlayer->GetWeaponSystemComponent())
 	{
 		//SetAimSocket();
 	}
@@ -54,88 +45,66 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 {
 	Super::NativeUpdateAnimation(DeltaTime);
 
-	if (Character)
+	if (SuraPlayer)
 	{
-		Velocity = Character->GetCharacterMovement()->Velocity;
+		// <Character Movement>
+		MovementState = SuraPlayer->GetPlayerMovementComponent()->GetMovementState();
+		bIsCrouching = SuraPlayer->GetPlayerMovementComponent()->IsCrouching();
+		bIsDashing = SuraPlayer->GetPlayerMovementComponent()->IsDashing();
+		Velocity = SuraPlayer->GetPlayerMovementComponent()->Velocity;
+		MovementInputVector = SuraPlayer->GetPlayerMovementComponent()->GetMovementInputVector();
 
-		GroundSpeed = UKismetMathLibrary::VSizeXY(Character->GetCharacterMovement()->Velocity);
-
-		Direction = UKismetAnimationLibrary::CalculateDirection(Character->GetCharacterMovement()->Velocity,
-			Character->GetActorRotation());
-
-		Pitch = UKismetMathLibrary::NormalizeAxis(Character->GetControlRotation().Pitch);
-
-		if (Character->GetCurrentState())
-		{
-			CurrentState = Character->GetCurrentState();
-			CurrentStateType = Character->GetCurrentState()->GetStateType();
-			bCrouchTriggered = Character->bCrouchTriggered;
-		}
-
-		if (Character->GetCharacterMovement()->MovementMode == MOVE_Flying)
-		{
-			bIsInAir = true;
-		}
-		else
-		{
-			if (Character->GetCharacterMovement()->IsFalling())
-			{
-				bIsInAir = true;
-			}
-			else
-			{
-				bIsInAir = false;
-			}
-		}
 
 		//-----------------------------------------------
-		// <Related to Weapon System>
-
-		bIsZoomIn = Character->GetWeaponSystem()->IsZoomIn();
-
+		// <Weapon System>
+		bIsZoomIn = SuraPlayer->GetWeaponSystemComponent()->IsZoomIn();
 		//ScreenCenterWorldLocation = Character->GetWeaponSystem()->GetScreenCenterWorldPosition();
-
 		//TargetRightHandWorldLocation = Character->GetWeaponSystem()->GetTargetRightHandWorldLocation();
-
 		SetTargetRightHandTransform();
 
 
 		//TODO: Update 말고 트리거로 작동하게 해야함
 		//SetAimSocket();
 		//SetAimPoint();
-		if (Character->GetWeaponSystem())
+		if (SuraPlayer->GetWeaponSystemComponent())
 		{
 			//SetAimSocket();
 			SetAimPoint();
 			UpdateWeapon();
+
+			LeftHandTransform = GetLeftHandTransform();
+			TargetLeftHandSocketTransform = GetTargetLeftHandTransfrom();
 		}
 
 		// DefalutCameraRelativeTransform = Character->GetCamera()->GetRelativeTransform();
-
-
 		// LogTransform(AimSocketRelativeTransform);
-
 	}
 }
 
 void USuraPlayerAnimInstance_Weapon::UpdateWeapon()
 {
-	if (IsValid(Character->GetWeaponSystem())
-		&& Character->GetWeaponSystem() != nullptr)
+	if (IsValid(SuraPlayer->GetWeaponSystemComponent())
+		&& SuraPlayer->GetWeaponSystemComponent() != nullptr)
 	{
-		if (Character->GetWeaponSystem()->GetWeaponNum() != 0
-			&& IsValid(Character->GetWeaponSystem()->GetCurrentWeapon())
-			&& Character->GetWeaponSystem()->GetCurrentWeapon() != nullptr)
+		if (SuraPlayer->GetWeaponSystemComponent()->GetWeaponNum() != 0
+			&& IsValid(SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon())
+			&& SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon() != nullptr)
 		{
-			AimSocketRelativeTransform = Character->GetWeaponSystem()->GetCurrentWeapon()->GetAimSocketRelativeTransform();
+			bHasWeapon = true;
+
+			AimSocketRelativeTransform = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetAimSocketRelativeTransform();
 
 			//-------------------------------------------------------------
 
-			CurrentWeaponStateType = Character->GetWeaponSystem()->GetCurrentWeapon()->GetCurrentState()->GetWeaponStateType();
+			CurrentWeaponStateType = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetCurrentState()->GetWeaponStateType();
 
 			if (CurrentWeaponStateType == EWeaponStateType::WeaponStateType_Firing)
 			{
-				//UE_LOG(LogTemp, Warning, TEXT("Firing State!!!!!!!!!!"));
+				UE_LOG(LogTemp, Warning, TEXT("Firing State!!!!!!!!!!"));
+			}
+			else if (CurrentWeaponStateType == EWeaponStateType::WeaponStateType_Reloading)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Reloading State!!!!!!!!!!"));
 			}
 		}
 
@@ -179,15 +148,15 @@ void USuraPlayerAnimInstance_Weapon::SetAimSocket()
 	//	AimSocketRelativeTransform = AimSocketTransform.GetRelativeTransform(RightHandTransform);
 	//}
 
-	if (IsValid(Character->GetWeaponSystem())
-		&& Character->GetWeaponSystem() != nullptr)
+	if (IsValid(SuraPlayer->GetWeaponSystemComponent())
+		&& SuraPlayer->GetWeaponSystemComponent() != nullptr)
 	{
-		if (Character->GetWeaponSystem()->GetWeaponNum() != 0
-			&& IsValid(Character->GetWeaponSystem()->GetCurrentWeapon())
-			&& Character->GetWeaponSystem()->GetCurrentWeapon() != nullptr)
+		if (SuraPlayer->GetWeaponSystemComponent()->GetWeaponNum() != 0
+			&& IsValid(SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon())
+			&& SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon() != nullptr)
 		{
-			FTransform AimSocketTransform = Character->GetWeaponSystem()->GetCurrentWeapon()->GetWeaponMesh()->GetSocketTransform(FName(TEXT("Aim")));
-			FTransform IKHandGunTransform = Character->GetMesh()->GetSocketTransform(FName(TEXT("ik_hand_gun")));
+			FTransform AimSocketTransform = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetWeaponMesh()->GetSocketTransform(FName(TEXT("Aim")));
+			FTransform IKHandGunTransform = SuraPlayer->GetArmMesh()->GetSocketTransform(FName(TEXT("ik_hand_gun")));
 
 			AimSocketRelativeTransform = AimSocketTransform.GetRelativeTransform(IKHandGunTransform);
 			//AimSocketRelativeTransform = IKHandGunTransform.GetRelativeTransform(AimSocketTransform);
@@ -195,8 +164,8 @@ void USuraPlayerAnimInstance_Weapon::SetAimSocket()
 	}
 	else
 	{
-		FTransform AimSocketTransform = Character->GetMesh()->GetSocketTransform(FName(TEXT("ik_hand_gun")));
-		FTransform IKHandGunTransform = Character->GetMesh()->GetSocketTransform(FName(TEXT("ik_hand_gun")));
+		FTransform AimSocketTransform = SuraPlayer->GetArmMesh()->GetSocketTransform(FName(TEXT("ik_hand_gun")));
+		FTransform IKHandGunTransform = SuraPlayer->GetArmMesh()->GetSocketTransform(FName(TEXT("ik_hand_gun")));
 
 		//AimSocketRelativeTransform = AimSocketTransform.GetRelativeTransform(IKHandGunTransform);
 		AimSocketRelativeTransform = IKHandGunTransform.GetRelativeTransform(AimSocketTransform);
@@ -205,10 +174,10 @@ void USuraPlayerAnimInstance_Weapon::SetAimSocket()
 
 void USuraPlayerAnimInstance_Weapon::SetAimPoint()
 {
-	FTransform CameraTransform = Character->GetCamera()->GetComponentTransform();
+	FTransform CameraTransform = SuraPlayer->GetCameraComponent()->GetComponentTransform();
 	//FTransform HandRootTransform = Character->GetMesh()->GetSocketTransform(FName(TEXT("ik_hand_root")));
 	//FTransform HandRootTransform = Character->GetMesh()->GetBoneTransform(FName(TEXT("ik_hand_root")), ERelativeTransformSpace::RTS_World);
-	FTransform HandRootTransform = Character->GetMesh()->GetComponentTransform();
+	FTransform HandRootTransform = SuraPlayer->GetArmMesh()->GetComponentTransform();
 
 	FTransform CameraRelativeTransform = CameraTransform.GetRelativeTransform(HandRootTransform);
 	//FTransform CameraRelativeTransform = HandRootTransform.GetRelativeTransform(CameraTransform);
@@ -221,19 +190,19 @@ void USuraPlayerAnimInstance_Weapon::SetAimPoint()
 
 void USuraPlayerAnimInstance_Weapon::SetTargetRightHandTransform()
 {
-	if (IsValid(Character->GetWeaponSystem())
-		&& Character->GetWeaponSystem() != nullptr)
+	if (IsValid(SuraPlayer->GetWeaponSystemComponent())
+		&& SuraPlayer->GetWeaponSystemComponent() != nullptr)
 	{
-		if (Character->GetWeaponSystem()->GetWeaponNum() != 0
-			&& IsValid(Character->GetWeaponSystem()->GetCurrentWeapon())
-			&& Character->GetWeaponSystem()->GetCurrentWeapon() != nullptr)
+		if (SuraPlayer->GetWeaponSystemComponent()->GetWeaponNum() != 0
+			&& IsValid(SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon())
+			&& SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon() != nullptr)
 		{
 			//FTransform RootTransform = Character->GetMesh()->GetBoneTransform(FName(TEXT("ik_hand_root")), ERelativeTransformSpace::RTS_World);
-			FTransform RootTransform = Character->GetArmMesh()->GetComponentTransform();
+			FTransform RootTransform = SuraPlayer->GetArmMesh()->GetComponentTransform();
 
-			FTransform CameraTransform = Character->GetCamera()->GetComponentTransform();
-			FTransform WeaponAimSocketTransform = Character->GetWeaponSystem()->GetCurrentWeapon()->GetWeaponMesh()->GetSocketTransform(FName(TEXT("Aim")));
-			FTransform RightHandTransform = Character->GetArmMesh()->GetBoneTransform(FName(TEXT("hand_r")));
+			FTransform CameraTransform = SuraPlayer->GetCameraComponent()->GetComponentTransform();
+			FTransform WeaponAimSocketTransform = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetWeaponMesh()->GetSocketTransform(FName(TEXT("Aim")));
+			FTransform RightHandTransform = SuraPlayer->GetArmMesh()->GetBoneTransform(FName(TEXT("hand_r")));
 
 			FTransform CameraRelativeTransform = CameraTransform.GetRelativeTransform(RootTransform);
 			FTransform WeaponAimSocketRelativeTransform = WeaponAimSocketTransform.GetRelativeTransform(RootTransform);
@@ -262,4 +231,24 @@ void USuraPlayerAnimInstance_Weapon::LogTransform(const FTransform& Transform, c
 		Location.X, Location.Y, Location.Z,
 		Rotation.Pitch, Rotation.Yaw, Rotation.Roll,
 		Scale.X, Scale.Y, Scale.Z);
+}
+
+FTransform USuraPlayerAnimInstance_Weapon::GetLeftHandTransform()
+{
+	return SuraPlayer->GetArmMesh()->GetSocketTransform(FName("hand_l"));
+}
+
+FTransform USuraPlayerAnimInstance_Weapon::GetTargetLeftHandTransfrom()
+{
+	if (SuraPlayer)
+	{
+		CurrentWeapon = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon();
+		if (CurrentWeapon)
+		{
+			return CurrentWeapon->GetWeaponMesh()->GetSocketTransform(FName("LeftHand"));
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("NOOOOOO!!!"));
+	return FTransform();
 }

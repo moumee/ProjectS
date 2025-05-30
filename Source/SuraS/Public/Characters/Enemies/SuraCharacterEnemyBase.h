@@ -8,9 +8,11 @@
 #include "Interfaces/Damageable.h"
 #include "Structures/DamageData.h"
 #include "Interfaces/Enemies/EnemyActions.h"
+#include "Utilities/EnemyPatrolRoute.h"
 
 #include "SuraCharacterEnemyBase.generated.h"
 
+class UACDamageSystem;
 class UWidgetComponent;
 class AEnemyBaseAIController;
 class UBehaviorTree;
@@ -47,6 +49,9 @@ protected:
 
 	UPROPERTY()
 	ASuraEnemyWeapon* EnemyWeapon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Patrol Route", meta = (AllowPrivateAccess = "true"))
+	AEnemyPatrolRoute* PatrolRoute;
 
 	// [protected functions]
 	// Called when the game starts or when spawned
@@ -87,15 +92,23 @@ public:
 	FORCEINLINE float GetAttackDamageAmount() const { return AttackDamageAmount; }
 
 	// behavior tree getter
-	UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
+	FORCEINLINE UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
 
 	FORCEINLINE FName GetEnemyType() const { return EnemyType; }
+
+	FORCEINLINE AEnemyPatrolRoute* GetPatrolRoute() const { return PatrolRoute; }
 
 	void SetUpAIController(AEnemyBaseAIController* const NewAIController); // const ptr: the ptr address can't be changed
 
 	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
 
-	virtual void Attack(const ASuraCharacterPlayer* Player) override;
+	virtual void Attack(const ASuraPawnPlayer* Player) override;
+
+	virtual void SetMovementSpeed(EEnemySpeed Speed) override;
+
+	virtual void Climb(const FVector& Destination);
+
+	virtual void OnClimbEnded(UAnimMontage* AnimMontage, bool bInterrupted);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	UAnimMontage* HitAnimation;
@@ -105,6 +118,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	UAnimMontage* AttackAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
+	UAnimMontage* ClimbAnimation;
+
 
 	//poolsystem
 	bool isInitialized = false;

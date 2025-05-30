@@ -20,7 +20,9 @@
 
 #include "ACWeapon.generated.h"
 
-class ASuraCharacterPlayerWeapon;
+//class ASuraCharacterPlayerWeapon;
+class ASuraPawnPlayer;
+
 class USuraWeaponBaseState;
 class USuraWeaponIdleState;
 class USuraWeaponFiringState;
@@ -118,22 +120,22 @@ public:
 
 	AWeapon();
 
-	void InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter);
-	void InitializeCamera(ASuraCharacterPlayerWeapon* NewCharacter);
+	void InitializeWeapon(ASuraPawnPlayer* NewCharacter);
+	void InitializeCamera(ASuraPawnPlayer* NewCharacter);
 	void InitializeUI();
 
 	void LoadWeaponData();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	bool AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter);
+	bool AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void DetachWeaponFromPlayer();
 
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
-	void FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 	void SpawnProjectile();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
@@ -206,7 +208,7 @@ public:
 
 protected:
 	/** The Character holding this weapon*/
-	ASuraCharacterPlayerWeapon* Character;
+	ASuraPawnPlayer* Character;
 	
 	APlayerController* CharacterController;
 		
@@ -289,6 +291,8 @@ protected:
 
 	FVector RightHandToAimSocketOffset;
 
+
+	FTransform RightHandOffset;
 protected:
 	float LineTraceMaxDistance = 10000.f;
 
@@ -317,10 +321,10 @@ protected:
 	float WeaponSwitchingRate = 1.f;
 	FTimerHandle SwitchingTimer;
 public:
-	void SwitchWeapon(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip);
-	void EndWeaponSwitch(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip);
-	void EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter);
-	void UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter);
+	void SwitchWeapon(ASuraPawnPlayer* TargetCharacter, bool bEquip);
+	void EndWeaponSwitch(ASuraPawnPlayer* TargetCharacter, bool bEquip);
+	void EquipWeapon(ASuraPawnPlayer* TargetCharacter);
+	void UnequipWeapon(ASuraPawnPlayer* TargetCharacter);
 	void SetInputActionBinding();
 	void ResetInputActionBinding();
 #pragma endregion
@@ -345,6 +349,11 @@ protected:
 	UPROPERTY(EditAnywhere)
 	int32 LeftAmmoInCurrentMag;
 
+	UPROPERTY(EditAnywhere)
+	int32 AmmoConsumedPerShot_Left = 1;
+	UPROPERTY(EditAnywhere)
+	int32 AmmoConsumedPerShot_Right = 1;
+
 	FTimerHandle ReloadingTimer;
 protected:
 	void HandleReload();
@@ -354,9 +363,10 @@ public:
 protected:
 	void StopReload();
 
-	void ConsumeAmmo();
+	void ConsumeAmmo(int32 AmmoCost = 1);
 	void ReloadAmmo();
 	bool HasAmmoInCurrentMag();
+	bool HasAmmoInCurrentMag(int32 AmmoCost);
 public:
 	bool AddAmmo(int32 NumAmmo);
 	void AutoReload();
@@ -435,7 +445,7 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float SingleShotDelay = 1.f;
 public:
-	void StartSingleShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
+	void StartSingleShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0);
 	void StopSingleShot();
 #pragma endregion
 
@@ -469,6 +479,7 @@ protected:
 
 protected:
 	void StartFullAutoShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
+	void UpdateFullAutoShot(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
 	void StopFullAutoShot();
 #pragma endregion
 
@@ -532,6 +543,7 @@ protected:
 	float ChargingAdditionalRecoilAmountYawBase = 1.f;
 	float ChargingAdditionalProjectileRadiusBase = 20.f;
 
+	int32 ChargingAdditionalPelletMaxNum = 0;
 	//int32 MaxPenetrableObjectsNum = 4;
 
 	float ElapsedChargeTime = 0.f;

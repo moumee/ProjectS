@@ -39,4 +39,7 @@ struct SURAS_API FEnemyAttributesData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UAnimMontage* AttackAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UAnimMontage* ClimbAnimation;
 };

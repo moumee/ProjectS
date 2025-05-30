@@ -27,7 +27,7 @@ void ASuraCharacterEnemyBombard::BeginPlay()
 	EnemyWeapon = Firearm;
 }
 
-void ASuraCharacterEnemyBombard::Attack(const ASuraCharacterPlayer* Player)
+void ASuraCharacterEnemyBombard::Attack(const ASuraPawnPlayer* Player)
 {
 	if (AttackAnimation)
 	{

@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "AIController.h"
 #include "Perception/AIPerceptionTypes.h"
-#include "Enumerations/Enemies/EEnemyState.h"
+#include "Enumerations/Enemies/EnemyEnums.h"
 #include "EnemyBaseAIController.generated.h"
 
 /**
@@ -15,7 +15,8 @@ UCLASS()
 class SURAS_API AEnemyBaseAIController : public AAIController
 {
 	GENERATED_BODY()
-	
+
+	UPROPERTY()
 	class UAISenseConfig_Sight* SightConfig;
 
 	void SetupPerceptionSystem();
@@ -23,7 +24,7 @@ class SURAS_API AEnemyBaseAIController : public AAIController
 	UFUNCTION()
 	void OnTargetSighted(AActor* SeenTarget, FAIStimulus const Stimulus);
 
-	EEnemyState CurrentState;
+	EEnemyStates _CurrentState;
 
 protected:
 	virtual void OnPossess(APawn* PossessedPawn) override;
@@ -33,7 +34,7 @@ public:
 
 	void InitializeBlackBoard(float StrafeRadius, float AttackRadius, float AttackRate);
 
-	EEnemyState GetCurrentState() const { return CurrentState; }
+	FORCEINLINE EEnemyStates GetCurrentState() const { return _CurrentState; }
 
-	void UpdateCurrentState(EEnemyState NewState);
+	void UpdateCurrentState(EEnemyStates NewState);
 };

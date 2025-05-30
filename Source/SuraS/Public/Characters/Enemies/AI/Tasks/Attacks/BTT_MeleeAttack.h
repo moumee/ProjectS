@@ -6,6 +6,7 @@
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "BTT_MeleeAttack.generated.h"
 
+class ASuraPawnPlayer;
 /**
  * 
  */
@@ -17,6 +18,9 @@ class SURAS_API UBTT_MeleeAttack : public UBTTask_BlackboardBase
 	FOnMontageEnded OnAttackMontageEnded;
 
 	bool IsAttacking = true;
+
+	UPROPERTY()
+	ASuraPawnPlayer* Target;
 
 	void OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted);
 	

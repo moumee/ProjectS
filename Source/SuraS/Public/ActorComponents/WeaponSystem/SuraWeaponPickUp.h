@@ -13,7 +13,8 @@
 class AWeapon;
 class USuraPickUpComponent;
 class ASuraCharacterBase;
-class ASuraCharacterPlayerWeapon;
+//class ASuraCharacterPlayerWeapon;
+class ASuraPawnPlayer;
 
 UCLASS()
 class SURAS_API ASuraWeaponPickUp : public AActor, public IInteractInterface
@@ -35,10 +36,10 @@ public:
 public:
 
 	UFUNCTION()
-	void AttachToCharacter(ASuraCharacterPlayerWeapon* Character);
+	void AttachToCharacter(ASuraPawnPlayer* Character);
 
 	UFUNCTION()
-	AWeapon* SpawnWeapon(ASuraCharacterPlayerWeapon* Character);
+	AWeapon* SpawnWeapon(ASuraPawnPlayer* Character);
 
 	void DestroyWeaponPickUp();
 

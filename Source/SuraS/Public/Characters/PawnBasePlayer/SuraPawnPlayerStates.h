@@ -1,5 +1,8 @@
 #pragma once
 
+
+// Deprecated. Currently used for the old SuraCharacterPlayer
+
 UENUM(BlueprintType)
 enum class EPrimaryState : uint8
 {

@@ -66,6 +66,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
 	UMaterialInterface* DecalMaterial;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* HitSound; //TODO: Play different sound per object type
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float DefaultDamage = 0.f;
 
@@ -106,6 +109,19 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
 	int32 NumPenetrableObjects = 4;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ricochet")
+	bool bCanSimpleBounce = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ricochet")
+	int32 MaxRicochetCount = 4;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ricochet")
+	float MinIncidenceAngle = 5.f;
+
+	int32 CurrentRicochetCount = 0;
+
+
 public:	
 	ASuraProjectile();
 	void InitializeProjectile(AActor* Owner, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0);
@@ -133,6 +149,7 @@ public:
 protected:
 	bool bShouldUpdateTrailEffect = false;
 	void UpdateTrailEffect();
+
 
 	void DrawSphere(FVector Location, float Radius);
 
@@ -174,6 +191,22 @@ protected:
 	bool IsTargetValid();
 	bool IsTargetWithInRange();
 	void UpdateTargetInfo();
+#pragma endregion
+
+#pragma region Impulse
+protected:
+	bool bCanApplyImpulseToEnemy = false;
+	float HitImpulseToEnemy = 100.f;
+protected:
+	void AddImpulseToEnemy(AActor* OtherActor, FVector Force);
+
+
+#pragma endregion
+
+#pragma region Ricochet
+protected:
+	bool CheckRicochetAngle(FVector normal, FVector vel);
+
 #pragma endregion
 
 };

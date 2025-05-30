@@ -27,7 +27,7 @@ void ASuraCharacterEnemyRifle::BeginPlay()
 	EnemyWeapon = Firearm;
 }
 
-void ASuraCharacterEnemyRifle::Attack(const ASuraCharacterPlayer* Player)
+void ASuraCharacterEnemyRifle::Attack(const ASuraPawnPlayer* Player)
 {
 	if (AttackAnimation)
 	{

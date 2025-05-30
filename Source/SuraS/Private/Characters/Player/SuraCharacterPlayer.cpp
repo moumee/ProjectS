@@ -6,6 +6,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "ActorComponents/ACPlayerMovmentData.h"
+#include "ActorComponents/AttackComponents/ACPlayerAttackTokens.h"
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraPlayerBaseState.h"
@@ -55,7 +56,7 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	// UIManager actor components
 	UIManager = CreateDefaultSubobject<UACUIMangerComponent>(TEXT("UI Manager Component"));
 	
-	
+	AttackTokensComponent = CreateDefaultSubobject<UACPlayerAttackTokens>(TEXT("Attack Tokens Component"));
 
 	DamageSystemComponent = CreateDefaultSubobject<UACDamageSystem>(TEXT("Damage System Component"));
 

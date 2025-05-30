@@ -27,5 +27,5 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Firearm")
 	TSubclassOf<class ASuraFirearmRifle> RifleClass;
 
-	virtual void Attack(const ASuraCharacterPlayer* Player) override;
+	virtual void Attack(const ASuraPawnPlayer* Player) override;
 };

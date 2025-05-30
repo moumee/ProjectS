@@ -5,19 +5,33 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "GameFramework/Pawn.h"
+#include "Interfaces/Damageable.h"
 #include "SuraPawnPlayer.generated.h"
 
+class USuraPlayerCameraComponent;
+class USpringArmComponent;
 class USuraPlayerMovementComponent;
+class UWeaponSystemComponent;
 class UCameraComponent;
 class UCapsuleComponent;
 struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
 
+// for interactions with enemies - must keep - by Yoony
+class UACDamageSystem;
+class UACPlayerAttackTokens;
+class UPlayerHitWidget;
+
 UCLASS()
-class SURAS_API ASuraPawnPlayer : public APawn
+class SURAS_API ASuraPawnPlayer : public APawn, public IDamageable
 {
 	GENERATED_BODY()
+
+	TSubclassOf<class UUserWidget> HitEffectWidgetClass;
+
+	UPROPERTY()
+	UPlayerHitWidget* HitEffectWidget;
 
 public:
 	ASuraPawnPlayer();
@@ -25,42 +39,85 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	virtual void PossessedBy(AController* NewController) override;
 	
 	virtual void BeginPlay() override;
 
 	UCapsuleComponent* GetCapsuleComponent();
 
+	UCameraComponent* GetCameraComponent() const { return Camera; };
+
+	UWeaponSystemComponent* GetWeaponSystemComponent() const { return WeaponSystem; }  // <WeaponSystem>
+
+	USkeletalMeshComponent* GetArmMesh() { return ArmMesh; }  // <WeaponSystem>
+
+	bool HasWeapon() const;  // <WeaponSystem>s
+
+	void UpdateLookInputVector2D(const FInputActionValue& InputValue);  // <WeaponSystem>
+	void SetLookInputVector2DZero();  // <WeaponSystem>
+	FVector2D GetPlayerLookInputVector() const { return PlayerLookInputVector2D; } // <WeaponSystem>
+	USuraPlayerMovementComponent* GetPlayerMovementComponent() { return MovementComponent; };
+
+	// for damage system comp and interactions with enemies
+	UACDamageSystem* GetDamageSystemComponent() const { return DamageSystemComponent; }
+	UACPlayerAttackTokens* GetAttackTokensComponent() const { return AttackTokensComponent; }
+	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
+
 protected:
 
 	UPROPERTY(EditAnywhere)
-	UCapsuleComponent* CapsuleComponent;
+	TObjectPtr<UCapsuleComponent> CapsuleComponent;
+	
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	USkeletalMeshComponent* ArmMesh;
+	TObjectPtr<USkeletalMeshComponent> ArmMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	TObjectPtr<USkeletalMeshComponent> HandsMesh;
 
 	UPROPERTY(EditAnywhere)
-	UCameraComponent* Camera;
+	TObjectPtr<UCameraComponent> Camera;
 
 	UPROPERTY(EditAnywhere)
-	USuraPlayerMovementComponent* MovementComponent;
+	TObjectPtr<USuraPlayerMovementComponent> MovementComponent;
+
+	UPROPERTY(EditAnywhere, Category = "WeaponSystem")
+	TObjectPtr<UWeaponSystemComponent> WeaponSystem;  // <WeaponSystem>
+	// This actor component is for handling camera shakes and state based movement
+	// IT IS NOT THE CAMERA!!
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<USuraPlayerCameraComponent> CameraMovementComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Damage")
+	UACDamageSystem* DamageSystemComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Attack Tokens")
+	UACPlayerAttackTokens* AttackTokensComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputMappingContext* DefaultMappingContext;
+	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputAction* MoveAction;
+	TObjectPtr<UInputAction> MoveAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputAction* LookAction;
+	TObjectPtr<UInputAction> LookAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputAction* JumpAction;
+	TObjectPtr<UInputAction> RunAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputAction* DashAction;
+	TObjectPtr<UInputAction> JumpAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	UInputAction* CrouchAction;
+	TObjectPtr<UInputAction> DashAction;
+
+	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	TObjectPtr<UInputAction> CrouchAction;
+	
+
+	FVector2D PlayerLookInputVector2D; // <WeaponSystem>
 
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);
@@ -71,6 +128,9 @@ protected:
 	void StartCrouchInput();
 	void StopCrouchInput();
 
+	// Damage Comp Event Delegate Functions
+	void OnDamaged();
+	void OnDeath();
 };
 
 

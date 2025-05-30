@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Characters/Player/SuraPlayerEnums.h"
+#include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 #include "ActorComponents/WeaponSystem/WeaponStateType.h"
 #include "Animation/AnimInstance.h"
 #include "SuraPlayerAnimInstance_Weapon.generated.h"
 
 class USuraPlayerBaseState;
-class ASuraCharacterPlayerWeapon;
+class ASuraPawnPlayer;
 class AWeapon;
 /**
  * 
@@ -25,39 +25,25 @@ public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaTime) override;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Player")
-	ASuraCharacterPlayerWeapon* Character;
+protected:
+	// <Player Movement>
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr<ASuraPawnPlayer> SuraPlayer;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	EMovementState MovementState;
 
-	//-------------------------------------------------
-	// <½ÂÈ¯´Ô Player logic °ü·Ã>
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bIsCrouching;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	float GroundSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bIsDashing;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector Velocity;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	float RunSpeed;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	bool bIsInAir;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	bool bCrouchTriggered;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	float Direction;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	float Pitch;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	USuraPlayerBaseState* CurrentState;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	EPlayerState CurrentStateType;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FVector2D MovementInputVector;
 
 
 	//-------------------------------------------------
@@ -84,6 +70,12 @@ public:
 	FTransform AimPointRelativeTransform;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	FTransform LeftHandTransform;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	FTransform TargetLeftHandSocketTransform;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	FVector AimPointLocation;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
@@ -92,6 +84,9 @@ public:
 	//TODO: Logic ¹Ù²ã¾ß ÇÔ
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	AWeapon* CurrentWeapon;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	bool bHasWeapon = false;
 
 	//--------------------------
 
@@ -114,6 +109,8 @@ public:
 
 
 
+
+
 public:
 	void UpdateWeapon();
 
@@ -126,4 +123,9 @@ public:
 	void SetTargetRightHandTransform();
 
 	void LogTransform(const FTransform& Transform, const FString& TransformName = TEXT("Transform"));
+
+	//---------------------------
+	FTransform GetLeftHandTransform();
+	FTransform GetTargetLeftHandTransfrom();
+
 };

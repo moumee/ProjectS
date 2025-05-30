@@ -7,6 +7,7 @@
 #include "ActorComponents/UISystem/ACKillLogManager.h"
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
+#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -167,13 +168,65 @@ bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, const AA
 	return GetDamageSystemComp()->TakeDamage(DamageData, DamageCauser);
 }
 
-void ASuraCharacterEnemyBase::Attack(const ASuraCharacterPlayer* Player)
+void ASuraCharacterEnemyBase::Attack(const ASuraPawnPlayer* Player)
 {
 	if (AttackAnimation)
 	{
 		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
 		EnemyAnimInstance->Montage_Play(AttackAnimation);
 	}
+}
+
+void ASuraCharacterEnemyBase::SetMovementSpeed(EEnemySpeed Speed)
+{
+	switch (Speed)
+	{
+	case EEnemySpeed::Idle:
+		GetCharacterMovement()->MaxWalkSpeed = 0.f;
+		break;
+	case EEnemySpeed::Walk:
+		GetCharacterMovement()->MaxWalkSpeed = 250.f;
+		break;
+	case EEnemySpeed::Jog:
+		GetCharacterMovement()->MaxWalkSpeed = 400.f;
+		break;
+	case EEnemySpeed::Sprint:
+		GetCharacterMovement()->MaxWalkSpeed = 600.f;
+		break;
+	default:
+		GetCharacterMovement()->MaxWalkSpeed = 300.f;
+		break;
+	}
+}
+
+void ASuraCharacterEnemyBase::Climb(const FVector& Destination)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("climb"));
+
+	// GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+	AddMovementInput(FVector(Destination.X, Destination.Y, Destination.Z), true);
+
+	FOnMontageEnded OnClimbMontageEnded;
+
+	OnClimbMontageEnded.BindUObject(this, &ASuraCharacterEnemyBase::OnClimbEnded);
+
+	if (ClimbAnimation)
+	{
+		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
+		
+		// SetActorRotation(FRotator(90.f, GetActorRotation().Yaw, GetActorRotation().Roll));
+		
+		EnemyAnimInstance->Montage_Play(ClimbAnimation);
+	}
+
+	GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(OnClimbMontageEnded); // montage interrupted
+	GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(OnClimbMontageEnded); // montage ended
+}
+
+void ASuraCharacterEnemyBase::OnClimbEnded(UAnimMontage* AnimMontage, bool bInterrupted)
+{
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 }
 
 void ASuraCharacterEnemyBase::InitializeEnemy()
@@ -214,6 +267,7 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 			HitAnimation = EnemyAttributesData->HitAnimation;
 			DeathAnimation = EnemyAttributesData->DeathAnimation;
 			AttackAnimation = EnemyAttributesData->AttackAnimation;
+			ClimbAnimation = EnemyAttributesData->ClimbAnimation;
 		}
 
 		PlayerController = GetWorld()->GetFirstPlayerController();

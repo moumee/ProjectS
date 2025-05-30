@@ -1,25 +1,26 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Characters/Enemies/AI/Tasks/Attacks/BTT_Fire.h"
-
-#include "AIController.h"
+#include "Characters/Enemies/AI/Tasks/Attacks/BTT_CheckAttackTokens.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
+#include "Characters/Enemies/AI/EnemyBaseAIController.h"
+#include "ActorComponents/AttackComponents/ACPlayerAttackTokens.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
-UBTT_Fire::UBTT_Fire(FObjectInitializer const& ObjectInitializer)
+UBTT_CheckAttackTokens::UBTT_CheckAttackTokens(FObjectInitializer const& ObjectInitializer)
 {
-	NodeName = "Fire";
+	NodeName = "Check Attack Tokens";
 }
 
-EBTNodeResult::Type UBTT_Fire::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UBTT_CheckAttackTokens::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(OwnerComp.GetAIOwner()->GetCharacter()))
 	{
 		if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
 		{
-			Enemy->Attack(Player);
+			if (!Player->GetAttackTokensComponent()->ReserveAttackToken(1))
+				return EBTNodeResult::Failed;
 
 			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 			return EBTNodeResult::Succeeded;

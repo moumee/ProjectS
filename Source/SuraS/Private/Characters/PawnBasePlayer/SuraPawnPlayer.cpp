@@ -5,9 +5,16 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "ActorComponents/AttackComponents/ACPlayerAttackTokens.h"
+#include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "Camera/CameraComponent.h"
+#include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
+#include "Widgets/Player/PlayerHitWidget.h"
 
 ASuraPawnPlayer::ASuraPawnPlayer()
 {
@@ -28,26 +35,55 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	Camera->SetupAttachment(CapsuleComponent);
 	Camera->SetRelativeLocation(FVector(0.f, 0.f, 70.f));
 	Camera->bUsePawnControlRotation = true;
+	Camera->PostProcessSettings.bOverride_DepthOfFieldFocalDistance = true;
 
 	ArmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arm Mesh"));
 	ArmMesh->SetupAttachment(Camera);
 
+	HandsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Hands Mesh"));
+	HandsMesh->SetupAttachment(ArmMesh);
+	HandsMesh->SetLeaderPoseComponent(ArmMesh);
+
 	MovementComponent = CreateDefaultSubobject<USuraPlayerMovementComponent>(TEXT("Movement Component"));
 	MovementComponent->UpdatedComponent = RootComponent;
+	MovementComponent->SetDefaultCapsuleValues(CapsuleComponent->GetScaledCapsuleRadius(), CapsuleComponent->GetScaledCapsuleHalfHeight());
 
+	CameraMovementComponent = CreateDefaultSubobject<USuraPlayerCameraComponent>(TEXT("CameraMovement Component"));
+	
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
+	// <WeaponSystem>
+	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
+	CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+	ArmMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// for damage interactions with enemies
+	AttackTokensComponent = CreateDefaultSubobject<UACPlayerAttackTokens>(TEXT("Attack Tokens Component"));
+	DamageSystemComponent = CreateDefaultSubobject<UACDamageSystem>(TEXT("Damage System Component"));
+
+	// Hit Effect Class Init - by Yoony
+	static ConstructorHelpers::FClassFinder<UPlayerHitWidget> WidgetClass{ TEXT("/Game/UI/Player/WBP_PlayerHit") };
+
+	if (WidgetClass.Succeeded())
+		HitEffectWidgetClass = WidgetClass.Class;
 }
 
 void ASuraPawnPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	GetDamageSystemComponent()->OnDamaged.AddUObject(this, &ASuraPawnPlayer::OnDamaged);
+	GetDamageSystemComponent()->OnDeath.AddUObject(this, &ASuraPawnPlayer::OnDeath);
+
+	// Hit Effect Widget Init - by Yoony
+	if (IsValid(HitEffectWidgetClass))
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		HitEffectWidget = Cast<UPlayerHitWidget>(CreateWidget<UPlayerHitWidget>(GetWorld(), HitEffectWidgetClass));
+		
+		if (IsValid(HitEffectWidget))
 		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			HitEffectWidget->AddToViewport();
+			HitEffectWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
 }
@@ -55,6 +91,25 @@ void ASuraPawnPlayer::BeginPlay()
 UCapsuleComponent* ASuraPawnPlayer::GetCapsuleComponent()
 {
 	return CapsuleComponent;
+}
+
+bool ASuraPawnPlayer::HasWeapon() const
+{
+	if (WeaponSystem)
+	{
+		return WeaponSystem->GetCurrentWeapon() != nullptr;
+	}
+	return false;
+}
+
+void ASuraPawnPlayer::UpdateLookInputVector2D(const FInputActionValue& InputValue)
+{
+	PlayerLookInputVector2D = InputValue.Get<FVector2D>();
+}
+
+void ASuraPawnPlayer::SetLookInputVector2DZero()
+{
+	PlayerLookInputVector2D = FVector2D::ZeroVector;
 }
 
 
@@ -79,8 +134,24 @@ void ASuraPawnPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopDashInput);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartCrouchInput);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopCrouchInput);
-	}
 
+		// <WeaponSystem>
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::UpdateLookInputVector2D);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::None, this, &ASuraPawnPlayer::SetLookInputVector2DZero);
+	}
+}
+
+void ASuraPawnPlayer::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+		}
+	}
 }
 
 void ASuraPawnPlayer::HandleMoveInput(const FInputActionValue& Value)
@@ -177,6 +248,22 @@ void ASuraPawnPlayer::StopCrouchInput()
 	}
 	
 	MovementComponent->SetCrouchPressed(false);
+}
+
+bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
+{
+	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
+}
+
+void ASuraPawnPlayer::OnDamaged()
+{
+	HitEffectWidget->SetVisibility(ESlateVisibility::Visible);
+	HitEffectWidget->PlayFadeAnimtion();
+}
+
+void ASuraPawnPlayer::OnDeath()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Player Dead"));
 }
 
 

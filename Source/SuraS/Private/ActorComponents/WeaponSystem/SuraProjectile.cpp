@@ -96,6 +96,17 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 		CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
 	}
 
+	if (bCanSimpleBounce)
+	{
+		// MEMO: Test
+		ProjectileMovement->bShouldBounce = true; // 도탄 활성화
+		ProjectileMovement->Bounciness = 0.6f;    // 반사 탄성 (0~1)
+		ProjectileMovement->Friction = 0.2f;      // 표면 마찰
+		ProjectileMovement->BounceVelocityStopSimulatingThreshold = 10.0f; // 임계 속도 이하일 때 정지
+		ProjectileMovement->bRotationFollowsVelocity = true;
+	}
+
+
 	AdditionalDamage = additonalDamage;
 
 	if (AdditionalRadius > 0.f)
@@ -122,6 +133,9 @@ void ASuraProjectile::LoadProjectileData()
 		InitialLifeSpan = ProjectileData->InitialLifeSpan; //TODO 이렇게는 적용이 안됨. 삭제 요망
 		SetLifeSpan(ProjectileData->InitialLifeSpan);
 
+		// <Sound>
+		HitSound = ProjectileData->HitSound;
+
 		// <Damage>
 		DefaultDamage = ProjectileData->DefaultDamage;
 		HeadShotAdditionalDamage = ProjectileData->HeadShotAdditionalDamage;
@@ -143,6 +157,15 @@ void ASuraProjectile::LoadProjectileData()
 
 		// <Penetration>
 		bCanPenetrate = ProjectileData->bCanPenetrate; //legacy
+
+		// <Impulse>
+		bCanApplyImpulseToEnemy = ProjectileData->bCanApplyImpulseToEnemy;
+		HitImpulseToEnemy = ProjectileData->HitImpulseToEnemy;
+
+		// <Ricochet>
+		bCanSimpleBounce = ProjectileData->bCanSimpleBounce;
+		MaxRicochetCount = ProjectileData->MaxRicochetCount;
+		MinIncidenceAngle = ProjectileData->MinIncidenceAngle;
 	}
 }
 
@@ -229,6 +252,7 @@ bool ASuraProjectile::SearchOverlappedActor(FVector CenterLocation, float Search
 
 void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	//TODO: 정리가 필요함
 	//TODO: Projectile이 다른 actor에게 hit 했을 때, OtherActor의 종류에 따라서 다른 event 발생시키기. Interface 사용하기
 	if (bCanPenetrate)
 	{
@@ -262,6 +286,10 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 				SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 				SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 
+				if (HitSound != nullptr)
+				{
+					UGameplayStatics::PlaySoundAtLocation(this, HitSound, Hit.ImpactPoint);
+				}
 
 				if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(Hit))
 				{
@@ -287,7 +315,26 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 				ApplyExplosiveDamage(bIsExplosive, Hit.ImpactPoint);
 
-				Destroy();
+				if (bCanApplyImpulseToEnemy)
+				{
+					AddImpulseToEnemy(OtherActor, GetVelocity().GetSafeNormal()*HitImpulseToEnemy);
+				}
+
+				if (Cast<ACharacter>(OtherActor))
+				{
+					Destroy();
+				}
+				else
+				{
+					if (bCanSimpleBounce && CurrentRicochetCount < MaxRicochetCount && CheckRicochetAngle(Hit.ImpactNormal, ProjectileMovement->Velocity))
+					{
+						CurrentRicochetCount++;
+					}
+					else
+					{
+						Destroy();
+					}
+				}
 			}
 		}
 		else
@@ -349,6 +396,11 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 				}
 
 				ApplyExplosiveDamage(bIsExplosive, SweepResult.ImpactPoint);
+
+				if (bCanApplyImpulseToEnemy)
+				{
+					AddImpulseToEnemy(OtherActor, GetVelocity().GetSafeNormal() * HitImpulseToEnemy);
+				}
 
 				UpdatePenetration();
 				if (NumPenetratedObjects > NumPenetrableObjects)
@@ -467,6 +519,8 @@ void ASuraProjectile::UpdateTrailEffect()
 	}
 }
 
+
+
 void ASuraProjectile::DrawSphere(FVector Location, float Radius)
 {
 	DrawDebugSphere(
@@ -567,6 +621,26 @@ void ASuraProjectile::UpdateTargetInfo()
 	}
 }
 #pragma endregion
+
+#pragma region Impulse
+void ASuraProjectile::AddImpulseToEnemy(AActor* OtherActor, FVector Force)
+{
+	if (OtherActor != nullptr && IsValid(OtherActor))
+	{
+		ACharacter* Enemy = Cast<ACharacter>(OtherActor);
+		if (Enemy)
+		{
+			Enemy->LaunchCharacter(Force, false, false);
+		}
+	}
+}
+bool ASuraProjectile::CheckRicochetAngle(FVector normal, FVector vel)
+{
+	return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(-normal.GetSafeNormal(), vel.GetSafeNormal()))) > MinIncidenceAngle;
+}
+#pragma endregion
+
+
 //// Called when the game starts or when spawned
 //void ASuraProjectile::BeginPlay()
 //{

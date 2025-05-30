@@ -2,7 +2,9 @@
 
 
 #include "Characters/Enemies/AI/Tasks/Attacks/BTT_MeleeAttack.h"
-#include "Characters/Player/SuraCharacterPlayer.h"
+
+#include "ActorComponents/AttackComponents/ACPlayerAttackTokens.h"
+#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -17,11 +19,12 @@ EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerC
 {
 	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(OwnerComp.GetAIOwner()->GetCharacter()))
 	{
-		if (ASuraCharacterPlayer* const Player = Cast<ASuraCharacterPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
+		if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
 		{
 			OnAttackMontageEnded.BindUObject(this, &UBTT_MeleeAttack::OnAttackEnded);
 
 			IsAttacking = true;
+			Target = Player;
 			Enemy->Attack(Player);
 
 			Enemy->GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(OnAttackMontageEnded); // montage interrupted
@@ -40,7 +43,11 @@ void UBTT_MeleeAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMe
 	Super::TickTask(OwnerComp, NodeMemory, DeltaSeconds);
 
 	if (!IsAttacking)
+	{
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+		Target->GetAttackTokensComponent()->ReturnAttackToken(1);
+	}
+		
 }
 
 void UBTT_MeleeAttack::OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted)
