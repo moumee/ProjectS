@@ -1,0 +1,21 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+UENUM(BlueprintType)
+enum class EEnemyStates : uint8
+{
+	None UMETA(DisplayName = "None"),
+	Passive UMETA(DisplayName = "Passive"),
+	Attacking UMETA(DisplayName = "Attacking"),
+	Dead UMETA(DisplayName = "Dead")
+};
+
+UENUM(BlueprintType)
+enum class EEnemySpeed : uint8
+{
+	Idle UMETA(DisplayName = "Idle"),
+	Walk UMETA(DisplayName = "Walk"),
+	Jog UMETA(DisplayName = "Jog"),
+	Sprint UMETA(DisplayName = "Sprint")
+};
