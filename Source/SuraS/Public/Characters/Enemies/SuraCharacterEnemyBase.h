@@ -12,6 +12,7 @@
 
 #include "SuraCharacterEnemyBase.generated.h"
 
+class UACDamageSystem;
 class UWidgetComponent;
 class AEnemyBaseAIController;
 class UBehaviorTree;
@@ -49,6 +50,9 @@ protected:
 	UPROPERTY()
 	ASuraEnemyWeapon* EnemyWeapon;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Patrol Route", meta = (AllowPrivateAccess = "true"))
+	AEnemyPatrolRoute* PatrolRoute;
+
 	// [protected functions]
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -72,9 +76,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (RowType = "EnemyAttributesData"))
 	FDataTableRowHandle EnemyAttributesDT;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	AEnemyPatrolRoute* PatrolRoute;
-
 	// ai controller getter
 	FORCEINLINE AEnemyBaseAIController* GetAIController() const { return AIController; }
 
@@ -95,11 +96,15 @@ public:
 
 	FORCEINLINE FName GetEnemyType() const { return EnemyType; }
 
+	FORCEINLINE AEnemyPatrolRoute* GetPatrolRoute() const { return PatrolRoute; }
+
 	void SetUpAIController(AEnemyBaseAIController* const NewAIController); // const ptr: the ptr address can't be changed
 
 	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
 
-	virtual void Attack(const ASuraCharacterPlayer* Player) override;
+	virtual void Attack(const ASuraPawnPlayer* Player) override;
+
+	virtual void SetMovementSpeed(EEnemySpeed Speed) override;
 
 	virtual void Climb(const FVector& Destination);
 

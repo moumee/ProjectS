@@ -4,7 +4,7 @@
 #include "Characters/Enemies/AI/Tasks/Attacks/BTT_MeleeAttack.h"
 
 #include "ActorComponents/AttackComponents/ACPlayerAttackTokens.h"
-#include "Characters/Player/SuraCharacterPlayer.h"
+#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -19,7 +19,7 @@ EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerC
 {
 	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(OwnerComp.GetAIOwner()->GetCharacter()))
 	{
-		if (ASuraCharacterPlayer* const Player = Cast<ASuraCharacterPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
+		if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
 		{
 			OnAttackMontageEnded.BindUObject(this, &UBTT_MeleeAttack::OnAttackEnded);
 

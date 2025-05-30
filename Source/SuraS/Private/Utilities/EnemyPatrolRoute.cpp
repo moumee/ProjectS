@@ -15,13 +15,18 @@ void AEnemyPatrolRoute::IncrementPatrolRoute()
 {
 	_PatrolIndex += _Direction;
 
-	if (_PatrolIndex == PatrolRoute->GetSplineLength() - 1)
-		_Direction = -1; // move back if reached the end
+	if (_PatrolIndex >= PatrolRoute->GetNumberOfSplinePoints() - 1)
+	{
+		if (bIsRouteLooped)
+			_PatrolIndex %= PatrolRoute->GetNumberOfSplinePoints(); // move to the first index of the route if looped
+		else
+			_Direction = -1; // move back if reached the end
+	}
 	else if (_PatrolIndex == 0)
 		_Direction = 1; // move forward if reached the start
 }
 
-FVector AEnemyPatrolRoute::GetSplinePointAsWorldPosition() const
+FVector AEnemyPatrolRoute::GetCurrentPatrolIndexPosition() const
 {
 	return PatrolRoute->GetLocationAtSplinePoint(_PatrolIndex, ESplineCoordinateSpace::World);
 }

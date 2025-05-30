@@ -4,7 +4,7 @@
 
 #include "BehaviorTree/BehaviorTree.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
-#include "Characters/Player/SuraCharacterPlayer.h" // For detecting the player
+#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -34,16 +34,14 @@ void AEnemyBaseAIController::OnPossess(APawn* PossessedPawn)
 			UseBlackboard(BehaviorTree->BlackboardAsset, Bboard);
 			Blackboard = Bboard; // "Blackboard" is an already existing variable name in AAIController class
 
-			const auto EnemyAttributesData = Enemy->EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(Enemy->GetEnemyType(), "");
-
-			if (EnemyAttributesData)
+			if (const auto EnemyAttributesData = Enemy->EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(Enemy->GetEnemyType(), ""))
 			{
 				InitializeBlackBoard(EnemyAttributesData->StrafeRadius, EnemyAttributesData->AttackRadius, EnemyAttributesData->AttackRate);
 			}
 
 			RunBehaviorTree(BehaviorTree);
 
-			UpdateCurrentState(EEnemyState::Idle);
+			UpdateCurrentState(EEnemyStates::Passive);
 
 			Enemy->SetUpAIController(this);
 		}
@@ -75,15 +73,15 @@ void AEnemyBaseAIController::SetupPerceptionSystem()
 
 void AEnemyBaseAIController::OnTargetSighted(AActor* SeenTarget, FAIStimulus const Stimulus)
 {
-	if (ASuraCharacterPlayer* const Player = Cast<ASuraCharacterPlayer>(SeenTarget))
+	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(SeenTarget))
 	{
 		GetBlackboardComponent()->SetValueAsObject("AttackTarget", Player);
-		UpdateCurrentState(EEnemyState::Attacking);
+		UpdateCurrentState(EEnemyStates::Attacking);
 	}
 }
 
-void AEnemyBaseAIController::UpdateCurrentState(EEnemyState NewState)
+void AEnemyBaseAIController::UpdateCurrentState(EEnemyStates NewState)
 {
-	CurrentState = NewState;
-	GetBlackboardComponent()->SetValueAsEnum("State", (uint8)NewState);
+	_CurrentState = NewState;
+	GetBlackboardComponent()->SetValueAsEnum("State", static_cast<uint8>(_CurrentState));
 }

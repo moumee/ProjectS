@@ -5,13 +5,13 @@
 #include "BrainComponent.h"
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
+#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 #include "Widgets/Enemies/EnemyHealthBarWidget.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
-#include "Utilities/EnemyPatrolRoute.h"
 #include "Weapons/SuraEnemyWeapon.h"
 
 ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
@@ -164,12 +164,34 @@ bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, const AA
 	return GetDamageSystemComp()->TakeDamage(DamageData, DamageCauser);
 }
 
-void ASuraCharacterEnemyBase::Attack(const ASuraCharacterPlayer* Player)
+void ASuraCharacterEnemyBase::Attack(const ASuraPawnPlayer* Player)
 {
 	if (AttackAnimation)
 	{
 		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
 		EnemyAnimInstance->Montage_Play(AttackAnimation);
+	}
+}
+
+void ASuraCharacterEnemyBase::SetMovementSpeed(EEnemySpeed Speed)
+{
+	switch (Speed)
+	{
+	case EEnemySpeed::Idle:
+		GetCharacterMovement()->MaxWalkSpeed = 0.f;
+		break;
+	case EEnemySpeed::Walk:
+		GetCharacterMovement()->MaxWalkSpeed = 250.f;
+		break;
+	case EEnemySpeed::Jog:
+		GetCharacterMovement()->MaxWalkSpeed = 400.f;
+		break;
+	case EEnemySpeed::Sprint:
+		GetCharacterMovement()->MaxWalkSpeed = 600.f;
+		break;
+	default:
+		GetCharacterMovement()->MaxWalkSpeed = 300.f;
+		break;
 	}
 }
 

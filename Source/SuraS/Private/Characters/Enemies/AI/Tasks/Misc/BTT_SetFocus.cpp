@@ -3,7 +3,7 @@
 
 #include "Characters/Enemies/AI/Tasks/Misc/BTT_SetFocus.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
-#include "Characters/Player/SuraCharacterPlayer.h"
+#include "Characters/PawnBasePlayer//SuraPawnPlayer.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
 UBTT_SetFocus::UBTT_SetFocus(FObjectInitializer const& ObjectInitializer)
@@ -15,7 +15,7 @@ EBTNodeResult::Type UBTT_SetFocus::ExecuteTask(UBehaviorTreeComponent& OwnerComp
 {
 	if (AEnemyBaseAIController* const EnemyController = Cast<AEnemyBaseAIController>(OwnerComp.GetAIOwner()))
 	{
-		if (ASuraCharacterPlayer* const Player = Cast<ASuraCharacterPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
+		if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
 		{
 			EnemyController->SetFocus(Player, EAIFocusPriority::Gameplay);
 
