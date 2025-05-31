@@ -4,8 +4,9 @@
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "EnhancedInputComponent.h"
 #include "ActorComponents/UISystem/ACInventoryManager.h"
+#include "ActorComponents/UISystem/ACKillLogManager.h"
 #include "UI/InventoryWidget.h"
-
+#include "UI/KillLogWidget.h"
 
 
 // Sets default values for this component's properties
@@ -16,7 +17,7 @@ UACUIMangerComponent::UACUIMangerComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	
-	InitializeMangers();
+	InitializeManagers();
 }
 
 
@@ -36,7 +37,6 @@ void UACUIMangerComponent::SetupInput()
 		if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PC->InputComponent))
 		{
 			EnhancedInput->BindAction(OpenInventoryAction, ETriggerEvent::Started, this, &UACUIMangerComponent::OpenUI, EUIType::Inventory);
-			//EnhancedInput->BindAction(OpenPauseMenuAction, ETriggerEvent::Started, this, &UACBaseUIComponent::ToggleUI, EUIType::PauseMenu);
 		}
 	}
 }
@@ -91,6 +91,19 @@ void UACUIMangerComponent::InitializeWidgets()
 				break;
 			}
 
+		case EUIType::KillLog:
+			{
+				if (UKillLogWidget* KLW = Cast<UKillLogWidget>(NewWidget))
+				{
+					KillLogManager->SetKillLogWidget(KLW);
+					KLW->SetKillLogManager(KillLogManager);
+					KLW->AddToViewport(); // ✅ 반드시 필요
+
+					UE_LOG(LogTemp, Warning, TEXT("✔ KillLogWidget Viewport에 추가됨"));
+				}
+				break;
+			}
+
 		//case EUIType::HUD:
 			// HUD 위젯 초기화 및 매니저 연결
 				//break;
@@ -101,15 +114,25 @@ void UACUIMangerComponent::InitializeWidgets()
 	}
 }
 
-void UACUIMangerComponent::InitializeMangers()
+void UACUIMangerComponent::InitializeManagers()
 {
 	// 인벤토리 매니저 생성 및 등록 (생성자에서 호출되므로 문제 없음)
 	InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("InventoryManager"));
-
 	// UIComponentManager에 접근하기 위해 this를 파라미터로 전달
 	InventoryManager->SetUIManager(this);
 
+	KillLogManager = CreateDefaultSubobject<UACKillLogManager>(TEXT("KillLog"));
+	KillLogManager->SetUIManager(this);
 	
 	// HUDManager, PauseMenuManager 등도 여기에 추가
 
+}
+
+void UACUIMangerComponent::TestKillLog()
+{
+	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("🔹 IA_KILLLOG 입력 감지됨!"));
+	
+	if (!KillLogManager) return;
+
+	KillLogManager->AddKillLog(TEXT("Player"), TEXT("Enemy"));
 }

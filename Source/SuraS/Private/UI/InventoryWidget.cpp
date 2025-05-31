@@ -1,9 +1,9 @@
 #include "UI/InventoryWidget.h"
 
-#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponData.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "ActorComponents/UISystem/ACInventoryManager.h"
+#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
@@ -25,7 +25,7 @@ void UInventoryWidget::NativeConstruct()
 #pragma region Weapon
     
     // Player의 UWeaponSystemComponent 가져오기
-    ASuraCharacterPlayerWeapon* Player = Cast<ASuraCharacterPlayerWeapon>(GetOwningPlayerPawn());
+    ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(GetOwningPlayerPawn());
     if (Player)
     {
         UWeaponSystemComponent* WeaponSystem = Player->FindComponentByClass<UWeaponSystemComponent>();
@@ -119,17 +119,22 @@ FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
 
     if (InKeyEvent.GetKey() == EKeys::F)
     {
-       // GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("F 키 감지됨"));
+        GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("F 키 감지됨"));
 
-        ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwningPlayerPawn());
-        if (!OwnerCharacter) return FReply::Unhandled();
+        if (!InventoryManager)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("InventoryManager가 nullptr입니다."));
+            return FReply::Unhandled();
+        }
 
         InventoryManager->OnConfirmWeaponEquip();
-        //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("OnConfrimWeaponEquip함수 호출됨"));
+        
         return FReply::Handled();
     }
 
-    return FReply::Handled();  // Tab 키 기본 동작 방지
+    return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
+
+    //return FReply::Handled();  // Tab 키 기본 동작 방지
 }
 
 void UInventoryWidget::SetInventoryManager(UACInventoryManager* InManager)

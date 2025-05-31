@@ -74,4 +74,18 @@ public:
 	EWeaponName GetWeaponName() const { return WeaponName; }
 	bool IsMagazine() const { return bIsMagazine; }
 	int32 GetAmmo() const { return NumAmmo; }
+
+	// suhyeon
+	// 무기 클래스 설정
+	void SetWeaponClass(TSubclassOf<AWeapon> InClass)
+	{
+		WeaponClass = InClass;
+	}
+
+	// 무기 이름 설정
+	void SetWeaponName(EWeaponName InName)
+	{
+		WeaponName = InName;
+	}
+	
 };

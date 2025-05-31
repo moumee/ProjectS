@@ -191,6 +191,19 @@ public:
 	USuraWeaponBaseState* GetCurrentState() const { return CurrentState; }
 
 	void ChangeState(USuraWeaponBaseState* NewState);
+
+#pragma region suhyeon
+	void SetWeaponData(FWeaponData* InWeaponData);
+
+	void SetWeaponName(EWeaponName InWeaponName)
+	{
+		WeaponName = InWeaponName;
+	}
+
+	// 캐릭터 설정 함수
+	void SetCharacter(class ASuraCharacterPlayerWeapon* InCharacter);
+#pragma endregion
+	
 #pragma endregion
 
 protected:

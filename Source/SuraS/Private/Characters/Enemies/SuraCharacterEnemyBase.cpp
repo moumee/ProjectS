@@ -4,6 +4,8 @@
 
 #include "BrainComponent.h"
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
+#include "ActorComponents/UISystem/ACKillLogManager.h"
+#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/CapsuleComponent.h"
@@ -44,6 +46,8 @@ void ASuraCharacterEnemyBase::BeginPlay()
 	Super::BeginPlay();
 
 	InitializeEnemy();
+	
+	BindKillLogOnDeath();
 }
 
 void ASuraCharacterEnemyBase::Tick(float DeltaSeconds)
@@ -269,6 +273,32 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 		PlayerController = GetWorld()->GetFirstPlayerController();
 
 		isInitialized = true;
+	}
+}
+
+void ASuraCharacterEnemyBase::BindKillLogOnDeath() const
+{
+	if (UACDamageSystem* DamageSystem = FindComponentByClass<UACDamageSystem>())
+	{
+		DamageSystem->OnDeath.AddLambda([this]()
+		{
+			// KillLog 호출 로직
+			// 3. 플레이어 가져오기
+			APlayerController* PC = GetWorld()->GetFirstPlayerController();
+			if (!PC) return;
+
+			ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(PC->GetPawn());
+			if (!Player) return;
+
+			// 4. UIManager → KillLogManager 가져와서 호출
+			if (UACUIMangerComponent* UIManager = Player->FindComponentByClass<UACUIMangerComponent>())
+			{
+				if (UACKillLogManager* KLM = UIManager->GetKillLogManager())
+				{
+					KLM->AddKillLog(Player->GetName(), this->GetName());
+				}
+			}
+		});
 	}
 }
 

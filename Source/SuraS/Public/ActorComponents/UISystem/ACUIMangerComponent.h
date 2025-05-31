@@ -11,14 +11,15 @@ class UEnhancedInputComponent;
 class UBaseUIWidget;
 class UACInventoryManager;
 class UACCrosshairManager;
-
+class UACKillLogManager;
 
 UENUM(BlueprintType)
 enum class EUIType : uint8
 {
 	None UMETA(DisplayName = "None"),
 	Inventory UMETA(DisplayName = "Inventory"),
-	Pause UMETA(DisplayName = "Pause")
+	Pause UMETA(DisplayName = "Pause"),
+	KillLog UMETA(DisplayName = "KillLog")
 };
 
 
@@ -46,17 +47,17 @@ public:
 
 	UBaseUIWidget* GetWidget(EUIType UIType);
 	void InitializeWidgets();
-	void InitializeMangers();
+	void InitializeManagers();
+
+	UFUNCTION(BlueprintCallable)
+	UACKillLogManager* GetKillLogManager() const { return KillLogManager; }
 
 	UDataTable* GetWeaponDataTable() const
 	{
 		return DTWeapon;	
 	}
 
-	// UDataTable* GetProjectileDataTable() const
-	// {
-	// 	return DTProjectile;
-	// }
+	void TestKillLog();
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -81,6 +82,13 @@ private:
 	/** UI Manager들 **/
 	UPROPERTY()
 	UACInventoryManager* InventoryManager;
+
+	UPROPERTY()
+	UACKillLogManager* KillLogManager;
+
+
+	
+
 	
 	// UPROPERTY()
 	// UACCrosshairManager* CrosshairManager;

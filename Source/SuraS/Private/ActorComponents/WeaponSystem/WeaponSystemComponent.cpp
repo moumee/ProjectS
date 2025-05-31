@@ -473,4 +473,24 @@ void UWeaponSystemComponent::ChangeWeapon(int32 WeaponIndex)
 		//CurrentWeapon = WeaponInventory[WeaponIndex];
 	}
 }
+
+
 #pragma endregion
+
+
+void UWeaponSystemComponent::EquipFirstWeapon()
+{
+	if (WeaponInventory.IsValidIndex(0))
+	{
+		AWeapon* FirstWeapon = WeaponInventory[0];
+
+		if (IsValid(CurrentWeapon))
+		{
+			CurrentWeapon->SwitchWeapon(PlayerOwner, false);
+		}
+
+		FirstWeapon->SwitchWeapon(PlayerOwner, true);
+		CurrentWeapon = FirstWeapon;
+		CurrentWeaponIndex = 0;
+	}
+}
