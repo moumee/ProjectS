@@ -301,7 +301,21 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		}
 		else
 		{
-			float WishSpeed = bIsCrouching ? CrouchSpeed : (MovementInputVector.Y > 0.f ? RunSpeed : WalkSpeed);
+			if (bRunPressed)
+			{
+				bRunPressed = false;
+				bIsRunning = !bIsRunning;
+			}
+
+			if (bIsRunning)
+			{
+				if (MovementInputVector.Y <= 0.f)
+				{
+					bIsRunning = false;
+				}
+			}
+			
+			float WishSpeed = bIsCrouching ? CrouchSpeed : (bIsRunning ? RunSpeed : WalkSpeed);
 			
 			FVector AcceleratedVelocity = Velocity + InputDirection * Acceleration * DeltaTime;
 			Velocity = AcceleratedVelocity.Size() > WishSpeed ? AcceleratedVelocity.GetSafeNormal() * WishSpeed : AcceleratedVelocity;
@@ -985,7 +999,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		// {
 		// 	NewSpeed = FMath::Min(CurrentSpeed + WallRunAcceleration * DeltaTime, WallRunBackwardMaxSpeed);
 		// }
-  //   
+		
 		// // Always set velocity in backward wall run direction when pressing S
 		// Velocity.X = NewSpeed * -VelocityDir.X;
 		// Velocity.Y = NewSpeed * -VelocityDir.Y;
@@ -1178,6 +1192,15 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 	if (OldState == EMovementState::EMS_Move)
 	{
 		SlideResetTimer = 0.f;
+
+		if (NewState == EMovementState::EMS_Hang)
+		{
+			if (bIsRunning)
+			{
+				bIsRunning = false;
+			}
+		}
+		
 	}
 
 	
@@ -1269,6 +1292,11 @@ bool USuraPlayerMovementComponent::IsGrounded()
 void USuraPlayerMovementComponent::SetMovementInputVector(const FVector2D& InMovementInputVector)
 {
 	MovementInputVector = InMovementInputVector;
+}
+
+void USuraPlayerMovementComponent::ToggleRunPressed()
+{
+	bRunPressed = true;
 }
 
 void USuraPlayerMovementComponent::SetMovementState(EMovementState NewState)

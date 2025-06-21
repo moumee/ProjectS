@@ -65,6 +65,8 @@ public:
 
 	void SetMovementInputVector(const FVector2D& InMovementInputVector);
 
+	void ToggleRunPressed();
+
 	void SetJumpPressed(bool bPressed);
 
 	void SetDashPressed(bool bPressed);
@@ -81,6 +83,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool IsGrounded();
+
+	UFUNCTION(BlueprintCallable)
+	bool IsRunning() const { return bIsRunning; }
 	
 	virtual bool IsCrouching() const override { return bIsCrouching; }
 
@@ -213,6 +218,13 @@ protected:
 
 	FHitResult GroundHit;
 
+#pragma region Run
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bIsRunning = false;
+	
+#pragma endregion Run
+	
 #pragma region WallRun
 	
 	EWallRunEnter WallRunEnterMode;
@@ -314,6 +326,9 @@ protected:
 	FVector2D MovementInputVector = FVector2D::ZeroVector;
 
 	float MinWalkableFloorZ;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
+	bool bRunPressed = false;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
 	bool bJumpPressed = false;

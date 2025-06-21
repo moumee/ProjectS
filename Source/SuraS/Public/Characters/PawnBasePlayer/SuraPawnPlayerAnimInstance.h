@@ -25,6 +25,9 @@ protected:
 	EMovementState MovementState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bIsRunning;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bIsCrouching;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
