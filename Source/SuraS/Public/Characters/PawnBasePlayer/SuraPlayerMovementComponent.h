@@ -214,6 +214,9 @@ protected:
 protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	bool bControllerTilting = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	bool bIsCrouching = false;
 
 	FHitResult GroundHit;
@@ -341,7 +344,7 @@ protected:
 
 	void InitMovementData();
 
-
+	void AddControllerRoll(float DeltaTime, const FVector& WallRunDirection, EWallRunSide WallRunSide);
 
 	void SetMovementState(EMovementState NewState);
 
