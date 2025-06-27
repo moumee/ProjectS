@@ -78,6 +78,9 @@ void USuraPlayerMovementComponent::InitMovementData()
 	WallRunMaxSpeed = Row->WallRunMaxSpeed;
 	WallRunBackwardMaxSpeed = Row->WallRunBackwardMaxSpeed;
 	WallRunJumpAirSpeed2D = Row->WallRunJumpAirSpeed2D;
+	WallRunCameraTiltAngle = Row->WallRunCameraTiltAngle;
+	PreWallRunDetectionRange = Row->PreWallRunDetectionRange;
+	WallRunCameraTiltInterpSpeed = Row->WallRunCameraTiltInterpSpeed;
 	SlideInitialWindow = Row->SlideInitialWindow;
 	SlideMaxDuration = Row->SlideMaxDuration;
 }
@@ -90,15 +93,15 @@ void USuraPlayerMovementComponent::AddControllerRoll(float DeltaTime, const FVec
 	
 	if (WallRunSide == EWallRunSide::EWRS_Left)
 	{
-		TargetRoll = FMath::Lerp(15, -15, Alpha);
+		TargetRoll = FMath::Lerp(WallRunCameraTiltAngle, -WallRunCameraTiltAngle, Alpha);
 	}
 	else if (WallRunSide == EWallRunSide::EWRS_Right)
 	{
-		TargetRoll = FMath::Lerp(-15, 15, Alpha);
+		TargetRoll = FMath::Lerp(-WallRunCameraTiltAngle, WallRunCameraTiltAngle, Alpha);
 	}
 
 	FRotator CurrentControlRotation = SuraPawnPlayer->GetControlRotation();
-	FRotator NewRotation = FMath::RInterpTo(CurrentControlRotation, FRotator(CurrentControlRotation.Pitch, CurrentControlRotation.Yaw, TargetRoll), DeltaTime, 4.f);
+	FRotator NewRotation = FMath::RInterpTo(CurrentControlRotation, FRotator(CurrentControlRotation.Pitch, CurrentControlRotation.Yaw, TargetRoll), DeltaTime, WallRunCameraTiltInterpSpeed);
 	SuraPlayerController->SetControlRotation(NewRotation);
 }
 
@@ -664,8 +667,8 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	FCollisionQueryParams PreWallParams;
 	PreWallParams.AddIgnoredActor(SuraPawnPlayer);
 	FVector TraceStart = SuraPawnPlayer->GetActorLocation();
-	FVector TraceRightEnd = TraceStart + SuraPawnPlayer->GetActorRightVector() * 200.f;
-	FVector TraceLeftEnd = TraceStart + SuraPawnPlayer->GetActorRightVector() * (-200.f);
+	FVector TraceRightEnd = TraceStart + SuraPawnPlayer->GetActorRightVector() * PreWallRunDetectionRange;
+	FVector TraceLeftEnd = TraceStart + SuraPawnPlayer->GetActorRightVector() * (-PreWallRunDetectionRange);
 	bool bPreWallRightHit = GetWorld()->SweepSingleByChannel(PreWallRightHit, TraceStart, TraceRightEnd, SuraPawnPlayer->GetActorQuat(),
 		WALL_TRACE_CHANNEL, FCollisionShape::MakeSphere(40.f), PreWallParams);
 	if (bPreWallRightHit)

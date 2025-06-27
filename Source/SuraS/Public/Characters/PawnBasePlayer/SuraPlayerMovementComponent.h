@@ -241,6 +241,10 @@ protected:
 	FHitResult CurrentWallHit;
 	bool bShouldMoveUpWall = false;
 	bool bShouldMoveDownWall = false;
+
+	float WallRunCameraTiltInterpSpeed = 5.f;
+	float WallRunCameraTiltAngle = 15.f;
+	float PreWallRunDetectionRange = 200.f;
 	
 #pragma endregion WallRun
 
