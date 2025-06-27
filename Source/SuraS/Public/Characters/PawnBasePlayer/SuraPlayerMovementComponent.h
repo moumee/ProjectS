@@ -77,6 +77,8 @@ public:
 		DefaultCapsuleHalfHeight = HalfHeight;
 	}
 
+	bool FindGroundPoint(FVector& OutPoint);
+
 	FVector2D GetMovementInputVector() const { return MovementInputVector;};
 
 	UFUNCTION(BlueprintCallable)
@@ -207,6 +209,9 @@ protected:
 	float SlideMaxDuration = 1.f;
 
 protected:
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float GroundPointDetectionLength = 1000.f;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	bool bIsCrouching = false;

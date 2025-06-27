@@ -80,6 +80,7 @@ void USuraPlayerMovementComponent::InitMovementData()
 	WallRunJumpAirSpeed2D = Row->WallRunJumpAirSpeed2D;
 	SlideInitialWindow = Row->SlideInitialWindow;
 	SlideMaxDuration = Row->SlideMaxDuration;
+	GroundPointDetectionLength = Row->GroundPointDetectionLength;
 }
 
 
@@ -115,6 +116,10 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 			SuraPlayerController->SetControlRotation(NewRotation);
 		}
 	}
+
+	// This is for debugging purpose! Need to remove it
+	FVector Test;
+	FindGroundPoint(Test);
 	
 	TickState(DeltaTime);
 
@@ -140,7 +145,7 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 		}
 	}
 	
-
+	
 	
 }
 
@@ -1294,6 +1299,26 @@ void USuraPlayerMovementComponent::SetDashPressed(bool bPressed)
 void USuraPlayerMovementComponent::SetCrouchPressed(bool bPressed)
 {
 	bCrouchPressed = bPressed;
+}
+
+bool USuraPlayerMovementComponent::FindGroundPoint(FVector& OutPoint)
+{
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(PawnOwner);
+	FVector TraceStart = PawnOwner->GetActorLocation();
+	FVector TraceEnd = TraceStart + FVector(0, 0, -GroundPointDetectionLength);
+	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_WorldStatic, Params);
+
+	
+
+	if (bHit)
+	{
+		OutPoint = Hit.ImpactPoint;
+		DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 5.f, 10, FColor::Green, false);
+	}
+
+	return bHit;
 }
 
 void USuraPlayerMovementComponent::UpdateDashCooldowns(float DeltaTime)
