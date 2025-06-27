@@ -7,6 +7,9 @@
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 
 #include "KismetTraceUtils.h"
+#include "ActorComponents/WeaponSystem/ACWeapon.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponBaseState.h"
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Characters/PawnBasePlayer/PawnPlayerMovmentRow.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Characters/PawnBasePlayer/SuraPlayerController.h"
@@ -337,7 +340,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 			if (bIsRunning)
 			{
-				if (MovementInputVector.Y <= 0.f)
+				if (MovementInputVector.Y <= 0.f || SuraPawnPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Firing)
 				{
 					bIsRunning = false;
 				}
@@ -582,12 +585,10 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			{
 				if (bIsDashing || bCrouchPressed || !MovementInputVector.IsZero())
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Projected"));
 					Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * RunSpeed;
 				}
 				else
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Zero"));
 					Velocity = FVector::ZeroVector;
 				}
 			}
@@ -604,12 +605,10 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 				{
 					if (bIsDashing || bCrouchPressed || !MovementInputVector.IsZero())
 					{
-						UE_LOG(LogTemp, Warning, TEXT("Projected"));
 						Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * RunSpeed;
 					}
 					else
 					{
-						UE_LOG(LogTemp, Warning, TEXT("Zero"));
 						Velocity = FVector::ZeroVector;
 					}
 					
@@ -676,16 +675,10 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	FVector TraceLeftEnd = TraceStart + SuraPawnPlayer->GetActorRightVector() * (-PreWallRunDetectionRange);
 	bool bPreWallRightHit = GetWorld()->SweepSingleByChannel(PreWallRightHit, TraceStart, TraceRightEnd, SuraPawnPlayer->GetActorQuat(),
 		WALL_TRACE_CHANNEL, FCollisionShape::MakeSphere(40.f), PreWallParams);
-	if (bPreWallRightHit)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PreWallRightHit"));
-	}
+	
 	bool bPreWallLeftHit = GetWorld()->SweepSingleByChannel(PreWallLeftHit, TraceStart, TraceLeftEnd, SuraPawnPlayer->GetActorQuat(),
 		WALL_TRACE_CHANNEL, FCollisionShape::MakeSphere(40.f), PreWallParams);
-	if (bPreWallLeftHit)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PreWallLeftHit"));
-	}
+	
 
 	
 	
