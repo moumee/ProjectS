@@ -18,6 +18,7 @@ class SURAS_API UACDamageSystem : public UActorComponent
 {
 	GENERATED_BODY()
 
+protected:
 	float Health = 100.f;
 	float MaxHealth = 100.f;
 	bool bIsInterruptible = true;
@@ -43,5 +44,5 @@ public:
 	FOnDeath OnDeath;
 
 	UFUNCTION(BlueprintCallable)
-	bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser);
+	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser);
 };
