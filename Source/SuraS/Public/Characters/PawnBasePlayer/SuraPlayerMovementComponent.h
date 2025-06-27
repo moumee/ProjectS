@@ -65,6 +65,8 @@ public:
 
 	void SetMovementInputVector(const FVector2D& InMovementInputVector);
 
+	void ToggleRunPressed();
+
 	void SetJumpPressed(bool bPressed);
 
 	void SetDashPressed(bool bPressed);
@@ -83,6 +85,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool IsGrounded();
+
+	UFUNCTION(BlueprintCallable)
+	bool IsRunning() const { return bIsRunning; }
 	
 	virtual bool IsCrouching() const override { return bIsCrouching; }
 
@@ -214,10 +219,20 @@ protected:
 	float GroundPointDetectionLength = 1000.f;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	bool bControllerTilting = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	bool bIsCrouching = false;
 
 	FHitResult GroundHit;
 
+#pragma region Run
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bIsRunning = false;
+	
+#pragma endregion Run
+	
 #pragma region WallRun
 	
 	EWallRunEnter WallRunEnterMode;
@@ -231,6 +246,10 @@ protected:
 	FHitResult CurrentWallHit;
 	bool bShouldMoveUpWall = false;
 	bool bShouldMoveDownWall = false;
+
+	float WallRunCameraTiltInterpSpeed = 5.f;
+	float WallRunCameraTiltAngle = 15.f;
+	float PreWallRunDetectionRange = 200.f;
 	
 #pragma endregion WallRun
 
@@ -321,6 +340,9 @@ protected:
 	float MinWalkableFloorZ;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
+	bool bRunPressed = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
 	bool bJumpPressed = false;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
@@ -331,7 +353,7 @@ protected:
 
 	void InitMovementData();
 
-
+	void AddControllerRoll(float DeltaTime, const FVector& WallRunDirection, EWallRunSide WallRunSide);
 
 	void SetMovementState(EMovementState NewState);
 

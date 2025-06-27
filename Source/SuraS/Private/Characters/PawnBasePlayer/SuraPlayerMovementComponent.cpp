@@ -78,11 +78,33 @@ void USuraPlayerMovementComponent::InitMovementData()
 	WallRunMaxSpeed = Row->WallRunMaxSpeed;
 	WallRunBackwardMaxSpeed = Row->WallRunBackwardMaxSpeed;
 	WallRunJumpAirSpeed2D = Row->WallRunJumpAirSpeed2D;
+	WallRunCameraTiltAngle = Row->WallRunCameraTiltAngle;
+	PreWallRunDetectionRange = Row->PreWallRunDetectionRange;
+	WallRunCameraTiltInterpSpeed = Row->WallRunCameraTiltInterpSpeed;
 	SlideInitialWindow = Row->SlideInitialWindow;
 	SlideMaxDuration = Row->SlideMaxDuration;
 	GroundPointDetectionLength = Row->GroundPointDetectionLength;
 }
 
+void USuraPlayerMovementComponent::AddControllerRoll(float DeltaTime, const FVector& WallRunDirection, EWallRunSide WallRunSide)
+{
+	float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(SuraPawnPlayer->GetActorForwardVector(), WallRunDirection)));
+	float Alpha = FMath::Abs(Angle / 180.f);
+	float TargetRoll = 0.f;
+	
+	if (WallRunSide == EWallRunSide::EWRS_Left)
+	{
+		TargetRoll = FMath::Lerp(WallRunCameraTiltAngle, -WallRunCameraTiltAngle, Alpha);
+	}
+	else if (WallRunSide == EWallRunSide::EWRS_Right)
+	{
+		TargetRoll = FMath::Lerp(-WallRunCameraTiltAngle, WallRunCameraTiltAngle, Alpha);
+	}
+
+	FRotator CurrentControlRotation = SuraPawnPlayer->GetControlRotation();
+	FRotator NewRotation = FMath::RInterpTo(CurrentControlRotation, FRotator(CurrentControlRotation.Pitch, CurrentControlRotation.Yaw, TargetRoll), DeltaTime, WallRunCameraTiltInterpSpeed);
+	SuraPlayerController->SetControlRotation(NewRotation);
+}
 
 
 void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType,
@@ -107,7 +129,7 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 
 	UpdateDashCooldowns(DeltaTime);
 
-	if (CurrentMovementState != EMovementState::EMS_WallRun)
+	if (!bControllerTilting)
 	{
 		if (SuraPlayerController->GetControlRotation().Roll != 0.f)
 		{
@@ -120,6 +142,7 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 	// This is for debugging purpose! Need to remove it
 	FVector Test;
 	FindGroundPoint(Test);
+	
 	
 	TickState(DeltaTime);
 
@@ -306,7 +329,21 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		}
 		else
 		{
-			float WishSpeed = bIsCrouching ? CrouchSpeed : (MovementInputVector.Y > 0.f ? RunSpeed : WalkSpeed);
+			if (bRunPressed)
+			{
+				bRunPressed = false;
+				bIsRunning = !bIsRunning;
+			}
+
+			if (bIsRunning)
+			{
+				if (MovementInputVector.Y <= 0.f)
+				{
+					bIsRunning = false;
+				}
+			}
+			
+			float WishSpeed = bIsCrouching ? CrouchSpeed : (bIsRunning ? RunSpeed : WalkSpeed);
 			
 			FVector AcceleratedVelocity = Velocity + InputDirection * Acceleration * DeltaTime;
 			Velocity = AcceleratedVelocity.Size() > WishSpeed ? AcceleratedVelocity.GetSafeNormal() * WishSpeed : AcceleratedVelocity;
@@ -630,6 +667,44 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		}
 	}
 
+	FHitResult PreWallRightHit;
+	FHitResult PreWallLeftHit;
+	FCollisionQueryParams PreWallParams;
+	PreWallParams.AddIgnoredActor(SuraPawnPlayer);
+	FVector TraceStart = SuraPawnPlayer->GetActorLocation();
+	FVector TraceRightEnd = TraceStart + SuraPawnPlayer->GetActorRightVector() * PreWallRunDetectionRange;
+	FVector TraceLeftEnd = TraceStart + SuraPawnPlayer->GetActorRightVector() * (-PreWallRunDetectionRange);
+	bool bPreWallRightHit = GetWorld()->SweepSingleByChannel(PreWallRightHit, TraceStart, TraceRightEnd, SuraPawnPlayer->GetActorQuat(),
+		WALL_TRACE_CHANNEL, FCollisionShape::MakeSphere(40.f), PreWallParams);
+	if (bPreWallRightHit)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PreWallRightHit"));
+	}
+	bool bPreWallLeftHit = GetWorld()->SweepSingleByChannel(PreWallLeftHit, TraceStart, TraceLeftEnd, SuraPawnPlayer->GetActorQuat(),
+		WALL_TRACE_CHANNEL, FCollisionShape::MakeSphere(40.f), PreWallParams);
+	if (bPreWallLeftHit)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PreWallLeftHit"));
+	}
+
+	
+	
+	if (bPreWallRightHit && FVector::DotProduct(SuraPawnPlayer->GetVelocity().GetSafeNormal2D(), PreWallRightHit.ImpactNormal) < 0.f)
+	{
+		bControllerTilting = true;
+		FVector WallRunDirection = FVector::CrossProduct(PreWallRightHit.ImpactNormal, FVector::DownVector).GetSafeNormal();
+		AddControllerRoll(DeltaTime, WallRunDirection, EWallRunSide::EWRS_Right);
+	}
+	else if (bPreWallLeftHit && FVector::DotProduct(SuraPawnPlayer->GetVelocity().GetSafeNormal2D(), PreWallLeftHit.ImpactNormal) < 0.f)
+	{
+		bControllerTilting = true;
+		FVector WallRunDirection = FVector::CrossProduct(PreWallLeftHit.ImpactNormal, FVector::UpVector).GetSafeNormal();
+		AddControllerRoll(DeltaTime, WallRunDirection, EWallRunSide::EWRS_Left);
+	}
+	else
+	{
+		bControllerTilting = false;
+	}
 	
 
 	if (CanWallRun())
@@ -823,23 +898,10 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	{
 		WallRunDir = FVector::CrossProduct(CurrentWallHit.ImpactNormal, FVector::DownVector).GetSafeNormal();
 	}
-	
-	float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(SuraPawnPlayer->GetActorForwardVector(), WallRunDir)));
-	float Alpha = FMath::Abs(Angle / 180.f);
-	float TargetRoll = 0.f;
-	
-	if (CurrentWallRunSide == EWallRunSide::EWRS_Left)
-	{
-		TargetRoll = FMath::Lerp(15, -15, Alpha);
-	}
-	else if (CurrentWallRunSide == EWallRunSide::EWRS_Right)
-	{
-		TargetRoll = FMath::Lerp(-15, 15, Alpha);
-	}
 
-	FRotator CurrentControlRotation = SuraPawnPlayer->GetControlRotation();
-	FRotator NewRotation = FMath::RInterpTo(CurrentControlRotation, FRotator(CurrentControlRotation.Pitch, CurrentControlRotation.Yaw, TargetRoll), DeltaTime, 5.f);
-	SuraPlayerController->SetControlRotation(NewRotation);
+	bControllerTilting = true;
+	
+	AddControllerRoll(DeltaTime, WallRunDir, CurrentWallRunSide);
 
 	if (WallRunEnterMode == EWallRunEnter::EWRE_Upward && bIsDeceleratingZ)
 	{
@@ -990,7 +1052,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		// {
 		// 	NewSpeed = FMath::Min(CurrentSpeed + WallRunAcceleration * DeltaTime, WallRunBackwardMaxSpeed);
 		// }
-  //   
+		
 		// // Always set velocity in backward wall run direction when pressing S
 		// Velocity.X = NewSpeed * -VelocityDir.X;
 		// Velocity.Y = NewSpeed * -VelocityDir.Y;
@@ -1183,6 +1245,15 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 	if (OldState == EMovementState::EMS_Move)
 	{
 		SlideResetTimer = 0.f;
+
+		if (NewState == EMovementState::EMS_Hang)
+		{
+			if (bIsRunning)
+			{
+				bIsRunning = false;
+			}
+		}
+		
 	}
 
 	
@@ -1235,6 +1306,10 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 		{
 			bWallJumpAirBoost = true;
 		}
+		else
+		{
+			bControllerTilting = false;
+		}
 	}
 	
 	
@@ -1274,6 +1349,11 @@ bool USuraPlayerMovementComponent::IsGrounded()
 void USuraPlayerMovementComponent::SetMovementInputVector(const FVector2D& InMovementInputVector)
 {
 	MovementInputVector = InMovementInputVector;
+}
+
+void USuraPlayerMovementComponent::ToggleRunPressed()
+{
+	bRunPressed = true;
 }
 
 void USuraPlayerMovementComponent::SetMovementState(EMovementState NewState)

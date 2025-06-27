@@ -14,6 +14,7 @@ void USuraPawnPlayerAnimInstance::NativeInitializeAnimation()
 	if (SuraPlayer)
 	{
 		MovementState = SuraPlayer->GetPlayerMovementComponent()->GetMovementState();
+		bIsRunning = SuraPlayer->GetPlayerMovementComponent()->IsRunning();
 		bIsCrouching = SuraPlayer->GetPlayerMovementComponent()->IsCrouching();
 		bIsDashing = SuraPlayer->GetPlayerMovementComponent()->IsDashing();
 		Velocity = SuraPlayer->GetPlayerMovementComponent()->Velocity;
@@ -32,6 +33,7 @@ void USuraPawnPlayerAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSec
 	if (SuraPlayer)
 	{
 		MovementState = SuraPlayer->GetPlayerMovementComponent()->GetMovementState();
+		bIsRunning = SuraPlayer->GetPlayerMovementComponent()->IsRunning();
 		bIsCrouching = SuraPlayer->GetPlayerMovementComponent()->IsCrouching();
 		bIsDashing = SuraPlayer->GetPlayerMovementComponent()->IsDashing();
 		Velocity = SuraPlayer->GetPlayerMovementComponent()->Velocity;
