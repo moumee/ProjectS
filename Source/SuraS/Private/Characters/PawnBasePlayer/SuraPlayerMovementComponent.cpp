@@ -340,7 +340,16 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 			if (bIsRunning)
 			{
-				if (MovementInputVector.Y <= 0.f || SuraPawnPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Firing)
+				if (AWeapon* CurrentWeapon = SuraPawnPlayer->GetWeaponSystemComponent()->GetCurrentWeapon())
+				{
+					EWeaponStateType CurrentWeaponState = CurrentWeapon->GetCurrentState()->GetWeaponStateType();
+					if (CurrentWeaponState == EWeaponStateType::WeaponStateType_Firing)
+					{
+						bIsRunning = false;
+					}
+				}
+				
+				if (MovementInputVector.Y <= 0)
 				{
 					bIsRunning = false;
 				}
