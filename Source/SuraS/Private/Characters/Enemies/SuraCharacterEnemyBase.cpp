@@ -3,7 +3,7 @@
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 
 #include "BrainComponent.h"
-#include "ActorComponents/DamageComponent/ACDamageSystem.h"
+#include "ActorComponents/DamageComponent/ACEnemyDamageSystem.h"
 #include "ActorComponents/UISystem/ACKillLogManager.h"
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
@@ -19,7 +19,7 @@
 ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 {
 	// Damage system comp
-	DamageSystemComp = CreateDefaultSubobject<UACDamageSystem>(TEXT("DamageSystemComponent"));
+	DamageSystemComp = CreateDefaultSubobject<UACEnemyDamageSystem>(TEXT("DamageSystemComponent"));
 	AddOwnedComponent(DamageSystemComp);
 
 	HealthBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
@@ -47,7 +47,7 @@ void ASuraCharacterEnemyBase::BeginPlay()
 
 	InitializeEnemy();
 	
-	BindKillLogOnDeath();
+	// BindKillLogOnDeath();
 }
 
 void ASuraCharacterEnemyBase::Tick(float DeltaSeconds)
@@ -110,8 +110,21 @@ void ASuraCharacterEnemyBase::OnDamagedTriggered()
 
 	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *(HitAnimation->GetFName()).ToString()));
 
-	if (HitAnimation)		
-		PlayAnimMontage(HitAnimation);
+	if (HitAnimation)
+	{
+		OnHitMontageEnded.BindUObject(this, &ASuraCharacterEnemyBase::OnHitEnded);
+		
+		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
+		EnemyAnimInstance->Montage_Play(HitAnimation);
+
+		GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(OnHitMontageEnded); // montage interrupted
+		GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(OnHitMontageEnded); // montage ended
+	}
+}
+
+void ASuraCharacterEnemyBase::OnHitEnded(UAnimMontage* AnimMontage, bool bInterrupted)
+{
+	GetAIController()->UpdateCurrentState(EEnemyStates::Attacking);
 }
 
 void ASuraCharacterEnemyBase::OnDeathTriggered()
@@ -276,7 +289,7 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 	}
 }
 
-void ASuraCharacterEnemyBase::BindKillLogOnDeath() const
+/*void ASuraCharacterEnemyBase::BindKillLogOnDeath() const
 {
 	if (UACDamageSystem* DamageSystem = FindComponentByClass<UACDamageSystem>())
 	{
@@ -300,7 +313,7 @@ void ASuraCharacterEnemyBase::BindKillLogOnDeath() const
 			}
 		});
 	}
-}
+}*/
 
 void ASuraCharacterEnemyBase::SetUpAIController(AEnemyBaseAIController* const NewAIController)
 {

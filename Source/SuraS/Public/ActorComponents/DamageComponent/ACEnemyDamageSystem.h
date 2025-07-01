@@ -33,7 +33,6 @@ class SURAS_API UACEnemyDamageSystem : public UACDamageSystem
 public:
 	// Sets default values for this component's properties
 	UACEnemyDamageSystem();
-
-	UFUNCTION(BlueprintCallable)
+	
 	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
 };
