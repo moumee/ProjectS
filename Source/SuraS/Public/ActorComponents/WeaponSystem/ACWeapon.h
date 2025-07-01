@@ -413,6 +413,8 @@ protected:
 public:
 	void ActivateCrosshairWidget(bool bflag);
 	void ActivateAmmoCounterWidget(bool bflag);
+	UAmmoCounterWidget* GetAmmoCounterWidget() const { return AmmoCounterWidget; } // suhyeon
+	
 protected:
 	void SetUpAimUIDelegateBinding(ASuraProjectile* Projectile);
 #pragma endregion
