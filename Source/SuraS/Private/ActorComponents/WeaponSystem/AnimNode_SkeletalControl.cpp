@@ -215,14 +215,17 @@ void FAnimNode_SkeletalControl::EvaluateSkeletalControl_AnyThread(FComponentSpac
 	float NormalizedTime = ElapsedTime / RotationTimeSeconds;
 	float EaseAlpha = FMath::Sin(PI * NormalizedTime);
 
-	float CurrentRotationDegreesX = MaxRotationDegreesX * EaseAlpha;
-	float CurrentRotationDegreesY = MaxRotationDegreesY * EaseAlpha;
-	float CurrentRotationDegreesZ = MaxRotationDegreesZ * EaseAlpha;
+
+	FVector CurrentRotationValue = MaxRotationValue * EaseAlpha;
+
+	//float CurrentRotationDegreesX = MaxRotationDegreesX * EaseAlpha;
+	//float CurrentRotationDegreesY = MaxRotationDegreesY * EaseAlpha;
+	//float CurrentRotationDegreesZ = MaxRotationDegreesZ * EaseAlpha;
 
 	FCompactPoseBoneIndex BoneIndex = TargetBone.GetCompactPoseIndex(Output.Pose.GetPose().GetBoneContainer());
 	FTransform BoneTransform = Output.Pose.GetComponentSpaceTransform(BoneIndex);
 
-	FRotator DeltaRotator(CurrentRotationDegreesX, CurrentRotationDegreesY, CurrentRotationDegreesZ);
+	FRotator DeltaRotator(CurrentRotationValue.X, CurrentRotationValue.Y, CurrentRotationValue.Z);
 	FQuat DeltaRotation = DeltaRotator.Quaternion();
 
 	BoneTransform.ConcatenateRotation(DeltaRotation);

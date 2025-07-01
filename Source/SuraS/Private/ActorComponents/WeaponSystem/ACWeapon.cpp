@@ -355,7 +355,9 @@ void AWeapon::LoadWeaponData()
 		ZoomRecoil = WeaponData->ZoomRecoil;
 
 		// <Recoil>
-		DefaultArmRecoil = WeaponData->ArmRecoil;
+		ArmRecoil_Hand = WeaponData->ArmRecoil_Hand;
+		ArmRecoil_UpperArm = WeaponData->ArmRecoil_UpperArm;
+		ArmRecoil_LowerArm = WeaponData->ArmRecoil_LowerArm;
 
 		// <Camera Shake>
 		DefaultCameraShakeClass = WeaponData->DefaultCameraShakeClass;
@@ -2211,9 +2213,17 @@ void AWeapon::AddArmRecoil()
 		Cast<IWeaponInterface>(CharacterAnimInstance)->AddArmRecoil();
 	}
 }
-FArmRecoilStruct* AWeapon::GetArmRecoilInfo()
+FArmRecoilStruct* AWeapon::GetArmRecoilInfo_Hand()
 {
-	return &DefaultArmRecoil;
+	return &ArmRecoil_Hand;
+}
+FArmRecoilStruct* AWeapon::GetArmRecoilInfo_UpperArm()
+{
+	return &ArmRecoil_UpperArm;
+}
+FArmRecoilStruct* AWeapon::GetArmRecoilInfo_LowerArm()
+{
+	return &ArmRecoil_LowerArm;
 }
 #pragma endregion
 

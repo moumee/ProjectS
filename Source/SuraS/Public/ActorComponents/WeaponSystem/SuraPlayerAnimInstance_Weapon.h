@@ -135,30 +135,53 @@ protected:
 	bool bIsArmRecoiling = false;
 
 	UPROPERTY()
-	FArmRecoilStruct DefaultArmRecoil;
+	FArmRecoilStruct ArmRecoil_Hand;
+	UPROPERTY()
+	FArmRecoilStruct ArmRecoil_UpperArm;
+	UPROPERTY()
+	FArmRecoilStruct ArmRecoil_LowerArm;
 
-	float TotalTargetArmRecoilValueX = 0.f;
-	float TotalTargetArmRecoilValueY = 0.f;
-	float TotalTargetArmRecoilValueZ = 0.f;
+	FVector TotalTargetRecoil_Hand = { 0.f, 0.f, 0.f };
+	FVector TotalTargetRecoil_LowerArm = { 0.f, 0.f, 0.f };
+	FVector TotalTargetRecoil_UpperArm = { 0.f, 0.f, 0.f };
 
-	float CulmulatedRecoilX = 0.f;
-	float CulmulatedRecoilY = 0.f;
-	float CulmulatedRecoilZ = 0.f;
+	FVector CulmulatedRecoil_Hand = { 0.f, 0.f, 0.f };
+	FVector CulmulatedRecoil_LowerArm = { 0.f, 0.f, 0.f };
+	FVector CulmulatedRecoil_UpperArm = { 0.f, 0.f, 0.f };
 
-	float RecoveredArmRecoilX = 0.f;
-	float RecoveredArmRecoilY = 0.f;
-	float RecoveredArmRecoilZ = 0.f;
+	FVector RecoveredRecoil_Hand = { 0.f, 0.f, 0.f };
+	FVector RecoveredRecoil_LowerArm = { 0.f, 0.f, 0.f };
+	FVector RecoveredRecoil_UpperArm = { 0.f, 0.f, 0.f };
+
+	//float TotalTargetArmRecoilValueX = 0.f;
+	//float TotalTargetArmRecoilValueY = 0.f;
+	//float TotalTargetArmRecoilValueZ = 0.f;
+
+	//float CulmulatedRecoilX = 0.f;
+	//float CulmulatedRecoilY = 0.f;
+	//float CulmulatedRecoilZ = 0.f;
+
+	//float RecoveredArmRecoilX = 0.f;
+	//float RecoveredArmRecoilY = 0.f;
+	//float RecoveredArmRecoilZ = 0.f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
-	float CurrentArmRecoilValueX = 0.f;
+	FVector CurrentRecoil_Hand = { 0.f, 0.f, 0.f };
 	UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
-	float CurrentArmRecoilValueY = 0.f;
+	FVector CurrentRecoil_LowerArm = { 0.f, 0.f, 0.f };
 	UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
-	float CurrentArmRecoilValueZ = 0.f;
+	FVector CurrentRecoil_UpperArm = { 0.f, 0.f, 0.f };
+
+	//UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
+	//float CurrentArmRecoilValueX = 0.f;
+	//UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
+	//float CurrentArmRecoilValueY = 0.f;
+	//UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
+	//float CurrentArmRecoilValueZ = 0.f;
 
 public:
-	void ApplyArmRecoil(float DeltaTime, FArmRecoilStruct* RecoilStruct = nullptr);
-	void RecoverArmRecoil(float DeltaTime, FArmRecoilStruct* RecoilStruct = nullptr);
+	void ApplyArmRecoil(float DeltaTime);
+	void RecoverArmRecoil(float DeltaTime);
 	void UpdateArmRecoil(float DeltaTime);
 #pragma endregion
 };

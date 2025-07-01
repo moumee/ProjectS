@@ -590,12 +590,18 @@ public:
 
 #pragma region Recoil/ArmAnimation
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FArmRecoilStruct DefaultArmRecoil;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil_Hand;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil_UpperArm;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil_LowerArm;
 public:
 	void AddArmRecoil();
 
-	FArmRecoilStruct* GetArmRecoilInfo();
+	FArmRecoilStruct* GetArmRecoilInfo_Hand();
+	FArmRecoilStruct* GetArmRecoilInfo_UpperArm();
+	FArmRecoilStruct* GetArmRecoilInfo_LowerArm();
 #pragma endregion
 
 

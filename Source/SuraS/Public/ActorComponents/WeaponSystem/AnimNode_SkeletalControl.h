@@ -56,13 +56,16 @@ struct SURAS_API FAnimNode_SkeletalControl : public FAnimNode_Base
 	FBoneReference TargetBone;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Recoil, meta = (PinShownByDefault))
-	float MaxRotationDegreesX = 30.f;
+	FVector MaxRotationValue = FVector(0.f, 0.f, 0.f);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Recoil, meta = (PinShownByDefault))
-	float MaxRotationDegreesY = 30.f;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Recoil, meta = (PinShownByDefault))
+	//float MaxRotationDegreesX = 30.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Recoil, meta = (PinShownByDefault))
-	float MaxRotationDegreesZ = 30.f;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Recoil, meta = (PinShownByDefault))
+	//float MaxRotationDegreesY = 30.f;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Recoil, meta = (PinShownByDefault))
+	//float MaxRotationDegreesZ = 30.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Recoil)
 	float RotationTimeSeconds = 2.0f;
