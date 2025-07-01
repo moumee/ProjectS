@@ -21,3 +21,7 @@ void IWeaponInterface::ReloadingEnd()
 void IWeaponInterface::SwitchToOtherWeapon()
 {
 }
+
+void IWeaponInterface::AddArmRecoil(float AdditionalRecoilAmountX, float AdditionalRecoilAmountY, float AdditionalRecoilAmountZ)
+{
+}
