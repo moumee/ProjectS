@@ -9,7 +9,6 @@
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
-#include "GameFramework/Character.h"
 #include "UI/InventoryWidget.h"
 #include "Components/TextBlock.h"
 
