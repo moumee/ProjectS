@@ -30,4 +30,7 @@ public:
 	virtual void ReloadingEnd();
 
 	virtual void SwitchToOtherWeapon();
+
+	//<ArmRecoilAnimation>
+	virtual void AddArmRecoil(float AdditionalRecoilAmountX = 0.f, float AdditionalRecoilAmountY = 0.f, float AdditionalRecoilAmountZ = 0.f);
 };

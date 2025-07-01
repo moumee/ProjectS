@@ -13,6 +13,7 @@
 #include "ActorComponents/WeaponSystem/WeaponCamSettingValue.h"
 #include "ActorComponents/WeaponSystem/WeaponInterface.h"
 #include "ActorComponents/WeaponSystem/WeaponRecoilStruct.h"
+#include "ActorComponents/WeaponSystem/ArmRecoilStruct.h"
 #include "ActorComponents/WeaponSystem/ProjectileSpreadValue.h"
 
 #include "Engine/DataTable.h"
@@ -560,7 +561,7 @@ protected:
 	int32 MaxPenetrableObjectsNum_Right = 4;
 #pragma endregion
 
-#pragma region Recoil
+#pragma region Recoil/Aim
 protected:
 	bool bIsRecoiling = false;
 
@@ -586,6 +587,23 @@ public:
 	void RecoverRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct = nullptr);
 	void UpdateRecoil(float DeltaTime);
 #pragma endregion
+
+#pragma region Recoil/ArmAnimation
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil_Hand;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil_UpperArm;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil_LowerArm;
+public:
+	void AddArmRecoil();
+
+	FArmRecoilStruct* GetArmRecoilInfo_Hand();
+	FArmRecoilStruct* GetArmRecoilInfo_UpperArm();
+	FArmRecoilStruct* GetArmRecoilInfo_LowerArm();
+#pragma endregion
+
 
 #pragma region Overheat
 protected:

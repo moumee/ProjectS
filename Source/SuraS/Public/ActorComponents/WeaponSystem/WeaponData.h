@@ -7,6 +7,7 @@
 #include "ActorComponents/WeaponSystem/WeaponAction.h"
 #include "ActorComponents/WeaponSystem/ProjectileType.h"
 #include "ActorComponents/WeaponSystem/WeaponRecoilStruct.h"
+#include "ActorComponents/WeaponSystem/ArmRecoilStruct.h"
 #include "ActorComponents/WeaponSystem/WeaponCameraShakeBase.h"
 #include "ActorComponents/WeaponSystem/ProjectileSpreadValue.h"
 #include "NiagaraSystem.h"
@@ -108,6 +109,13 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	FWeaponRecoilStruct DefaultRecoil;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
 	FWeaponRecoilStruct ZoomRecoil;
+	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil_Hand;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil_UpperArm;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil_LowerArm;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
 	TSubclassOf<UWeaponCameraShakeBase> DefaultCameraShakeClass;
