@@ -594,7 +594,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			{
 				if (bIsDashing || bCrouchPressed || !MovementInputVector.IsZero())
 				{
-					Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * RunSpeed;
+					Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * (bIsRunning ? RunSpeed : WalkSpeed);
 				}
 				else
 				{
@@ -614,7 +614,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 				{
 					if (bIsDashing || bCrouchPressed || !MovementInputVector.IsZero())
 					{
-						Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * RunSpeed;
+						Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * (bIsRunning ? RunSpeed : WalkSpeed);
 					}
 					else
 					{
@@ -784,7 +784,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	{
 		// float MaxHorizontalSpeed = bWallJumpAirBoost ? WallRunJumpAirSpeed2D : RunSpeed;
 
-		float MaxHorizontalSpeed = RunSpeed;
+		float MaxHorizontalSpeed = bIsRunning ? RunSpeed : WalkSpeed;
 		if (bWallJumpAirBoost)
 		{
 			MaxHorizontalSpeed = WallRunJumpAirSpeed2D;
@@ -943,7 +943,8 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	FVector TraceStart = SuraPawnPlayer->GetActorLocation();
 	FVector TraceEnd = TraceStart - CurrentWallHit.ImpactNormal * 200.f;
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility, Params);
+	bool bHit = GetWorld()->SweepSingleByChannel(HitResult, TraceStart, TraceEnd, PawnOwner->GetActorQuat(),
+		WALL_TRACE_CHANNEL, FCollisionShape::MakeSphere(30.f), Params);
 	
 	if (!bHit || !HitResult.IsValidBlockingHit())
 	{
@@ -951,16 +952,33 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	    SetMovementState(EMovementState::EMS_Airborne);
 	    return;
 	}
+
 	
 
 	// Wall was hit - continue with wall run logic
 	CurrentWallHit = HitResult;
+
+	FHitResult ForwardHitResult;
+	FCollisionQueryParams ForwardParams;
+	ForwardParams.AddIgnoredActor(SuraPawnPlayer);
+	FVector ForwardTraceStart = SuraPawnPlayer->GetActorLocation();
+	FVector ForwardTraceEnd = ForwardTraceStart + Velocity.GetSafeNormal() * 75.f;
+	bool bForwardHit = GetWorld()->SweepSingleByChannel(ForwardHitResult, ForwardTraceStart, ForwardTraceEnd,
+		PawnOwner->GetActorQuat(), WALL_TRACE_CHANNEL, FCollisionShape::MakeSphere(20.f), ForwardParams);
+
+	if (bForwardHit && ForwardHitResult.bBlockingHit)
+	{
+		CurrentWallHit = ForwardHitResult;
+	}
+	
 	FVector VelocityDir;
 
 	// Determine velocity direction based on which side we're running on
 	if (CurrentWallRunSide == EWallRunSide::EWRS_Left)
 	{
 	    VelocityDir = FVector::CrossProduct(CurrentWallHit.ImpactNormal, FVector::UpVector).GetSafeNormal();
+		
+		
 	    
 	    // Check if player wants to exit wall to the right
 	    if (MovementInputVector.X > 0.f)
