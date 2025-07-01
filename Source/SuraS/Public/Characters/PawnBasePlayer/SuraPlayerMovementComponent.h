@@ -226,12 +226,21 @@ protected:
 
 	FHitResult GroundHit;
 
-#pragma region Run
+#pragma region Move
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bIsRunning = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	bool bIsStepping = false;
+
+	FHitResult StepWallHit;
+
+	FHitResult StepFloorHit;
+
+	FVector LastVelocityBeforeStep;
 	
-#pragma endregion Run
+#pragma endregion Move
 	
 #pragma region WallRun
 	
