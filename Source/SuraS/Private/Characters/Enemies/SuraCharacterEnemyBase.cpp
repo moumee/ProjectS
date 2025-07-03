@@ -3,7 +3,7 @@
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 
 #include "BrainComponent.h"
-#include "ActorComponents/DamageComponent/ACDamageSystem.h"
+#include "ActorComponents/DamageComponent/ACEnemyDamageSystem.h"
 #include "ActorComponents/UISystem/ACKillLogManager.h"
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
@@ -19,7 +19,7 @@
 ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 {
 	// Damage system comp
-	DamageSystemComp = CreateDefaultSubobject<UACDamageSystem>(TEXT("DamageSystemComponent"));
+	DamageSystemComp = CreateDefaultSubobject<UACEnemyDamageSystem>(TEXT("DamageSystemComponent"));
 	AddOwnedComponent(DamageSystemComp);
 
 	HealthBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
@@ -38,6 +38,8 @@ ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 		}
 	}
 
+	bUseControllerRotationYaw = true; // for controller controled rotation
+
 	EnemyType = "Base";
 }
 
@@ -53,7 +55,9 @@ void ASuraCharacterEnemyBase::BeginPlay()
 void ASuraCharacterEnemyBase::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	
 	if (!isInitialized) return;
+	
 	if (UEnemyHealthBarWidget* const Widget = Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject()))
 	{
 		float Distance = FVector::Dist(GetPlayerController()->PlayerCameraManager->GetCameraLocation(), GetActorLocation());
@@ -106,12 +110,28 @@ void ASuraCharacterEnemyBase::OnDamagedTriggered()
 	HealthBarWidget->SetHiddenInGame(false);
 
 	if (!HealthBarWidget->bHiddenInGame)
-		Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject())->PlayFadeAnimtion();
+		Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject())->PlayFadeAnimation();
 
 	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *(HitAnimation->GetFName()).ToString()));
 
-	if (HitAnimation)		
-		PlayAnimMontage(HitAnimation);
+	if (HitAnimation)
+	{
+		OnHitMontageEnded.BindUObject(this, &ASuraCharacterEnemyBase::OnHitEnded);
+		
+		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
+		EnemyAnimInstance->Montage_Play(HitAnimation);
+
+		GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(OnHitMontageEnded); // montage interrupted
+		GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(OnHitMontageEnded); // montage ended
+	}
+}
+
+void ASuraCharacterEnemyBase::OnHitEnded(UAnimMontage* AnimMontage, bool bInterrupted)
+{
+	ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(GetPlayerController()->GetPawn());
+
+	if (Player)
+		GetAIController()->SetStateToAttacking(Player);
 }
 
 void ASuraCharacterEnemyBase::OnDeathTriggered()
@@ -165,8 +185,48 @@ void ASuraCharacterEnemyBase::UpdateHealthBarValue()
 
 bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
 {
+	if (CheckParentBoneName(GetComponentByClass<USkeletalMeshComponent>(),
+		DamageData.BoneName,  FName(TEXT("upperarm_l"))))
+	{
+		GetComponentByClass<USkeletalMeshComponent>()->HideBoneByName(FName(TEXT("upperarm_l")), PBO_Term);
+	}
+	UE_LOG(LogTemp, Error, TEXT("bone: %s"), *DamageData.BoneName.ToString());
+	
 	return GetDamageSystemComp()->TakeDamage(DamageData, DamageCauser);
 }
+
+bool ASuraCharacterEnemyBase::CheckParentBoneName(const USkeletalMeshComponent* SkeletalMeshComponent,
+	const FName& ChildBoneName, const FName& TargetParentBoneName)
+{
+	
+	if (!SkeletalMeshComponent || !SkeletalMeshComponent->GetSkeletalMeshAsset())
+	{
+		return false;
+	}
+	const FReferenceSkeleton& RefSkeleton = SkeletalMeshComponent->GetSkeletalMeshAsset()->GetRefSkeleton();
+	const int32 ChildBoneIndex = RefSkeleton.FindBoneIndex(ChildBoneName);
+	
+	if (ChildBoneIndex != INDEX_NONE)
+	{
+		int32 CurrentBoneIndex = RefSkeleton.GetParentIndex(ChildBoneIndex);
+
+		// 부모 인덱스가 INDEX_NONE이 될 때까지
+		while (CurrentBoneIndex != INDEX_NONE)
+		{
+			if (RefSkeleton.GetBoneName(CurrentBoneIndex) == TargetParentBoneName)
+			{
+				return true; // 목표 부모
+			}
+
+			//다음 부모
+			CurrentBoneIndex = RefSkeleton.GetParentIndex(CurrentBoneIndex);
+		}
+	}
+
+	// 부모가 이제 없다
+	return false;
+}
+
 
 void ASuraCharacterEnemyBase::Attack(const ASuraPawnPlayer* Player)
 {
@@ -284,7 +344,7 @@ void ASuraCharacterEnemyBase::BindKillLogOnDeath() const
 		{
 			// KillLog 호출 로직
 			// 3. 플레이어 가져오기
-			APlayerController* PC = GetWorld()->GetFirstPlayerController();
+			APlayerController* PC = GetPlayerController();
 			if (!PC) return;
 
 			ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(PC->GetPawn());

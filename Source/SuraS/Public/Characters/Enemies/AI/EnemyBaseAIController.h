@@ -37,4 +37,6 @@ public:
 	FORCEINLINE EEnemyStates GetCurrentState() const { return _CurrentState; }
 
 	void UpdateCurrentState(EEnemyStates NewState);
+
+	void SetStateToAttacking(AActor* TargetActor);
 };
