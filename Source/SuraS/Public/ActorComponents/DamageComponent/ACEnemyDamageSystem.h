@@ -35,6 +35,7 @@ class SURAS_API UACEnemyDamageSystem : public UACDamageSystem
 	static TSet<FName> RArmBoneNames;
 	static TSet<FName> LLegBoneNames;
 	static TSet<FName> RLegBoneNames;
+	FActorSpawnParameters SpawnParams;
 
 public:
 	// Sets default values for this component's properties
