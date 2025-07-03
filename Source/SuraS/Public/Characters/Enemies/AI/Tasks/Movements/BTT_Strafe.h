@@ -14,10 +14,15 @@ class SURAS_API UBTT_Strafe : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
 
+	int StrafeDirection;
+	
 	float DeltaTime = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Strafe", meta = (AllowPrivateAccess = "true"))
 	float StrafeDuration = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Strafe", meta = (AllowPrivateAccess = "true"))
+	float StrafeDurationDeviation = 0.f;
 
 public:
 	explicit UBTT_Strafe(FObjectInitializer const& ObjectInitializer);

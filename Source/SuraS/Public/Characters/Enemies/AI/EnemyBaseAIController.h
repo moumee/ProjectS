@@ -38,5 +38,5 @@ public:
 
 	void UpdateCurrentState(EEnemyStates NewState);
 
-	void SetStateToAttacking(AActor* TargetActor);
+	void SetStateToChaseOrAttacking(AActor* TargetActor);
 };

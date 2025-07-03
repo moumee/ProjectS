@@ -131,7 +131,7 @@ void ASuraCharacterEnemyBase::OnHitEnded(UAnimMontage* AnimMontage, bool bInterr
 	ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(GetPlayerController()->GetPawn());
 
 	if (Player)
-		GetAIController()->SetStateToAttacking(Player);
+		GetAIController()->SetStateToChaseOrAttacking(Player);
 }
 
 void ASuraCharacterEnemyBase::OnDeathTriggered()
