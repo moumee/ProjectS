@@ -85,3 +85,9 @@ void AEnemyBaseAIController::UpdateCurrentState(EEnemyStates NewState)
 	_CurrentState = NewState;
 	GetBlackboardComponent()->SetValueAsEnum("State", static_cast<uint8>(_CurrentState));
 }
+
+void AEnemyBaseAIController::SetStateToAttacking(AActor* TargetActor)
+{
+	GetBlackboardComponent()->SetValueAsObject("AttackTarget", TargetActor);
+	UpdateCurrentState(EEnemyStates::Attacking);
+}

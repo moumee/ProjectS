@@ -28,7 +28,7 @@ FVector2D UEnemyHealthBarWidget::GetHealthBarSize()
 	return CanvasSlot->GetSize();
 }
 
-void UEnemyHealthBarWidget::PlayFadeAnimtion()
+void UEnemyHealthBarWidget::PlayFadeAnimation()
 {
 	PlayAnimation(FadeInOutAnimation);
 }
