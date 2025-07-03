@@ -30,9 +30,24 @@ class SURAS_API UACEnemyDamageSystem : public UACDamageSystem
 	float LLegHealth = 100.f;
 	float MaxLLegHealth = 100.f;
 
+	static TSet<FName> HeadBoneNames;
+	static TSet<FName> LArmBoneNames;
+	static TSet<FName> RArmBoneNames;
+	static TSet<FName> LLegBoneNames;
+	static TSet<FName> RLegBoneNames;
+
 public:
 	// Sets default values for this component's properties
 	UACEnemyDamageSystem();
 	
 	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> RArm;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> LArm;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> Head;
 };

@@ -3,8 +3,10 @@
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 
 #include "BrainComponent.h"
+#include "SuraSProjectile.h"
 #include "ActorComponents/DamageComponent/ACEnemyDamageSystem.h"
 #include "ActorComponents/UISystem/ACKillLogManager.h"
+#include "ActorComponents/WeaponSystem/ProjectileType.h"
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
@@ -41,6 +43,8 @@ ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 	bUseControllerRotationYaw = true; // for controller controled rotation
 
 	EnemyType = "Base";
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
 }
 
 void ASuraCharacterEnemyBase::BeginPlay()
@@ -185,48 +189,8 @@ void ASuraCharacterEnemyBase::UpdateHealthBarValue()
 
 bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
 {
-	if (CheckParentBoneName(GetComponentByClass<USkeletalMeshComponent>(),
-		DamageData.BoneName,  FName(TEXT("upperarm_l"))))
-	{
-		GetComponentByClass<USkeletalMeshComponent>()->HideBoneByName(FName(TEXT("upperarm_l")), PBO_Term);
-	}
-	UE_LOG(LogTemp, Error, TEXT("bone: %s"), *DamageData.BoneName.ToString());
-	
 	return GetDamageSystemComp()->TakeDamage(DamageData, DamageCauser);
 }
-
-bool ASuraCharacterEnemyBase::CheckParentBoneName(const USkeletalMeshComponent* SkeletalMeshComponent,
-	const FName& ChildBoneName, const FName& TargetParentBoneName)
-{
-	
-	if (!SkeletalMeshComponent || !SkeletalMeshComponent->GetSkeletalMeshAsset())
-	{
-		return false;
-	}
-	const FReferenceSkeleton& RefSkeleton = SkeletalMeshComponent->GetSkeletalMeshAsset()->GetRefSkeleton();
-	const int32 ChildBoneIndex = RefSkeleton.FindBoneIndex(ChildBoneName);
-	
-	if (ChildBoneIndex != INDEX_NONE)
-	{
-		int32 CurrentBoneIndex = RefSkeleton.GetParentIndex(ChildBoneIndex);
-
-		// 부모 인덱스가 INDEX_NONE이 될 때까지
-		while (CurrentBoneIndex != INDEX_NONE)
-		{
-			if (RefSkeleton.GetBoneName(CurrentBoneIndex) == TargetParentBoneName)
-			{
-				return true; // 목표 부모
-			}
-
-			//다음 부모
-			CurrentBoneIndex = RefSkeleton.GetParentIndex(CurrentBoneIndex);
-		}
-	}
-
-	// 부모가 이제 없다
-	return false;
-}
-
 
 void ASuraCharacterEnemyBase::Attack(const ASuraPawnPlayer* Player)
 {
