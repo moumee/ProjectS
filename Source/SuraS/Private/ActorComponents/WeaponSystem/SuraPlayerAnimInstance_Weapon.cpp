@@ -71,6 +71,7 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 			//SetAimSocket();
 			SetAimPoint();
 			UpdateWeapon();
+			UpdateArmRecoil(DeltaTime);
 
 			LeftHandTransform = GetLeftHandTransform();
 			TargetLeftHandSocketTransform = GetTargetLeftHandTransfrom();
@@ -105,6 +106,15 @@ void USuraPlayerAnimInstance_Weapon::UpdateWeapon()
 			else if (CurrentWeaponStateType == EWeaponStateType::WeaponStateType_Reloading)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Reloading State!!!!!!!!!!"));
+			}
+
+			//-------------------------------------------------------------
+
+			if (CurrentWeapon != SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon())
+			{
+				ArmRecoil_Hand = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo_Hand();
+				ArmRecoil_UpperArm = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo_UpperArm();
+				ArmRecoil_LowerArm = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo_LowerArm();
 			}
 		}
 
@@ -249,6 +259,114 @@ FTransform USuraPlayerAnimInstance_Weapon::GetTargetLeftHandTransfrom()
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("NOOOOOO!!!"));
+	//UE_LOG(LogTemp, Warning, TEXT("NOOOOOO!!!"));
 	return FTransform();
 }
+
+#pragma region ArmRecoil
+void USuraPlayerAnimInstance_Weapon::AddArmRecoil(float AdditionalRecoilAmountX, float AdditionalRecoilAmountY, float AdditionalRecoilAmountZ)
+{
+	bIsArmRecoiling = true;
+
+	if (&ArmRecoil_Hand && &ArmRecoil_UpperArm && &ArmRecoil_LowerArm)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("Arm Recoil Added!!!"));
+
+		// --- Hand ---
+		FVector RandRecoil_Hand;
+		RandRecoil_Hand.X = FMath::RandRange((ArmRecoil_Hand.RecoilAmount.X + AdditionalRecoilAmountX) * ArmRecoil_Hand.RecoilRangeMin.X, (ArmRecoil_Hand.RecoilAmount.X + AdditionalRecoilAmountX) * ArmRecoil_Hand.RecoilRangeMax.X);
+		RandRecoil_Hand.Y = FMath::RandRange((ArmRecoil_Hand.RecoilAmount.Y + AdditionalRecoilAmountY) * ArmRecoil_Hand.RecoilRangeMin.Y, (ArmRecoil_Hand.RecoilAmount.Y + AdditionalRecoilAmountY) * ArmRecoil_Hand.RecoilRangeMax.Y);
+		RandRecoil_Hand.Z = FMath::RandRange((ArmRecoil_Hand.RecoilAmount.Z + AdditionalRecoilAmountZ) * ArmRecoil_Hand.RecoilRangeMin.Z, (ArmRecoil_Hand.RecoilAmount.Z + AdditionalRecoilAmountZ) * ArmRecoil_Hand.RecoilRangeMax.Z);
+
+		TotalTargetRecoil_Hand += RandRecoil_Hand;
+
+		// --- LowerArm ---
+		FVector RandRecoil_LowerArm;
+		RandRecoil_LowerArm.X = FMath::RandRange((ArmRecoil_LowerArm.RecoilAmount.X + AdditionalRecoilAmountX) * ArmRecoil_LowerArm.RecoilRangeMin.X, (ArmRecoil_LowerArm.RecoilAmount.X + AdditionalRecoilAmountX) * ArmRecoil_LowerArm.RecoilRangeMax.X);
+		RandRecoil_LowerArm.Y = FMath::RandRange((ArmRecoil_LowerArm.RecoilAmount.Y + AdditionalRecoilAmountY) * ArmRecoil_LowerArm.RecoilRangeMin.Y, (ArmRecoil_LowerArm.RecoilAmount.Y + AdditionalRecoilAmountY) * ArmRecoil_LowerArm.RecoilRangeMax.Y);
+		RandRecoil_LowerArm.Z = FMath::RandRange((ArmRecoil_LowerArm.RecoilAmount.Z + AdditionalRecoilAmountZ) * ArmRecoil_LowerArm.RecoilRangeMin.Z, (ArmRecoil_LowerArm.RecoilAmount.Z + AdditionalRecoilAmountZ) * ArmRecoil_LowerArm.RecoilRangeMax.Z);
+
+		TotalTargetRecoil_LowerArm += RandRecoil_LowerArm;
+
+		// --- UpperArm ---
+		FVector RandRecoil_UpperArm;
+		RandRecoil_UpperArm.X = FMath::RandRange((ArmRecoil_UpperArm.RecoilAmount.X + AdditionalRecoilAmountX) * ArmRecoil_UpperArm.RecoilRangeMin.X, (ArmRecoil_UpperArm.RecoilAmount.X + AdditionalRecoilAmountX) * ArmRecoil_UpperArm.RecoilRangeMax.X);
+		RandRecoil_UpperArm.Y = FMath::RandRange((ArmRecoil_UpperArm.RecoilAmount.Y + AdditionalRecoilAmountY) * ArmRecoil_UpperArm.RecoilRangeMin.Y, (ArmRecoil_UpperArm.RecoilAmount.Y + AdditionalRecoilAmountY) * ArmRecoil_UpperArm.RecoilRangeMax.Y);
+		RandRecoil_UpperArm.Z = FMath::RandRange((ArmRecoil_UpperArm.RecoilAmount.Z + AdditionalRecoilAmountZ) * ArmRecoil_UpperArm.RecoilRangeMin.Z, (ArmRecoil_UpperArm.RecoilAmount.Z + AdditionalRecoilAmountZ) * ArmRecoil_UpperArm.RecoilRangeMax.Z);
+
+		TotalTargetRecoil_UpperArm += RandRecoil_UpperArm;
+	}
+}
+
+void USuraPlayerAnimInstance_Weapon::ApplyArmRecoil(float DeltaTime)
+{
+	if (&ArmRecoil_Hand && &ArmRecoil_UpperArm && &ArmRecoil_LowerArm)
+	{
+		// --- Hand ---
+		FVector InterpRecoilTarget_Hand = FMath::VInterpTo(FVector(0.f, 0.f, 0.f), TotalTargetRecoil_Hand - CulmulatedRecoil_Hand, DeltaTime, ArmRecoil_Hand.RecoilSpeed);
+		CurrentRecoil_Hand += InterpRecoilTarget_Hand;
+		CulmulatedRecoil_Hand += InterpRecoilTarget_Hand;
+		// --- LowerArm ---
+		FVector InterpRecoilTarget_LowerArm = FMath::VInterpTo(FVector(0.f, 0.f, 0.f), TotalTargetRecoil_LowerArm - CulmulatedRecoil_LowerArm, DeltaTime, ArmRecoil_LowerArm.RecoilSpeed);
+		CurrentRecoil_LowerArm += InterpRecoilTarget_LowerArm;
+		CulmulatedRecoil_LowerArm += InterpRecoilTarget_LowerArm;
+		// --- UpperArm ---
+		FVector InterpRecoilTarget_UpperArm = FMath::VInterpTo(FVector(0.f, 0.f, 0.f), TotalTargetRecoil_UpperArm - CulmulatedRecoil_UpperArm, DeltaTime, ArmRecoil_UpperArm.RecoilSpeed);
+		CurrentRecoil_UpperArm += InterpRecoilTarget_UpperArm;
+		CulmulatedRecoil_UpperArm += InterpRecoilTarget_UpperArm;
+	}
+}
+
+void USuraPlayerAnimInstance_Weapon::RecoverArmRecoil(float DeltaTime)
+{
+	// --- Hand ---
+	FVector InterpRecoilRecoverTarget_Hand = FMath::VInterpTo(FVector(0.f, 0.f, 0.f), CulmulatedRecoil_Hand - RecoveredRecoil_Hand, DeltaTime, ArmRecoil_Hand.RecoilRecoverSpeed);
+	CurrentRecoil_Hand -= InterpRecoilRecoverTarget_Hand;
+	RecoveredRecoil_Hand += InterpRecoilRecoverTarget_Hand;
+
+	// --- LowerArm ---
+	FVector InterpRecoilRecoverTarget_LowerArm = FMath::VInterpTo(FVector(0.f, 0.f, 0.f), CulmulatedRecoil_LowerArm - RecoveredRecoil_LowerArm, DeltaTime, ArmRecoil_LowerArm.RecoilRecoverSpeed);
+	CurrentRecoil_LowerArm -= InterpRecoilRecoverTarget_LowerArm;
+	RecoveredRecoil_LowerArm += InterpRecoilRecoverTarget_LowerArm;
+
+	// --- UpperArm ---
+	FVector InterpRecoilRecoverTarget_UpperArm = FMath::VInterpTo(FVector(0.f, 0.f, 0.f), CulmulatedRecoil_UpperArm - RecoveredRecoil_UpperArm, DeltaTime, ArmRecoil_UpperArm.RecoilRecoverSpeed);
+	CurrentRecoil_UpperArm -= InterpRecoilRecoverTarget_UpperArm;
+	RecoveredRecoil_UpperArm += InterpRecoilRecoverTarget_UpperArm;
+
+	if ((CulmulatedRecoil_Hand - RecoveredRecoil_Hand).IsNearlyZero()
+		&& (CulmulatedRecoil_LowerArm - RecoveredRecoil_LowerArm).IsNearlyZero()
+		&& (CulmulatedRecoil_UpperArm - RecoveredRecoil_UpperArm).IsNearlyZero())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Arm Recoil has been perfectly Recovered!!!"));
+
+		TotalTargetRecoil_Hand = FVector::ZeroVector;
+		TotalTargetRecoil_LowerArm = FVector::ZeroVector;
+		TotalTargetRecoil_UpperArm = FVector::ZeroVector;
+
+		CulmulatedRecoil_Hand = FVector::ZeroVector;
+		CulmulatedRecoil_LowerArm = FVector::ZeroVector;
+		CulmulatedRecoil_UpperArm = FVector::ZeroVector;
+
+		RecoveredRecoil_Hand = FVector::ZeroVector;
+		RecoveredRecoil_LowerArm = FVector::ZeroVector;
+		RecoveredRecoil_UpperArm = FVector::ZeroVector;
+
+		bIsArmRecoiling = false;
+	}
+}
+
+void USuraPlayerAnimInstance_Weapon::UpdateArmRecoil(float DeltaTime)
+{
+	if (bIsArmRecoiling)
+	{
+		//ApplyArmRecoil(DeltaTime, DefaultArmRecoil);
+		//RecoverArmRecoil(DeltaTime, DefaultArmRecoil);
+
+		//UE_LOG(LogTemp, Warning, TEXT("Updating Arm Recoil"));
+
+		ApplyArmRecoil(DeltaTime);
+		RecoverArmRecoil(DeltaTime);
+	}
+}
+#pragma endregion

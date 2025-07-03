@@ -354,6 +354,11 @@ void AWeapon::LoadWeaponData()
 		DefaultRecoil = WeaponData->DefaultRecoil;
 		ZoomRecoil = WeaponData->ZoomRecoil;
 
+		// <Recoil>
+		ArmRecoil_Hand = WeaponData->ArmRecoil_Hand;
+		ArmRecoil_UpperArm = WeaponData->ArmRecoil_UpperArm;
+		ArmRecoil_LowerArm = WeaponData->ArmRecoil_LowerArm;
+
 		// <Camera Shake>
 		DefaultCameraShakeClass = WeaponData->DefaultCameraShakeClass;
 		ZoomCameraShakeClass = WeaponData->ZoomCameraShakeClass;
@@ -634,11 +639,13 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 		{
 			AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
 			ApplyCameraShake(ZoomCameraShakeClass);
+			AddArmRecoil();
 		}
 		else
 		{
 			AddRecoilValue(&DefaultRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
 			ApplyCameraShake(DefaultCameraShakeClass);
+			AddArmRecoil();
 		}
 	}
 }
@@ -734,11 +741,13 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 			{
 				AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
 				ApplyCameraShake(ZoomCameraShakeClass);
+				AddArmRecoil();
 			}
 			else
 			{
 				AddRecoilValue(&DefaultRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
 				ApplyCameraShake(DefaultCameraShakeClass);
+				AddArmRecoil();
 			}
 		}
 	}
@@ -2069,7 +2078,7 @@ void AWeapon::StopCharge()
 }
 #pragma endregion
 
-#pragma region Recoil
+#pragma region Recoil/Aim
 void AWeapon::AddRecoilValue(FWeaponRecoilStruct* RecoilStruct, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw)
 {
 	bIsRecoiling = true;
@@ -2149,7 +2158,7 @@ void AWeapon::RecoverRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct)
 	else
 	{
 		float InterpRecoilRecoverTargetValue_Pitch = FMath::FInterpTo(0.f, CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch, DeltaTime, RecoilStruct->RecoilRecoverSpeed);
-		float InterpRecoilRecoverTargetValue_Yaw = FMath::FInterpTo(0.f, CulmulatedRecoilValueYaw - RecoveredRecoilValueYaw, DeltaTime, RecoilStruct->RecoilRecoverSpeed);;
+		float InterpRecoilRecoverTargetValue_Yaw = FMath::FInterpTo(0.f, CulmulatedRecoilValueYaw - RecoveredRecoilValueYaw, DeltaTime, RecoilStruct->RecoilRecoverSpeed);
 
 		PlayerController->AddPitchInput(-InterpRecoilRecoverTargetValue_Pitch);
 		PlayerController->AddYawInput(-InterpRecoilRecoverTargetValue_Yaw);
@@ -2193,6 +2202,28 @@ void AWeapon::UpdateRecoil(float DeltaTime)
 			}
 		}
 	}
+}
+#pragma endregion
+
+#pragma region Recoil/ArmAnimation
+void AWeapon::AddArmRecoil()
+{
+	if (CharacterAnimInstance->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
+	{
+		Cast<IWeaponInterface>(CharacterAnimInstance)->AddArmRecoil();
+	}
+}
+FArmRecoilStruct* AWeapon::GetArmRecoilInfo_Hand()
+{
+	return &ArmRecoil_Hand;
+}
+FArmRecoilStruct* AWeapon::GetArmRecoilInfo_UpperArm()
+{
+	return &ArmRecoil_UpperArm;
+}
+FArmRecoilStruct* AWeapon::GetArmRecoilInfo_LowerArm()
+{
+	return &ArmRecoil_LowerArm;
 }
 #pragma endregion
 
