@@ -84,6 +84,7 @@ void USuraPlayerMovementComponent::InitMovementData()
 	WallRunCameraTiltAngle = Row->WallRunCameraTiltAngle;
 	PreWallRunDetectionRange = Row->PreWallRunDetectionRange;
 	WallRunCameraTiltInterpSpeed = Row->WallRunCameraTiltInterpSpeed;
+	WallRunTiltRecoverCurve = Row->WallRunTiltRecoverCurve;
 	SlideInitialWindow = Row->SlideInitialWindow;
 	SlideMaxDuration = Row->SlideMaxDuration;
 	GroundPointDetectionLength = Row->GroundPointDetectionLength;
@@ -91,22 +92,52 @@ void USuraPlayerMovementComponent::InitMovementData()
 
 void USuraPlayerMovementComponent::AddControllerRoll(float DeltaTime, const FVector& WallRunDirection, EWallRunSide WallRunSide)
 {
-	float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(SuraPawnPlayer->GetActorForwardVector(), WallRunDirection)));
-	float Alpha = FMath::Abs(Angle / 180.f);
+	FVector PlayerForward = SuraPawnPlayer->GetActorForwardVector();
+
+	float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(PlayerForward, WallRunDirection)));
+	float DirectionSign = FMath::Sign(FVector::CrossProduct(WallRunDirection, PlayerForward).Z);
+	float SignedAngle = Angle * DirectionSign;
 	float TargetRoll = 0.f;
-	
+
 	if (WallRunSide == EWallRunSide::EWRS_Left)
 	{
-		TargetRoll = FMath::Lerp(WallRunCameraTiltAngle, -WallRunCameraTiltAngle, Alpha);
+		TargetRoll = FMath::GetMappedRangeValueClamped(
+			FVector2D(0.f, 90.f),
+			FVector2D(WallRunCameraTiltAngle, 0.f),
+			FMath::Abs(SignedAngle));
+		
 	}
 	else if (WallRunSide == EWallRunSide::EWRS_Right)
 	{
-		TargetRoll = FMath::Lerp(-WallRunCameraTiltAngle, WallRunCameraTiltAngle, Alpha);
+		TargetRoll = FMath::GetMappedRangeValueClamped(
+			FVector2D(0.f, 90.f),                          
+			FVector2D(-WallRunCameraTiltAngle, 0.f),       
+			FMath::Abs(SignedAngle));
 	}
 
 	FRotator CurrentControlRotation = SuraPawnPlayer->GetControlRotation();
-	FRotator NewRotation = FMath::RInterpTo(CurrentControlRotation, FRotator(CurrentControlRotation.Pitch, CurrentControlRotation.Yaw, TargetRoll), DeltaTime, WallRunCameraTiltInterpSpeed);
-	SuraPlayerController->SetControlRotation(NewRotation);
+	float CurrentRoll = FMath::UnwindDegrees(CurrentControlRotation.Roll);
+	float NewRoll = FMath::FInterpTo(CurrentRoll, TargetRoll, DeltaTime, WallRunCameraTiltInterpSpeed);
+	FRotator NewControlRotation = CurrentControlRotation;
+	NewControlRotation.Roll = NewRoll;
+	SuraPlayerController->SetControlRotation(NewControlRotation);
+	
+	// float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(SuraPawnPlayer->GetActorForwardVector(), WallRunDirection)));
+	// float Alpha = FMath::Abs(Angle / 180.f);
+	// float TargetRoll = 0.f;
+	//
+	// if (WallRunSide == EWallRunSide::EWRS_Left)
+	// {
+	// 	TargetRoll = FMath::Lerp(WallRunCameraTiltAngle, -WallRunCameraTiltAngle, Alpha);
+	// }
+	// else if (WallRunSide == EWallRunSide::EWRS_Right)
+	// {
+	// 	TargetRoll = FMath::Lerp(-WallRunCameraTiltAngle, WallRunCameraTiltAngle, Alpha);
+	// }
+	//
+	// FRotator CurrentControlRotation = SuraPawnPlayer->GetControlRotation();
+	// FRotator NewRotation = FMath::RInterpTo(CurrentControlRotation, FRotator(CurrentControlRotation.Pitch, CurrentControlRotation.Yaw, TargetRoll), DeltaTime, WallRunCameraTiltInterpSpeed);
+	// SuraPlayerController->SetControlRotation(NewRotation);
 }
 
 
@@ -275,7 +306,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 			Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + 700.f);
 			bIsDashing = false;
 			ElapsedTimeFromDash = 0.f;
-			SlideResetTimer = 0.;
+			SlideResetTimer = 0.f;
 			
 			OnSlide.Broadcast();
 			SetMovementState(EMovementState::EMS_Slide);
@@ -605,50 +636,6 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	{
 		ElapsedTimeFromSurface += DeltaTime;
 	}
-	
-	if (IsGrounded())
-	{
-		if (PreviousMovementState != EMovementState::EMS_Move)
-		{
-			if (GroundHit.ImpactNormal.Z >= MinWalkableFloorZ)
-			{
-				if (bIsDashing || bCrouchPressed || !MovementInputVector.IsZero())
-				{
-					Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * (bIsRunning ? RunSpeed : WalkSpeed);
-				}
-				else
-				{
-					Velocity = FVector::ZeroVector;
-				}
-			}
-			OnLand.Broadcast(Velocity.Z);
-			OnMove.Broadcast();
-			SetMovementState(EMovementState::EMS_Move);
-			return;
-		}
-		else
-		{
-			if (ElapsedTimeFromSurface > JumpBuffer)
-			{
-				if (GroundHit.ImpactNormal.Z >= MinWalkableFloorZ)
-				{
-					if (bIsDashing || bCrouchPressed || !MovementInputVector.IsZero())
-					{
-						Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * (bIsRunning ? RunSpeed : WalkSpeed);
-					}
-					else
-					{
-						Velocity = FVector::ZeroVector;
-					}
-					
-				}
-				OnLand.Broadcast(Velocity.Z);
-				OnMove.Broadcast();
-				SetMovementState(EMovementState::EMS_Move);
-				return;
-			}
-		}
-	}
 
 	if (bCrouchPressed)
 	{
@@ -694,6 +681,45 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			
 		}
 	}
+	
+	if (IsGrounded())
+	{
+		if ((PreviousMovementState != EMovementState::EMS_Move) || (ElapsedTimeFromSurface > JumpBuffer))
+		{
+			OnLand.Broadcast(Velocity.Z);
+			
+			if (GroundHit.ImpactNormal.Z >= MinWalkableFloorZ)
+			{
+				if (bCrouchPressed && Velocity.Size2D() >= RunSpeed)
+				{
+					SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
+					// TODO: Slide Additional Speed to Variable and Data Table 
+					Velocity = SlideStartDirection * (Velocity.Size() + 700.f);
+					bIsDashing = false;
+					ElapsedTimeFromDash = 0.f;
+					SlideResetTimer = 0.f;
+			
+					OnSlide.Broadcast();
+					SetMovementState(EMovementState::EMS_Slide);
+					return;
+				}
+				
+				if (bIsDashing || bCrouchPressed || !MovementInputVector.IsZero())
+				{
+					Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * (bIsRunning ? RunSpeed : WalkSpeed);
+				}
+				else
+				{
+					Velocity = FVector::ZeroVector;
+				}
+			}
+			OnMove.Broadcast();
+			SetMovementState(EMovementState::EMS_Move);
+			return;
+		}
+	}
+
+
 
 	FHitResult PreWallRightHit;
 	FHitResult PreWallLeftHit;
@@ -923,7 +949,34 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 
 	bControllerTilting = true;
 	
-	AddControllerRoll(DeltaTime, WallRunDir, CurrentWallRunSide);
+	// UE_LOG(LogTemp, Log, TEXT("Current Controller Roll : %f"), SuraPawnPlayer->GetControlRotation().Roll);
+
+	if (WallRunElapsedTime < (WallRunMaxDuration - 1.f))
+	{
+		AddControllerRoll(DeltaTime, WallRunDir, CurrentWallRunSide);
+	}
+	else
+	{
+		if (!bTiltRecovering)
+		{
+			bTiltRecovering = true;
+			RecoverStartRoll = FMath::UnwindDegrees(SuraPawnPlayer->GetControlRotation().Roll);
+		}
+
+		float RecoverElapsedTime = WallRunElapsedTime - (WallRunMaxDuration - 1.f);
+		float Alpha = FMath::Clamp(RecoverElapsedTime / 1.f, 0.f, 1.f);
+		float NewRoll = 0.f;
+
+		if (WallRunTiltRecoverCurve)
+		{
+			float CurveMultiplier = WallRunTiltRecoverCurve->GetFloatValue(Alpha);
+			NewRoll = CurveMultiplier * RecoverStartRoll;
+		}
+
+		FRotator CurrentControlRotation = SuraPawnPlayer->GetControlRotation();
+		CurrentControlRotation.Roll = NewRoll;
+		SuraPlayerController->SetControlRotation(CurrentControlRotation);
+	}
 
 	if (WallRunEnterMode == EWallRunEnter::EWRE_Upward && bIsDeceleratingZ)
 	{
@@ -953,6 +1006,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		OnAirborne.Broadcast();
 		CurrentJumpCount++;
 		SetMovementState(EMovementState::EMS_Airborne);
+		
 		return;
 	}
 	
@@ -1364,6 +1418,7 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 	{
 		WallRunElapsedTime = 0.f;
 		bIsDeceleratingZ = false;
+		bTiltRecovering = false;
 
 		if (NewState == EMovementState::EMS_Airborne)
 		{
