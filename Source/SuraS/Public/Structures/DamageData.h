@@ -22,4 +22,7 @@ struct SURAS_API FDamageData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bCanForceDamage = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName BoneName = NAME_None;
 };

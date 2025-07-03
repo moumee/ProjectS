@@ -130,7 +130,7 @@ public:
 	void LaunchProjectile();
 
 	void ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector CenterLocation);
-	void ApplyDamage(AActor* OtherActor, float DamageAmount, EDamageType DamageType, bool bCanForceDamage);
+	void ApplyDamage(AActor* OtherActor, float DamageAmount, EDamageType DamageType, bool bCanForceDamage, FName BoneName);
 	bool SearchOverlappedActor(FVector CenterLocation, float SearchRadius, TArray<AActor*>& OverlappedActors);
 
 	UFUNCTION()
