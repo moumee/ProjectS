@@ -42,7 +42,7 @@ ASuraProjectile::ASuraProjectile()
 	// Set as root component
 	RootComponent = CollisionComp;
 
-	//TODO: Projectile attribute load ÇÏ±â À§ÇÑ Data Table ±¸ÇöÇÏ±â
+	//TODO: Projectile attribute load ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½ Data Table ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½
 	// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
@@ -99,10 +99,10 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 	if (bCanSimpleBounce)
 	{
 		// MEMO: Test
-		ProjectileMovement->bShouldBounce = true; // µµÅº È°¼ºÈ­
-		ProjectileMovement->Bounciness = 0.6f;    // ¹Ý»ç Åº¼º (0~1)
-		ProjectileMovement->Friction = 0.2f;      // Ç¥¸é ¸¶Âû
-		ProjectileMovement->BounceVelocityStopSimulatingThreshold = 10.0f; // ÀÓ°è ¼Óµµ ÀÌÇÏÀÏ ¶§ Á¤Áö
+		ProjectileMovement->bShouldBounce = true; // ï¿½ï¿½Åº È°ï¿½ï¿½È­
+		ProjectileMovement->Bounciness = 0.6f;    // ï¿½Ý»ï¿½ Åºï¿½ï¿½ (0~1)
+		ProjectileMovement->Friction = 0.2f;      // Ç¥ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+		ProjectileMovement->BounceVelocityStopSimulatingThreshold = 10.0f; // ï¿½Ó°ï¿½ ï¿½Óµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		ProjectileMovement->bRotationFollowsVelocity = true;
 	}
 
@@ -130,7 +130,7 @@ void ASuraProjectile::LoadProjectileData()
 		ExplosionEffect = ProjectileData->ExplosionEffect;
 		DecalMaterial = ProjectileData->HoleDecal;
 
-		InitialLifeSpan = ProjectileData->InitialLifeSpan; //TODO ÀÌ·¸°Ô´Â Àû¿ëÀÌ ¾ÈµÊ. »èÁ¦ ¿ä¸Á
+		InitialLifeSpan = ProjectileData->InitialLifeSpan; //TODO ï¿½Ì·ï¿½ï¿½Ô´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Èµï¿½. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 		SetLifeSpan(ProjectileData->InitialLifeSpan);
 
 		// <Sound>
@@ -212,7 +212,7 @@ void ASuraProjectile::ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector Cen
 				{
 					DamageAmount = ((MaxExplosionRadius - DistanceToTarget) / MaxExplosionRadius) * MaxExplosiveDamage;
 				}
-				ApplyDamage(OverlappedActor, DamageAmount, EDamageType::Explosion, true);
+				ApplyDamage(OverlappedActor, DamageAmount, EDamageType::Explosion, true, NAME_None);
 				if (OnBodyShot.IsBound())
 				{
 					OnBodyShot.Execute();
@@ -227,12 +227,15 @@ void ASuraProjectile::ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector Cen
 		}
 	}
 }
-void ASuraProjectile::ApplyDamage(AActor* OtherActor, float DamageAmount, EDamageType DamageType, bool bCanForceDamage)
+void ASuraProjectile::ApplyDamage(AActor* OtherActor, float DamageAmount, EDamageType DamageType, bool bCanForceDamage, FName BoneName)
 {
 	FDamageData Damage;
 	Damage.DamageAmount = DamageAmount;
 	Damage.DamageType = DamageType;
 	Damage.bCanForceDamage = bCanForceDamage;
+	Damage.BoneName = BoneName;
+
+	
 
 	if (OtherActor->GetClass()->ImplementsInterface(UDamageable::StaticClass()))
 	{
@@ -252,8 +255,8 @@ bool ASuraProjectile::SearchOverlappedActor(FVector CenterLocation, float Search
 
 void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	//TODO: Á¤¸®°¡ ÇÊ¿äÇÔ
-	//TODO: ProjectileÀÌ ´Ù¸¥ actor¿¡°Ô hit ÇßÀ» ¶§, OtherActorÀÇ Á¾·ù¿¡ µû¶ó¼­ ´Ù¸¥ event ¹ß»ý½ÃÅ°±â. Interface »ç¿ëÇÏ±â
+	//TODO: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½ï¿½ï¿½
+	//TODO: Projectileï¿½ï¿½ ï¿½Ù¸ï¿½ actorï¿½ï¿½ï¿½ï¿½ hit ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½, OtherActorï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¸ï¿½ event ï¿½ß»ï¿½ï¿½ï¿½Å°ï¿½ï¿½. Interface ï¿½ï¿½ï¿½ï¿½Ï±ï¿½
 	if (bCanPenetrate)
 	{
 		SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
@@ -293,7 +296,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 				if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(Hit))
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false);
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, Hit.BoneName);
 
 					if (OnHeadShot.IsBound())
 					{
@@ -302,8 +305,8 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 				}
 				else
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false);
-
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, Hit.BoneName);
+					UE_LOG(LogTemp, Error, TEXT("bone11: %s"), *Hit.BoneName.ToString());
 					if (Cast<ACharacter>(OtherActor))
 					{
 						if (OnBodyShot.IsBound())
@@ -366,16 +369,16 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 					OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 				}
 
-				//TODO: Overlap µÉ ¶§ÀÇ Effect´Â ¾î¶»°Ô ÇÒÁö »ý°¢ÇØºÁ¾ßÇÔ
+				//TODO: Overlap ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Effectï¿½ï¿½ ï¿½î¶»ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Øºï¿½ï¿½ï¿½ï¿½ï¿½
 				//SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 				//SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 
-				//TODO: Damage´Â Initialize¿¡¼­ µû·Î ¹Þ¾Æ¿Í¾ßÇÔ. Additional Damage¸¦ ¹Þ¾Æ¿Í¾ßÇÔ
-				//ÀÏ´ÜÀº ±âº» Damage·Î ½ÇÇè
+				//TODO: Damageï¿½ï¿½ Initializeï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Þ¾Æ¿Í¾ï¿½ï¿½ï¿½. Additional Damageï¿½ï¿½ ï¿½Þ¾Æ¿Í¾ï¿½ï¿½ï¿½
+				//ï¿½Ï´ï¿½ï¿½ï¿½ ï¿½âº» Damageï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 				
 				if (HeadShotAdditionalDamage > 0.f && CheckHeadOvelap(OtherActor, SweepResult))
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false);
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName);
 
 					if (OnHeadShot.IsBound())
 					{
@@ -384,7 +387,7 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 				}
 				else
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false);
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName);
 
 					if (Cast<ACharacter>(OtherActor))
 					{
@@ -436,14 +439,14 @@ void ASuraProjectile::SpawnExplosionEffect(FVector SpawnLocation)
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionEffect, SpawnLocation, FRotator::ZeroRotator, FVector(1.0f), true);
 	}
 }
-void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Rocket Trail Àû¿ë½Ã ÀÌ»óÇÔ. ¼ÕºÁ¾ßÇÔ
+void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Rocket Trail ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì»ï¿½ï¿½ï¿½. ï¿½Õºï¿½ï¿½ï¿½ï¿½ï¿½
 {
 	if (ProjectileMesh && TrailEffect)
 	{ 
 		FTransform TrailStartTransform = ProjectileMesh->GetSocketTransform(FName(TEXT("TrailStart")), ERelativeTransformSpace::RTS_Component);
 		FTransform TrailEndTransform = ProjectileMesh->GetSocketTransform(FName(TEXT("TrailEnd")), ERelativeTransformSpace::RTS_Component);
 
-		// TODO: offsetÀº Traile ¸¶´Ù ´Ù¸£°Ô ¼³Á¤ÇØ¾ßÇÔ. ¾Æ´Ï¸é ¿¡µðÅÍ¿¡¼­ Mesh¸¶´Ù socketÀÇ À§Ä¡¸¦ Á÷Á¢ ¹Ù²ãÁÖ´Â °ÍÀÌ ³ªÀº ¹æ¹ýÀÏÁöµµ
+		// TODO: offsetï¿½ï¿½ Traile ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ø¾ï¿½ï¿½ï¿½. ï¿½Æ´Ï¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¿ï¿½ï¿½ï¿½ Meshï¿½ï¿½ï¿½ï¿½ socketï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ù²ï¿½ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		float DistanceOffset = 80.f;
 
 		FVector TrailLocationOffset = (TrailEndTransform.GetLocation() - TrailStartTransform.GetLocation()).GetSafeNormal() * DistanceOffset;
@@ -460,7 +463,7 @@ void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Roc
 				FRotator(0.f, 0.f, 0.f));
 
 
-			//TODO: effect¸¦ weapon muzzle¿¡ ºÎÂø½ÃÅ³Áö, ¹ß»çÁöÁ¡¿¡ ³öµÑÁö´Â InputÀ¸·Î ¼³Á¤°¡´ÉÇÏ°Ô ÇÏ±â
+			//TODO: effectï¿½ï¿½ weapon muzzleï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å³ï¿½ï¿½, ï¿½ß»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Inputï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Ï±ï¿½
 			
 			//TrailEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
 			//	TrailEffect,
@@ -493,16 +496,16 @@ void ASuraProjectile::SpawnDecalEffect(FVector SpawnLocation, FRotator SpawnRota
 {
 	if (DecalMaterial)
 	{
-		FVector DecalSize = FVector(2.0f, 8.0f, 8.0f);     // X: µÎ²², YZ: Å©±â
+		FVector DecalSize = FVector(2.0f, 8.0f, 8.0f);     // X: ï¿½Î²ï¿½, YZ: Å©ï¿½ï¿½
 
 		UDecalComponent* ProjectileDecal =
 		UGameplayStatics::SpawnDecalAtLocation(
-			GetWorld(),          // ¿ùµå ÄÁÅØ½ºÆ®
-			DecalMaterial,       // µ¥Ä® ¸ÓÆ¼¸®¾ó
-			DecalSize,           // µ¥Ä® Å©±â
-			SpawnLocation,       // À§Ä¡
-			SpawnRotation,       // È¸Àü
-			10.0f                // ¼ö¸í (ÃÊ ´ÜÀ§)
+			GetWorld(),          // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ø½ï¿½Æ®
+			DecalMaterial,       // ï¿½ï¿½Ä® ï¿½ï¿½Æ¼ï¿½ï¿½ï¿½ï¿½
+			DecalSize,           // ï¿½ï¿½Ä® Å©ï¿½ï¿½
+			SpawnLocation,       // ï¿½ï¿½Ä¡
+			SpawnRotation,       // È¸ï¿½ï¿½
+			10.0f                // ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
 		);
 		ProjectileDecal->SetFadeScreenSize(0.0001f);
 	}
@@ -525,24 +528,24 @@ void ASuraProjectile::DrawSphere(FVector Location, float Radius)
 {
 	DrawDebugSphere(
 		GetWorld(),                 // UWorld* World
-		Location,         // À§Ä¡ (Center)
-		Radius,                     // ¹ÝÁö¸§ (Radius)
-		12,                        // ¼¼±×¸ÕÆ® ¼ö (Segments)
-		FColor::Red,               // »ö»ó
-		false,                     // Áö¼Ó ½Ã°£ ¹«ÇÑ (true¸é Áö¼ÓÀûÀ¸·Î Ç¥½ÃµÊ)
-		5.0f,                      // Áö¼Ó ½Ã°£ (ÃÊ)
+		Location,         // ï¿½ï¿½Ä¡ (Center)
+		Radius,                     // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (Radius)
+		12,                        // ï¿½ï¿½ï¿½×¸ï¿½Æ® ï¿½ï¿½ (Segments)
+		FColor::Red,               // ï¿½ï¿½ï¿½ï¿½
+		false,                     // ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½ (trueï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½Ãµï¿½)
+		5.0f,                      // ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ (ï¿½ï¿½)
 		0,                         // Depth Priority
-		2.0f                       // ¼± µÎ²²
+		2.0f                       // ï¿½ï¿½ ï¿½Î²ï¿½
 	);
 }
 
 #pragma region Penetration
-void ASuraProjectile::UpdatePenetration() //TODO: ±»ÀÌ ÇÔ¼ö·Î Çß¾î¾ß Çß³ª?
+void ASuraProjectile::UpdatePenetration() //TODO: ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ ï¿½ß¾ï¿½ï¿½ ï¿½ß³ï¿½?
 {
 	NumPenetratedObjects++;
 }
 
-void ASuraProjectile::ResetPenetration()  //TODO: ±»ÀÌ ÇÔ¼ö·Î Çß¾î¾ß Çß³ª?
+void ASuraProjectile::ResetPenetration()  //TODO: ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ ï¿½ß¾ï¿½ï¿½ ï¿½ß³ï¿½?
 {
 	NumPenetratedObjects = 0;
 }
@@ -580,7 +583,7 @@ bool ASuraProjectile::CheckHeadOvelap(const AActor* OverlappedActor, const FHitR
 #pragma region Homing
 bool ASuraProjectile::IsTargetValid()
 {
-	//TODO: TargetÀÇ »ýÁ¸ ¿©ºÎ¸¦ ÆÇ´ÜÇÒ ¹æ¹ýÀÌ ÇÊ¿äÇÔ -> °ü·Ã º¯¼ö ÇÏÀ±´Ô²² ¿äÃ»µå·Á¾ß ÇÔ
+	//TODO: Targetï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Î¸ï¿½ ï¿½Ç´ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½ï¿½ï¿½ -> ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô²ï¿½ ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
 	if (!ProjectileMovement->HomingTargetComponent.IsValid())
 	{
 		return false;
@@ -599,11 +602,11 @@ void ASuraProjectile::UpdateTargetInfo()
 {
 	if (ProjectileMovement->bIsHomingProjectile)
 	{
-		if (!IsTargetValid() || IsTargetWithInRange()) // TODO: Áö±ÝÀº ÀÓ½Ã·Î ||·Î Ã³¸®ÇÔ
+		if (!IsTargetValid() || IsTargetWithInRange()) // TODO: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ó½Ã·ï¿½ ||ï¿½ï¿½ Ã³ï¿½ï¿½ï¿½ï¿½
 		{
-			//TODO: TargetLocation¸¦ ÇâÇØ ³¯¾Æ°¡¼­ ÆøÆÄÇÏµµ·Ï ¼³Á¤ÇÏ±â
-			//TODO: ¿ø·¡ÀÇ TargetÀÇ À§Ä¡¿Í ÀÏÁ¤ °Å¸® ÀÌ»ó °¡±î¿öÁö¸é ÀÚµ¿ ÆøÆÄÇÏµµ·Ï ÇÏ´Â °Íµµ ³ª»ÚÁö ¾ÊÀº °Í °°À½
-			//-> ÀÌ´Â TargetÀÇ »ç¸Á¿©ºÎ¿Í »ó°ü ¾øÀÌ Àû¿ëÇÏ´Â °ÍÀÌ ÁÁÀ» µí
+			//TODO: TargetLocationï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Æ°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½
+			//TODO: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Targetï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ ï¿½Ì»ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ ï¿½Ï´ï¿½ ï¿½Íµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+			//-> ï¿½Ì´ï¿½ Targetï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¿ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
 
 			UE_LOG(LogTemp, Error, TEXT("Target is not valid!!!"));
 

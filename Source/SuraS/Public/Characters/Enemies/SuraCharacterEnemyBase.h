@@ -73,6 +73,9 @@ protected:
 
 	virtual void UpdateHealthBarValue();
 
+	//engore system
+	virtual bool CheckParentBoneName(const USkeletalMeshComponent* SkeletalMeshComponent, const FName& ChildBoneName, const FName& TargetParentBoneName);
+
 public:
 	ASuraCharacterEnemyBase();
 
