@@ -33,25 +33,31 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 	if (HeadBoneNames.Contains((DamageData.BoneName)))
 	{
 		HeadHealth -= DamageData.DamageAmount;
-		if (HeadHealth <= 0) OwningEnemyActor->GetComponentByClass<USkeletalMeshComponent>()
-		->HideBoneByName(FName(TEXT("head")), PBO_Term);
-		FVector SpawnLocation = OwningEnemyActor->FindComponentByClass<USkeletalMeshComponent>()
-				->GetSocketLocation(FName(TEXT("head")));
-		if (RArm != nullptr)
+		if (HeadHealth <= 0)
 		{
-			GetWorld()->SpawnActor<AActor>(Head, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
+			OwningEnemyActor->GetComponentByClass<USkeletalMeshComponent>()
+				->HideBoneByName(FName(TEXT("head")), PBO_Term);
+			FVector SpawnLocation = OwningEnemyActor->FindComponentByClass<USkeletalMeshComponent>()
+				->GetSocketLocation(FName(TEXT("head")));
+			if (RArm != nullptr)
+			{
+				GetWorld()->SpawnActor<AActor>(Head, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
+			}
 		}
 	}
 	if (LArmBoneNames.Contains((DamageData.BoneName)))
 	{
 		LArmHealth -= DamageData.DamageAmount;
-		if (LArmHealth <= 0) OwningEnemyActor->GetComponentByClass<USkeletalMeshComponent>()
-		->HideBoneByName(FName(TEXT("upperarm_l")), PBO_Term);
-		FVector SpawnLocation = OwningEnemyActor->FindComponentByClass<USkeletalMeshComponent>()
-				->GetSocketLocation(FName(TEXT("upperarm_l")));
-		if (RArm != nullptr)
+		if (LArmHealth <= 0)
 		{
-			GetWorld()->SpawnActor<AActor>(LArm, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
+			OwningEnemyActor->GetComponentByClass<USkeletalMeshComponent>()
+				->HideBoneByName(FName(TEXT("upperarm_l")), PBO_Term);
+			FVector SpawnLocation = OwningEnemyActor->FindComponentByClass<USkeletalMeshComponent>()
+				->GetSocketLocation(FName(TEXT("upperarm_l")));
+			if (RArm != nullptr)
+			{
+				GetWorld()->SpawnActor<AActor>(LArm, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
+			}
 		}
 	}
 	if (RArmBoneNames.Contains((DamageData.BoneName)))

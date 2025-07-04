@@ -12,8 +12,8 @@ class SURAS_API UACEnemyDamageSystem : public UACDamageSystem
 {
 	GENERATED_BODY()
 
-	float HeadHealth = 100.f;
-	float MaxHeadHealth = 100.f;
+	float HeadHealth = 300.f;
+	float MaxHeadHealth = 300.f;
 	
 	float BodyHealth = 100.f;
 	float MaxBodyHealth = 100.f;
@@ -24,11 +24,11 @@ class SURAS_API UACEnemyDamageSystem : public UACDamageSystem
 	float LArmHealth = 100.f;
 	float MaxLArmHealth = 100.f;
 	
-	float RLegHealth = 100.f;
-	float MaxRLegHealth = 100.f;
+	float RLegHealth = 400.f;
+	float MaxRLegHealth = 400.f;
 	
-	float LLegHealth = 100.f;
-	float MaxLLegHealth = 100.f;
+	float LLegHealth = 400.f;
+	float MaxLLegHealth = 400.f;
 
 	static TSet<FName> HeadBoneNames;
 	static TSet<FName> LArmBoneNames;
