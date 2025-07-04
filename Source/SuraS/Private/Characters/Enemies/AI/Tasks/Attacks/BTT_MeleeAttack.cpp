@@ -44,8 +44,8 @@ void UBTT_MeleeAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMe
 
 	if (!IsAttacking)
 	{
+		// Target->GetAttackTokensComponent()->ReturnAttackToken(1);
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-		Target->GetAttackTokensComponent()->ReturnAttackToken(1);
 	}
 		
 }

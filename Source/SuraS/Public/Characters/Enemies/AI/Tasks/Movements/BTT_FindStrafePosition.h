@@ -14,6 +14,13 @@ class SURAS_API UBTT_FindStrafePosition : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Strafe", meta = (AllowPrivateAccess = "true"))
+	float ChaseStrafeRadiusDeviation = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Strafe", meta = (AllowPrivateAccess = "true"))
+	float LocationSearchRadius = 0.f;
+
 public:
 	explicit UBTT_FindStrafePosition(FObjectInitializer const& ObjectInitializer);
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };

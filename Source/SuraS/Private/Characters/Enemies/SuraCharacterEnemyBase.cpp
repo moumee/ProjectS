@@ -37,8 +37,9 @@ ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 			HealthBarWidget->SetWidgetClass((WidgetClass.Class));
 		}
 	}
-
+	
 	bUseControllerRotationYaw = true; // for controller controled rotation
+	GetCharacterMovement()->bUseRVOAvoidance = true;
 
 	EnemyType = "Base";
 }
@@ -131,7 +132,7 @@ void ASuraCharacterEnemyBase::OnHitEnded(UAnimMontage* AnimMontage, bool bInterr
 	ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(GetPlayerController()->GetPawn());
 
 	if (Player)
-		GetAIController()->SetStateToChaseOrAttacking(Player);
+		GetAIController()->SetStateToChaseOrPursue(Player);
 }
 
 void ASuraCharacterEnemyBase::OnDeathTriggered()
@@ -140,6 +141,9 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 
 	if (DeathAnimation)
 		PlayAnimMontage(DeathAnimation);
+
+	if (AIController->GetCurrentState() == EEnemyStates::Pursue || AIController->GetCurrentState() == EEnemyStates::Attacking)
+		AIController->EndPursueState();
 
 	AIController->GetBrainComponent()->StopLogic("Death");
 
