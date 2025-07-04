@@ -17,9 +17,9 @@ void ASuraCharacterEnemyMelee::BeginPlay()
 
 void ASuraCharacterEnemyMelee::RotateTowardPlayer()
 {
-	FRotator NewRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), Player->GetActorLocation());
+	float NewRotationYaw = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), Player->GetActorLocation()).Yaw;
 
-	SetActorRotation(FMath::RInterpTo(GetActorRotation(), NewRotation, GetWorld()->GetDeltaSeconds(), 15.f));
+	SetActorRotation(FMath::RInterpTo(GetActorRotation(), FRotator(GetActorRotation().Pitch, NewRotationYaw, GetActorRotation().Roll), GetWorld()->GetDeltaSeconds(), 15.f));
 }
 
 void ASuraCharacterEnemyMelee::Attack(const ASuraPawnPlayer* AttackTarget)

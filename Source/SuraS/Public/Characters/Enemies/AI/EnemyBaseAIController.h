@@ -32,11 +32,13 @@ protected:
 public:
 	AEnemyBaseAIController(FObjectInitializer const& ObjectInitializer);
 
-	void InitializeBlackBoard(float StrafeRadius, float AttackRadius, float AttackRate);
+	void InitializeBlackBoard(float StrafeRadius, float ChaseStrafeRadius, float AttackRadius, float AttackRate);
 
 	FORCEINLINE EEnemyStates GetCurrentState() const { return _CurrentState; }
 
 	void UpdateCurrentState(EEnemyStates NewState);
 
-	void SetStateToAttacking(AActor* TargetActor);
+	void SetStateToChaseOrPursue(AActor* TargetActor);
+
+	void EndPursueState();
 };
