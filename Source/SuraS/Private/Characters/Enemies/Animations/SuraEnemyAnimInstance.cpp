@@ -5,7 +5,9 @@
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "KismetAnimationLibrary.h"
+#include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Enumerations/Enemies/EnemyEnums.h"
 
 void USuraEnemyAnimInstance::NativeInitializeAnimation()
 {
@@ -15,7 +17,7 @@ void USuraEnemyAnimInstance::NativeInitializeAnimation()
 
 	if (Enemy)
 	{
-		
+		EnemyBaseAIController = Enemy->GetAIController();
 	}
 }
 
@@ -30,5 +32,13 @@ void USuraEnemyAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 		GroundSpeed = UKismetMathLibrary::VSizeXY(Velocity);
 
 		Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, Enemy->GetActorRotation());
+
+		EnemyBaseAIController = Enemy->GetAIController();
+
+		if (EnemyBaseAIController)
+		{
+			EnemyState = Enemy->GetAIController()->GetCurrentState();
+			bIsPursueOrAttacking = (EnemyState == EEnemyStates::Attacking || EnemyState == EEnemyStates::Pursue) ? true : false;
+		}
 	}
 }
