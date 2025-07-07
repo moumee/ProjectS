@@ -215,9 +215,15 @@ protected:
 		
 #pragma region Animation
 protected:
+	FTransform RightHandSocketTransform;
+	FTransform RightHandSocketTransform_Crouch;
+protected:
 	void StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMontage* WeaponFireAnimation);
 	void StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation, float CharacterAnimPlayRate, float WeaponAnimPlayRate);
 	void CancelAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation);
+public:
+	FTransform GetRightHandSocketTransform() const { return RightHandSocketTransform; }
+	FTransform GetRightHandSocketTransform_Crouch() const { return RightHandSocketTransform_Crouch; }
 #pragma endregion
 
 #pragma region Animation/Character
@@ -591,6 +597,10 @@ public:
 #pragma region Recoil/ArmAnimation
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
 	FArmRecoilStruct ArmRecoil_Hand;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
 	FArmRecoilStruct ArmRecoil_UpperArm;
@@ -599,6 +609,7 @@ protected:
 public:
 	void AddArmRecoil();
 
+	FArmRecoilStruct* GetArmRecoilInfo();
 	FArmRecoilStruct* GetArmRecoilInfo_Hand();
 	FArmRecoilStruct* GetArmRecoilInfo_UpperArm();
 	FArmRecoilStruct* GetArmRecoilInfo_LowerArm();

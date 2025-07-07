@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ActorComponents/WeaponSystem/AnimNode_SkeletalControl.h"
+#include "ActorComponents/WeaponSystem/AnimNode_BoneRotationControl.h"
 #include "Engine/SkeletalMesh.h"
 #include "Animation/AnimInstanceProxy.h"
 
@@ -14,11 +14,10 @@
 #endif
 
 /////////////////////////////////////////////////////
-// FAnimNode_SkeletalControl
+// FAnimNode_BoneRotationControl
 
-void FAnimNode_SkeletalControl::Initialize_AnyThread(const FAnimationInitializeContext& Context)
+void FAnimNode_BoneRotationControl::Initialize_AnyThread(const FAnimationInitializeContext& Context)
 {
-	//Unreal enigne의 profiling macro -> 이 함수가 실행되는 동안 성능을 측정하기 위해 사용함
 	DECLARE_SCOPE_HIERARCHICAL_COUNTER_ANIMNODE(Initialize_AnyThread)
 
 	FAnimNode_Base::Initialize_AnyThread(Context);
@@ -29,10 +28,9 @@ void FAnimNode_SkeletalControl::Initialize_AnyThread(const FAnimationInitializeC
 	AlphaScaleBiasClamp.Reinitialize();
 
 	//-----------------------------------
-
 }
 
-void FAnimNode_SkeletalControl::CacheBones_AnyThread(const FAnimationCacheBonesContext& Context)
+void FAnimNode_BoneRotationControl::CacheBones_AnyThread(const FAnimationCacheBonesContext& Context)
 {
 #if WITH_EDITOR
 	ClearValidationVisualWarnings();
@@ -46,7 +44,7 @@ void FAnimNode_SkeletalControl::CacheBones_AnyThread(const FAnimationCacheBonesC
 	//-----------------------------------
 }
 
-void FAnimNode_SkeletalControl::Update_AnyThread(const FAnimationUpdateContext& Context)
+void FAnimNode_BoneRotationControl::Update_AnyThread(const FAnimationUpdateContext& Context)
 {
 	//////////////////////////////////////////////////////////////////////////
 	// PERFORMANCE CRITICAL NOTE
@@ -106,7 +104,7 @@ void FAnimNode_SkeletalControl::Update_AnyThread(const FAnimationUpdateContext& 
 	TRACE_ANIM_NODE_VALUE(Context, TEXT("Alpha"), ActualAlpha);
 }
 
-void FAnimNode_SkeletalControl::EvaluateComponentSpace_AnyThread(FComponentSpacePoseContext& Output)
+void FAnimNode_BoneRotationControl::EvaluateComponentSpace_AnyThread(FComponentSpacePoseContext& Output)
 {
 	//////////////////////////////////////////////////////////////////////////
 	// PERFORMANCE CRITICAL NOTE
@@ -167,17 +165,17 @@ void FAnimNode_SkeletalControl::EvaluateComponentSpace_AnyThread(FComponentSpace
 	}
 }
 
-void FAnimNode_SkeletalControl::ClearValidationVisualWarnings()
+void FAnimNode_BoneRotationControl::ClearValidationVisualWarnings()
 {
 	ValidationVisualWarningMessage = FText::GetEmpty();
 }
 
-FText FAnimNode_SkeletalControl::GetValidationVisualWarningMessage() const
+FText FAnimNode_BoneRotationControl::GetValidationVisualWarningMessage() const
 {
 	return FText();
 }
 
-void FAnimNode_SkeletalControl::UpdateInternal(const FAnimationUpdateContext& Context)
+void FAnimNode_BoneRotationControl::UpdateInternal(const FAnimationUpdateContext& Context)
 {
 	DECLARE_SCOPE_HIERARCHICAL_COUNTER_ANIMNODE(UpdateInternal)
 
@@ -185,24 +183,24 @@ void FAnimNode_SkeletalControl::UpdateInternal(const FAnimationUpdateContext& Co
 	ElapsedTime = FMath::Min(ElapsedTime, RotationTimeSeconds / 2);
 }
 
-void FAnimNode_SkeletalControl::UpdateComponentPose_AnyThread(const FAnimationUpdateContext& Context)
+void FAnimNode_BoneRotationControl::UpdateComponentPose_AnyThread(const FAnimationUpdateContext& Context)
 {
 	DECLARE_SCOPE_HIERARCHICAL_COUNTER_ANIMNODE(UpdateComponentPose_AnyThread)
 	ComponentPose.Update(Context);
 }
 
-void FAnimNode_SkeletalControl::EvaluateComponentPose_AnyThread(FComponentSpacePoseContext& Output)
+void FAnimNode_BoneRotationControl::EvaluateComponentPose_AnyThread(FComponentSpacePoseContext& Output)
 {
 	DECLARE_SCOPE_HIERARCHICAL_COUNTER_ANIMNODE(EvaluateComponentPose_AnyThread)
 	// Evaluate the input
 	ComponentPose.EvaluateComponentSpace(Output);
 }
 
-void FAnimNode_SkeletalControl::EvaluateComponentSpaceInternal(FComponentSpacePoseContext& Context)
+void FAnimNode_BoneRotationControl::EvaluateComponentSpaceInternal(FComponentSpacePoseContext& Context)
 {
 }
 
-void FAnimNode_SkeletalControl::EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms)
+void FAnimNode_BoneRotationControl::EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms)
 {
 	DECLARE_SCOPE_HIERARCHICAL_COUNTER_ANIMNODE(EvaluateSkeletalControl_AnyThread)
 
@@ -226,7 +224,7 @@ void FAnimNode_SkeletalControl::EvaluateSkeletalControl_AnyThread(FComponentSpac
 	OutBoneTransforms.Add(FBoneTransform(BoneIndex, BoneTransform));
 }
 
-bool FAnimNode_SkeletalControl::IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer& RequiredBones)
+bool FAnimNode_BoneRotationControl::IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer& RequiredBones)
 {
 	if (!TargetBone.IsValidToEvaluate(RequiredBones))
 	{
@@ -236,7 +234,7 @@ bool FAnimNode_SkeletalControl::IsValidToEvaluate(const USkeleton* Skeleton, con
 	return true;
 }
 
-void FAnimNode_SkeletalControl::InitializeBoneReferences(const FBoneContainer& RequiredBones)
+void FAnimNode_BoneRotationControl::InitializeBoneReferences(const FBoneContainer& RequiredBones)
 {
 	DECLARE_SCOPE_HIERARCHICAL_COUNTER_ANIMNODE(InitializeBoneReferences)
 	TargetBone.Initialize(RequiredBones);
