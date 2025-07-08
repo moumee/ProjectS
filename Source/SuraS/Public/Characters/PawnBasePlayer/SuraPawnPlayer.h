@@ -65,6 +65,11 @@ public:
 	UACPlayerAttackTokens* GetAttackTokensComponent() const { return AttackTokensComponent; }
 	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
 
+	// SuraPawnPlayer.h - suhyeon
+	UFUNCTION(BlueprintCallable)
+	UWeaponAimUIWidget* GetWeaponAimUIWidget() const;
+
+
 protected:
 
 	UPROPERTY(EditAnywhere)
@@ -133,6 +138,7 @@ protected:
 	void StopDashInput();
 	void StartCrouchInput();
 	void StopCrouchInput();
+	
 
 	// Damage Comp Event Delegate Functions
 	void OnDamaged();

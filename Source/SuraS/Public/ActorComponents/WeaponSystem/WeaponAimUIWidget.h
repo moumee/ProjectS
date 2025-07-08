@@ -10,6 +10,7 @@ class ASuraProjectile;
 
 class UImage;
 class UOverlay;
+class UProgressBar;
 
 UCLASS()
 class SURAS_API UWeaponAimUIWidget : public UUserWidget
@@ -42,6 +43,8 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UImage* RightCrosshair;
+
+	
 
 #pragma region Spread
 	void ResetAimUISize();
@@ -101,5 +104,27 @@ protected:
 	void SetNormalOvelayInvisible();
 
 	void UpdateHitIndicator(float DeltaTime);
+	
 #pragma endregion
+
+#pragma region DashCounter
+public:
+	// WeaponAimUIWidget.h
+	FTimerHandle LeftDashTimerHandle;
+	FTimerHandle RightDashTimerHandle;
+
+	
+	// Dash Counter
+	UPROPERTY(meta = (BindWidget))
+	UProgressBar* LeftDashCounter;
+
+	UPROPERTY(meta = (BindWidget))
+	UProgressBar* RightDashCounter;
+	
+	void StartRecovery(float AmountToRecover, float RecoveryDuration);
+	void AnimateProgress(UProgressBar* TargetBar, float From, float To, float Duration);
+	bool TryUseDash(float CooldownTimePer1Gauge);
+
+
+#pragma endregion 
 };

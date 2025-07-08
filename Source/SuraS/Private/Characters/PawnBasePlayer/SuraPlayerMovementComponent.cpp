@@ -9,6 +9,7 @@
 #include "KismetTraceUtils.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponBaseState.h"
+#include "ActorComponents/WeaponSystem/WeaponAimUIWidget.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Characters/PawnBasePlayer/PawnPlayerMovmentRow.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
@@ -521,6 +522,26 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 	{
 		bDashPressed = false;
 		bIsDashing = true;
+
+		UE_LOG(LogTemp, Error, TEXT("Dash called"));
+		
+
+		// suhyeon start - for dash ui function call
+		UWeaponAimUIWidget* AimUI = SuraPawnPlayer->GetWeaponAimUIWidget();
+		if (!AimUI) return;
+		
+		const float CooldownPerOneGauge = DashCooldown;  // or 캐릭터에서 받은 값
+		
+		if (!AimUI->TryUseDash(CooldownPerOneGauge))
+		{
+			// 게이지 부족 → 대쉬 실패
+			return;
+		}
+		
+		// 대쉬 성공 → 실제 이동 처리 실행
+		
+		// suhyeon end
+		
 		for (int32 i = 0; i < DashCooldowns.Num(); i++)
 		{
 			if (DashCooldowns[i] == 0.f)
