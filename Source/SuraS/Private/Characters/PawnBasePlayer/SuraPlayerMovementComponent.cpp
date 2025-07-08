@@ -54,6 +54,7 @@ void USuraPlayerMovementComponent::BeginPlay()
 
 void USuraPlayerMovementComponent::InitMovementData()
 {
+	checkf(MovementDataTable, TEXT("MovementDataTable is not assigned in SuraPawnPlayer blueprint!!!!!!!!"));
 	FPawnPlayerMovementRow* Row = MovementDataTable->FindRow<FPawnPlayerMovementRow>("Player", "");
 	if (!Row) return;
 	GravityScale = Row->GravityScale;
