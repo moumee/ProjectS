@@ -12,8 +12,11 @@ class SURAS_API UACPlayerAttackTokens : public UActorComponent
 {
 	GENERATED_BODY()
 	
-	int _AttackTokens = 8;
-	int _MaxAttackTokens = 8;
+	int _EnemyAttackTokens = 8;
+	int _MaxEnemyAttackTokens = 8;
+
+	int _EnemyPursuitTokens = 6;
+	int _MaxEnemyPursuitTokens = 6;
 
 public:
 	// Sets default values for this component's properties
@@ -21,4 +24,9 @@ public:
 	
 	bool ReserveAttackToken(int ReserveAmount);
 	void ReturnAttackToken(int ReserveAmount);
+
+	int ReservePursuitToken(int ReserveAmount);
+	void ReturnPursuitToken(int ReserveAmount);
+
+	FORCEINLINE int GetMaxEnemyPursuitTokens() const { return _MaxEnemyPursuitTokens; };
 };

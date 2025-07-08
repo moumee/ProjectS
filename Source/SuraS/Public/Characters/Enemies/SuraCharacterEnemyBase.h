@@ -12,11 +12,14 @@
 
 #include "SuraCharacterEnemyBase.generated.h"
 
-class UACDamageSystem;
+class UACEnemyDamageSystem;
 class UWidgetComponent;
 class AEnemyBaseAIController;
 class UBehaviorTree;
 class ASuraEnemyWeapon;
+
+//#define 
+
 /**
  * 
  */
@@ -32,7 +35,7 @@ class SURAS_API ASuraCharacterEnemyBase : public ASuraCharacterBase, public IDam
 	APlayerController* PlayerController;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actor Components", meta = (AllowPrivateAccess = "true"))
-	UACDamageSystem* DamageSystemComp;
+	UACEnemyDamageSystem* DamageSystemComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widgets", meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* HealthBarWidget;
@@ -40,6 +43,7 @@ class SURAS_API ASuraCharacterEnemyBase : public ASuraCharacterBase, public IDam
 	FVector2D HealthBarWidgetSize;
 
 	FTimerHandle HideHealthBarHandle;
+	FOnMontageEnded OnHitMontageEnded;
 
 protected:
 	// [protected variables]
@@ -68,7 +72,10 @@ protected:
 
 	virtual void OnDeathTriggered();
 
+	virtual void OnHitEnded(UAnimMontage* AnimMontage, bool bInterrupted);
+
 	virtual void UpdateHealthBarValue();
+
 
 public:
 	ASuraCharacterEnemyBase();
@@ -86,7 +93,7 @@ public:
 	FORCEINLINE FVector2D GetHealthBarWidgetSize() const { return HealthBarWidgetSize; }
 
 	// damage system comp getter
-	FORCEINLINE UACDamageSystem* GetDamageSystemComp() const { return DamageSystemComp; }
+	FORCEINLINE UACEnemyDamageSystem* GetDamageSystemComp() const { return DamageSystemComp; }
 
 	// damage system comp getter
 	FORCEINLINE float GetAttackDamageAmount() const { return AttackDamageAmount; }

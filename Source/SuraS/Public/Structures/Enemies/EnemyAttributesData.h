@@ -23,6 +23,9 @@ struct SURAS_API FEnemyAttributesData : public FTableRowBase
 	float StrafeRadius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ChaseStrafeRadius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float AttackRadius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

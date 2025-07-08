@@ -207,6 +207,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
 	float WallRunJumpAirSpeed2D = 1400.f;
 
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	TObjectPtr<UCurveFloat> WallRunTiltRecoverCurve;
+
 	UPROPERTY(EditAnywhere, Category = "Movement|Slide")
 	float SlideInitialWindow = 0.65f;
 
@@ -226,12 +229,21 @@ protected:
 
 	FHitResult GroundHit;
 
-#pragma region Run
+#pragma region Move
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bIsRunning = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	bool bIsStepping = false;
+
+	FHitResult StepWallHit;
+
+	FHitResult StepFloorHit;
+
+	FVector LastVelocityBeforeStep;
 	
-#pragma endregion Run
+#pragma endregion Move
 	
 #pragma region WallRun
 	
@@ -250,6 +262,10 @@ protected:
 	float WallRunCameraTiltInterpSpeed = 5.f;
 	float WallRunCameraTiltAngle = 15.f;
 	float PreWallRunDetectionRange = 200.f;
+
+	bool bTiltRecovering = false;
+	UPROPERTY(VisibleAnywhere, Category = "Movement|WallRun")
+	float RecoverStartRoll;
 	
 #pragma endregion WallRun
 

@@ -8,13 +8,13 @@
 #include "Animation/BoneSocketReference.h"
 #include "Animation/AnimNodeBase.h"
 #include "Animation/InputScaleBias.h"
-#include "AnimNode_SkeletalControl.generated.h"
+#include "AnimNode_BoneRotationControl.generated.h"
 
 /**
  * 
  */
 USTRUCT(BlueprintInternalUseOnly)
-struct SURAS_API FAnimNode_SkeletalControl : public FAnimNode_Base
+struct SURAS_API FAnimNode_BoneRotationControl : public FAnimNode_Base
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -58,15 +58,6 @@ struct SURAS_API FAnimNode_SkeletalControl : public FAnimNode_Base
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Recoil, meta = (PinShownByDefault))
 	FRotator MaxRotation = FRotator(0.f, 0.f, 0.f);
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Recoil, meta = (PinShownByDefault))
-	//float MaxRotationDegreesX = 30.f;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Recoil, meta = (PinShownByDefault))
-	//float MaxRotationDegreesY = 30.f;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Recoil, meta = (PinShownByDefault))
-	//float MaxRotationDegreesZ = 30.f;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Recoil)
 	float RotationTimeSeconds = 2.0f;
 
@@ -75,9 +66,8 @@ struct SURAS_API FAnimNode_SkeletalControl : public FAnimNode_Base
 
 	float ElapsedTime = 0.f;
 
-
 public:
-	FAnimNode_SkeletalControl()
+	FAnimNode_BoneRotationControl()
 		: LODThreshold(INDEX_NONE)
 		, ActualAlpha(0.f)
 		, AlphaInputType(EAnimAlphaInputType::Float)
@@ -132,7 +122,6 @@ protected:
 
 	// initialize any bone references you have
 	virtual void InitializeBoneReferences(const FBoneContainer& RequiredBones);
-
 
 private:
 	// Resused bone transform array to avoid reallocating in skeletal controls

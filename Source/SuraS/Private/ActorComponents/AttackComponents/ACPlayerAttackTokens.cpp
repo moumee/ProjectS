@@ -16,10 +16,10 @@ UACPlayerAttackTokens::UACPlayerAttackTokens()
 
 bool UACPlayerAttackTokens::ReserveAttackToken(int ReserveAmount)
 {
-	if (_AttackTokens >= ReserveAmount)
+	if (_EnemyAttackTokens >= ReserveAmount)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Reserved Attack Tokens: %d"), _AttackTokens));
-		_AttackTokens -= ReserveAmount;
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Reserved Attack Tokens: %d"), _EnemyAttackTokens));
+		_EnemyAttackTokens -= ReserveAmount;
 		return true;
 	}
 	
@@ -28,10 +28,35 @@ bool UACPlayerAttackTokens::ReserveAttackToken(int ReserveAmount)
 
 void UACPlayerAttackTokens::ReturnAttackToken(int ReserveAmount)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Returned Attack Tokens: %d"), _AttackTokens));
-	_AttackTokens += ReserveAmount;
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Returned Attack Tokens: %d"), _EnemyAttackTokens));
+	_EnemyAttackTokens += ReserveAmount;
 
-	if (_AttackTokens > _MaxAttackTokens)
-		_AttackTokens = _MaxAttackTokens;
+	if (_EnemyAttackTokens > _MaxEnemyAttackTokens)
+		_EnemyAttackTokens = _MaxEnemyAttackTokens;
+}
+
+/**
+ * @brief Returns remaining number of Pursuit Tokens that will be used as the index of the pursuit state enemy. Returns -1 if no token left.
+ */
+int UACPlayerAttackTokens::ReservePursuitToken(int ReserveAmount)
+{
+	if (_EnemyPursuitTokens >= ReserveAmount)
+	{
+		_EnemyPursuitTokens -= ReserveAmount;
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Reserved Pursuit Tokens: %d"), _EnemyPursuitTokens));
+		
+		return _EnemyPursuitTokens;
+	}
+	
+	return -1;
+}
+
+void UACPlayerAttackTokens::ReturnPursuitToken(int ReserveAmount)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Returned Pursuit Tokens: %d"), _EnemyPursuitTokens));
+	_EnemyPursuitTokens += ReserveAmount;
+
+	if (_EnemyPursuitTokens > _MaxEnemyPursuitTokens)
+		_EnemyPursuitTokens = _MaxEnemyPursuitTokens;
 }
 

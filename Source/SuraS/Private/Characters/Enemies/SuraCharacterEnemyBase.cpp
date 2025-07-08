@@ -3,8 +3,10 @@
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 
 #include "BrainComponent.h"
-#include "ActorComponents/DamageComponent/ACDamageSystem.h"
+#include "SuraSProjectile.h"
+#include "ActorComponents/DamageComponent/ACEnemyDamageSystem.h"
 #include "ActorComponents/UISystem/ACKillLogManager.h"
+#include "ActorComponents/WeaponSystem/ProjectileType.h"
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
@@ -19,7 +21,7 @@
 ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 {
 	// Damage system comp
-	DamageSystemComp = CreateDefaultSubobject<UACDamageSystem>(TEXT("DamageSystemComponent"));
+	DamageSystemComp = CreateDefaultSubobject<UACEnemyDamageSystem>(TEXT("DamageSystemComponent"));
 	AddOwnedComponent(DamageSystemComp);
 
 	HealthBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
@@ -37,8 +39,13 @@ ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 			HealthBarWidget->SetWidgetClass((WidgetClass.Class));
 		}
 	}
+	
+	bUseControllerRotationYaw = true; // for controller controled rotation
+	GetCharacterMovement()->bUseRVOAvoidance = true;
 
 	EnemyType = "Base";
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
 }
 
 void ASuraCharacterEnemyBase::BeginPlay()
@@ -53,7 +60,9 @@ void ASuraCharacterEnemyBase::BeginPlay()
 void ASuraCharacterEnemyBase::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	
 	if (!isInitialized) return;
+	
 	if (UEnemyHealthBarWidget* const Widget = Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject()))
 	{
 		float Distance = FVector::Dist(GetPlayerController()->PlayerCameraManager->GetCameraLocation(), GetActorLocation());
@@ -106,12 +115,28 @@ void ASuraCharacterEnemyBase::OnDamagedTriggered()
 	HealthBarWidget->SetHiddenInGame(false);
 
 	if (!HealthBarWidget->bHiddenInGame)
-		Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject())->PlayFadeAnimtion();
+		Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject())->PlayFadeAnimation();
 
 	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *(HitAnimation->GetFName()).ToString()));
 
-	if (HitAnimation)		
-		PlayAnimMontage(HitAnimation);
+	if (HitAnimation)
+	{
+		OnHitMontageEnded.BindUObject(this, &ASuraCharacterEnemyBase::OnHitEnded);
+		
+		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
+		EnemyAnimInstance->Montage_Play(HitAnimation);
+
+		GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(OnHitMontageEnded); // montage interrupted
+		GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(OnHitMontageEnded); // montage ended
+	}
+}
+
+void ASuraCharacterEnemyBase::OnHitEnded(UAnimMontage* AnimMontage, bool bInterrupted)
+{
+	ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(GetPlayerController()->GetPawn());
+
+	if (Player)
+		GetAIController()->SetStateToChaseOrPursue(Player);
 }
 
 void ASuraCharacterEnemyBase::OnDeathTriggered()
@@ -120,6 +145,9 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 
 	if (DeathAnimation)
 		PlayAnimMontage(DeathAnimation);
+
+	if (AIController->GetCurrentState() == EEnemyStates::Pursue || AIController->GetCurrentState() == EEnemyStates::Attacking)
+		AIController->EndPursueState();
 
 	AIController->GetBrainComponent()->StopLogic("Death");
 
@@ -284,7 +312,7 @@ void ASuraCharacterEnemyBase::BindKillLogOnDeath() const
 		{
 			// KillLog 호출 로직
 			// 3. 플레이어 가져오기
-			APlayerController* PC = GetWorld()->GetFirstPlayerController();
+			APlayerController* PC = GetPlayerController();
 			if (!PC) return;
 
 			ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(PC->GetPawn());

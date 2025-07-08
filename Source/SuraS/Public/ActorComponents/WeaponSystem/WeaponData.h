@@ -111,11 +111,19 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	FWeaponRecoilStruct ZoomRecoil;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
 	FArmRecoilStruct ArmRecoil_Hand;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
 	FArmRecoilStruct ArmRecoil_UpperArm;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
 	FArmRecoilStruct ArmRecoil_LowerArm;
+	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	FTransform RightHandSocketTransform;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	FTransform RightHandSocketTransform_Crouch;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
 	TSubclassOf<UWeaponCameraShakeBase> DefaultCameraShakeClass;

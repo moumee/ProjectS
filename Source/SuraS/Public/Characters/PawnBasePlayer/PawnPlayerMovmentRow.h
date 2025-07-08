@@ -95,14 +95,15 @@ struct SURAS_API FPawnPlayerMovementRow : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
 	float WallRunCameraTiltInterpSpeed = 5.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	TObjectPtr<UCurveFloat> WallRunTiltRecoverCurve;
 	
 	UPROPERTY(EditAnywhere, Category = "Movement|Slide")
 	float SlideInitialWindow = 0.65f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Slide")
 	float SlideMaxDuration = 1.25f;
-
-	
 	
 	UPROPERTY(EditAnywhere, Category = "Movement")
     float GroundPointDetectionLength = 1000.f;
