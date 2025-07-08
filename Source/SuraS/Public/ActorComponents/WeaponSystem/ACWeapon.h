@@ -388,6 +388,7 @@ protected:
 	UPROPERTY()
 	UWeaponAimUIWidget* AimUIWidget;
 
+
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|AmmoCounterWidget")
 	//TSubclassOf<UUserWidget> AmmoCounterWidgetClass;
 	TSubclassOf<UAmmoCounterWidget> AmmoCounterWidgetClass;
@@ -415,6 +416,9 @@ public:
 	void ActivateCrosshairWidget(bool bflag);
 	void ActivateAmmoCounterWidget(bool bflag);
 	UAmmoCounterWidget* GetAmmoCounterWidget() const { return AmmoCounterWidget; } // suhyeon
+	// suhyeon
+	UFUNCTION(BlueprintCallable)
+	UWeaponAimUIWidget* GetAimUIWidget() const { return AimUIWidget; }
 	
 protected:
 	void SetUpAimUIDelegateBinding(ASuraProjectile* Projectile);

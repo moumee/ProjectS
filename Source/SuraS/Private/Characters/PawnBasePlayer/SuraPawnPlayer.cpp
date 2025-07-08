@@ -8,6 +8,7 @@
 #include "ActorComponents/AttackComponents/ACPlayerAttackTokens.h"
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
+#include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
@@ -270,6 +271,13 @@ void ASuraPawnPlayer::StopCrouchInput()
 bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
 {
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
+}
+
+UWeaponAimUIWidget* ASuraPawnPlayer::GetWeaponAimUIWidget() const
+{
+	AWeapon* EquippedWeapon = WeaponSystem->GetCurrentWeapon();
+	
+	return EquippedWeapon ? EquippedWeapon->GetAimUIWidget() : nullptr; // 현재 장착한 무기의 aimuiwidget을 반환
 }
 
 void ASuraPawnPlayer::OnDamaged()
