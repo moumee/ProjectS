@@ -132,6 +132,11 @@ protected:
 	FTransform RightHandSocketTransform;
 	UPROPERTY(BlueprintReadOnly, Category = "RightHandSocket")
 	FTransform RightHandSocketTransform_Crouch;
+
+	UPROPERTY(BlueprintReadOnly, Category = "RightHandSocket")
+	FTransform CurrentRightHandSocketTransform;
+public:
+	void UpdateRightHandSocket(float DeltaTime);
 #pragma endregion
 
 #pragma region ArmRecoil
