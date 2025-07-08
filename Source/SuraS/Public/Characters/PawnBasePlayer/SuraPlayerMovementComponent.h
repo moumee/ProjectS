@@ -24,8 +24,7 @@ enum class EMovementState : uint8
 	EMS_Slide,
 	EMS_Airborne,
 	EMS_WallRun,
-	EMS_Mantle,
-	EMS_Hang
+	EMS_Mantle
 };
 
 UENUM(Blueprintable)
@@ -101,6 +100,10 @@ public:
 	float GetWalkSpeed() const { return WalkSpeed; }
 
 	EMovementState GetMovementState() const { return CurrentMovementState; }
+
+	int32 GetAvailableDashCount() const { return AvailableDashCount; }
+
+	TArray<float> GetDashCooldowns() const { return DashCooldowns; }
 
 	FOnMove	OnMove;
 	FOnWallRun OnWallRun;
@@ -392,8 +395,6 @@ protected:
 	void TickWallRun(float DeltaTime);
 
 	void TickMantle(float DeltaTime);
-
-	void TickHang(float DeltaTime);
 
 	void UpdateDashCooldowns(float DeltaTime);
 
