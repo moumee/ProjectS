@@ -126,6 +126,7 @@ public:
 	void InitializeUI();
 
 	void LoadWeaponData();
+	void SetMeshVisibility(bool bflag);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	bool AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter);
