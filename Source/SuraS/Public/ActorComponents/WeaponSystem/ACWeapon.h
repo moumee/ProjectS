@@ -126,6 +126,7 @@ public:
 	void InitializeUI();
 
 	void LoadWeaponData();
+	void SetMeshVisibility(bool bflag);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	bool AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter);
@@ -215,9 +216,15 @@ protected:
 		
 #pragma region Animation
 protected:
+	FTransform RightHandSocketTransform;
+	FTransform RightHandSocketTransform_Crouch;
+protected:
 	void StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMontage* WeaponFireAnimation);
 	void StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation, float CharacterAnimPlayRate, float WeaponAnimPlayRate);
 	void CancelAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation);
+public:
+	FTransform GetRightHandSocketTransform() const { return RightHandSocketTransform; }
+	FTransform GetRightHandSocketTransform_Crouch() const { return RightHandSocketTransform_Crouch; }
 #pragma endregion
 
 #pragma region Animation/Character
@@ -388,6 +395,7 @@ protected:
 	UPROPERTY()
 	UWeaponAimUIWidget* AimUIWidget;
 
+
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|AmmoCounterWidget")
 	//TSubclassOf<UUserWidget> AmmoCounterWidgetClass;
 	TSubclassOf<UAmmoCounterWidget> AmmoCounterWidgetClass;
@@ -414,6 +422,11 @@ protected:
 public:
 	void ActivateCrosshairWidget(bool bflag);
 	void ActivateAmmoCounterWidget(bool bflag);
+	UAmmoCounterWidget* GetAmmoCounterWidget() const { return AmmoCounterWidget; } // suhyeon
+	// suhyeon
+	UFUNCTION(BlueprintCallable)
+	UWeaponAimUIWidget* GetAimUIWidget() const { return AimUIWidget; }
+	
 protected:
 	void SetUpAimUIDelegateBinding(ASuraProjectile* Projectile);
 #pragma endregion
@@ -591,6 +604,10 @@ public:
 #pragma region Recoil/ArmAnimation
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
 	FArmRecoilStruct ArmRecoil_Hand;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
 	FArmRecoilStruct ArmRecoil_UpperArm;
@@ -599,6 +616,7 @@ protected:
 public:
 	void AddArmRecoil();
 
+	FArmRecoilStruct* GetArmRecoilInfo();
 	FArmRecoilStruct* GetArmRecoilInfo_Hand();
 	FArmRecoilStruct* GetArmRecoilInfo_UpperArm();
 	FArmRecoilStruct* GetArmRecoilInfo_LowerArm();

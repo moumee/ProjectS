@@ -23,6 +23,7 @@ void USuraPlayerAnimInstance_Weapon::NativeInitializeAnimation()
 	{
 		// <Character Movement>
 		MovementState = SuraPlayer->GetPlayerMovementComponent()->GetMovementState();
+		bIsRunning = SuraPlayer->GetPlayerMovementComponent()->IsRunning();
 		bIsCrouching = SuraPlayer->GetPlayerMovementComponent()->IsCrouching();
 		bIsDashing = SuraPlayer->GetPlayerMovementComponent()->IsDashing();
 		Velocity = SuraPlayer->GetPlayerMovementComponent()->Velocity;
@@ -33,11 +34,27 @@ void USuraPlayerAnimInstance_Weapon::NativeInitializeAnimation()
 		// <weapon System>
 		SetAimPoint();
 		CurrentWeaponStateType = EWeaponStateType::WeaponStateType_None;
-	}
 
-	if (SuraPlayer && SuraPlayer->GetWeaponSystemComponent())
+		if (SuraPlayer->GetWeaponSystemComponent())
+		{
+			//SetAimSocket();
+		}
+	}
+}
+
+void USuraPlayerAnimInstance_Weapon::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
+
+	if (SuraPlayer)
 	{
-		//SetAimSocket();
+		// <Character Movement>
+		MovementState = SuraPlayer->GetPlayerMovementComponent()->GetMovementState();
+		bIsRunning = SuraPlayer->GetPlayerMovementComponent()->IsRunning();
+		bIsCrouching = SuraPlayer->GetPlayerMovementComponent()->IsCrouching();
+		bIsDashing = SuraPlayer->GetPlayerMovementComponent()->IsDashing();
+		Velocity = SuraPlayer->GetPlayerMovementComponent()->Velocity;
+		MovementInputVector = SuraPlayer->GetPlayerMovementComponent()->GetMovementInputVector();
 	}
 }
 
@@ -47,15 +64,6 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 
 	if (SuraPlayer)
 	{
-		// <Character Movement>
-		MovementState = SuraPlayer->GetPlayerMovementComponent()->GetMovementState();
-		bIsCrouching = SuraPlayer->GetPlayerMovementComponent()->IsCrouching();
-		bIsDashing = SuraPlayer->GetPlayerMovementComponent()->IsDashing();
-		Velocity = SuraPlayer->GetPlayerMovementComponent()->Velocity;
-		MovementInputVector = SuraPlayer->GetPlayerMovementComponent()->GetMovementInputVector();
-
-
-		//-----------------------------------------------
 		// <Weapon System>
 		bIsZoomIn = SuraPlayer->GetWeaponSystemComponent()->IsZoomIn();
 		//ScreenCenterWorldLocation = Character->GetWeaponSystem()->GetScreenCenterWorldPosition();
@@ -69,9 +77,11 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 		if (SuraPlayer->GetWeaponSystemComponent())
 		{
 			//SetAimSocket();
+			UpdateRightHandSocket(DeltaTime);
 			SetAimPoint();
 			UpdateWeapon();
 			UpdateArmRecoil(DeltaTime);
+			ConvertRecoilValueFrame();
 
 			LeftHandTransform = GetLeftHandTransform();
 			TargetLeftHandSocketTransform = GetTargetLeftHandTransfrom();
@@ -96,22 +106,26 @@ void USuraPlayerAnimInstance_Weapon::UpdateWeapon()
 			AimSocketRelativeTransform = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetAimSocketRelativeTransform();
 
 			//-------------------------------------------------------------
-
 			CurrentWeaponStateType = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetCurrentState()->GetWeaponStateType();
 
-			if (CurrentWeaponStateType == EWeaponStateType::WeaponStateType_Firing)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Firing State!!!!!!!!!!"));
-			}
-			else if (CurrentWeaponStateType == EWeaponStateType::WeaponStateType_Reloading)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Reloading State!!!!!!!!!!"));
-			}
-
+			//if (CurrentWeaponStateType == EWeaponStateType::WeaponStateType_Firing)
+			//{
+			//	UE_LOG(LogTemp, Warning, TEXT("Firing State!!!!!!!!!!"));
+			//}
+			//else if (CurrentWeaponStateType == EWeaponStateType::WeaponStateType_Reloading)
+			//{
+			//	UE_LOG(LogTemp, Warning, TEXT("Reloading State!!!!!!!!!!"));
+			//}
 			//-------------------------------------------------------------
 
 			if (CurrentWeapon != SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon())
 			{
+				// <RightHandSocket>
+				RightHandSocketTransform = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetRightHandSocketTransform();
+				RightHandSocketTransform_Crouch = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetRightHandSocketTransform_Crouch();
+
+				// <Recoil>
+				ArmRecoil = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo();
 				ArmRecoil_Hand = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo_Hand();
 				ArmRecoil_UpperArm = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo_UpperArm();
 				ArmRecoil_LowerArm = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo_LowerArm();
@@ -263,94 +277,174 @@ FTransform USuraPlayerAnimInstance_Weapon::GetTargetLeftHandTransfrom()
 	return FTransform();
 }
 
+#pragma region RightHandSocket
+void USuraPlayerAnimInstance_Weapon::UpdateRightHandSocket(float DeltaTime)
+{
+	if (bIsCrouching)
+	{
+		CurrentRightHandSocketTransform.SetRotation((FMath::RInterpTo(CurrentRightHandSocketTransform.GetRotation().Rotator(), RightHandSocketTransform_Crouch.GetRotation().Rotator(), DeltaTime, 10.f)).Quaternion());
+		CurrentRightHandSocketTransform.SetTranslation(FMath::VInterpTo(CurrentRightHandSocketTransform.GetTranslation(), RightHandSocketTransform_Crouch.GetTranslation(), DeltaTime, 10.f));
+	}
+	else
+	{
+		CurrentRightHandSocketTransform.SetRotation((FMath::RInterpTo(CurrentRightHandSocketTransform.GetRotation().Rotator(), RightHandSocketTransform.GetRotation().Rotator(), DeltaTime, 10.f)).Quaternion());
+		CurrentRightHandSocketTransform.SetTranslation(FMath::VInterpTo(CurrentRightHandSocketTransform.GetTranslation(), RightHandSocketTransform.GetTranslation(), DeltaTime, 10.f));
+	}
+}
+#pragma endregion
+
 #pragma region ArmRecoil
 void USuraPlayerAnimInstance_Weapon::AddArmRecoil(float AdditionalRecoilAmountX, float AdditionalRecoilAmountY, float AdditionalRecoilAmountZ)
 {
+	// <Old Version>
+
+	//bIsArmRecoiling = true;
+
+	//if (&ArmRecoil_Hand && &ArmRecoil_UpperArm && &ArmRecoil_LowerArm)
+	//{
+	//	//UE_LOG(LogTemp, Warning, TEXT("Arm Recoil Added!!!"));
+
+	//	// --- Hand ---
+	//	FRotator RandRecoil_Hand;
+	//	RandRecoil_Hand.Roll = FMath::RandRange((ArmRecoil_Hand.RecoilAmount.Roll + AdditionalRecoilAmountX) * ArmRecoil_Hand.RecoilRangeMin.Roll, (ArmRecoil_Hand.RecoilAmount.Roll + AdditionalRecoilAmountX) * ArmRecoil_Hand.RecoilRangeMax.Roll);
+	//	RandRecoil_Hand.Pitch = FMath::RandRange((ArmRecoil_Hand.RecoilAmount.Pitch + AdditionalRecoilAmountY) * ArmRecoil_Hand.RecoilRangeMin.Pitch, (ArmRecoil_Hand.RecoilAmount.Pitch + AdditionalRecoilAmountY) * ArmRecoil_Hand.RecoilRangeMax.Pitch);
+	//	RandRecoil_Hand.Yaw = FMath::RandRange((ArmRecoil_Hand.RecoilAmount.Yaw + AdditionalRecoilAmountZ) * ArmRecoil_Hand.RecoilRangeMin.Yaw, (ArmRecoil_Hand.RecoilAmount.Yaw + AdditionalRecoilAmountZ) * ArmRecoil_Hand.RecoilRangeMax.Yaw);
+
+	//	TotalTargetRecoil_Hand += RandRecoil_Hand;
+
+	//	// --- LowerArm ---
+	//	FRotator RandRecoil_LowerArm;
+	//	RandRecoil_LowerArm.Roll = FMath::RandRange((ArmRecoil_LowerArm.RecoilAmount.Roll + AdditionalRecoilAmountX) * ArmRecoil_LowerArm.RecoilRangeMin.Roll, (ArmRecoil_LowerArm.RecoilAmount.Roll + AdditionalRecoilAmountX) * ArmRecoil_LowerArm.RecoilRangeMax.Roll);
+	//	RandRecoil_LowerArm.Pitch = FMath::RandRange((ArmRecoil_LowerArm.RecoilAmount.Pitch + AdditionalRecoilAmountY) * ArmRecoil_LowerArm.RecoilRangeMin.Pitch, (ArmRecoil_LowerArm.RecoilAmount.Pitch + AdditionalRecoilAmountY) * ArmRecoil_LowerArm.RecoilRangeMax.Pitch);
+	//	RandRecoil_LowerArm.Yaw = FMath::RandRange((ArmRecoil_LowerArm.RecoilAmount.Yaw + AdditionalRecoilAmountZ) * ArmRecoil_LowerArm.RecoilRangeMin.Yaw, (ArmRecoil_LowerArm.RecoilAmount.Yaw + AdditionalRecoilAmountZ) * ArmRecoil_LowerArm.RecoilRangeMax.Yaw);
+
+	//	TotalTargetRecoil_LowerArm += RandRecoil_LowerArm;
+
+	//	// --- UpperArm ---
+	//	FRotator RandRecoil_UpperArm;
+	//	RandRecoil_UpperArm.Roll = FMath::RandRange((ArmRecoil_UpperArm.RecoilAmount.Roll + AdditionalRecoilAmountX) * ArmRecoil_UpperArm.RecoilRangeMin.Roll, (ArmRecoil_UpperArm.RecoilAmount.Roll + AdditionalRecoilAmountX) * ArmRecoil_UpperArm.RecoilRangeMax.Roll);
+	//	RandRecoil_UpperArm.Pitch = FMath::RandRange((ArmRecoil_UpperArm.RecoilAmount.Pitch + AdditionalRecoilAmountY) * ArmRecoil_UpperArm.RecoilRangeMin.Pitch, (ArmRecoil_UpperArm.RecoilAmount.Pitch + AdditionalRecoilAmountY) * ArmRecoil_UpperArm.RecoilRangeMax.Pitch);
+	//	RandRecoil_UpperArm.Yaw = FMath::RandRange((ArmRecoil_UpperArm.RecoilAmount.Yaw + AdditionalRecoilAmountZ) * ArmRecoil_UpperArm.RecoilRangeMin.Yaw, (ArmRecoil_UpperArm.RecoilAmount.Yaw + AdditionalRecoilAmountZ) * ArmRecoil_UpperArm.RecoilRangeMax.Yaw);
+
+	//	TotalTargetRecoil_UpperArm += RandRecoil_UpperArm;
+	//}
+
+	//-----------------------------------------------
+	// <New Version>
+
 	bIsArmRecoiling = true;
 
-	if (&ArmRecoil_Hand && &ArmRecoil_UpperArm && &ArmRecoil_LowerArm)
+	if (&ArmRecoil)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("Arm Recoil Added!!!"));
 
-		// --- Hand ---
-		FVector RandRecoil_Hand;
-		RandRecoil_Hand.X = FMath::RandRange((ArmRecoil_Hand.RecoilAmount.X + AdditionalRecoilAmountX) * ArmRecoil_Hand.RecoilRangeMin.X, (ArmRecoil_Hand.RecoilAmount.X + AdditionalRecoilAmountX) * ArmRecoil_Hand.RecoilRangeMax.X);
-		RandRecoil_Hand.Y = FMath::RandRange((ArmRecoil_Hand.RecoilAmount.Y + AdditionalRecoilAmountY) * ArmRecoil_Hand.RecoilRangeMin.Y, (ArmRecoil_Hand.RecoilAmount.Y + AdditionalRecoilAmountY) * ArmRecoil_Hand.RecoilRangeMax.Y);
-		RandRecoil_Hand.Z = FMath::RandRange((ArmRecoil_Hand.RecoilAmount.Z + AdditionalRecoilAmountZ) * ArmRecoil_Hand.RecoilRangeMin.Z, (ArmRecoil_Hand.RecoilAmount.Z + AdditionalRecoilAmountZ) * ArmRecoil_Hand.RecoilRangeMax.Z);
+		FRotator RandRecoil_Rot;
+		FVector RandRecoil_Vec;
 
-		TotalTargetRecoil_Hand += RandRecoil_Hand;
+		RandRecoil_Rot.Roll = FMath::RandRange((ArmRecoil.Recoil_Rot.Roll + AdditionalRecoilAmountX) * ArmRecoil.RecoilRangeMin_Rot.Roll, (ArmRecoil.Recoil_Rot.Roll + AdditionalRecoilAmountX) * ArmRecoil.RecoilRangeMax_Rot.Roll);
+		RandRecoil_Rot.Pitch = FMath::RandRange((ArmRecoil.Recoil_Rot.Pitch + AdditionalRecoilAmountY) * ArmRecoil.RecoilRangeMin_Rot.Pitch, (ArmRecoil.Recoil_Rot.Pitch + AdditionalRecoilAmountY) * ArmRecoil.RecoilRangeMax_Rot.Pitch);
+		RandRecoil_Rot.Yaw = FMath::RandRange((ArmRecoil.Recoil_Rot.Yaw + AdditionalRecoilAmountZ) * ArmRecoil.RecoilRangeMin_Rot.Yaw, (ArmRecoil.Recoil_Rot.Yaw + AdditionalRecoilAmountZ) * ArmRecoil.RecoilRangeMax_Rot.Yaw);
 
-		// --- LowerArm ---
-		FVector RandRecoil_LowerArm;
-		RandRecoil_LowerArm.X = FMath::RandRange((ArmRecoil_LowerArm.RecoilAmount.X + AdditionalRecoilAmountX) * ArmRecoil_LowerArm.RecoilRangeMin.X, (ArmRecoil_LowerArm.RecoilAmount.X + AdditionalRecoilAmountX) * ArmRecoil_LowerArm.RecoilRangeMax.X);
-		RandRecoil_LowerArm.Y = FMath::RandRange((ArmRecoil_LowerArm.RecoilAmount.Y + AdditionalRecoilAmountY) * ArmRecoil_LowerArm.RecoilRangeMin.Y, (ArmRecoil_LowerArm.RecoilAmount.Y + AdditionalRecoilAmountY) * ArmRecoil_LowerArm.RecoilRangeMax.Y);
-		RandRecoil_LowerArm.Z = FMath::RandRange((ArmRecoil_LowerArm.RecoilAmount.Z + AdditionalRecoilAmountZ) * ArmRecoil_LowerArm.RecoilRangeMin.Z, (ArmRecoil_LowerArm.RecoilAmount.Z + AdditionalRecoilAmountZ) * ArmRecoil_LowerArm.RecoilRangeMax.Z);
+		RandRecoil_Vec.X = FMath::RandRange((ArmRecoil.Recoil_Vec.X + AdditionalRecoilAmountX) * ArmRecoil.RecoilRangeMin_Vec.X, (ArmRecoil.Recoil_Vec.X + AdditionalRecoilAmountX) * ArmRecoil.RecoilRangeMax_Vec.X);
+		RandRecoil_Vec.Y = FMath::RandRange((ArmRecoil.Recoil_Vec.Y + AdditionalRecoilAmountY) * ArmRecoil.RecoilRangeMin_Vec.Y, (ArmRecoil.Recoil_Vec.Y + AdditionalRecoilAmountY) * ArmRecoil.RecoilRangeMax_Vec.Y);
+		RandRecoil_Vec.Z = FMath::RandRange((ArmRecoil.Recoil_Vec.Z + AdditionalRecoilAmountZ) * ArmRecoil.RecoilRangeMin_Vec.Z, (ArmRecoil.Recoil_Vec.Z + AdditionalRecoilAmountZ) * ArmRecoil.RecoilRangeMax_Vec.Z);
 
-		TotalTargetRecoil_LowerArm += RandRecoil_LowerArm;
-
-		// --- UpperArm ---
-		FVector RandRecoil_UpperArm;
-		RandRecoil_UpperArm.X = FMath::RandRange((ArmRecoil_UpperArm.RecoilAmount.X + AdditionalRecoilAmountX) * ArmRecoil_UpperArm.RecoilRangeMin.X, (ArmRecoil_UpperArm.RecoilAmount.X + AdditionalRecoilAmountX) * ArmRecoil_UpperArm.RecoilRangeMax.X);
-		RandRecoil_UpperArm.Y = FMath::RandRange((ArmRecoil_UpperArm.RecoilAmount.Y + AdditionalRecoilAmountY) * ArmRecoil_UpperArm.RecoilRangeMin.Y, (ArmRecoil_UpperArm.RecoilAmount.Y + AdditionalRecoilAmountY) * ArmRecoil_UpperArm.RecoilRangeMax.Y);
-		RandRecoil_UpperArm.Z = FMath::RandRange((ArmRecoil_UpperArm.RecoilAmount.Z + AdditionalRecoilAmountZ) * ArmRecoil_UpperArm.RecoilRangeMin.Z, (ArmRecoil_UpperArm.RecoilAmount.Z + AdditionalRecoilAmountZ) * ArmRecoil_UpperArm.RecoilRangeMax.Z);
-
-		TotalTargetRecoil_UpperArm += RandRecoil_UpperArm;
+		TotalTargetRecoil_Rot += RandRecoil_Rot;
+		TotalTargetRecoil_Vec += RandRecoil_Vec;
 	}
 }
 
 void USuraPlayerAnimInstance_Weapon::ApplyArmRecoil(float DeltaTime)
 {
-	if (&ArmRecoil_Hand && &ArmRecoil_UpperArm && &ArmRecoil_LowerArm)
+	// <Old Version>
+
+	//if (&ArmRecoil_Hand && &ArmRecoil_UpperArm && &ArmRecoil_LowerArm)
+	//{
+	//	// --- Hand ---
+	//	FRotator InterpRecoilTarget_Hand = FMath::RInterpTo(FRotator(0.f, 0.f, 0.f), TotalTargetRecoil_Hand - CulmulatedRecoil_Hand, DeltaTime, ArmRecoil_Hand.RecoilSpeed);
+	//	CurrentRecoil_Hand += InterpRecoilTarget_Hand;
+	//	CulmulatedRecoil_Hand += InterpRecoilTarget_Hand;
+	//	// --- LowerArm ---
+	//	FRotator InterpRecoilTarget_LowerArm = FMath::RInterpTo(FRotator(0.f, 0.f, 0.f), TotalTargetRecoil_LowerArm - CulmulatedRecoil_LowerArm, DeltaTime, ArmRecoil_LowerArm.RecoilSpeed);
+	//	CurrentRecoil_LowerArm += InterpRecoilTarget_LowerArm;
+	//	CulmulatedRecoil_LowerArm += InterpRecoilTarget_LowerArm;
+	//	// --- UpperArm ---
+	//	FRotator InterpRecoilTarget_UpperArm = FMath::RInterpTo(FRotator(0.f, 0.f, 0.f), TotalTargetRecoil_UpperArm - CulmulatedRecoil_UpperArm, DeltaTime, ArmRecoil_UpperArm.RecoilSpeed);
+	//	CurrentRecoil_UpperArm += InterpRecoilTarget_UpperArm;
+	//	CulmulatedRecoil_UpperArm += InterpRecoilTarget_UpperArm;
+	//}
+
+	//-----------------------------------------------
+	// <New Version>
+
+	if (&ArmRecoil)
 	{
-		// --- Hand ---
-		FVector InterpRecoilTarget_Hand = FMath::VInterpTo(FVector(0.f, 0.f, 0.f), TotalTargetRecoil_Hand - CulmulatedRecoil_Hand, DeltaTime, ArmRecoil_Hand.RecoilSpeed);
-		CurrentRecoil_Hand += InterpRecoilTarget_Hand;
-		CulmulatedRecoil_Hand += InterpRecoilTarget_Hand;
-		// --- LowerArm ---
-		FVector InterpRecoilTarget_LowerArm = FMath::VInterpTo(FVector(0.f, 0.f, 0.f), TotalTargetRecoil_LowerArm - CulmulatedRecoil_LowerArm, DeltaTime, ArmRecoil_LowerArm.RecoilSpeed);
-		CurrentRecoil_LowerArm += InterpRecoilTarget_LowerArm;
-		CulmulatedRecoil_LowerArm += InterpRecoilTarget_LowerArm;
-		// --- UpperArm ---
-		FVector InterpRecoilTarget_UpperArm = FMath::VInterpTo(FVector(0.f, 0.f, 0.f), TotalTargetRecoil_UpperArm - CulmulatedRecoil_UpperArm, DeltaTime, ArmRecoil_UpperArm.RecoilSpeed);
-		CurrentRecoil_UpperArm += InterpRecoilTarget_UpperArm;
-		CulmulatedRecoil_UpperArm += InterpRecoilTarget_UpperArm;
+		FRotator InterpRecoilTarget_Rot = FMath::RInterpTo(CurrentRecoil_Rot, TotalTargetRecoil_Rot, DeltaTime, ArmRecoil.RecoilSpeed);
+		CurrentRecoil_Rot = InterpRecoilTarget_Rot;
+
+		FVector InterpRecoilTarget_Vec = FMath::VInterpTo(CurrentRecoil_Vec, TotalTargetRecoil_Vec, DeltaTime, ArmRecoil.RecoilSpeed);
+		CurrentRecoil_Vec = InterpRecoilTarget_Vec;
 	}
 }
 
 void USuraPlayerAnimInstance_Weapon::RecoverArmRecoil(float DeltaTime)
 {
-	// --- Hand ---
-	FVector InterpRecoilRecoverTarget_Hand = FMath::VInterpTo(FVector(0.f, 0.f, 0.f), CulmulatedRecoil_Hand - RecoveredRecoil_Hand, DeltaTime, ArmRecoil_Hand.RecoilRecoverSpeed);
-	CurrentRecoil_Hand -= InterpRecoilRecoverTarget_Hand;
-	RecoveredRecoil_Hand += InterpRecoilRecoverTarget_Hand;
+	// <Old Version>
 
-	// --- LowerArm ---
-	FVector InterpRecoilRecoverTarget_LowerArm = FMath::VInterpTo(FVector(0.f, 0.f, 0.f), CulmulatedRecoil_LowerArm - RecoveredRecoil_LowerArm, DeltaTime, ArmRecoil_LowerArm.RecoilRecoverSpeed);
-	CurrentRecoil_LowerArm -= InterpRecoilRecoverTarget_LowerArm;
-	RecoveredRecoil_LowerArm += InterpRecoilRecoverTarget_LowerArm;
+	//// --- Hand ---
+	//FRotator InterpRecoilRecoverTarget_Hand = FMath::RInterpTo(FRotator(0.f, 0.f, 0.f), CulmulatedRecoil_Hand - RecoveredRecoil_Hand, DeltaTime, ArmRecoil_Hand.RecoilRecoverSpeed);
+	//CurrentRecoil_Hand -= InterpRecoilRecoverTarget_Hand;
+	//RecoveredRecoil_Hand += InterpRecoilRecoverTarget_Hand;
 
-	// --- UpperArm ---
-	FVector InterpRecoilRecoverTarget_UpperArm = FMath::VInterpTo(FVector(0.f, 0.f, 0.f), CulmulatedRecoil_UpperArm - RecoveredRecoil_UpperArm, DeltaTime, ArmRecoil_UpperArm.RecoilRecoverSpeed);
-	CurrentRecoil_UpperArm -= InterpRecoilRecoverTarget_UpperArm;
-	RecoveredRecoil_UpperArm += InterpRecoilRecoverTarget_UpperArm;
+	//// --- LowerArm ---
+	//FRotator InterpRecoilRecoverTarget_LowerArm = FMath::RInterpTo(FRotator(0.f, 0.f, 0.f), CulmulatedRecoil_LowerArm - RecoveredRecoil_LowerArm, DeltaTime, ArmRecoil_LowerArm.RecoilRecoverSpeed);
+	//CurrentRecoil_LowerArm -= InterpRecoilRecoverTarget_LowerArm;
+	//RecoveredRecoil_LowerArm += InterpRecoilRecoverTarget_LowerArm;
 
-	if ((CulmulatedRecoil_Hand - RecoveredRecoil_Hand).IsNearlyZero()
-		&& (CulmulatedRecoil_LowerArm - RecoveredRecoil_LowerArm).IsNearlyZero()
-		&& (CulmulatedRecoil_UpperArm - RecoveredRecoil_UpperArm).IsNearlyZero())
+	//// --- UpperArm ---
+	//FRotator InterpRecoilRecoverTarget_UpperArm = FMath::RInterpTo(FRotator(0.f, 0.f, 0.f), CulmulatedRecoil_UpperArm - RecoveredRecoil_UpperArm, DeltaTime, ArmRecoil_UpperArm.RecoilRecoverSpeed);
+	//CurrentRecoil_UpperArm -= InterpRecoilRecoverTarget_UpperArm;
+	//RecoveredRecoil_UpperArm += InterpRecoilRecoverTarget_UpperArm;
+
+	//if ((CulmulatedRecoil_Hand - RecoveredRecoil_Hand).IsNearlyZero()
+	//	&& (CulmulatedRecoil_LowerArm - RecoveredRecoil_LowerArm).IsNearlyZero()
+	//	&& (CulmulatedRecoil_UpperArm - RecoveredRecoil_UpperArm).IsNearlyZero())
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("Arm Recoil has been perfectly Recovered!!!"));
+
+	//	TotalTargetRecoil_Hand = FRotator::ZeroRotator;
+	//	TotalTargetRecoil_LowerArm = FRotator::ZeroRotator;
+	//	TotalTargetRecoil_UpperArm = FRotator::ZeroRotator;
+
+	//	CulmulatedRecoil_Hand = FRotator::ZeroRotator;
+	//	CulmulatedRecoil_LowerArm = FRotator::ZeroRotator;
+	//	CulmulatedRecoil_UpperArm = FRotator::ZeroRotator;
+
+	//	RecoveredRecoil_Hand = FRotator::ZeroRotator;
+	//	RecoveredRecoil_LowerArm = FRotator::ZeroRotator;
+	//	RecoveredRecoil_UpperArm = FRotator::ZeroRotator;
+
+	//	bIsArmRecoiling = false;
+	//}
+
+	//-----------------------------------------------
+	// <New Version>
+	FRotator InterpRecoilRecoverTarget_Rot = FMath::RInterpTo(TotalTargetRecoil_Rot, FRotator::ZeroRotator, DeltaTime, ArmRecoil.RecoilRecoverSpeed);
+	TotalTargetRecoil_Rot = InterpRecoilRecoverTarget_Rot;
+
+	FVector InterpRecoilRecoverTarget_Vec = FMath::VInterpTo(TotalTargetRecoil_Vec, FVector::ZeroVector, DeltaTime, ArmRecoil.RecoilRecoverSpeed);
+	TotalTargetRecoil_Vec = InterpRecoilRecoverTarget_Vec;
+
+	if (CurrentRecoil_Rot.IsNearlyZero()
+		&& CurrentRecoil_Vec.IsNearlyZero())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Arm Recoil has been perfectly Recovered!!!"));
 
-		TotalTargetRecoil_Hand = FVector::ZeroVector;
-		TotalTargetRecoil_LowerArm = FVector::ZeroVector;
-		TotalTargetRecoil_UpperArm = FVector::ZeroVector;
+		TotalTargetRecoil_Rot = FRotator::ZeroRotator;
+		CurrentRecoil_Rot = FRotator::ZeroRotator;
 
-		CulmulatedRecoil_Hand = FVector::ZeroVector;
-		CulmulatedRecoil_LowerArm = FVector::ZeroVector;
-		CulmulatedRecoil_UpperArm = FVector::ZeroVector;
-
-		RecoveredRecoil_Hand = FVector::ZeroVector;
-		RecoveredRecoil_LowerArm = FVector::ZeroVector;
-		RecoveredRecoil_UpperArm = FVector::ZeroVector;
+		TotalTargetRecoil_Vec = FVector::ZeroVector;
+		CurrentRecoil_Vec = FVector::ZeroVector;
 
 		bIsArmRecoiling = false;
 	}
@@ -360,13 +454,30 @@ void USuraPlayerAnimInstance_Weapon::UpdateArmRecoil(float DeltaTime)
 {
 	if (bIsArmRecoiling)
 	{
-		//ApplyArmRecoil(DeltaTime, DefaultArmRecoil);
-		//RecoverArmRecoil(DeltaTime, DefaultArmRecoil);
-
 		//UE_LOG(LogTemp, Warning, TEXT("Updating Arm Recoil"));
 
 		ApplyArmRecoil(DeltaTime);
 		RecoverArmRecoil(DeltaTime);
 	}
+}
+
+void USuraPlayerAnimInstance_Weapon::ConvertRecoilValueFrame()
+{
+	// <Old Version>
+	//if (bIsCrouching)
+	//{
+	//	ConvertedCurrentRecoil_Rot = (RightHandSocketTransform_Crouch.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
+	//	ConvertedCurrentRecoil_Vec = RightHandSocketTransform_Crouch.GetRotation().RotateVector(CurrentRecoil_Vec) + RightHandSocketTransform_Crouch.GetTranslation();
+	//}
+	//else
+	//{
+	//	ConvertedCurrentRecoil_Rot = (RightHandSocketTransform.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
+	//	ConvertedCurrentRecoil_Vec = RightHandSocketTransform.GetRotation().RotateVector(CurrentRecoil_Vec) + RightHandSocketTransform.GetTranslation();
+	//}
+	//----------------------
+	// <New Version>
+	ConvertedCurrentRecoil_Rot = (CurrentRightHandSocketTransform.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
+	ConvertedCurrentRecoil_Vec = CurrentRightHandSocketTransform.GetRotation().RotateVector(CurrentRecoil_Vec) + CurrentRightHandSocketTransform.GetTranslation();
+
 }
 #pragma endregion

@@ -14,59 +14,76 @@ struct FArmRecoilStruct
 {
 	GENERATED_USTRUCT_BODY()
 public:
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//bool bIsRecoilRecoverAffectedByPlayerInput = true;
-	UPROPERTY(EditAnywhere)
-	FVector RecoilAmount;
 
 	UPROPERTY(EditAnywhere)
-	FVector RecoilRangeMin;
+	FRotator Recoil_Rot;
 
 	UPROPERTY(EditAnywhere)
-	FVector RecoilRangeMax;
+	FRotator RecoilRangeMin_Rot;
+
+	UPROPERTY(EditAnywhere)
+	FRotator RecoilRangeMax_Rot;
+
+	UPROPERTY(EditAnywhere)
+	FVector Recoil_Vec;
+
+	UPROPERTY(EditAnywhere)
+	FVector RecoilRangeMin_Vec;
+
+	UPROPERTY(EditAnywhere)
+	FVector RecoilRangeMax_Vec;
+
+	//----------------
 
 	//UPROPERTY(EditAnywhere)
-	//float RecoilAmountX = 1.5f;
+	//FRotator RecoilAmount;
 
 	//UPROPERTY(EditAnywhere)
-	//float RecoilRangeMinX = 0.8f;
+	//FRotator RecoilRangeMin;
 
 	//UPROPERTY(EditAnywhere)
-	//float RecoilRangeMaxX = 1.2f;
-
-	//UPROPERTY(EditAnywhere)
-	//float RecoilAmountY = 0.8f;
-
-	//UPROPERTY(EditAnywhere)
-	//float RecoilRangeMinY = -1.f;
-
-	//UPROPERTY(EditAnywhere)
-	//float RecoilRangeMaxY = 1.f;
-
-	//UPROPERTY(EditAnywhere)
-	//float RecoilAmountZ = 0.8f;
-
-	//UPROPERTY(EditAnywhere)
-	//float RecoilRangeMinZ = -1.f;
-
-	//UPROPERTY(EditAnywhere)
-	//float RecoilRangeMaxZ = 1.f;
+	//FRotator RecoilRangeMax;
 
 	UPROPERTY(EditAnywhere)
 	float RecoilSpeed = 4.f;
 	UPROPERTY(EditAnywhere)
 	float RecoilRecoverSpeed = 3.5f;
 
+	//FArmRecoilStruct(
+	//	FRotator InRecoilAmount = {1.f, 1.f, 1.f},
+	//	FRotator InRecoilRangeMin = { 1.f, 1.f, 1.f },
+	//	FRotator InRecoilRangeMax = { 1.f, 1.f, 1.f },
+	//	float InRecoilSpeed = 4.f,
+	//	float InRecoilRecoverSpeed = 3.5f
+	//	):
+	//	RecoilAmount(InRecoilAmount),
+	//	RecoilRangeMin(InRecoilRangeMin),
+	//	RecoilRangeMax(InRecoilRangeMax),
+	//	RecoilSpeed(InRecoilSpeed),
+	//	RecoilRecoverSpeed(InRecoilRecoverSpeed)
+	//{
+	//}
+
 	FArmRecoilStruct(
-		FVector InRecoilAmount = {1.f, 1.f, 1.f},
-		FVector InRecoilRangeMin = { 1.f, 1.f, 1.f },
-		FVector InRecoilRangeMax = { 1.f, 1.f, 1.f },
+		FRotator InRecoilAmount_Rot = FRotator(),
+		FRotator InRecoilRangeMin_Rot = FRotator(),
+		FRotator InRecoilRangeMax_Rot = FRotator(),
+
+		FVector InRecoilAmount_Vec = FVector(),
+		FVector InRecoilRangeMin_Vec = FVector(),
+		FVector InRecoilRangeMax_Vec = FVector(),
+
 		float InRecoilSpeed = 4.f,
 		float InRecoilRecoverSpeed = 3.5f
-		):
-		RecoilAmount(InRecoilAmount),
-		RecoilRangeMin(InRecoilRangeMin),
-		RecoilRangeMax(InRecoilRangeMax),
+	) :
+		Recoil_Rot(InRecoilAmount_Rot),
+		RecoilRangeMin_Rot(InRecoilRangeMin_Rot),
+		RecoilRangeMax_Rot(InRecoilRangeMax_Rot),
+
+		Recoil_Vec(InRecoilAmount_Vec),
+		RecoilRangeMin_Vec(InRecoilRangeMin_Vec),
+		RecoilRangeMax_Vec(InRecoilRangeMax_Vec),
+
 		RecoilSpeed(InRecoilSpeed),
 		RecoilRecoverSpeed(InRecoilRecoverSpeed)
 	{

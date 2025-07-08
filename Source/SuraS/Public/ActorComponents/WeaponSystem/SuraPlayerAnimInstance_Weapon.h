@@ -10,7 +10,7 @@
 #include "ActorComponents/WeaponSystem/ArmRecoilStruct.h"
 #include "SuraPlayerAnimInstance_Weapon.generated.h"
 
-class USuraPlayerBaseState;
+//class USuraPlayerBaseState;
 class ASuraPawnPlayer;
 class AWeapon;
 /**
@@ -21,10 +21,8 @@ class SURAS_API USuraPlayerAnimInstance_Weapon : public UAnimInstance, public IW
 {
 	GENERATED_BODY()
 public:
-	//SuraPlayerAnimInstance_Weapon();
-	//~SuraPlayerAnimInstance_Weapon();
-
 	virtual void NativeInitializeAnimation() override;
+	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
 	virtual void NativeUpdateAnimation(float DeltaTime) override;
 
 protected:
@@ -34,6 +32,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	EMovementState MovementState;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bIsRunning;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bIsCrouching;
@@ -47,9 +48,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector2D MovementInputVector;
 
-
 	//-------------------------------------------------
-	// <이재형 Weapon system 관련>
+	// <Weapon system>
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	EWeaponStateType CurrentWeaponStateType;
@@ -126,14 +126,26 @@ public:
 	FTransform GetLeftHandTransform();
 	FTransform GetTargetLeftHandTransfrom();
 
-	
+#pragma region RightHandSocket
+protected:
+	UPROPERTY(BlueprintReadOnly, Category = "RightHandSocket")
+	FTransform RightHandSocketTransform;
+	UPROPERTY(BlueprintReadOnly, Category = "RightHandSocket")
+	FTransform RightHandSocketTransform_Crouch;
+
+	UPROPERTY(BlueprintReadOnly, Category = "RightHandSocket")
+	FTransform CurrentRightHandSocketTransform;
+public:
+	void UpdateRightHandSocket(float DeltaTime);
+#pragma endregion
+
 #pragma region ArmRecoil
 public:
 	virtual void AddArmRecoil(float AdditionalRecoilAmountX = 0.f, float AdditionalRecoilAmountY = 0.f, float AdditionalRecoilAmountZ = 0.f) override;
-
 protected:
 	bool bIsArmRecoiling = false;
 
+	// <Old>
 	UPROPERTY()
 	FArmRecoilStruct ArmRecoil_Hand;
 	UPROPERTY()
@@ -141,47 +153,54 @@ protected:
 	UPROPERTY()
 	FArmRecoilStruct ArmRecoil_LowerArm;
 
-	FVector TotalTargetRecoil_Hand = { 0.f, 0.f, 0.f };
-	FVector TotalTargetRecoil_LowerArm = { 0.f, 0.f, 0.f };
-	FVector TotalTargetRecoil_UpperArm = { 0.f, 0.f, 0.f };
+	FRotator TotalTargetRecoil_Hand = { 0.f, 0.f, 0.f };
+	FRotator TotalTargetRecoil_LowerArm = { 0.f, 0.f, 0.f };
+	FRotator TotalTargetRecoil_UpperArm = { 0.f, 0.f, 0.f };
 
-	FVector CulmulatedRecoil_Hand = { 0.f, 0.f, 0.f };
-	FVector CulmulatedRecoil_LowerArm = { 0.f, 0.f, 0.f };
-	FVector CulmulatedRecoil_UpperArm = { 0.f, 0.f, 0.f };
+	FRotator CulmulatedRecoil_Hand = { 0.f, 0.f, 0.f };
+	FRotator CulmulatedRecoil_LowerArm = { 0.f, 0.f, 0.f };
+	FRotator CulmulatedRecoil_UpperArm = { 0.f, 0.f, 0.f };
 
-	FVector RecoveredRecoil_Hand = { 0.f, 0.f, 0.f };
-	FVector RecoveredRecoil_LowerArm = { 0.f, 0.f, 0.f };
-	FVector RecoveredRecoil_UpperArm = { 0.f, 0.f, 0.f };
-
-	//float TotalTargetArmRecoilValueX = 0.f;
-	//float TotalTargetArmRecoilValueY = 0.f;
-	//float TotalTargetArmRecoilValueZ = 0.f;
-
-	//float CulmulatedRecoilX = 0.f;
-	//float CulmulatedRecoilY = 0.f;
-	//float CulmulatedRecoilZ = 0.f;
-
-	//float RecoveredArmRecoilX = 0.f;
-	//float RecoveredArmRecoilY = 0.f;
-	//float RecoveredArmRecoilZ = 0.f;
+	FRotator RecoveredRecoil_Hand = { 0.f, 0.f, 0.f };
+	FRotator RecoveredRecoil_LowerArm = { 0.f, 0.f, 0.f };
+	FRotator RecoveredRecoil_UpperArm = { 0.f, 0.f, 0.f };
 
 	UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
-	FVector CurrentRecoil_Hand = { 0.f, 0.f, 0.f };
+	FRotator CurrentRecoil_Hand = { 0.f, 0.f, 0.f };
 	UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
-	FVector CurrentRecoil_LowerArm = { 0.f, 0.f, 0.f };
+	FRotator CurrentRecoil_LowerArm = { 0.f, 0.f, 0.f };
 	UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
-	FVector CurrentRecoil_UpperArm = { 0.f, 0.f, 0.f };
+	FRotator CurrentRecoil_UpperArm = { 0.f, 0.f, 0.f };
 
-	//UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
-	//float CurrentArmRecoilValueX = 0.f;
-	//UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
-	//float CurrentArmRecoilValueY = 0.f;
-	//UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
-	//float CurrentArmRecoilValueZ = 0.f;
+	//--------------------------
+	// <New>
+	UPROPERTY()
+	FArmRecoilStruct ArmRecoil;
+
+	FRotator TotalTargetRecoil_Rot;
+	FVector TotalTargetRecoil_Vec;	
+
+	UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
+	FRotator CurrentRecoil_Rot;
+	UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
+	FVector CurrentRecoil_Vec;
+
+	UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
+	FRotator ConvertedCurrentRecoil_Rot;
+	UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
+	FVector ConvertedCurrentRecoil_Vec;
 
 public:
 	void ApplyArmRecoil(float DeltaTime);
 	void RecoverArmRecoil(float DeltaTime);
 	void UpdateArmRecoil(float DeltaTime);
+	void ConvertRecoilValueFrame();
+#pragma endregion
+
+#pragma region Crouch
+protected:
+	FRotator RotationWhenCrouching_Hand_R;
+	FRotator RotationWhenCrouching_LowerArm_R;
+	FRotator RotationWhenCrouching_UpperArm_R;
 #pragma endregion
 };

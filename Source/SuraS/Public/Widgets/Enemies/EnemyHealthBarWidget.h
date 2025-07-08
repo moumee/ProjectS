@@ -32,5 +32,5 @@ public:
 	void ResizeHealthBar(FVector2D NewSize);
 	void HideInGame(bool bHidden);
 	FVector2D GetHealthBarSize();
-	void PlayFadeAnimtion();
+	void PlayFadeAnimation();
 };

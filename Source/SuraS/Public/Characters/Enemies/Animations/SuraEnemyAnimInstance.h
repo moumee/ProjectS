@@ -6,6 +6,8 @@
 #include "Animation/AnimInstance.h"
 #include "SuraEnemyAnimInstance.generated.h"
 
+class AEnemyBaseAIController;
+enum class EEnemyStates : uint8;
 class ASuraCharacterEnemyBase;
 /**
  * 
@@ -27,6 +29,15 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	float Direction;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bIsPursueOrAttacking = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	EEnemyStates EnemyState;
+
+	UPROPERTY()
+	AEnemyBaseAIController* EnemyBaseAIController;
 
 	virtual void NativeInitializeAnimation() override;
 

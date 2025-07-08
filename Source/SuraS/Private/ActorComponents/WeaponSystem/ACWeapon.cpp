@@ -56,6 +56,7 @@ AWeapon::AWeapon()
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	WeaponMesh->SetupAttachment(GetRootComponent(), FName(TEXT("WeaponMesh")));
 	WeaponMesh->SetVisibility(false);
+	SetMeshVisibility(false);
 
 	WeaponAnimInstance = WeaponMesh->GetAnimInstance();
 
@@ -199,6 +200,9 @@ void AWeapon::InitializeWeapon(ASuraPawnPlayer* NewCharacter)
 	}
 
 	// Set Aim Socket Relative Transform
+
+	SetMeshVisibility(false);
+
 	SetAimSocketRelativeTransform();
 }
 
@@ -355,9 +359,14 @@ void AWeapon::LoadWeaponData()
 		ZoomRecoil = WeaponData->ZoomRecoil;
 
 		// <Recoil>
+		ArmRecoil = WeaponData->ArmRecoil;
 		ArmRecoil_Hand = WeaponData->ArmRecoil_Hand;
 		ArmRecoil_UpperArm = WeaponData->ArmRecoil_UpperArm;
 		ArmRecoil_LowerArm = WeaponData->ArmRecoil_LowerArm;
+
+		// <Animation>
+		RightHandSocketTransform = WeaponData->RightHandSocketTransform;
+		RightHandSocketTransform_Crouch = WeaponData->RightHandSocketTransform_Crouch;
 
 		// <Camera Shake>
 		DefaultCameraShakeClass = WeaponData->DefaultCameraShakeClass;
@@ -388,6 +397,19 @@ void AWeapon::LoadWeaponData()
 
 		// <IK>
 		RightHandOffset = WeaponData->RightHandOffset;
+	}
+}
+
+void AWeapon::SetMeshVisibility(bool bflag)
+{
+	TInlineComponentArray<USceneComponent*> MeshComponents;
+	GetComponents<USceneComponent>(MeshComponents);
+	for (USceneComponent* MeshComp : MeshComponents)
+	{
+		if (MeshComp)
+		{
+			MeshComp->SetVisibility(bflag, true);
+		}
 	}
 }
 
@@ -505,7 +527,8 @@ bool AWeapon::AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter)
 	ActivateAmmoCounterWidget(true);
 
 	//TODO: BP에서 부가적으로 부착한 Mesh들도 Visibility를 관리해야함. 근데 에디터에서 WeaponMesh가 부모 소켓으로 되어있으면 하위의 것들은 알아서 처리되는 듯?
-	WeaponMesh->SetVisibility(true);
+	//WeaponMesh->SetVisibility(true);
+	SetMeshVisibility(true);
 
 	return true;
 }
@@ -521,7 +544,9 @@ void AWeapon::DetachWeaponFromPlayer()
 		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		//DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 		//ActivateCrosshairWidget(false);
-		WeaponMesh->SetVisibility(false);
+		// 
+		//WeaponMesh->SetVisibility(false);
+		SetMeshVisibility(false);
 	}
 }
 
@@ -2212,6 +2237,10 @@ void AWeapon::AddArmRecoil()
 	{
 		Cast<IWeaponInterface>(CharacterAnimInstance)->AddArmRecoil();
 	}
+}
+FArmRecoilStruct* AWeapon::GetArmRecoilInfo()
+{
+	return &ArmRecoil;
 }
 FArmRecoilStruct* AWeapon::GetArmRecoilInfo_Hand()
 {

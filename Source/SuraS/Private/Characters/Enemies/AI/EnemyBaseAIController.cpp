@@ -2,6 +2,7 @@
 
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 
+#include "ActorComponents/AttackComponents/ACPlayerAttackTokens.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
@@ -15,9 +16,10 @@ AEnemyBaseAIController::AEnemyBaseAIController(FObjectInitializer const& ObjectI
 	SetupPerceptionSystem();
 }
 
-void AEnemyBaseAIController::InitializeBlackBoard(float StrafeRadius, float AttackRadius, float AttackRate)
+void AEnemyBaseAIController::InitializeBlackBoard(float StrafeRadius, float ChaseStrafeRadius, float AttackRadius, float AttackRate)
 {
 	GetBlackboardComponent()->SetValueAsFloat("StrafeRadius", StrafeRadius);
+	GetBlackboardComponent()->SetValueAsFloat("ChaseStrafeRadius", ChaseStrafeRadius);
 	GetBlackboardComponent()->SetValueAsFloat("AttackRadius", AttackRadius);
 	GetBlackboardComponent()->SetValueAsFloat("AttackRate", AttackRate);
 }
@@ -36,7 +38,7 @@ void AEnemyBaseAIController::OnPossess(APawn* PossessedPawn)
 
 			if (const auto EnemyAttributesData = Enemy->EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(Enemy->GetEnemyType(), ""))
 			{
-				InitializeBlackBoard(EnemyAttributesData->StrafeRadius, EnemyAttributesData->AttackRadius, EnemyAttributesData->AttackRate);
+				InitializeBlackBoard(EnemyAttributesData->StrafeRadius, EnemyAttributesData->ChaseStrafeRadius, EnemyAttributesData->AttackRadius, EnemyAttributesData->AttackRate);
 			}
 
 			RunBehaviorTree(BehaviorTree);
@@ -73,15 +75,42 @@ void AEnemyBaseAIController::SetupPerceptionSystem()
 
 void AEnemyBaseAIController::OnTargetSighted(AActor* SeenTarget, FAIStimulus const Stimulus)
 {
-	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(SeenTarget))
-	{
-		GetBlackboardComponent()->SetValueAsObject("AttackTarget", Player);
-		UpdateCurrentState(EEnemyStates::Attacking);
-	}
+	if (GetCurrentState() != EEnemyStates::Pursue && GetCurrentState() != EEnemyStates::Attacking)
+		SetStateToChaseOrPursue(SeenTarget);
 }
 
 void AEnemyBaseAIController::UpdateCurrentState(EEnemyStates NewState)
 {
 	_CurrentState = NewState;
 	GetBlackboardComponent()->SetValueAsEnum("State", static_cast<uint8>(_CurrentState));
+}
+
+void AEnemyBaseAIController::SetStateToChaseOrPursue(AActor* TargetActor)
+{
+	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(TargetActor))
+	{
+		GetBlackboardComponent()->SetValueAsObject("AttackTarget", Player);
+
+		int PursuitIndex = Player->GetAttackTokensComponent()->ReservePursuitToken(1);
+		
+		if (PursuitIndex != -1)
+		{
+			PursuitIndex = Player->GetAttackTokensComponent()->GetMaxEnemyPursuitTokens() - PursuitIndex - 1;
+				
+			GetBlackboardComponent()->SetValueAsInt("PursuitIndex", PursuitIndex);
+			UpdateCurrentState(EEnemyStates::Pursue);
+		}
+		else
+		{
+			UpdateCurrentState(EEnemyStates::Chase);
+		}
+	}
+}
+
+void AEnemyBaseAIController::EndPursueState()
+{
+	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
+	{
+		Player->GetAttackTokensComponent()->ReturnPursuitToken(1);
+	}
 }

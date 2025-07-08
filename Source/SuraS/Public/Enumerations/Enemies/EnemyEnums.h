@@ -7,6 +7,8 @@ enum class EEnemyStates : uint8
 {
 	None UMETA(DisplayName = "None"),
 	Passive UMETA(DisplayName = "Passive"),
+	Chase UMETA(DisplayName = "Chase"),
+	Pursue UMETA(DisplayName = "Pursue"),
 	Attacking UMETA(DisplayName = "Attacking"),
 	Dead UMETA(DisplayName = "Dead")
 };
