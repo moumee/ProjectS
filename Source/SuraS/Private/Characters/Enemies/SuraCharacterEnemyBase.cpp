@@ -135,7 +135,7 @@ void ASuraCharacterEnemyBase::OnHitEnded(UAnimMontage* AnimMontage, bool bInterr
 {
 	ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(GetPlayerController()->GetPawn());
 
-	if (Player)
+	if (Player && AIController->GetCurrentState() != EEnemyStates::Pursue && AIController->GetCurrentState() != EEnemyStates::Attacking)
 		GetAIController()->SetStateToChaseOrPursue(Player);
 }
 
@@ -143,11 +143,19 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 {
 	UpdateHealthBarValue();
 
+	float DeathAnimDuration = 3.f;
+	
 	if (DeathAnimation)
+	{
 		PlayAnimMontage(DeathAnimation);
+		DeathAnimDuration = DeathAnimation->GetPlayLength();
+	}
 
 	if (AIController->GetCurrentState() == EEnemyStates::Pursue || AIController->GetCurrentState() == EEnemyStates::Attacking)
+	{
 		AIController->EndPursueState();
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Puruse Token Returned"));
+	}
 
 	AIController->GetBrainComponent()->StopLogic("Death");
 
@@ -161,23 +169,26 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), GetCapsuleComponent()->IsSimulatingPhysics() ? TEXT("true") : TEXT("false")));
 
 	// Ragdoll physics
-	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	/*GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
-	GetMesh()->SetCollisionObjectType(ECC_GameTraceChannel1); // to disable collision with SuraProjectile object
+	GetMesh()->SetCollisionObjectType(ECC_GameTraceChannel1);*/ // to disable collision with SuraProjectile object
 
 	//objectpoolDisableEnemy
 	FTimerHandle DeathHandle;
-
+	
 	GetWorldTimerManager().SetTimer(
 		DeathHandle,
 		FTimerDelegate::CreateLambda([&]()
 		{
-			SetActorHiddenInGame(true);
+			/*GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+			GetMesh()->Stop();*/
 			
 			if (EnemyWeapon)
-				EnemyWeapon->SetActorHiddenInGame(true);
+				EnemyWeapon->Destroy();
+
+			Destroy();
 		}),
-		3.f,
+		DeathAnimDuration,
 		false
 	);
 }
@@ -219,7 +230,7 @@ void ASuraCharacterEnemyBase::SetMovementSpeed(EEnemySpeed Speed)
 		GetCharacterMovement()->MaxWalkSpeed = 400.f;
 		break;
 	case EEnemySpeed::Sprint:
-		GetCharacterMovement()->MaxWalkSpeed = 600.f;
+		GetCharacterMovement()->MaxWalkSpeed = 800.f;
 		break;
 	default:
 		GetCharacterMovement()->MaxWalkSpeed = 300.f;

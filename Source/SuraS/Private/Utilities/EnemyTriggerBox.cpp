@@ -49,5 +49,8 @@ void AEnemyTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 			}
 		}
 	}
+
+	EnemiesToTrigger.Empty();
+	Destroy();
 }
 

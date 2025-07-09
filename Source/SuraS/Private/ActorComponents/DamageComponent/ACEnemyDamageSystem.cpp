@@ -24,11 +24,11 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 	
 	AActor* OwningEnemyActor = GetOwner();
 
-	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(OwningEnemyActor))
+	/*if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(OwningEnemyActor))
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Enemy Damaged"));
 		// Enemy->GetAIController()->AlertNearByEnemies();
-	}
+	}*/
 
 	if (HeadBoneNames.Contains((DamageData.BoneName)))
 	{
