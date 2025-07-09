@@ -77,6 +77,7 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 		if (SuraPlayer->GetWeaponSystemComponent())
 		{
 			//SetAimSocket();
+			UpdateRightHandSocket(DeltaTime);
 			SetAimPoint();
 			UpdateWeapon();
 			UpdateArmRecoil(DeltaTime);
@@ -276,6 +277,22 @@ FTransform USuraPlayerAnimInstance_Weapon::GetTargetLeftHandTransfrom()
 	return FTransform();
 }
 
+#pragma region RightHandSocket
+void USuraPlayerAnimInstance_Weapon::UpdateRightHandSocket(float DeltaTime)
+{
+	if (bIsCrouching)
+	{
+		CurrentRightHandSocketTransform.SetRotation((FMath::RInterpTo(CurrentRightHandSocketTransform.GetRotation().Rotator(), RightHandSocketTransform_Crouch.GetRotation().Rotator(), DeltaTime, 10.f)).Quaternion());
+		CurrentRightHandSocketTransform.SetTranslation(FMath::VInterpTo(CurrentRightHandSocketTransform.GetTranslation(), RightHandSocketTransform_Crouch.GetTranslation(), DeltaTime, 10.f));
+	}
+	else
+	{
+		CurrentRightHandSocketTransform.SetRotation((FMath::RInterpTo(CurrentRightHandSocketTransform.GetRotation().Rotator(), RightHandSocketTransform.GetRotation().Rotator(), DeltaTime, 10.f)).Quaternion());
+		CurrentRightHandSocketTransform.SetTranslation(FMath::VInterpTo(CurrentRightHandSocketTransform.GetTranslation(), RightHandSocketTransform.GetTranslation(), DeltaTime, 10.f));
+	}
+}
+#pragma endregion
+
 #pragma region ArmRecoil
 void USuraPlayerAnimInstance_Weapon::AddArmRecoil(float AdditionalRecoilAmountX, float AdditionalRecoilAmountY, float AdditionalRecoilAmountZ)
 {
@@ -446,15 +463,21 @@ void USuraPlayerAnimInstance_Weapon::UpdateArmRecoil(float DeltaTime)
 
 void USuraPlayerAnimInstance_Weapon::ConvertRecoilValueFrame()
 {
-	if (bIsCrouching)
-	{
-		ConvertedCurrentRecoil_Rot = (RightHandSocketTransform_Crouch.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
-		ConvertedCurrentRecoil_Vec = RightHandSocketTransform_Crouch.GetRotation().RotateVector(CurrentRecoil_Vec) + RightHandSocketTransform_Crouch.GetTranslation();
-	}
-	else
-	{
-		ConvertedCurrentRecoil_Rot = (RightHandSocketTransform.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
-		ConvertedCurrentRecoil_Vec = RightHandSocketTransform.GetRotation().RotateVector(CurrentRecoil_Vec) + RightHandSocketTransform.GetTranslation();
-	}
+	// <Old Version>
+	//if (bIsCrouching)
+	//{
+	//	ConvertedCurrentRecoil_Rot = (RightHandSocketTransform_Crouch.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
+	//	ConvertedCurrentRecoil_Vec = RightHandSocketTransform_Crouch.GetRotation().RotateVector(CurrentRecoil_Vec) + RightHandSocketTransform_Crouch.GetTranslation();
+	//}
+	//else
+	//{
+	//	ConvertedCurrentRecoil_Rot = (RightHandSocketTransform.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
+	//	ConvertedCurrentRecoil_Vec = RightHandSocketTransform.GetRotation().RotateVector(CurrentRecoil_Vec) + RightHandSocketTransform.GetTranslation();
+	//}
+	//----------------------
+	// <New Version>
+	ConvertedCurrentRecoil_Rot = (CurrentRightHandSocketTransform.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
+	ConvertedCurrentRecoil_Vec = CurrentRightHandSocketTransform.GetRotation().RotateVector(CurrentRecoil_Vec) + CurrentRightHandSocketTransform.GetTranslation();
+
 }
 #pragma endregion

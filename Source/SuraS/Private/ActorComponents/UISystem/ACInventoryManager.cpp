@@ -11,6 +11,7 @@
 #include "Components/ProgressBar.h"
 #include "UI/InventoryWidget.h"
 #include "Components/TextBlock.h"
+#include "ActorComponents/WeaponSystem/AmmoCounterWidget.h"
 
 UACInventoryManager::UACInventoryManager()
 {
@@ -154,7 +155,27 @@ void UACInventoryManager::UpdateWeaponAttributeUI(AWeapon* Weapon)
 
 	// 무기 이미지 표시
 	InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(Weapon->WeaponData->WeaponImage);
+	InventoryWidget->CurrentWeaponImage->SetOpacity(1.0f);
 
+	// Magazine
+	if (Weapon->GetAmmoCounterWidget() && InventoryWidget->MagazineTextBlock)
+	{
+		// UTextBlock* 타입이므로 텍스트를 가져와서 숫자로 변환
+		int32 Ammo = FCString::Atoi(*Weapon->GetAmmoCounterWidget()->AmmoCount->GetText().ToString());
+		int32 TotalAmmo = FCString::Atoi(*Weapon->GetAmmoCounterWidget()->TotalAmmo->GetText().ToString());
+
+		const FString AmmoString = FString::Printf(TEXT("%d / %d"), Ammo, TotalAmmo);
+		InventoryWidget->MagazineTextBlock->SetText(FText::FromString(AmmoString));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AmmoCounterWidget 또는 MagazineTextBlock이 nullptr입니다."));
+	}
+
+
+	
+	
+	
 	// ProjectileData 접근 (CDO + 강제 Load)
 	const ASuraProjectile* ProjectileCDO = nullptr;
 	if (Weapon->WeaponData->LeftProjectileClass)

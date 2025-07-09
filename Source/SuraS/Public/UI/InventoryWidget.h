@@ -150,6 +150,7 @@ public:
 	UPROPERTY(meta = (BindWidget)) UProgressBar* CurrentWeaponRecoil; // Recoil
 	//handle speed
 	//magazine
+	UPROPERTY(meta = (BindWidget)) UTextBlock* MagazineTextBlock;
 	//firing method
 
 	UPROPERTY(meta = (BindWidget)) UTextBlock* CurrentWeaponDamageText;

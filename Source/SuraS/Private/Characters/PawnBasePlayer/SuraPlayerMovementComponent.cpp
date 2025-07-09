@@ -9,6 +9,7 @@
 #include "KismetTraceUtils.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponBaseState.h"
+#include "ActorComponents/WeaponSystem/WeaponAimUIWidget.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Characters/PawnBasePlayer/PawnPlayerMovmentRow.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
@@ -53,6 +54,7 @@ void USuraPlayerMovementComponent::BeginPlay()
 
 void USuraPlayerMovementComponent::InitMovementData()
 {
+	checkf(MovementDataTable, TEXT("MovementDataTable is not assigned in SuraPawnPlayer blueprint!!!!!!!!"));
 	FPawnPlayerMovementRow* Row = MovementDataTable->FindRow<FPawnPlayerMovementRow>("Player", "");
 	if (!Row) return;
 	GravityScale = Row->GravityScale;
@@ -170,10 +172,6 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 			SuraPlayerController->SetControlRotation(NewRotation);
 		}
 	}
-
-	// This is for debugging purpose! Need to remove it
-	FVector Test;
-	FindGroundPoint(Test);
 	
 	
 	TickState(DeltaTime);
@@ -219,9 +217,6 @@ void USuraPlayerMovementComponent::TickState(float DeltaTime)
 		case EMovementState::EMS_WallRun:
 			TickWallRun(DeltaTime);
 			break;
-		case EMovementState::EMS_Hang:
-			TickHang(DeltaTime);
-			break;
 		case EMovementState::EMS_Mantle:
 			TickMantle(DeltaTime);
 			break;
@@ -262,6 +257,9 @@ void USuraPlayerMovementComponent::UnCrouchCapsule(float DeltaTime)
 void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 {
 	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();
+
+	const bool bWantsToDash = bDashPressed;
+	bDashPressed = false;
 	
 	if (bIsStepping)
 	{
@@ -274,7 +272,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 		bool bSteppingFrontHit = GetWorld()->SweepSingleByChannel(SteppingFrontHit, SuraPawnPlayer->GetActorLocation(),
 			SuraPawnPlayer->GetActorLocation() + SuraPawnPlayer->GetActorForwardVector() * 50.f, SuraPawnPlayer->GetActorQuat(),
-			WALL_TRACE_CHANNEL, SuraPawnPlayer->GetCapsuleComponent()->GetCollisionShape(), SteppingFrontParams);
+			ECC_WorldStatic, SuraPawnPlayer->GetCapsuleComponent()->GetCollisionShape(), SteppingFrontParams);
 
 		Velocity = StepUpDir * (bIsRunning ? RunSpeed : WalkSpeed);
 
@@ -300,7 +298,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 		bIsCrouching = true;
 		
-		if (Velocity.Size() >= RunSpeed - 50.f && GroundHit.ImpactNormal.Z >= MinWalkableFloorZ)
+		if (Velocity.Size() >= RunSpeed - 50.f && GroundHit.ImpactNormal.Z >= MinWalkableFloorZ && !bIsDashing)
 		{
 			SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
 			Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + 700.f);
@@ -497,7 +495,6 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 			{
 				bIsStepping = true;
 				LastVelocityBeforeStep = Velocity;
-				// SuraPawnPlayer->SetActorLocation(StepFloorHit.Location);
 			}
 		}
 	}
@@ -517,10 +514,29 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		return;
 	}
 
-	if (bDashPressed && AvailableDashCount > 0)
+	if (bWantsToDash && AvailableDashCount > 0)
 	{
-		bDashPressed = false;
 		bIsDashing = true;
+
+		UE_LOG(LogTemp, Error, TEXT("Dash called"));
+		
+
+		// suhyeon start - for dash ui function call
+		// UWeaponAimUIWidget* AimUI = SuraPawnPlayer->GetWeaponAimUIWidget();
+		// if (!AimUI) return;
+		//
+		// const float CooldownPerOneGauge = DashCooldown;  // or 캐릭터에서 받은 값
+		//
+		// if (!AimUI->TryUseDash(CooldownPerOneGauge))
+		// {
+		// 	// 게이지 부족 → 대쉬 실패
+		// 	return;
+		// }
+		
+		// 대쉬 성공 → 실제 이동 처리 실행
+		
+		// suhyeon end
+		
 		for (int32 i = 0; i < DashCooldowns.Num(); i++)
 		{
 			if (DashCooldowns[i] == 0.f)
@@ -540,6 +556,10 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 {
+	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();
+	const bool bWantsToDash = bDashPressed;
+	bDashPressed = false;
+	
 	if (!IsGrounded() || GroundHit.ImpactNormal.Z < MinWalkableFloorZ)
 	{
 		OnAirborne.Broadcast();
@@ -623,6 +643,27 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
+
+	if (bWantsToDash && AvailableDashCount > 0)
+	{
+		bIsDashing = true;
+		
+		for (int32 i = 0; i < DashCooldowns.Num(); i++)
+		{
+			if (DashCooldowns[i] == 0.f)
+			{
+				AvailableDashCount--;
+				DashCooldowns[i] = DashCooldown;
+				break;
+			}
+		}
+		
+		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
+		Velocity = DashDirection * DashStartSpeed;
+		OnDash.Broadcast(MovementInputVector);
+		SetMovementState(EMovementState::EMS_Move);
+		return;
+	}
 	
 	
 }
@@ -636,6 +677,9 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	{
 		ElapsedTimeFromSurface += DeltaTime;
 	}
+
+	const bool bWantsToDash = bDashPressed;
+	bDashPressed = false;
 
 	if (bCrouchPressed)
 	{
@@ -911,9 +955,8 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		}
 	}
 
-	if (bDashPressed && AvailableDashCount > 0)
+	if (bWantsToDash && AvailableDashCount > 0)
 	{
-		bDashPressed = false;
 		bIsDashing = true;
 		bHasDashedInAir = true;
 		
@@ -926,7 +969,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 				break;
 			}
 		}
-
+		
 		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
 		Velocity = DashDirection.GetSafeNormal2D() * DashStartSpeed + FVector(0, 0, Velocity.Z);
 		OnDash.Broadcast(MovementInputVector);
@@ -1239,8 +1282,6 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	
 }
 
-void USuraPlayerMovementComponent::TickHang(float DeltaTime){}
-
 void USuraPlayerMovementComponent::TickMantle(float DeltaTime)
 {
 	// FVector WallRight = FVector::CrossProduct(MantleWallHit.ImpactNormal, FVector::UpVector).GetSafeNormal();
@@ -1362,14 +1403,6 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 	if (OldState == EMovementState::EMS_Move)
 	{
 		SlideResetTimer = 0.f;
-
-		if (NewState == EMovementState::EMS_Hang)
-		{
-			if (bIsRunning)
-			{
-				bIsRunning = false;
-			}
-		}
 		
 	}
 
@@ -1521,6 +1554,7 @@ bool USuraPlayerMovementComponent::FindGroundPoint(FVector& OutPoint)
 
 void USuraPlayerMovementComponent::UpdateDashCooldowns(float DeltaTime)
 {
+	
 	float MinCooldownLeftIndex = -1;
 	
 	if (AvailableDashCount < DashCooldowns.Num())
@@ -1535,11 +1569,11 @@ void USuraPlayerMovementComponent::UpdateDashCooldowns(float DeltaTime)
 			}
 		}
 	}
-
+	
 	if (MinCooldownLeftIndex > -1)
 	{
-		DashCooldowns[MinCooldownLeftIndex] = FMath::Clamp(DashCooldowns[MinCooldownLeftIndex] - DeltaTime, 0.f, DashCooldown);
-		if (DashCooldowns[MinCooldownLeftIndex] <= 0.f)
+		DashCooldowns[MinCooldownLeftIndex] = FMath::Max(DashCooldowns[MinCooldownLeftIndex] - DeltaTime, 0.f);
+		if (DashCooldowns[MinCooldownLeftIndex] == 0.f)
 		{
 			AvailableDashCount++;
 		}
