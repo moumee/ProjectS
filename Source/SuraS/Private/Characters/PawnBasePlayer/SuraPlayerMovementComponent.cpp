@@ -562,6 +562,8 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 	
 	if (!IsGrounded() || GroundHit.ImpactNormal.Z < MinWalkableFloorZ)
 	{
+		bShouldKeepSlideSpeed = true;
+		LastSlideSpeedBeforeAirborne = Velocity;
 		OnAirborne.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
@@ -639,6 +641,9 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		bJumpPressed = false;
 		CurrentJumpCount++;
 		Velocity.Z = PrimaryJumpZVelocity;
+		bShouldKeepSlideSpeed = SlideStateElapsedTime > 0.3f; // TODO : Make this as a variable
+		
+		LastSlideSpeedBeforeAirborne = Velocity;
 		OnPrimaryJump.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
@@ -673,7 +678,8 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 {
 	if (PreviousMovementState == EMovementState::EMS_Move ||
-		PreviousMovementState == EMovementState::EMS_WallRun)
+		PreviousMovementState == EMovementState::EMS_WallRun ||
+		PreviousMovementState == EMovementState::EMS_Slide)
 	{
 		ElapsedTimeFromSurface += DeltaTime;
 	}
@@ -738,7 +744,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 				{
 					SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
 					// TODO: Slide Additional Speed to Variable and Data Table 
-					Velocity = SlideStartDirection * (Velocity.Size() + 700.f);
+					Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + 700.f);
 					bIsDashing = false;
 					ElapsedTimeFromDash = 0.f;
 					SlideResetTimer = 0.f;
@@ -872,17 +878,28 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 
 	if (!bIsDashing)
 	{
-		// float MaxHorizontalSpeed = bWallJumpAirBoost ? WallRunJumpAirSpeed2D : RunSpeed;
-
 		float MaxHorizontalSpeed = bIsRunning ? RunSpeed : WalkSpeed;
 		if (bWallJumpAirBoost)
 		{
 			MaxHorizontalSpeed = WallRunJumpAirSpeed2D;
 		}
-		else if (bHasDashedInAir)
+		else
 		{
-			MaxHorizontalSpeed = DashEndSpeed;
+			if (bHasDashedInAir && bShouldKeepSlideSpeed)
+			{
+				MaxHorizontalSpeed = FMath::Max(DashEndSpeed, LastSlideSpeedBeforeAirborne.Size2D());
+			}
+			else if (bHasDashedInAir && !bShouldKeepSlideSpeed)
+			{
+				MaxHorizontalSpeed = DashEndSpeed;
+			}
+			else if (!bHasDashedInAir && bShouldKeepSlideSpeed)
+			{
+				MaxHorizontalSpeed = LastSlideSpeedBeforeAirborne.Size2D();
+			}
+			
 		}
+		
 		
 		if (Velocity.Size2D() > MaxHorizontalSpeed)
 		{
@@ -947,7 +964,8 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		bJumpPressed = false;
 		if (CurrentJumpCount < MaxJumpCount)
 		{
-			bHasRecentlySlid = false;
+			// Commented out to prevent infinite slide boost using slide jump
+			// bHasRecentlySlid = false;
 			SlideElapsedTime = 0.f;
 			CurrentJumpCount++;
 			OnDoubleJump.Broadcast();
@@ -1411,6 +1429,7 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 	{
 		bHasDashedInAir = false;
 		bWallJumpAirBoost = false;
+		bShouldKeepSlideSpeed = false;
 		ElapsedTimeFromSurface = 0.f;
 		CurrentJumpCount = 0;
 	}

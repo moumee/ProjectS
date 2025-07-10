@@ -325,6 +325,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Slide")
 	bool bHasRecentlySlid = false;
 
+	bool bShouldKeepSlideSpeed = false;
+	
+
+	FVector LastSlideSpeedBeforeAirborne;
+
 	
 #pragma endregion Slide
 
