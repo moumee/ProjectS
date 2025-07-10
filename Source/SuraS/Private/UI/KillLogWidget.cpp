@@ -248,7 +248,7 @@ void UKillLogWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	UTexture2D* LoadedTexture = Cast<UTexture2D>(
-	StaticLoadObject(UTexture2D::StaticClass(), nullptr, TEXT("/Game/UI/KillLog/img/skull2"))
+	StaticLoadObject(UTexture2D::StaticClass(), nullptr, TEXT("/Game/UI/KillLog/img/img_skull"))
 );
 
 	if (LoadedTexture)
