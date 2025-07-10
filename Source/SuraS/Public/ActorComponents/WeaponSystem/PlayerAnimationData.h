@@ -13,6 +13,12 @@ USTRUCT(BlueprintType)
 struct SURAS_API FPlayerAnimationData : public FTableRowBase
 {
 	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpringDamper")
+	FVector Stiffness;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpringDamper")
+	FVector Damping;
+	//--------------------------------------------------------------
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	FRotator RotationWhenCrouching_Hand_R;

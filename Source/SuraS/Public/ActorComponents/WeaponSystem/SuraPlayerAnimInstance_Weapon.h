@@ -8,6 +8,7 @@
 #include "ActorComponents/WeaponSystem/WeaponStateType.h"
 #include "ActorComponents/WeaponSystem/WeaponInterface.h"
 #include "ActorComponents/WeaponSystem/ArmRecoilStruct.h"
+#include "PlayerAnimationData.h"
 #include "SuraPlayerAnimInstance_Weapon.generated.h"
 
 //class USuraPlayerBaseState;
@@ -50,6 +51,10 @@ protected:
 
 	//-------------------------------------------------
 	// <Weapon system>
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon)
+	FDataTableRowHandle AnimationDataTableHandle;
+	FPlayerAnimationData* AnimationData;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	EWeaponStateType CurrentWeaponStateType;
@@ -110,6 +115,8 @@ protected:
 	FRotator HandTargetRelativeRotation;
 
 public:
+	void LoadAnimationData();
+
 	void UpdateWeapon();
 
 	void SetAimSocket();
@@ -203,4 +210,28 @@ protected:
 	FRotator RotationWhenCrouching_LowerArm_R;
 	FRotator RotationWhenCrouching_UpperArm_R;
 #pragma endregion
+
+#pragma region Spring Damper
+protected:
+	FVector TargetRightHandPos;
+	FVector TargetRightHandRot;
+
+	FVector CurrentComponentPos;
+	FVector CurrentComponentVel;
+
+	FTransform RightHandSocketSpringDamperTransform;
+
+protected:
+	FVector Stiffness;
+	FVector Damping;
+
+	float fast_negexp(float x);
+	//void SpringDamper(FVector CurrPos, FVector CurrVel, FVector GoalPos, FVector GoalVel, FVector& OutPos, FVector& OutVel, float stiffness, float damping, float DeltaTime, float eps = 1e-5f);
+	
+	void SpringDamepr_2(FVector CurrPos, FVector CurrVel, FVector GoalPos, FVector GoalVel, FVector& OutPos, FVector& OutVel, FVector stiffness, FVector damping, float DeltaTime, float eps = 1e-5f);
+	
+	void UpdateSpringDamper(float DeltaTime);
+
+#pragma endregion
+
 };
