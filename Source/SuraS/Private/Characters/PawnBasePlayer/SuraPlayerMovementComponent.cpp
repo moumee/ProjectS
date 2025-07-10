@@ -163,6 +163,8 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 
 	UpdateDashCooldowns(DeltaTime);
 
+	UpdateWallCooldowns();
+
 	if (!bControllerTilting)
 	{
 		if (SuraPlayerController->GetControlRotation().Roll != 0.f)
@@ -172,6 +174,7 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 			SuraPlayerController->SetControlRotation(NewRotation);
 		}
 	}
+
 	
 	
 	TickState(DeltaTime);
@@ -641,7 +644,7 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		bJumpPressed = false;
 		CurrentJumpCount++;
 		Velocity.Z = PrimaryJumpZVelocity;
-		bShouldKeepSlideSpeed = SlideStateElapsedTime > 0.3f; // TODO : Make this as a variable
+		bShouldKeepSlideSpeed = SlideStateElapsedTime > 0.2f; // TODO : Make this as a variable
 		
 		LastSlideSpeedBeforeAirborne = Velocity;
 		OnPrimaryJump.Broadcast();
@@ -734,7 +737,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	
 	if (IsGrounded())
 	{
-		if ((PreviousMovementState != EMovementState::EMS_Move) || (ElapsedTimeFromSurface > JumpBuffer))
+		if ((PreviousMovementState != EMovementState::EMS_Move && PreviousMovementState != EMovementState::EMS_Slide) || (ElapsedTimeFromSurface > JumpBuffer))
 		{
 			OnLand.Broadcast(Velocity.Z);
 			
@@ -1359,7 +1362,8 @@ bool USuraPlayerMovementComponent::CanWallRun()
 	if (bWallRightHit && WallRightHit.bBlockingHit && WallRightHit.ImpactNormal.Z < MinWalkableFloorZ &&
 		FVector::DotProduct(Velocity.GetSafeNormal2D(), WallRightHit.ImpactNormal.GetSafeNormal2D()) < 0.f)
 	{
-		bRightWallRunnable = true;
+		
+		bRightWallRunnable = CheckWallCooldown({WallRightHit, GetWorld()->GetTimeSeconds()});
 	}
 
 	FHitResult WallLeftHit;
@@ -1371,7 +1375,7 @@ bool USuraPlayerMovementComponent::CanWallRun()
 	if (bWallLeftHit && WallLeftHit.bBlockingHit && WallLeftHit.ImpactNormal.Z < MinWalkableFloorZ &&
 		FVector::DotProduct(Velocity.GetSafeNormal2D(), WallLeftHit.ImpactNormal.GetSafeNormal2D()) < 0.f)
 	{
-		bLeftWallRunnable = true;
+		bLeftWallRunnable = CheckWallCooldown({WallLeftHit, GetWorld()->GetTimeSeconds()});
 	}
 
 	if (bRightWallRunnable && bLeftWallRunnable)
@@ -1402,6 +1406,37 @@ bool USuraPlayerMovementComponent::CanWallRun()
 	return false;
 }
 
+bool USuraPlayerMovementComponent::CheckWallCooldown(const FWallInfo& InWallInfo)
+{
+	if (CooldownWalls.IsEmpty()) return true;
+
+	float CurrentTime = GetWorld()->GetTimeSeconds();
+
+	for (const FWallInfo& CooldownWall : CooldownWalls)
+	{
+		if (CurrentTime - CooldownWall.TimeStamp > WallCooldown) continue;
+
+		float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(InWallInfo.Hit.ImpactNormal, CooldownWall.Hit.ImpactNormal)));
+		float XYDistance = FVector::Dist2D(InWallInfo.Hit.ImpactPoint, CooldownWall.Hit.ImpactPoint);
+
+		if (Angle <= 15.f && XYDistance <= 700.f)
+		{
+			return false;
+		}
+	}
+
+	return true;
+
+	
+}
+
+void USuraPlayerMovementComponent::UpdateWallCooldowns()
+{
+	CooldownWalls.RemoveAllSwap([this](const FWallInfo& CooldownWall)
+	{
+		return GetWorld()->GetTimeSeconds() - CooldownWall.TimeStamp > WallCooldown;
+	});
+}
 
 
 void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldState, EMovementState NewState)
@@ -1471,6 +1506,8 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 		WallRunElapsedTime = 0.f;
 		bIsDeceleratingZ = false;
 		bTiltRecovering = false;
+
+		CooldownWalls.Add({CurrentWallHit, GetWorld()->GetTimeSeconds()});
 
 		if (NewState == EMovementState::EMS_Airborne)
 		{

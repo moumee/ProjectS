@@ -35,6 +35,18 @@ enum class EWallRunSide : uint8
 	EWRS_Right,
 };
 
+USTRUCT()
+struct FWallInfo
+{
+	GENERATED_BODY()
+	
+	UPROPERTY()
+	FHitResult Hit;
+	
+	UPROPERTY()
+	double TimeStamp;
+};
+
 DECLARE_MULTICAST_DELEGATE(FOnMove);
 DECLARE_MULTICAST_DELEGATE(FOnWallRun);
 DECLARE_MULTICAST_DELEGATE(FOnAirborne);
@@ -59,7 +71,7 @@ public:
 	USuraPlayerMovementComponent();
 
 	virtual void BeginPlay() override;
-
+	
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void SetMovementInputVector(const FVector2D& InMovementInputVector);
@@ -269,6 +281,10 @@ protected:
 	bool bTiltRecovering = false;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|WallRun")
 	float RecoverStartRoll;
+
+	TArray<FWallInfo> CooldownWalls;
+	float WallCooldown = 2.f;
+	
 	
 #pragma endregion WallRun
 
@@ -394,6 +410,10 @@ protected:
 	void TickSlide(float DeltaTime);
 	
 	bool CanWallRun();
+
+	bool CheckWallCooldown(const FWallInfo& InWallInfo);
+
+	void UpdateWallCooldowns();
 
 	void TickAirborne(float DeltaTime);
 
