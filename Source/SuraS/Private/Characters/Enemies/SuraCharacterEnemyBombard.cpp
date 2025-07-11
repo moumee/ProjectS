@@ -29,13 +29,14 @@ void ASuraCharacterEnemyBombard::BeginPlay()
 
 void ASuraCharacterEnemyBombard::Attack(const ASuraPawnPlayer* Player)
 {
-	if (AttackAnimation)
+	if (!AttackAnimations.IsEmpty())
 	{
 		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
-		EnemyAnimInstance->Montage_Play(AttackAnimation);
+		EnemyAnimInstance->Montage_Play(GetRandomAnimationMontage(AttackAnimations));
 
 		Firearm->Fire(this, Player);
 	}
+	
 	else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("not found"));

@@ -25,11 +25,11 @@ public:
 	UPROPERTY(EditAnywhere)
 	float AdditionalDamageAmount;
 
-	UPROPERTY(EditAnywhere)
+	/*UPROPERTY(EditAnywhere)
 	float AttackRange;
 
 	UPROPERTY(EditAnywhere)
-	float AttackRadius;
+	float AttackRadius;*/
 
 	virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EvetnRef) override;
 	virtual void NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EvetnRef) override;
