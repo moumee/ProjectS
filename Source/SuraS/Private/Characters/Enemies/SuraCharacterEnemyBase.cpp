@@ -119,12 +119,12 @@ void ASuraCharacterEnemyBase::OnDamagedTriggered()
 
 	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *(HitAnimation->GetFName()).ToString()));
 
-	if (HitAnimation)
+	if (!HitAnimations.IsEmpty())
 	{
 		OnHitMontageEnded.BindUObject(this, &ASuraCharacterEnemyBase::OnHitEnded);
 		
 		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
-		EnemyAnimInstance->Montage_Play(HitAnimation);
+		EnemyAnimInstance->Montage_Play(GetRandomAnimationMontage(HitAnimations));
 
 		GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(OnHitMontageEnded); // montage interrupted
 		GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(OnHitMontageEnded); // montage ended
@@ -145,8 +145,10 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 
 	float DeathAnimDuration = 3.f;
 	
-	if (DeathAnimation)
+	if (!DeathAnimations.IsEmpty())
 	{
+		UAnimMontage* DeathAnimation = GetRandomAnimationMontage(DeathAnimations);
+		
 		PlayAnimMontage(DeathAnimation);
 		DeathAnimDuration = DeathAnimation->GetPlayLength();
 	}
@@ -202,6 +204,26 @@ void ASuraCharacterEnemyBase::UpdateHealthBarValue()
 		Widget->SetHealthBarPercent(Health / MaxHealth);
 }
 
+UAnimMontage* ASuraCharacterEnemyBase::GetRandomAnimationMontage(TArray<UAnimMontage*> AnimMontages)
+{
+	int selection = FMath::RandRange(0, AnimMontages.Num() - 1);
+
+	return AnimMontages[selection];
+}
+
+void ASuraCharacterEnemyBase::LungeToTarget()
+{
+	FVector TargetLocation = GetAIController()->GetAttackTarget()->GetActorLocation();
+	FVector MyLocation = GetActorLocation();
+	FVector Direction = (TargetLocation - MyLocation).GetSafeNormal();
+
+	// float LungeDistance = FVector::Dist(TargetLocation, MyLocation);
+	// FVector NewLocation = MyLocation + Direction * LungeDistance;
+
+	// You could either use interpolation:
+	LaunchCharacter(Direction * 1000.f, true, true);
+}
+
 bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
 {
 	return GetDamageSystemComp()->TakeDamage(DamageData, DamageCauser);
@@ -209,10 +231,10 @@ bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, const AA
 
 void ASuraCharacterEnemyBase::Attack(const ASuraPawnPlayer* Player)
 {
-	if (AttackAnimation)
+	if (!AttackAnimations.IsEmpty())
 	{
 		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
-		EnemyAnimInstance->Montage_Play(AttackAnimation);
+		EnemyAnimInstance->Montage_Play(GetRandomAnimationMontage(AttackAnimations));
 	}
 }
 
@@ -302,10 +324,12 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 			GetCharacterMovement()->MaxWalkSpeed = EnemyAttributesData->MaxWalkSpeed;
 
 			AttackDamageAmount = EnemyAttributesData->AttackDamageAmount;
+			MeleeAttackRange = EnemyAttributesData->MeleeAttackRange;
+			MeleeAttackSphereRadius = EnemyAttributesData->MeleeAttackSphereRadius;
 
-			HitAnimation = EnemyAttributesData->HitAnimation;
-			DeathAnimation = EnemyAttributesData->DeathAnimation;
-			AttackAnimation = EnemyAttributesData->AttackAnimation;
+			HitAnimations = EnemyAttributesData->HitAnimations;
+			DeathAnimations = EnemyAttributesData->DeathAnimations;
+			AttackAnimations = EnemyAttributesData->AttackAnimations;
 			ClimbAnimation = EnemyAttributesData->ClimbAnimation;
 		}
 

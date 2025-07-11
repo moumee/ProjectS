@@ -25,7 +25,7 @@ void UANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 		CollisionQueryParams.AddIgnoredActor(GetEnemyChar());
 
 		const FVector Start = GetEnemyChar()->GetActorLocation() + GetEnemyChar()->GetActorForwardVector() * GetEnemyChar()->GetCapsuleComponent()->GetScaledCapsuleRadius();
-		const FVector End = Start + GetEnemyChar()->GetActorForwardVector() * AttackRange;
+		const FVector End = Start + GetEnemyChar()->GetActorForwardVector() * Enemy->GetMeleeAttackRange();
 
 		// ANS cannot access GetWorld directly! Must be accessed through MeshComp or whoever has access to GetWorld function first
 		bool bHit = MeshComp->GetWorld()->SweepSingleByChannel(
@@ -34,7 +34,7 @@ void UANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 			End,
 			FQuat::Identity,
 			ECollisionChannel::ECC_Pawn,
-			FCollisionShape::MakeSphere(AttackRadius),
+			FCollisionShape::MakeSphere(Enemy->GetMeleeAttackSphereRadius()),
 			CollisionQueryParams
 		);
 
