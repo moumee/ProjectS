@@ -32,16 +32,22 @@ struct SURAS_API FEnemyAttributesData : public FTableRowBase
 	float AttackRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MeleeAttackRange;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MeleeAttackSphereRadius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float AttackDamageAmount;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UAnimMontage* HitAnimation;
+	TArray<UAnimMontage*> HitAnimations;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UAnimMontage* DeathAnimation;
+	TArray<UAnimMontage*> DeathAnimations;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UAnimMontage* AttackAnimation;
+	TArray<UAnimMontage*> AttackAnimations;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UAnimMontage* ClimbAnimation;

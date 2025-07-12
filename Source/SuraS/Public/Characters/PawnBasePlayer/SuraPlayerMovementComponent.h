@@ -24,8 +24,7 @@ enum class EMovementState : uint8
 	EMS_Slide,
 	EMS_Airborne,
 	EMS_WallRun,
-	EMS_Mantle,
-	EMS_Hang
+	EMS_Mantle
 };
 
 UENUM(Blueprintable)
@@ -34,6 +33,18 @@ enum class EWallRunSide : uint8
 	EWRS_None,
 	EWRS_Left,
 	EWRS_Right,
+};
+
+USTRUCT()
+struct FWallInfo
+{
+	GENERATED_BODY()
+	
+	UPROPERTY()
+	FHitResult Hit;
+	
+	UPROPERTY()
+	double TimeStamp;
 };
 
 DECLARE_MULTICAST_DELEGATE(FOnMove);
@@ -60,7 +71,7 @@ public:
 	USuraPlayerMovementComponent();
 
 	virtual void BeginPlay() override;
-
+	
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void SetMovementInputVector(const FVector2D& InMovementInputVector);
@@ -101,6 +112,10 @@ public:
 	float GetWalkSpeed() const { return WalkSpeed; }
 
 	EMovementState GetMovementState() const { return CurrentMovementState; }
+
+	int32 GetAvailableDashCount() const { return AvailableDashCount; }
+
+	TArray<float> GetDashCooldowns() const { return DashCooldowns; }
 
 	FOnMove	OnMove;
 	FOnWallRun OnWallRun;
@@ -266,6 +281,10 @@ protected:
 	bool bTiltRecovering = false;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|WallRun")
 	float RecoverStartRoll;
+
+	TArray<FWallInfo> CooldownWalls;
+	float WallCooldown = 2.f;
+	
 	
 #pragma endregion WallRun
 
@@ -321,6 +340,11 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Slide")
 	bool bHasRecentlySlid = false;
+
+	bool bShouldKeepSlideSpeed = false;
+	
+
+	FVector LastSlideSpeedBeforeAirborne;
 
 	
 #pragma endregion Slide
@@ -387,13 +411,15 @@ protected:
 	
 	bool CanWallRun();
 
+	bool CheckWallCooldown(const FWallInfo& InWallInfo);
+
+	void UpdateWallCooldowns();
+
 	void TickAirborne(float DeltaTime);
 
 	void TickWallRun(float DeltaTime);
 
 	void TickMantle(float DeltaTime);
-
-	void TickHang(float DeltaTime);
 
 	void UpdateDashCooldowns(float DeltaTime);
 
