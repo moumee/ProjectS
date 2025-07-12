@@ -1280,7 +1280,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		bJumpPressed = false;
 		CurrentJumpCount++;
 		FVector WallNormal2D = CurrentWallHit.ImpactNormal.GetSafeNormal2D();
-		Velocity = FVector(Velocity.X, Velocity.Y, 0.f) + WallNormal2D * 500.f + FVector::UpVector * WallJumpZVelocity;
+		Velocity = FVector(Velocity.X, Velocity.Y, 0.f) + WallNormal2D * 2000.f + FVector::UpVector * WallJumpZVelocity;
 		OnWallJump.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
@@ -1419,13 +1419,17 @@ bool USuraPlayerMovementComponent::CheckWallCooldown(const FWallInfo& InWallInfo
 		float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(InWallInfo.Hit.ImpactNormal, CooldownWall.Hit.ImpactNormal)));
 		float XYDistance = FVector::Dist2D(InWallInfo.Hit.ImpactPoint, CooldownWall.Hit.ImpactPoint);
 
-		if (Angle <= 15.f && XYDistance <= 700.f)
+		if (Angle > 15.f)
 		{
-			return false;
+			return true;
+		}
+		else if (XYDistance >= 700.f)
+		{
+			return true;
 		}
 	}
 
-	return true;
+	return false;
 
 	
 }
