@@ -233,8 +233,11 @@ protected:
 	
 	void UpdateSpringDamper(float DeltaTime);
 
-	void UpdateSpringDamepr_Test(float DeltaTime);
+	void UpdateSpringDamper_Test(float DeltaTime);
 
+	void UpdateSpringDamper_Test_2(float DeltaTime);
+
+	void UpdateSpringDamper_Test_3(float DeltaTime);
 #pragma endregion
 
 };
