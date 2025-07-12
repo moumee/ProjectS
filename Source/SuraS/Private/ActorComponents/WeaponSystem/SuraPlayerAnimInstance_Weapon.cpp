@@ -106,6 +106,7 @@ void USuraPlayerAnimInstance_Weapon::LoadAnimationData()
 	AnimationData = AnimationDataTableHandle.GetRow<FPlayerAnimationData>("");
 	if (AnimationData)
 	{
+		DamperScale = AnimationData->DamperScale;
 		Stiffness = AnimationData->Stiffness;
 		Damping = AnimationData->Damping;
 	}
@@ -615,6 +616,8 @@ void USuraPlayerAnimInstance_Weapon::SpringDamepr_2(FVector CurrPos, FVector Cur
 		float w = sqrtf(s.Z - (d.Z * d.Z) / 4.0f);
 		float j = sqrtf(FMath::Square(v.Z + y.Z * (x.Z - c.Z)) / (w * w + eps) + FMath::Square(x.Z - c.Z));
 		float p = FMath::Atan((v.Z + (x.Z - c.Z) * y.Z) / (-(x.Z - c.Z) * w + eps));
+		//float p = FMath::Atan((v.Z + (x.Z - c.Z) * y.Z) / (-(x.Z - c.Z) * w));
+		//float p = FMath::Atan2((v.Z + (x.Z - c.Z) * y.Z) , (-(x.Z - c.Z) * w + eps));
 
 		j = (x.Z - c.Z) > 0.0f ? j : -j;
 
@@ -752,35 +755,189 @@ void USuraPlayerAnimInstance_Weapon::UpdateSpringDamper_Test_2(float DeltaTime) 
 }
 void USuraPlayerAnimInstance_Weapon::UpdateSpringDamper_Test_3(float DeltaTime) //Local(Mesh Component) frame에서 계산
 {
-	float Scale = 0.05f;
+	// <Old Version>
 
-	FTransform ComponentTransform = SuraPlayer->GetArmMesh()->GetComponentTransform();
+	//float Scale = 0.05f;
 
-	FVector CurrPos = ComponentTransform.InverseTransformPosition(CurrentComponentPos); //Local
-	FVector CurrVel = ComponentTransform.InverseTransformVector(CurrentComponentVel); //Local
+	//FTransform ComponentTransform = SuraPlayer->GetArmMesh()->GetComponentTransform();
 
-	FVector GoalPos = CurrentRightHandSocketTransform.GetLocation(); //Local
-	FVector GoalVel = ComponentTransform.InverseTransformVector(SuraPlayer->GetArmMesh()->GetComponentVelocity()); //Local
+	//FVector CurrPos = ComponentTransform.InverseTransformPosition(CurrentComponentPos); //Local
+	//FVector CurrVel = ComponentTransform.InverseTransformVector(CurrentComponentVel); //Local
 
-	FVector ScaledGoalPos = GoalPos; //Local
-	FVector ScaledGoalVel = GoalVel; //Local
+	//FVector GoalPos = CurrentRightHandSocketTransform.GetLocation(); //Local
+	//FVector GoalVel = ComponentTransform.InverseTransformVector(SuraPlayer->GetArmMesh()->GetComponentVelocity()); //Local
 
-	FVector OutPos; //Local
-	FVector OutVel; //Local	
+	//FVector ScaledGoalPos = GoalPos; //Local
+	//FVector ScaledGoalVel = GoalVel; //Local
 
-	SpringDamepr_2(CurrPos, CurrVel, ScaledGoalPos, ScaledGoalVel, OutPos, OutVel, Stiffness, Damping, DeltaTime); //Local 기준 계산
+	//FVector OutPos; //Local
+	//FVector OutVel; //Local	
 
-	FVector ConvertedPos = (GoalPos + (OutPos - ScaledGoalPos) * Scale);
-	ConvertedPos.Y = GoalPos.Y;
+	//SpringDamepr_2(CurrPos, CurrVel, ScaledGoalPos, ScaledGoalVel, OutPos, OutVel, Stiffness, Damping, DeltaTime); //Local 기준 계산
 
-	CurrentComponentPos = ComponentTransform.TransformPosition(OutPos);
-	CurrentComponentVel = ComponentTransform.TransformVector(OutVel);
+	//FVector ConvertedPos = (GoalPos + (OutPos - ScaledGoalPos) * Scale);
+	//ConvertedPos.Y = GoalPos.Y;
+
+	////------------------------------
+	//// <Clamp>
+	//ConvertedPos.X = FMath::Clamp(ConvertedPos.X, CurrentRightHandSocketTransform.GetLocation().X - 0.2f, CurrentRightHandSocketTransform.GetLocation().X + 0.2f);
+	//ConvertedPos.Z = FMath::Clamp(ConvertedPos.Z, CurrentRightHandSocketTransform.GetLocation().Z - 3.f, CurrentRightHandSocketTransform.GetLocation().Z + 2.f);
+
+	//if (ConvertedPos.X < CurrentRightHandSocketTransform.GetLocation().X - 0.2f || ConvertedPos.X > CurrentRightHandSocketTransform.GetLocation().X + 0.2f)
+	//{
+	//	OutVel.X = GoalVel.X;
+	//}
+	//if (ConvertedPos.Z < CurrentRightHandSocketTransform.GetLocation().Z - 3.f || ConvertedPos.Z > CurrentRightHandSocketTransform.GetLocation().Z + 2.f)
+	//{
+	//	OutVel.Z = GoalVel.Z;
+	//}
+	////------------------------------
+
+	//CurrentComponentPos = ComponentTransform.TransformPosition(OutPos);
+	//CurrentComponentVel = ComponentTransform.TransformVector(OutVel);
+
+	//FVector DirectionVec = ConvertedPos - (CurrentRightHandSocketTransform.GetLocation() + FVector(0.f, -20.f, 0.f));
+	//FQuat RotByZ = FQuat(FVector::ZAxisVector, -FMath::Atan(DirectionVec.X / DirectionVec.Y));
+	//FQuat RotByX = FQuat(FVector::XAxisVector, FMath::Atan(DirectionVec.Z / FMath::Sqrt(DirectionVec.X * DirectionVec.X + DirectionVec.Y * DirectionVec.Y)));
+
+	//RightHandSocketSpringDamperTransform.SetLocation(ConvertedPos);
+	//RightHandSocketSpringDamperTransform.SetRotation(RotByX * RotByZ * CurrentRightHandSocketTransform.GetRotation());
+
+	////---------------------------------
+	//// <New Version>
+	//float Scale = 0.05f;
+
+	//FTransform MeshToWorldTransform = SuraPlayer->GetArmMesh()->GetComponentTransform();
+	//FTransform ActorToWorldTransform = SuraPlayer->GetTransform();
+
+	//FVector CurrPos = ActorToWorldTransform.InverseTransformPosition(CurrentComponentPos); //Actor
+	//FVector CurrVel = ActorToWorldTransform.InverseTransformVector(CurrentComponentVel); //Actor
+
+	//FVector GoalPos = ActorToWorldTransform.InverseTransformPosition(MeshToWorldTransform.TransformPosition(CurrentRightHandSocketTransform.GetLocation())); //Actor
+	//FVector GoalVel = ActorToWorldTransform.InverseTransformVector(SuraPlayer->GetVelocity()); //Actor
+
+	//FVector OutPos; //Actor
+	//FVector OutVel; //Actor
+
+	//SpringDamepr_2(CurrPos, CurrVel, GoalPos, GoalVel, OutPos, OutVel, Stiffness, Damping, DeltaTime); //Local 기준 계산
+
+	//FVector ConvertedPos = (GoalPos + (OutPos - GoalPos) * Scale);
+	//ConvertedPos.X = GoalPos.X;
+
+	////-------------------------
+	////// <Clamp>
+	////ConvertedPos.X = FMath::Clamp(ConvertedPos.X, GoalPos.X - 0.5f, GoalPos.X + 0.5f);
+	////ConvertedPos.Y = FMath::Clamp(ConvertedPos.Y, GoalPos.Y - 0.5f, GoalPos.Y + 0.5f);
+	////ConvertedPos.Z = FMath::Clamp(ConvertedPos.Z, GoalPos.Z - 3.f, GoalPos.Z + 2.f);
+
+	////if (ConvertedPos.X < GoalPos.X - 0.5f || ConvertedPos.X > GoalPos.X + 0.5f)
+	////{
+	////	OutVel.X = GoalVel.X;
+	////}
+	////if (ConvertedPos.Y < GoalPos.Y - 0.5f || ConvertedPos.Y > GoalPos.Y + 0.5f)
+	////{
+	////	OutVel.Y = GoalVel.Y;
+	////}
+	////if (ConvertedPos.Z < GoalPos.Z - 3.f || ConvertedPos.Z > GoalPos.Z + 2.f)
+	////{
+	////	OutVel.Z = GoalVel.Z;
+	////}
+	////-------------------------
+
+	//ConvertedPos = MeshToWorldTransform.InverseTransformPosition(ActorToWorldTransform.TransformPosition(ConvertedPos));
+
+	//CurrentComponentPos = ActorToWorldTransform.TransformPosition(OutPos); //World
+	//CurrentComponentVel = ActorToWorldTransform.TransformVector(OutVel); //World
+
+	//FVector DirectionVec = ConvertedPos - (CurrentRightHandSocketTransform.GetLocation() + FVector(0.f, -20.f, 0.f));
+	//FQuat RotByZ = FQuat(FVector::ZAxisVector, -FMath::Atan(DirectionVec.X / DirectionVec.Y));
+	//FQuat RotByX = FQuat(FVector::XAxisVector, FMath::Atan(DirectionVec.Z / FMath::Sqrt(DirectionVec.X * DirectionVec.X + DirectionVec.Y * DirectionVec.Y)));
+
+	//RightHandSocketSpringDamperTransform.SetLocation(ConvertedPos);
+	//RightHandSocketSpringDamperTransform.SetRotation(RotByX * RotByZ * CurrentRightHandSocketTransform.GetRotation());
+
+	////---------------------------------
+	//// <New New Version>
+	//FTransform MeshToWorldTransform = SuraPlayer->GetArmMesh()->GetComponentTransform();
+	//FTransform ActorToWorldTransform = SuraPlayer->GetTransform();
+
+	//FVector CurrPos = ActorToWorldTransform.InverseTransformPosition(CurrentComponentPos); //Actor
+	//FVector CurrVel = ActorToWorldTransform.InverseTransformVector(CurrentComponentVel); //Actor
+
+	//FVector GoalPos = ActorToWorldTransform.InverseTransformPosition(MeshToWorldTransform.TransformPosition(CurrentRightHandSocketTransform.GetLocation())); //Actor
+	//FVector GoalVel = ActorToWorldTransform.InverseTransformVector(SuraPlayer->GetVelocity()); //Actor
+
+	//FVector OutPos; //Actor
+	//FVector OutVel; //Actor
+
+	//SpringDamepr_2(CurrPos * DamperScale, CurrVel * DamperScale, GoalPos * DamperScale, GoalVel * DamperScale, OutPos, OutVel, Stiffness, Damping, DeltaTime); //Local 기준 계산
+
+	//FVector ConvertedPos = (GoalPos + (OutPos - GoalPos * DamperScale));
+	//ConvertedPos.X = GoalPos.X;
+
+	//OutPos /= DamperScale;
+	//OutVel /= DamperScale;
+	////-------------------------
+	////// <Clamp>
+	////ConvertedPos.X = FMath::Clamp(ConvertedPos.X, GoalPos.X - 0.5f, GoalPos.X + 0.5f);
+	////ConvertedPos.Y = FMath::Clamp(ConvertedPos.Y, GoalPos.Y - 0.5f, GoalPos.Y + 0.5f);
+	////ConvertedPos.Z = FMath::Clamp(ConvertedPos.Z, GoalPos.Z - 3.f, GoalPos.Z + 2.f);
+
+	////if (ConvertedPos.X < GoalPos.X - 0.5f || ConvertedPos.X > GoalPos.X + 0.5f)
+	////{
+	////	OutVel.X = GoalVel.X;
+	////}
+	////if (ConvertedPos.Y < GoalPos.Y - 0.5f || ConvertedPos.Y > GoalPos.Y + 0.5f)
+	////{
+	////	OutVel.Y = GoalVel.Y;
+	////}
+	////if (ConvertedPos.Z < GoalPos.Z - 3.f || ConvertedPos.Z > GoalPos.Z + 2.f)
+	////{
+	////	OutVel.Z = GoalVel.Z;
+	////}
+	////-------------------------
+
+	//ConvertedPos = MeshToWorldTransform.InverseTransformPosition(ActorToWorldTransform.TransformPosition(ConvertedPos));
+
+	//CurrentComponentPos = ActorToWorldTransform.TransformPosition(OutPos); //World
+	//CurrentComponentVel = ActorToWorldTransform.TransformVector(OutVel); //World
+
+	//FVector DirectionVec = ConvertedPos - (CurrentRightHandSocketTransform.GetLocation() + FVector(0.f, -20.f, 0.f));
+	//FQuat RotByZ = FQuat(FVector::ZAxisVector, -FMath::Atan(DirectionVec.X / DirectionVec.Y));
+	//FQuat RotByX = FQuat(FVector::XAxisVector, FMath::Atan(DirectionVec.Z / FMath::Sqrt(DirectionVec.X * DirectionVec.X + DirectionVec.Y * DirectionVec.Y)));
+
+	//RightHandSocketSpringDamperTransform.SetLocation(ConvertedPos);
+	//RightHandSocketSpringDamperTransform.SetRotation(RotByX * RotByZ * CurrentRightHandSocketTransform.GetRotation());
+
+	//---------------------------------
+	// <New 3 Version>
+	FTransform MeshToWorldTransform = SuraPlayer->GetArmMesh()->GetComponentTransform();
+	FTransform ActorToWorldTransform = SuraPlayer->GetTransform();
+
+	FVector CurrPos = ActorToWorldTransform.InverseTransformPosition(CurrentComponentPos); //Actor
+	FVector CurrVel = ActorToWorldTransform.InverseTransformVector(CurrentComponentVel); //Actor
+
+	FVector GoalPos = ActorToWorldTransform.InverseTransformPosition(MeshToWorldTransform.TransformPosition(CurrentRightHandSocketTransform.GetLocation())); //Actor
+	FVector GoalVel = ActorToWorldTransform.InverseTransformVector(SuraPlayer->GetVelocity()); //Actor
+
+	FVector OutPos; //Actor
+	FVector OutVel; //Actor
+
+	SpringDamepr_2(CurrPos, CurrVel, GoalPos, GoalVel, OutPos, OutVel, Stiffness, Damping, DeltaTime); //Local 기준 계산
+
+	FVector ConvertedPos = (GoalPos + (OutPos - GoalPos)* DamperScale);
+	ConvertedPos.X = GoalPos.X;
+
+	ConvertedPos = MeshToWorldTransform.InverseTransformPosition(ActorToWorldTransform.TransformPosition(ConvertedPos));
+
+	CurrentComponentPos = ActorToWorldTransform.TransformPosition(OutPos); //World
+	CurrentComponentVel = ActorToWorldTransform.TransformVector(OutVel); //World
 
 	FVector DirectionVec = ConvertedPos - (CurrentRightHandSocketTransform.GetLocation() + FVector(0.f, -20.f, 0.f));
 	FQuat RotByZ = FQuat(FVector::ZAxisVector, -FMath::Atan(DirectionVec.X / DirectionVec.Y));
 	FQuat RotByX = FQuat(FVector::XAxisVector, FMath::Atan(DirectionVec.Z / FMath::Sqrt(DirectionVec.X * DirectionVec.X + DirectionVec.Y * DirectionVec.Y)));
 
 	RightHandSocketSpringDamperTransform.SetLocation(ConvertedPos);
-	RightHandSocketSpringDamperTransform.SetRotation(RotByX * RotByZ * CurrentRightHandSocketTransform.GetRotation());
+	RightHandSocketSpringDamperTransform.SetRotation(RotByX* RotByZ* CurrentRightHandSocketTransform.GetRotation());
 }
 #pragma endregion

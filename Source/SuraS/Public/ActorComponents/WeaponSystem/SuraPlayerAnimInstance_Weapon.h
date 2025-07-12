@@ -223,13 +223,15 @@ protected:
 	FTransform RightHandSocketSpringDamperTransform;
 
 protected:
+	float DamperScale;
+
 	FVector Stiffness;
 	FVector Damping;
 
 	float fast_negexp(float x);
 	//void SpringDamper(FVector CurrPos, FVector CurrVel, FVector GoalPos, FVector GoalVel, FVector& OutPos, FVector& OutVel, float stiffness, float damping, float DeltaTime, float eps = 1e-5f);
 	
-	void SpringDamepr_2(FVector CurrPos, FVector CurrVel, FVector GoalPos, FVector GoalVel, FVector& OutPos, FVector& OutVel, FVector stiffness, FVector damping, float DeltaTime, float eps = 1e-5f);
+	void SpringDamepr_2(FVector CurrPos, FVector CurrVel, FVector GoalPos, FVector GoalVel, FVector& OutPos, FVector& OutVel, FVector stiffness, FVector damping, float DeltaTime, float eps = 1e-6f);
 	
 	void UpdateSpringDamper(float DeltaTime);
 
