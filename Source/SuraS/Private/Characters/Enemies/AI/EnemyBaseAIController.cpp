@@ -114,3 +114,10 @@ void AEnemyBaseAIController::EndPursueState()
 		Player->GetAttackTokensComponent()->ReturnPursuitToken(1);
 	}
 }
+
+ASuraPawnPlayer* AEnemyBaseAIController::GetAttackTarget()
+{
+	ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(GetBlackboardComponent()->GetValueAsObject("AttackTarget"));
+	
+	return Player;
+}

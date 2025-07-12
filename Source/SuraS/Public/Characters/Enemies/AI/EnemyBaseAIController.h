@@ -8,6 +8,7 @@
 #include "Enumerations/Enemies/EnemyEnums.h"
 #include "EnemyBaseAIController.generated.h"
 
+class ASuraPawnPlayer;
 /**
  * 
  */
@@ -41,4 +42,6 @@ public:
 	void SetStateToChaseOrPursue(AActor* TargetActor);
 
 	void EndPursueState();
+
+	ASuraPawnPlayer* GetAttackTarget();
 };
