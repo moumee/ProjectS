@@ -213,8 +213,9 @@ protected:
 
 #pragma region Spring Damper
 protected:
-	FVector TargetRightHandPos;
-	FVector TargetRightHandRot;
+
+	FVector PrevComponentPos;
+	FVector PrevComponentVel;
 
 	FVector CurrentComponentPos;
 	FVector CurrentComponentVel;
@@ -231,6 +232,8 @@ protected:
 	void SpringDamepr_2(FVector CurrPos, FVector CurrVel, FVector GoalPos, FVector GoalVel, FVector& OutPos, FVector& OutVel, FVector stiffness, FVector damping, float DeltaTime, float eps = 1e-5f);
 	
 	void UpdateSpringDamper(float DeltaTime);
+
+	void UpdateSpringDamepr_Test(float DeltaTime);
 
 #pragma endregion
 

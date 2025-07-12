@@ -83,7 +83,8 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 			SetAimPoint();
 			UpdateWeapon();
 
-			UpdateSpringDamper(DeltaTime);
+			//UpdateSpringDamper(DeltaTime);
+			UpdateSpringDamepr_Test(DeltaTime);
 
 			UpdateArmRecoil(DeltaTime);
 			ConvertRecoilValueFrame();
@@ -652,14 +653,14 @@ void USuraPlayerAnimInstance_Weapon::UpdateSpringDamper(float DeltaTime)
 
 	SpringDamepr_2(CurrPos, CurrVel, GoalPos, GoalVel, OutPos, OutVel, Stiffness, Damping, DeltaTime);
 	
-	FVector ConvertedPos = ComponentTransform.InverseTransformPosition(OutPos);
-
 	CurrentComponentPos = OutPos;
 	CurrentComponentVel = OutVel;
 
-	ConvertedPos.X = FMath::Clamp(ConvertedPos.X, CurrentRightHandSocketTransform.GetLocation().X - 1.f, CurrentRightHandSocketTransform.GetLocation().X + 1.f);
-	ConvertedPos.Y = FMath::Clamp(ConvertedPos.Y, CurrentRightHandSocketTransform.GetLocation().Y - 1.f, CurrentRightHandSocketTransform.GetLocation().Y + 1.f);
-	ConvertedPos.Z = FMath::Clamp(ConvertedPos.Z, CurrentRightHandSocketTransform.GetLocation().Z - 5.f, CurrentRightHandSocketTransform.GetLocation().Z + 5.f);
+	FVector ConvertedPos = ComponentTransform.InverseTransformPosition(CurrentComponentPos);
+
+	ConvertedPos.X = FMath::Clamp(ConvertedPos.X, CurrentRightHandSocketTransform.GetLocation().X - 0.5f, CurrentRightHandSocketTransform.GetLocation().X + 0.5f);
+	ConvertedPos.Y = FMath::Clamp(ConvertedPos.Y, CurrentRightHandSocketTransform.GetLocation().Y - 0.5f, CurrentRightHandSocketTransform.GetLocation().Y + 0.5f);
+	ConvertedPos.Z = FMath::Clamp(ConvertedPos.Z, CurrentRightHandSocketTransform.GetLocation().Z - 3.f, CurrentRightHandSocketTransform.GetLocation().Z + 2.f);
 
 	CurrentComponentPos = ComponentTransform.TransformPosition(ConvertedPos);
 
@@ -671,7 +672,7 @@ void USuraPlayerAnimInstance_Weapon::UpdateSpringDamper(float DeltaTime)
 	{
 		CurrentComponentVel.Y = GoalVel.Y;
 	}
-	if (ConvertedPos.Z < CurrentRightHandSocketTransform.GetLocation().Z - 5.f || ConvertedPos.Z > CurrentRightHandSocketTransform.GetLocation().Z + 5.f)
+	if (ConvertedPos.Z < CurrentRightHandSocketTransform.GetLocation().Z - 3.f || ConvertedPos.Z > CurrentRightHandSocketTransform.GetLocation().Z + 2.f)
 	{
 		CurrentComponentVel.Z = GoalVel.Z;
 	}
@@ -683,5 +684,34 @@ void USuraPlayerAnimInstance_Weapon::UpdateSpringDamper(float DeltaTime)
 	RightHandSocketSpringDamperTransform.SetLocation(ConvertedPos);
 	RightHandSocketSpringDamperTransform.SetRotation(RotByX * RotByZ * CurrentRightHandSocketTransform.GetRotation());
 
+}
+void USuraPlayerAnimInstance_Weapon::UpdateSpringDamepr_Test(float DeltaTime)
+{
+	FVector CurrPos = CurrentComponentPos;
+	FVector CurrVel = CurrentComponentVel;
+
+	FTransform ComponentTransform = SuraPlayer->GetArmMesh()->GetComponentTransform();
+
+	FVector GoalPos = ComponentTransform.TransformPosition(CurrentRightHandSocketTransform.GetLocation());
+	FVector GoalVel = SuraPlayer->GetArmMesh()->GetComponentVelocity();
+
+	FVector OutPos;
+	FVector OutVel;
+
+	SpringDamepr_2(CurrPos, CurrVel, GoalPos, GoalVel, OutPos, OutVel, Stiffness, Damping, DeltaTime);
+
+	CurrentComponentPos = OutPos;
+	CurrentComponentVel = OutVel;
+
+	float Gain = 0.1f;
+
+	FVector ConvertedPos = ComponentTransform.InverseTransformPosition(GoalPos + (CurrentComponentPos - GoalPos) * Gain);
+
+	FVector DirectionVec = ConvertedPos - (CurrentRightHandSocketTransform.GetLocation() + FVector(0.f, -20.f, 0.f));
+	FQuat RotByZ = FQuat(FVector::ZAxisVector, -FMath::Atan(DirectionVec.X / DirectionVec.Y));
+	FQuat RotByX = FQuat(FVector::XAxisVector, FMath::Atan(DirectionVec.Z / FMath::Sqrt(DirectionVec.X * DirectionVec.X + DirectionVec.Y * DirectionVec.Y)));
+
+	RightHandSocketSpringDamperTransform.SetLocation(ConvertedPos);
+	RightHandSocketSpringDamperTransform.SetRotation(RotByX * RotByZ * CurrentRightHandSocketTransform.GetRotation());
 }
 #pragma endregion
