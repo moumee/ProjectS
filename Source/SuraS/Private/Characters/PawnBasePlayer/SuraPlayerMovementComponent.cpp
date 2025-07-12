@@ -24,8 +24,6 @@ USuraPlayerMovementComponent::USuraPlayerMovementComponent()
 	PrimaryComponentTick.TickGroup = TG_DuringPhysics;
 
 	MinWalkableFloorZ = FMath::Cos(FMath::DegreesToRadians(MaxWalkableFloorAngle));
-
-	DashCooldowns.Init(0.f, 2);
 }
 
 void USuraPlayerMovementComponent::BeginPlay()
@@ -161,7 +159,7 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 		return;
 	}
 
-	UpdateDashCooldowns(DeltaTime);
+	UpdateDashGauge(DeltaTime);
 
 	UpdateWallCooldowns();
 
@@ -517,42 +515,24 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		return;
 	}
 
-	if (bWantsToDash && AvailableDashCount > 0)
+	if (bWantsToDash && DashGauge >= 1.f)
 	{
-		bIsDashing = true;
-
-		UE_LOG(LogTemp, Error, TEXT("Dash called"));
-		
-
-		// suhyeon start - for dash ui function call
-		// UWeaponAimUIWidget* AimUI = SuraPawnPlayer->GetWeaponAimUIWidget();
-		// if (!AimUI) return;
-		//
-		// const float CooldownPerOneGauge = DashCooldown;  // or 캐릭터에서 받은 값
-		//
-		// if (!AimUI->TryUseDash(CooldownPerOneGauge))
-		// {
-		// 	// 게이지 부족 → 대쉬 실패
-		// 	return;
-		// }
-		
-		// 대쉬 성공 → 실제 이동 처리 실행
-		
-		// suhyeon end
-		
-		for (int32 i = 0; i < DashCooldowns.Num(); i++)
+		if (!bIsDashing)
 		{
-			if (DashCooldowns[i] == 0.f)
-			{
-				AvailableDashCount--;
-				DashCooldowns[i] = DashCooldown;
-				break;
-			}
+			bIsDashing = true;
 		}
+		else
+		{
+			// Reset the ongoing dash timer to renew the dash since we used the dash again.
+			ElapsedTimeFromDash = 0.f;
+		}
+
+		DashGauge = FMath::Clamp(DashGauge - 1.f, 0.f, 2.f);
 		
 		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
 		Velocity = DashDirection * DashStartSpeed;
 		OnDash.Broadcast(MovementInputVector);
+		
 	}
 	
 }
@@ -652,19 +632,19 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		return;
 	}
 
-	if (bWantsToDash && AvailableDashCount > 0)
+	if (bWantsToDash && DashGauge >= 1.f)
 	{
-		bIsDashing = true;
-		
-		for (int32 i = 0; i < DashCooldowns.Num(); i++)
+		if (!bIsDashing)
 		{
-			if (DashCooldowns[i] == 0.f)
-			{
-				AvailableDashCount--;
-				DashCooldowns[i] = DashCooldown;
-				break;
-			}
+			bIsDashing = true;
 		}
+		else
+		{
+			// Reset the ongoing dash timer to renew the dash since we used the dash again.
+			ElapsedTimeFromDash = 0.f;
+		}
+		
+		DashGauge = FMath::Clamp(DashGauge - 1.f, 0.f, 2.f);
 		
 		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
 		Velocity = DashDirection * DashStartSpeed;
@@ -976,23 +956,26 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		}
 	}
 
-	if (bWantsToDash && AvailableDashCount > 0)
+	if (bWantsToDash && DashGauge >= 1.f)
 	{
-		bIsDashing = true;
-		bHasDashedInAir = true;
-		
-		for (int32 i = 0; i < DashCooldowns.Num(); i++)
+		if (!bIsDashing)
 		{
-			if (DashCooldowns[i] == 0.f)
-			{
-				AvailableDashCount--;
-				DashCooldowns[i] = DashCooldown;
-				break;
-			}
+			bIsDashing = true;
+		}
+		else
+		{
+			// Reset the ongoing dash timer to renew the dash since we used the dash again.
+			ElapsedTimeFromDash = 0.f;
 		}
 		
+		bHasDashedInAir = true;
+		
+		DashGauge = FMath::Clamp(DashGauge - 1.f, 0.f, 2.f);
+		
 		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
-		Velocity = DashDirection.GetSafeNormal2D() * DashStartSpeed + FVector(0, 0, Velocity.Z);
+		// Commented out the Velocity.Z addition since it didn't seem smooth and user couldn't feel the second dash.
+		Velocity = DashDirection.GetSafeNormal2D() * DashStartSpeed; // + FVector(0, 0, Velocity.Z)
+		 
 		OnDash.Broadcast(MovementInputVector);
 	}
 	
@@ -1612,32 +1595,17 @@ bool USuraPlayerMovementComponent::FindGroundPoint(FVector& OutPoint)
 	return bHit;
 }
 
-void USuraPlayerMovementComponent::UpdateDashCooldowns(float DeltaTime)
+void USuraPlayerMovementComponent::UpdateDashGauge(float DeltaTime)
 {
-	
-	float MinCooldownLeftIndex = -1;
-	
-	if (AvailableDashCount < DashCooldowns.Num())
+	if (DashGauge < 2.f)
 	{
-		float MinDashCooldown = FLT_MAX;
-		for (int32 i = 0; i < DashCooldowns.Num(); i++)
-		{
-			if (DashCooldowns[i] > 0 && DashCooldowns[i] < MinDashCooldown)
-			{
-				MinDashCooldown = DashCooldowns[i];
-				MinCooldownLeftIndex = i;
-			}
-		}
+		/* Gauge max value is 2. and the dash cooldown is 5 seconds, and dash cooldown is accounted for a single dash, So
+		 * the increment factor becomes 1 second divided by dash cooldown.
+		 */
+		
+		DashGauge = FMath::Clamp(DashGauge + (1.f / DashCooldown) * DeltaTime, 0.f, 2.f);
 	}
 	
-	if (MinCooldownLeftIndex > -1)
-	{
-		DashCooldowns[MinCooldownLeftIndex] = FMath::Max(DashCooldowns[MinCooldownLeftIndex] - DeltaTime, 0.f);
-		if (DashCooldowns[MinCooldownLeftIndex] == 0.f)
-		{
-			AvailableDashCount++;
-		}
-	}
 }
 
 
