@@ -5,12 +5,10 @@
 
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 
-void UAN_LungeToTarget::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
+void UAN_LungeToTarget::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
-	Super::Notify(MeshComp, Animation);
+	Super::Notify(MeshComp, Animation, EventReference);
 
-	ASuraCharacterEnemyBase* Owner = Cast<ASuraCharacterEnemyBase>(MeshComp->GetOwner());
-
-	if (Owner)
-		Owner->LungeToTarget();
+	if (ASuraCharacterEnemyBase* Owner = Cast<ASuraCharacterEnemyBase>(MeshComp->GetOwner()))
+		Owner->LungeToTarget(LungeForce);
 }

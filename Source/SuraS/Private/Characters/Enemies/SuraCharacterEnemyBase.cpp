@@ -211,7 +211,7 @@ UAnimMontage* ASuraCharacterEnemyBase::GetRandomAnimationMontage(TArray<UAnimMon
 	return AnimMontages[selection];
 }
 
-void ASuraCharacterEnemyBase::LungeToTarget()
+void ASuraCharacterEnemyBase::LungeToTarget(float LungeForce = 1000.f)
 {
 	FVector TargetLocation = GetAIController()->GetAttackTarget()->GetActorLocation();
 	FVector MyLocation = GetActorLocation();
@@ -221,7 +221,7 @@ void ASuraCharacterEnemyBase::LungeToTarget()
 	// FVector NewLocation = MyLocation + Direction * LungeDistance;
 
 	// You could either use interpolation:
-	LaunchCharacter(Direction * 1000.f, true, true);
+	LaunchCharacter(Direction * LungeForce, true, true);
 }
 
 bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)

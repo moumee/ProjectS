@@ -8,6 +8,7 @@
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "NavigationSystem.h"
+#include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 
 UBTT_FindStrafePosition::UBTT_FindStrafePosition(FObjectInitializer const& ObjectInitializer)
 {
@@ -23,7 +24,9 @@ EBTNodeResult::Type UBTT_FindStrafePosition::ExecuteTask(UBehaviorTreeComponent&
 		if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
 		{
 			FVector CurrentLocation = Enemy->GetActorLocation();
-			FVector TargetActorLocation = Player->GetActorLocation();
+			FVector TargetActorLocation;
+			if (!Player->GetPlayerMovementComponent()->FindGroundPoint(TargetActorLocation))
+				return EBTNodeResult::Failed;
 
 			float Distance = FVector::Dist(TargetActorLocation, CurrentLocation);
 

@@ -39,6 +39,9 @@ void AEnemyBaseAIController::OnPossess(APawn* PossessedPawn)
 			if (const auto EnemyAttributesData = Enemy->EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(Enemy->GetEnemyType(), ""))
 			{
 				InitializeBlackBoard(EnemyAttributesData->StrafeRadius, EnemyAttributesData->ChaseStrafeRadius, EnemyAttributesData->AttackRadius, EnemyAttributesData->AttackRate);
+
+				SightConfig->SightRadius = EnemyAttributesData->MaxSightRadius;
+				SightConfig->PeripheralVisionAngleDegrees = EnemyAttributesData->SightAngle;
 			}
 
 			RunBehaviorTree(BehaviorTree);
