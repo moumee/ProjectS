@@ -20,6 +20,12 @@ struct SURAS_API FEnemyAttributesData : public FTableRowBase
 	float MaxWalkSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxSightRadius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SightAngle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float StrafeRadius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
