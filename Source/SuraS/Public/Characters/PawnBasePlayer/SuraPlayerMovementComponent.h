@@ -35,6 +35,18 @@ enum class EWallRunSide : uint8
 	EWRS_Right,
 };
 
+USTRUCT()
+struct FWallInfo
+{
+	GENERATED_BODY()
+	
+	UPROPERTY()
+	FHitResult Hit;
+	
+	UPROPERTY()
+	double TimeStamp;
+};
+
 DECLARE_MULTICAST_DELEGATE(FOnMove);
 DECLARE_MULTICAST_DELEGATE(FOnWallRun);
 DECLARE_MULTICAST_DELEGATE(FOnAirborne);
@@ -59,7 +71,7 @@ public:
 	USuraPlayerMovementComponent();
 
 	virtual void BeginPlay() override;
-
+	
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void SetMovementInputVector(const FVector2D& InMovementInputVector);
@@ -94,16 +106,15 @@ public:
 	bool IsDashing() const { return bIsDashing; }
 
 	UFUNCTION(BlueprintCallable)
+	float GetDashGauge() const { return DashGauge; }
+
+	UFUNCTION(BlueprintCallable)
 	float GetRunSpeed() const { return RunSpeed; }
 
 	UFUNCTION(BlueprintCallable)
 	float GetWalkSpeed() const { return WalkSpeed; }
 
 	EMovementState GetMovementState() const { return CurrentMovementState; }
-
-	int32 GetAvailableDashCount() const { return AvailableDashCount; }
-
-	TArray<float> GetDashCooldowns() const { return DashCooldowns; }
 
 	FOnMove	OnMove;
 	FOnWallRun OnWallRun;
@@ -269,6 +280,10 @@ protected:
 	bool bTiltRecovering = false;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|WallRun")
 	float RecoverStartRoll;
+
+	TArray<FWallInfo> CooldownWalls;
+	float WallCooldown = 2.f;
+	
 	
 #pragma endregion WallRun
 
@@ -277,13 +292,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	bool bIsDashing = false;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
-	TArray<float> DashCooldowns;
-	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
-	int32 AvailableDashCount = 2;
-	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	float ElapsedTimeFromDash = 0.f;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	bool bHasDashedInAir = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
+	float DashGauge = 2.f;
 
 #pragma endregion Dash
 
@@ -324,6 +338,11 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Slide")
 	bool bHasRecentlySlid = false;
+
+	bool bShouldKeepSlideSpeed = false;
+	
+
+	FVector LastSlideSpeedBeforeAirborne;
 
 	
 #pragma endregion Slide
@@ -390,12 +409,16 @@ protected:
 	
 	bool CanWallRun();
 
+	bool CheckWallCooldown(const FWallInfo& InWallInfo);
+
+	void UpdateWallCooldowns();
+
 	void TickAirborne(float DeltaTime);
 
 	void TickWallRun(float DeltaTime);
 
 	void TickMantle(float DeltaTime);
 
-	void UpdateDashCooldowns(float DeltaTime);
+	void UpdateDashGauge(float DeltaTime);
 
 };

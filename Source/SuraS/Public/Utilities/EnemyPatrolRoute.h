@@ -26,9 +26,6 @@ public:
 	// Sets default values for this actor's properties
 	AEnemyPatrolRoute();
 
-protected:
-
-
 public:
 	void IncrementPatrolRoute();
 	FVector GetCurrentPatrolIndexPosition() const;

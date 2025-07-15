@@ -119,12 +119,12 @@ void ASuraCharacterEnemyBase::OnDamagedTriggered()
 
 	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *(HitAnimation->GetFName()).ToString()));
 
-	if (HitAnimation)
+	if (!HitAnimations.IsEmpty())
 	{
 		OnHitMontageEnded.BindUObject(this, &ASuraCharacterEnemyBase::OnHitEnded);
 		
 		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
-		EnemyAnimInstance->Montage_Play(HitAnimation);
+		EnemyAnimInstance->Montage_Play(GetRandomAnimationMontage(HitAnimations));
 
 		GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(OnHitMontageEnded); // montage interrupted
 		GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(OnHitMontageEnded); // montage ended
@@ -135,7 +135,7 @@ void ASuraCharacterEnemyBase::OnHitEnded(UAnimMontage* AnimMontage, bool bInterr
 {
 	ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(GetPlayerController()->GetPawn());
 
-	if (Player)
+	if (Player && AIController->GetCurrentState() != EEnemyStates::Pursue && AIController->GetCurrentState() != EEnemyStates::Attacking)
 		GetAIController()->SetStateToChaseOrPursue(Player);
 }
 
@@ -143,11 +143,21 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 {
 	UpdateHealthBarValue();
 
-	if (DeathAnimation)
+	float DeathAnimDuration = 3.f;
+	
+	if (!DeathAnimations.IsEmpty())
+	{
+		UAnimMontage* DeathAnimation = GetRandomAnimationMontage(DeathAnimations);
+		
 		PlayAnimMontage(DeathAnimation);
+		DeathAnimDuration = DeathAnimation->GetPlayLength();
+	}
 
 	if (AIController->GetCurrentState() == EEnemyStates::Pursue || AIController->GetCurrentState() == EEnemyStates::Attacking)
+	{
 		AIController->EndPursueState();
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Puruse Token Returned"));
+	}
 
 	AIController->GetBrainComponent()->StopLogic("Death");
 
@@ -161,23 +171,26 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), GetCapsuleComponent()->IsSimulatingPhysics() ? TEXT("true") : TEXT("false")));
 
 	// Ragdoll physics
-	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	/*GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
-	GetMesh()->SetCollisionObjectType(ECC_GameTraceChannel1); // to disable collision with SuraProjectile object
+	GetMesh()->SetCollisionObjectType(ECC_GameTraceChannel1);*/ // to disable collision with SuraProjectile object
 
 	//objectpoolDisableEnemy
 	FTimerHandle DeathHandle;
-
+	
 	GetWorldTimerManager().SetTimer(
 		DeathHandle,
 		FTimerDelegate::CreateLambda([&]()
 		{
-			SetActorHiddenInGame(true);
+			/*GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+			GetMesh()->Stop();*/
 			
 			if (EnemyWeapon)
-				EnemyWeapon->SetActorHiddenInGame(true);
+				EnemyWeapon->Destroy();
+
+			Destroy();
 		}),
-		3.f,
+		DeathAnimDuration,
 		false
 	);
 }
@@ -191,6 +204,26 @@ void ASuraCharacterEnemyBase::UpdateHealthBarValue()
 		Widget->SetHealthBarPercent(Health / MaxHealth);
 }
 
+UAnimMontage* ASuraCharacterEnemyBase::GetRandomAnimationMontage(TArray<UAnimMontage*> AnimMontages)
+{
+	int selection = FMath::RandRange(0, AnimMontages.Num() - 1);
+
+	return AnimMontages[selection];
+}
+
+void ASuraCharacterEnemyBase::LungeToTarget(float LungeForce = 1000.f)
+{
+	FVector TargetLocation = GetAIController()->GetAttackTarget()->GetActorLocation();
+	FVector MyLocation = GetActorLocation();
+	FVector Direction = (TargetLocation - MyLocation).GetSafeNormal();
+
+	// float LungeDistance = FVector::Dist(TargetLocation, MyLocation);
+	// FVector NewLocation = MyLocation + Direction * LungeDistance;
+
+	// You could either use interpolation:
+	LaunchCharacter(Direction * LungeForce, true, true);
+}
+
 bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
 {
 	return GetDamageSystemComp()->TakeDamage(DamageData, DamageCauser);
@@ -198,10 +231,10 @@ bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, const AA
 
 void ASuraCharacterEnemyBase::Attack(const ASuraPawnPlayer* Player)
 {
-	if (AttackAnimation)
+	if (!AttackAnimations.IsEmpty())
 	{
 		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
-		EnemyAnimInstance->Montage_Play(AttackAnimation);
+		EnemyAnimInstance->Montage_Play(GetRandomAnimationMontage(AttackAnimations));
 	}
 }
 
@@ -219,7 +252,7 @@ void ASuraCharacterEnemyBase::SetMovementSpeed(EEnemySpeed Speed)
 		GetCharacterMovement()->MaxWalkSpeed = 400.f;
 		break;
 	case EEnemySpeed::Sprint:
-		GetCharacterMovement()->MaxWalkSpeed = 600.f;
+		GetCharacterMovement()->MaxWalkSpeed = 800.f;
 		break;
 	default:
 		GetCharacterMovement()->MaxWalkSpeed = 300.f;
@@ -291,10 +324,12 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 			GetCharacterMovement()->MaxWalkSpeed = EnemyAttributesData->MaxWalkSpeed;
 
 			AttackDamageAmount = EnemyAttributesData->AttackDamageAmount;
+			MeleeAttackRange = EnemyAttributesData->MeleeAttackRange;
+			MeleeAttackSphereRadius = EnemyAttributesData->MeleeAttackSphereRadius;
 
-			HitAnimation = EnemyAttributesData->HitAnimation;
-			DeathAnimation = EnemyAttributesData->DeathAnimation;
-			AttackAnimation = EnemyAttributesData->AttackAnimation;
+			HitAnimations = EnemyAttributesData->HitAnimations;
+			DeathAnimations = EnemyAttributesData->DeathAnimations;
+			AttackAnimations = EnemyAttributesData->AttackAnimations;
 			ClimbAnimation = EnemyAttributesData->ClimbAnimation;
 		}
 

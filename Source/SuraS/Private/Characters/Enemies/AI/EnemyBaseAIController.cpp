@@ -39,6 +39,9 @@ void AEnemyBaseAIController::OnPossess(APawn* PossessedPawn)
 			if (const auto EnemyAttributesData = Enemy->EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(Enemy->GetEnemyType(), ""))
 			{
 				InitializeBlackBoard(EnemyAttributesData->StrafeRadius, EnemyAttributesData->ChaseStrafeRadius, EnemyAttributesData->AttackRadius, EnemyAttributesData->AttackRate);
+
+				SightConfig->SightRadius = EnemyAttributesData->MaxSightRadius;
+				SightConfig->PeripheralVisionAngleDegrees = EnemyAttributesData->SightAngle;
 			}
 
 			RunBehaviorTree(BehaviorTree);
@@ -113,4 +116,11 @@ void AEnemyBaseAIController::EndPursueState()
 	{
 		Player->GetAttackTokensComponent()->ReturnPursuitToken(1);
 	}
+}
+
+ASuraPawnPlayer* AEnemyBaseAIController::GetAttackTarget()
+{
+	ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(GetBlackboardComponent()->GetValueAsObject("AttackTarget"));
+	
+	return Player;
 }

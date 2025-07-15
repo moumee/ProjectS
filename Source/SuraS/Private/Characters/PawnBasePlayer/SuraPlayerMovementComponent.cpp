@@ -24,8 +24,6 @@ USuraPlayerMovementComponent::USuraPlayerMovementComponent()
 	PrimaryComponentTick.TickGroup = TG_DuringPhysics;
 
 	MinWalkableFloorZ = FMath::Cos(FMath::DegreesToRadians(MaxWalkableFloorAngle));
-
-	DashCooldowns.Init(0.f, 2);
 }
 
 void USuraPlayerMovementComponent::BeginPlay()
@@ -161,7 +159,9 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 		return;
 	}
 
-	UpdateDashCooldowns(DeltaTime);
+	UpdateDashGauge(DeltaTime);
+
+	UpdateWallCooldowns();
 
 	if (!bControllerTilting)
 	{
@@ -172,6 +172,7 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 			SuraPlayerController->SetControlRotation(NewRotation);
 		}
 	}
+
 	
 	
 	TickState(DeltaTime);
@@ -514,25 +515,24 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		return;
 	}
 
-	if (bWantsToDash && AvailableDashCount > 0)
+	if (bWantsToDash && DashGauge >= 1.f)
 	{
-		bIsDashing = true;
-
-		UE_LOG(LogTemp, Error, TEXT("Dash called"));
-		
-		for (int32 i = 0; i < DashCooldowns.Num(); i++)
+		if (!bIsDashing)
 		{
-			if (DashCooldowns[i] == 0.f)
-			{
-				AvailableDashCount--;
-				DashCooldowns[i] = DashCooldown;
-				break;
-			}
+			bIsDashing = true;
 		}
+		else
+		{
+			// Reset the ongoing dash timer to renew the dash since we used the dash again.
+			ElapsedTimeFromDash = 0.f;
+		}
+
+		DashGauge = FMath::Clamp(DashGauge - 1.f, 0.f, 2.f);
 		
 		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
 		Velocity = DashDirection * DashStartSpeed;
 		OnDash.Broadcast(MovementInputVector);
+		
 	}
 	
 }
@@ -545,6 +545,8 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 	
 	if (!IsGrounded() || GroundHit.ImpactNormal.Z < MinWalkableFloorZ)
 	{
+		bShouldKeepSlideSpeed = true;
+		LastSlideSpeedBeforeAirborne = Velocity;
 		OnAirborne.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
@@ -622,24 +624,27 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		bJumpPressed = false;
 		CurrentJumpCount++;
 		Velocity.Z = PrimaryJumpZVelocity;
+		bShouldKeepSlideSpeed = SlideStateElapsedTime > 0.2f; // TODO : Make this as a variable
+		
+		LastSlideSpeedBeforeAirborne = Velocity;
 		OnPrimaryJump.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
 
-	if (bWantsToDash && AvailableDashCount > 0)
+	if (bWantsToDash && DashGauge >= 1.f)
 	{
-		bIsDashing = true;
-		
-		for (int32 i = 0; i < DashCooldowns.Num(); i++)
+		if (!bIsDashing)
 		{
-			if (DashCooldowns[i] == 0.f)
-			{
-				AvailableDashCount--;
-				DashCooldowns[i] = DashCooldown;
-				break;
-			}
+			bIsDashing = true;
 		}
+		else
+		{
+			// Reset the ongoing dash timer to renew the dash since we used the dash again.
+			ElapsedTimeFromDash = 0.f;
+		}
+		
+		DashGauge = FMath::Clamp(DashGauge - 1.f, 0.f, 2.f);
 		
 		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
 		Velocity = DashDirection * DashStartSpeed;
@@ -656,7 +661,8 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 {
 	if (PreviousMovementState == EMovementState::EMS_Move ||
-		PreviousMovementState == EMovementState::EMS_WallRun)
+		PreviousMovementState == EMovementState::EMS_WallRun ||
+		PreviousMovementState == EMovementState::EMS_Slide)
 	{
 		ElapsedTimeFromSurface += DeltaTime;
 	}
@@ -711,7 +717,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	
 	if (IsGrounded())
 	{
-		if ((PreviousMovementState != EMovementState::EMS_Move) || (ElapsedTimeFromSurface > JumpBuffer))
+		if ((PreviousMovementState != EMovementState::EMS_Move && PreviousMovementState != EMovementState::EMS_Slide) || (ElapsedTimeFromSurface > JumpBuffer))
 		{
 			OnLand.Broadcast(Velocity.Z);
 			
@@ -721,7 +727,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 				{
 					SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
 					// TODO: Slide Additional Speed to Variable and Data Table 
-					Velocity = SlideStartDirection * (Velocity.Size() + 700.f);
+					Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + 700.f);
 					bIsDashing = false;
 					ElapsedTimeFromDash = 0.f;
 					SlideResetTimer = 0.f;
@@ -855,17 +861,28 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 
 	if (!bIsDashing)
 	{
-		// float MaxHorizontalSpeed = bWallJumpAirBoost ? WallRunJumpAirSpeed2D : RunSpeed;
-
 		float MaxHorizontalSpeed = bIsRunning ? RunSpeed : WalkSpeed;
 		if (bWallJumpAirBoost)
 		{
 			MaxHorizontalSpeed = WallRunJumpAirSpeed2D;
 		}
-		else if (bHasDashedInAir)
+		else
 		{
-			MaxHorizontalSpeed = DashEndSpeed;
+			if (bHasDashedInAir && bShouldKeepSlideSpeed)
+			{
+				MaxHorizontalSpeed = FMath::Max(DashEndSpeed, LastSlideSpeedBeforeAirborne.Size2D());
+			}
+			else if (bHasDashedInAir && !bShouldKeepSlideSpeed)
+			{
+				MaxHorizontalSpeed = DashEndSpeed;
+			}
+			else if (!bHasDashedInAir && bShouldKeepSlideSpeed)
+			{
+				MaxHorizontalSpeed = LastSlideSpeedBeforeAirborne.Size2D();
+			}
+			
 		}
+		
 		
 		if (Velocity.Size2D() > MaxHorizontalSpeed)
 		{
@@ -930,7 +947,8 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		bJumpPressed = false;
 		if (CurrentJumpCount < MaxJumpCount)
 		{
-			bHasRecentlySlid = false;
+			// Commented out to prevent infinite slide boost using slide jump
+			// bHasRecentlySlid = false;
 			SlideElapsedTime = 0.f;
 			CurrentJumpCount++;
 			OnDoubleJump.Broadcast();
@@ -938,23 +956,26 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		}
 	}
 
-	if (bWantsToDash && AvailableDashCount > 0)
+	if (bWantsToDash && DashGauge >= 1.f)
 	{
-		bIsDashing = true;
-		bHasDashedInAir = true;
-		
-		for (int32 i = 0; i < DashCooldowns.Num(); i++)
+		if (!bIsDashing)
 		{
-			if (DashCooldowns[i] == 0.f)
-			{
-				AvailableDashCount--;
-				DashCooldowns[i] = DashCooldown;
-				break;
-			}
+			bIsDashing = true;
+		}
+		else
+		{
+			// Reset the ongoing dash timer to renew the dash since we used the dash again.
+			ElapsedTimeFromDash = 0.f;
 		}
 		
+		bHasDashedInAir = true;
+		
+		DashGauge = FMath::Clamp(DashGauge - 1.f, 0.f, 2.f);
+		
 		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
-		Velocity = DashDirection.GetSafeNormal2D() * DashStartSpeed + FVector(0, 0, Velocity.Z);
+		// Commented out the Velocity.Z addition since it didn't seem smooth and user couldn't feel the second dash.
+		Velocity = DashDirection.GetSafeNormal2D() * DashStartSpeed; // + FVector(0, 0, Velocity.Z)
+		 
 		OnDash.Broadcast(MovementInputVector);
 	}
 	
@@ -1242,7 +1263,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		bJumpPressed = false;
 		CurrentJumpCount++;
 		FVector WallNormal2D = CurrentWallHit.ImpactNormal.GetSafeNormal2D();
-		Velocity = FVector(Velocity.X, Velocity.Y, 0.f) + WallNormal2D * 500.f + FVector::UpVector * WallJumpZVelocity;
+		Velocity = FVector(Velocity.X, Velocity.Y, 0.f) + WallNormal2D * 2000.f + FVector::UpVector * WallJumpZVelocity;
 		OnWallJump.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
@@ -1324,7 +1345,8 @@ bool USuraPlayerMovementComponent::CanWallRun()
 	if (bWallRightHit && WallRightHit.bBlockingHit && WallRightHit.ImpactNormal.Z < MinWalkableFloorZ &&
 		FVector::DotProduct(Velocity.GetSafeNormal2D(), WallRightHit.ImpactNormal.GetSafeNormal2D()) < 0.f)
 	{
-		bRightWallRunnable = true;
+		
+		bRightWallRunnable = CheckWallCooldown({WallRightHit, GetWorld()->GetTimeSeconds()});
 	}
 
 	FHitResult WallLeftHit;
@@ -1336,7 +1358,7 @@ bool USuraPlayerMovementComponent::CanWallRun()
 	if (bWallLeftHit && WallLeftHit.bBlockingHit && WallLeftHit.ImpactNormal.Z < MinWalkableFloorZ &&
 		FVector::DotProduct(Velocity.GetSafeNormal2D(), WallLeftHit.ImpactNormal.GetSafeNormal2D()) < 0.f)
 	{
-		bLeftWallRunnable = true;
+		bLeftWallRunnable = CheckWallCooldown({WallLeftHit, GetWorld()->GetTimeSeconds()});
 	}
 
 	if (bRightWallRunnable && bLeftWallRunnable)
@@ -1367,6 +1389,41 @@ bool USuraPlayerMovementComponent::CanWallRun()
 	return false;
 }
 
+bool USuraPlayerMovementComponent::CheckWallCooldown(const FWallInfo& InWallInfo)
+{
+	if (CooldownWalls.IsEmpty()) return true;
+
+	float CurrentTime = GetWorld()->GetTimeSeconds();
+
+	for (const FWallInfo& CooldownWall : CooldownWalls)
+	{
+		if (CurrentTime - CooldownWall.TimeStamp > WallCooldown) continue;
+
+		float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(InWallInfo.Hit.ImpactNormal, CooldownWall.Hit.ImpactNormal)));
+		float XYDistance = FVector::Dist2D(InWallInfo.Hit.ImpactPoint, CooldownWall.Hit.ImpactPoint);
+
+		if (Angle > 15.f)
+		{
+			return true;
+		}
+		else if (XYDistance >= 700.f)
+		{
+			return true;
+		}
+	}
+
+	return false;
+
+	
+}
+
+void USuraPlayerMovementComponent::UpdateWallCooldowns()
+{
+	CooldownWalls.RemoveAllSwap([this](const FWallInfo& CooldownWall)
+	{
+		return GetWorld()->GetTimeSeconds() - CooldownWall.TimeStamp > WallCooldown;
+	});
+}
 
 
 void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldState, EMovementState NewState)
@@ -1394,6 +1451,7 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 	{
 		bHasDashedInAir = false;
 		bWallJumpAirBoost = false;
+		bShouldKeepSlideSpeed = false;
 		ElapsedTimeFromSurface = 0.f;
 		CurrentJumpCount = 0;
 	}
@@ -1435,6 +1493,8 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 		WallRunElapsedTime = 0.f;
 		bIsDeceleratingZ = false;
 		bTiltRecovering = false;
+
+		CooldownWalls.Add({CurrentWallHit, GetWorld()->GetTimeSeconds()});
 
 		if (NewState == EMovementState::EMS_Airborne)
 		{
@@ -1535,32 +1595,17 @@ bool USuraPlayerMovementComponent::FindGroundPoint(FVector& OutPoint)
 	return bHit;
 }
 
-void USuraPlayerMovementComponent::UpdateDashCooldowns(float DeltaTime)
+void USuraPlayerMovementComponent::UpdateDashGauge(float DeltaTime)
 {
-	
-	float MinCooldownLeftIndex = -1;
-	
-	if (AvailableDashCount < DashCooldowns.Num())
+	if (DashGauge < 2.f)
 	{
-		float MinDashCooldown = FLT_MAX;
-		for (int32 i = 0; i < DashCooldowns.Num(); i++)
-		{
-			if (DashCooldowns[i] > 0 && DashCooldowns[i] < MinDashCooldown)
-			{
-				MinDashCooldown = DashCooldowns[i];
-				MinCooldownLeftIndex = i;
-			}
-		}
+		/* Gauge max value is 2. and the dash cooldown is 5 seconds, and dash cooldown is accounted for a single dash, So
+		 * the increment factor becomes 1 second divided by dash cooldown.
+		 */
+		
+		DashGauge = FMath::Clamp(DashGauge + (1.f / DashCooldown) * DeltaTime, 0.f, 2.f);
 	}
 	
-	if (MinCooldownLeftIndex > -1)
-	{
-		DashCooldowns[MinCooldownLeftIndex] = FMath::Max(DashCooldowns[MinCooldownLeftIndex] - DeltaTime, 0.f);
-		if (DashCooldowns[MinCooldownLeftIndex] == 0.f)
-		{
-			AvailableDashCount++;
-		}
-	}
 }
 
 

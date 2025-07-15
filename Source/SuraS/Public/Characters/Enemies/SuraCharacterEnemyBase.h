@@ -49,13 +49,20 @@ protected:
 	// [protected variables]
 	FName EnemyType; // for initializing differently btw enemy types from the DT
 
-	float AttackDamageAmount;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
+	UBehaviorTree* BehaviorTree;
 
 	UPROPERTY()
 	ASuraEnemyWeapon* EnemyWeapon;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Patrol Route", meta = (AllowPrivateAccess = "true"))
 	AEnemyPatrolRoute* PatrolRoute;
+
+	float AttackDamageAmount;
+
+	float MeleeAttackRange;
+
+	float MeleeAttackSphereRadius;
 
 	// [protected functions]
 	// Called when the game starts or when spawned
@@ -65,9 +72,6 @@ protected:
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
-	UBehaviorTree* BehaviorTree;
-
 	virtual void OnDamagedTriggered();
 
 	virtual void OnDeathTriggered();
@@ -76,6 +80,7 @@ protected:
 
 	virtual void UpdateHealthBarValue();
 
+	virtual UAnimMontage* GetRandomAnimationMontage(TArray<UAnimMontage*> AnimMontages);
 
 public:
 	ASuraCharacterEnemyBase();
@@ -95,8 +100,10 @@ public:
 	// damage system comp getter
 	FORCEINLINE UACEnemyDamageSystem* GetDamageSystemComp() const { return DamageSystemComp; }
 
-	// damage system comp getter
+	// other getters
 	FORCEINLINE float GetAttackDamageAmount() const { return AttackDamageAmount; }
+	FORCEINLINE float GetMeleeAttackRange() const { return MeleeAttackRange; }
+	FORCEINLINE float GetMeleeAttackSphereRadius() const { return MeleeAttackSphereRadius; }
 
 	// behavior tree getter
 	FORCEINLINE UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
@@ -117,18 +124,19 @@ public:
 
 	virtual void OnClimbEnded(UAnimMontage* AnimMontage, bool bInterrupted);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
-	UAnimMontage* HitAnimation;
+	virtual void LungeToTarget(float LungeForce);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
-	UAnimMontage* DeathAnimation;
+	TArray<UAnimMontage*> HitAnimations;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
-	UAnimMontage* AttackAnimation;
+	TArray<UAnimMontage*> DeathAnimations;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
+	TArray<UAnimMontage*> AttackAnimations;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	UAnimMontage* ClimbAnimation;
-
 
 	//poolsystem
 	bool isInitialized = false;
