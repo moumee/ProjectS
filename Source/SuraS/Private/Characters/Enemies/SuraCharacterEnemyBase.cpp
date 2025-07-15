@@ -18,6 +18,8 @@
 #include "Structures/Enemies/EnemyAttributesData.h"
 #include "Weapons/SuraEnemyWeapon.h"
 
+#define ECC_ENEMY ECC_GameTraceChannel5
+
 ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 {
 	// Damage system comp
@@ -40,12 +42,12 @@ ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 		}
 	}
 	
-	bUseControllerRotationYaw = true; // for controller controled rotation
+	bUseControllerRotationYaw = true; // for controller controlled rotation
 	GetCharacterMovement()->bUseRVOAvoidance = true;
 
 	EnemyType = "Base";
 
-	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionProfileName("EnemyPawnOverlap");
 }
 
 void ASuraCharacterEnemyBase::BeginPlay()
@@ -220,7 +222,7 @@ void ASuraCharacterEnemyBase::LungeToTarget(float LungeForce = 1000.f)
 	// float LungeDistance = FVector::Dist(TargetLocation, MyLocation);
 	// FVector NewLocation = MyLocation + Direction * LungeDistance;
 
-	// You could either use interpolation:
+	// or use interpolation?
 	LaunchCharacter(Direction * LungeForce, true, true);
 }
 
@@ -262,11 +264,10 @@ void ASuraCharacterEnemyBase::SetMovementSpeed(EEnemySpeed Speed)
 
 void ASuraCharacterEnemyBase::Climb(const FVector& Destination)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("climb"));
-
-	// GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-	AddMovementInput(FVector(Destination.X, Destination.Y, Destination.Z), true);
+
+	FVector ToVector = Destination - GetActorLocation();
+	AddMovementInput(FVector(ToVector.X, ToVector.Y, ToVector.Z), 2.0f);
 
 	FOnMontageEnded OnClimbMontageEnded;
 
@@ -275,9 +276,6 @@ void ASuraCharacterEnemyBase::Climb(const FVector& Destination)
 	if (ClimbAnimation)
 	{
 		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
-		
-		// SetActorRotation(FRotator(90.f, GetActorRotation().Yaw, GetActorRotation().Roll));
-		
 		EnemyAnimInstance->Montage_Play(ClimbAnimation);
 	}
 

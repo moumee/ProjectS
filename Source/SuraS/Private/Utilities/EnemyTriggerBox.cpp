@@ -17,6 +17,7 @@ AEnemyTriggerBox::AEnemyTriggerBox()
 	TriggerBox = CreateDefaultSubobject<UBoxComponent>(FName("TriggerBox"));
 	RootComponent = TriggerBox;
 	TriggerBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+	TriggerBox->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); // Ignore Projectile
 	TriggerBox->SetGenerateOverlapEvents(true);
 }
 
@@ -28,25 +29,16 @@ void AEnemyTriggerBox::BeginPlay()
 	TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AEnemyTriggerBox::OnOverlapBegin);
 }
 
-// Called every frame
-void AEnemyTriggerBox::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
 void AEnemyTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (OtherActor)
+	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OtherActor))
 	{
-		if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OtherActor))
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Player Overlapped"));
+		// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Player Overlapped"));
 
-			for (ASuraCharacterEnemyBase* Enemy : EnemiesToTrigger)
-			{
-				Enemy->GetAIController()->SetStateToChaseOrPursue(Player);
-			}
+		for (ASuraCharacterEnemyBase* Enemy : EnemiesToTrigger)
+		{
+			Enemy->GetAIController()->SetStateToChaseOrPursue(Player);
 		}
 	}
 

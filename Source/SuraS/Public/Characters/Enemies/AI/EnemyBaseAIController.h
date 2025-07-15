@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "DetourCrowdAIController.h"
 #include "Perception/AIPerceptionTypes.h"
 #include "Enumerations/Enemies/EnemyEnums.h"
 #include "EnemyBaseAIController.generated.h"
