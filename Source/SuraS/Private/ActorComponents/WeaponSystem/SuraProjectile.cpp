@@ -26,11 +26,11 @@ ASuraProjectile::ASuraProjectile()
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	//CollisionComp->InitSphereRadius(5.0f);
 	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
-	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel6);
+	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel7);
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); //Projectile
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Ignore); //Weapon
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Ignore); //Player
-	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Ignore); //PlayerProjectile
+	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel7, ECR_Ignore); //PlayerProjectile
 	CollisionComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 
 	//CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);		// set up a notification for when this component hits something blocking
@@ -95,6 +95,7 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 			CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
 			CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
 			CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+			CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap);
 			NumPenetrableObjects = NumPenetrable;
 			UE_LOG(LogTemp, Error, TEXT("Projectile Penetrable Num: %d"), NumPenetrableObjects);
 		}
@@ -575,6 +576,7 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_GameTraceChannel6);
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(ProjectileOwner);
