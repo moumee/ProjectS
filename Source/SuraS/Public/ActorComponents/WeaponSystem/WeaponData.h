@@ -166,4 +166,9 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	int32 MaxPenetrableObjectsNum_Left = 4;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
 	int32 MaxPenetrableObjectsNum_Right = 4;
+	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitScan")
+	bool bIsHitScan_Left = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitScan")
+	bool bIsHitScan_Right = false;
 };

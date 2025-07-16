@@ -32,6 +32,8 @@ void USuraPlayerAnimInstance_Weapon::NativeInitializeAnimation()
 
 		//-------------------------------------------
 		// <weapon System>
+		LoadAnimationData();
+
 		SetAimPoint();
 		CurrentWeaponStateType = EWeaponStateType::WeaponStateType_None;
 
@@ -80,6 +82,9 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 			UpdateRightHandSocket(DeltaTime);
 			SetAimPoint();
 			UpdateWeapon();
+
+			UpdateSpringDamper(DeltaTime);
+
 			UpdateArmRecoil(DeltaTime);
 			ConvertRecoilValueFrame();
 
@@ -89,6 +94,17 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 
 		// DefalutCameraRelativeTransform = Character->GetCamera()->GetRelativeTransform();
 		// LogTransform(AimSocketRelativeTransform);
+	}
+}
+
+void USuraPlayerAnimInstance_Weapon::LoadAnimationData()
+{
+	AnimationData = AnimationDataTableHandle.GetRow<FPlayerAnimationData>("");
+	if (AnimationData)
+	{
+		DamperScale = AnimationData->DamperScale;
+		Stiffness = AnimationData->Stiffness;
+		Damping = AnimationData->Damping;
 	}
 }
 
@@ -476,8 +492,190 @@ void USuraPlayerAnimInstance_Weapon::ConvertRecoilValueFrame()
 	//}
 	//----------------------
 	// <New Version>
-	ConvertedCurrentRecoil_Rot = (CurrentRightHandSocketTransform.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
-	ConvertedCurrentRecoil_Vec = CurrentRightHandSocketTransform.GetRotation().RotateVector(CurrentRecoil_Vec) + CurrentRightHandSocketTransform.GetTranslation();
+	//ConvertedCurrentRecoil_Rot = (CurrentRightHandSocketTransform.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
+	//ConvertedCurrentRecoil_Vec = CurrentRightHandSocketTransform.GetRotation().RotateVector(CurrentRecoil_Vec) + CurrentRightHandSocketTransform.GetTranslation();
 
+	// <New New Version>
+	ConvertedCurrentRecoil_Rot = (RightHandSocketSpringDamperTransform.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
+	ConvertedCurrentRecoil_Vec = RightHandSocketSpringDamperTransform.GetRotation().RotateVector(CurrentRecoil_Vec) + RightHandSocketSpringDamperTransform.GetTranslation();
+}
+#pragma endregion
+
+#pragma region Spring Damper
+float USuraPlayerAnimInstance_Weapon::fast_negexp(float x)
+{
+	return 1.0f / (1.0f + x + 0.48f * x * x + 0.235f * x * x * x);
+}
+void USuraPlayerAnimInstance_Weapon::SpringDamper(FVector CurrPos, FVector CurrVel, FVector GoalPos, FVector GoalVel, FVector& OutPos, FVector& OutVel, FVector stiffness, FVector damping, float DeltaTime, float eps)
+{
+	FVector x = CurrPos;
+	FVector v = CurrVel;
+
+	FVector g = GoalPos;
+	FVector q = GoalVel;
+	FVector s = stiffness;
+	FVector d = damping;
+	FVector c = g + (d * q) / (s + eps);
+	FVector y = d / 2.0f;
+
+	// <X>
+	if (fabs(s.X - (d.X * d.X) / 4.0f) < eps) // Critically Damped
+	{
+		float j0 = x.X - c.X;
+		float j1 = v.X + j0 * y.X;
+
+		float eydt = fast_negexp(y.X * DeltaTime);
+
+		x.X = j0 * eydt + DeltaTime * j1 * eydt + c.X;
+		v.X = -y.X * j0 * eydt - y.X * DeltaTime * j1 * eydt + j1 * eydt;
+	}
+	else if (s.X - (d.X * d.X) / 4.0f > 0.0) // Under Damped
+	{
+		float w = sqrtf(s.X - (d.X * d.X) / 4.0f);
+		float j = sqrtf(FMath::Square(v.X + y.X * (x.X - c.X)) / (w * w + eps) + FMath::Square(x.X - c.X));
+		float p = FMath::Atan((v.X + (x.X - c.X) * y.X) / (-(x.X - c.X) * w + eps));
+
+		j = (x.X - c.X) > 0.0f ? j : -j;
+
+		float eydt = fast_negexp(y.X * DeltaTime);
+
+		x.X = j * eydt * cosf(w * DeltaTime + p) + c.X;
+		v.X = -y.X * j * eydt * cosf(w * DeltaTime + p) - w * j * eydt * sinf(w * DeltaTime + p);
+	}
+	else if (s.X - (d.X * d.X) / 4.0f < 0.0) // Over Damped
+	{
+		float y0 = (d.X + sqrtf(d.X * d.X - 4 * s.X)) / 2.0f;
+		float y1 = (d.X - sqrtf(d.X * d.X - 4 * s.X)) / 2.0f;
+
+		float j1 = (c.X * y0 - x.X * y0 - v.X) / (y1 - y0);
+		float j0 = x.X - j1 - c.X;
+
+		float ey0dt = fast_negexp(y0 * DeltaTime);
+		float ey1dt = fast_negexp(y1 * DeltaTime);
+
+		x.X = j0 * ey0dt + j1 * ey1dt + c.X;
+		v.X = -y0 * j0 * ey0dt - y1 * j1 * ey1dt;
+	}
+
+	// <Y>
+	if (fabs(s.Y - (d.Y * d.Y) / 4.0f) < eps) // Critically Damped
+	{
+		float j0 = x.Y - c.Y;
+		float j1 = v.Y + j0 * y.Y;
+
+		float eydt = fast_negexp(y.Y * DeltaTime);
+
+		x.Y = j0 * eydt + DeltaTime * j1 * eydt + c.Y;
+		v.Y = -y.Y * j0 * eydt - y.Y * DeltaTime * j1 * eydt + j1 * eydt;
+	}
+	else if (s.Y - (d.Y * d.Y) / 4.0f > 0.0) // Under Damped
+	{
+		float w = sqrtf(s.Y - (d.Y * d.Y) / 4.0f);
+		float j = sqrtf(FMath::Square(v.Y + y.Y * (x.Y - c.Y)) / (w * w + eps) + FMath::Square(x.Y - c.Y));
+		float p = FMath::Atan((v.Y + (x.Y - c.Y) * y.Y) / (-(x.Y - c.Y) * w + eps));
+
+		j = (x.Y - c.Y) > 0.0f ? j : -j;
+
+		float eydt = fast_negexp(y.Y * DeltaTime);
+
+		x.Y = j * eydt * cosf(w * DeltaTime + p) + c.Y;
+		v.Y = -y.Y * j * eydt * cosf(w * DeltaTime + p) - w * j * eydt * sinf(w * DeltaTime + p);
+	}
+	else if (s.Y - (d.Y * d.Y) / 4.0f < 0.0) // Over Damped
+	{
+		float y0 = (d.Y + sqrtf(d.Y * d.Y - 4 * s.Y)) / 2.0f;
+		float y1 = (d.Y - sqrtf(d.Y * d.Y - 4 * s.Y)) / 2.0f;
+
+		float j1 = (c.Y * y0 - x.Y * y0 - v.Y) / (y1 - y0);
+		float j0 = x.Y - j1 - c.Y;
+
+		float ey0dt = fast_negexp(y0 * DeltaTime);
+		float ey1dt = fast_negexp(y1 * DeltaTime);
+
+		x.Y = j0 * ey0dt + j1 * ey1dt + c.Y;
+		v.Y = -y0 * j0 * ey0dt - y1 * j1 * ey1dt;
+	}
+
+	// <Z>
+	if (fabs(s.Z - (d.Z * d.Z) / 4.0f) < eps) // Critically Damped
+	{
+		float j0 = x.Z - c.Z;
+		float j1 = v.Z + j0 * y.Z;
+
+		float eydt = fast_negexp(y.Z * DeltaTime);
+
+		x.Z = j0 * eydt + DeltaTime * j1 * eydt + c.Z;
+		v.Z = -y.Z * j0 * eydt - y.Z * DeltaTime * j1 * eydt + j1 * eydt;
+	}
+	else if (s.Z - (d.Z * d.Z) / 4.0f > 0.0) // Under Damped
+	{
+		float w = sqrtf(s.Z - (d.Z * d.Z) / 4.0f);
+		float j = sqrtf(FMath::Square(v.Z + y.Z * (x.Z - c.Z)) / (w * w + eps) + FMath::Square(x.Z - c.Z));
+		float p = FMath::Atan((v.Z + (x.Z - c.Z) * y.Z) / (-(x.Z - c.Z) * w + eps));
+
+		j = (x.Z - c.Z) > 0.0f ? j : -j;
+
+		float eydt = fast_negexp(y.Z * DeltaTime);
+
+		x.Z = j * eydt * cosf(w * DeltaTime + p) + c.Z;
+		v.Z = -y.Z * j * eydt * cosf(w * DeltaTime + p) - w * j * eydt * sinf(w * DeltaTime + p);
+	}
+	else if (s.Z - (d.Z * d.Z) / 4.0f < 0.0) // Over Damped
+	{
+		float y0 = (d.Z + sqrtf(d.Z * d.Z - 4 * s.Z)) / 2.0f;
+		float y1 = (d.Z - sqrtf(d.Z * d.Z - 4 * s.Z)) / 2.0f;
+
+		float j1 = (c.Z * y0 - x.Z * y0 - v.Z) / (y1 - y0);
+		float j0 = x.Z - j1 - c.Z;
+
+		float ey0dt = fast_negexp(y0 * DeltaTime);
+		float ey1dt = fast_negexp(y1 * DeltaTime);
+
+		x.Z = j0 * ey0dt + j1 * ey1dt + c.Z;
+		v.Z = -y0 * j0 * ey0dt - y1 * j1 * ey1dt;
+	}
+
+	OutPos = x;
+	OutVel = v;
+}
+void USuraPlayerAnimInstance_Weapon::UpdateSpringDamper(float DeltaTime)
+{
+	FTransform MeshToWorldTransform = SuraPlayer->GetArmMesh()->GetComponentTransform();
+	FTransform ActorToWorldTransform = SuraPlayer->GetTransform();
+
+	FVector CurrPos = ActorToWorldTransform.InverseTransformPosition(CurrentComponentPos); //Actor
+	FVector CurrVel = ActorToWorldTransform.InverseTransformVector(CurrentComponentVel); //Actor
+
+	FVector GoalPos = ActorToWorldTransform.InverseTransformPosition(MeshToWorldTransform.TransformPosition(CurrentRightHandSocketTransform.GetLocation())); //Actor
+	FVector GoalVel = ActorToWorldTransform.InverseTransformVector(SuraPlayer->GetVelocity()); //Actor
+	//FVector GoalVel = ActorToWorldTransform.InverseTransformVector(Velocity); //Actor
+
+	FVector OutPos; //Actor
+	FVector OutVel; //Actor
+
+	SpringDamper(CurrPos, CurrVel, GoalPos, GoalVel, OutPos, OutVel, Stiffness, Damping, DeltaTime); //Local 기준 계산
+
+	//UE_LOG(LogTemp, Warning, TEXT("GoalVel: %s"), *GoalVel.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("GoalPos: %s"), *GoalPos.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("CurrVel: %s"), *CurrVel.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("CurrPos: %s"), *CurrPos.ToString());
+
+	//UE_LOG(LogTemp, Warning, TEXT("Velocity: %s"), *Velocity.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("SuraPlayer->GetVelocity(): %s"), *SuraPlayer->GetVelocity().ToString());
+
+	FVector ConvertedPos = (GoalPos + (OutPos - GoalPos) * DamperScale);
+	ConvertedPos.X = GoalPos.X;
+
+	ConvertedPos = MeshToWorldTransform.InverseTransformPosition(ActorToWorldTransform.TransformPosition(ConvertedPos));
+
+	CurrentComponentPos = ActorToWorldTransform.TransformPosition(OutPos); //World
+	CurrentComponentVel = ActorToWorldTransform.TransformVector(OutVel); //World
+
+	FVector DirectionVec = ConvertedPos - (CurrentRightHandSocketTransform.GetLocation() + FVector(0.f, -20.f, 0.f));
+	FQuat RotByZ = FQuat(FVector::ZAxisVector, -FMath::Atan(DirectionVec.X / DirectionVec.Y));
+	FQuat RotByX = FQuat(FVector::XAxisVector, FMath::Atan(DirectionVec.Z / FMath::Sqrt(DirectionVec.X * DirectionVec.X + DirectionVec.Y * DirectionVec.Y)));
+
+	RightHandSocketSpringDamperTransform.SetLocation(ConvertedPos);
+	RightHandSocketSpringDamperTransform.SetRotation(RotByX * RotByZ * CurrentRightHandSocketTransform.GetRotation());
 }
 #pragma endregion
