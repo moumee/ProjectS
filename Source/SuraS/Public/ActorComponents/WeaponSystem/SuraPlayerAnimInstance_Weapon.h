@@ -148,7 +148,7 @@ public:
 
 #pragma region ArmRecoil
 public:
-	virtual void AddArmRecoil(float AdditionalRecoilAmountX = 0.f, float AdditionalRecoilAmountY = 0.f, float AdditionalRecoilAmountZ = 0.f) override;
+	virtual void AddArmRecoil(FArmRecoilStruct* armrecoil = nullptr, float AdditionalRecoilAmountX = 0.f, float AdditionalRecoilAmountY = 0.f, float AdditionalRecoilAmountZ = 0.f) override;
 protected:
 	bool bIsArmRecoiling = false;
 
@@ -223,7 +223,7 @@ protected:
 	FTransform RightHandSocketSpringDamperTransform;
 
 protected:
-	float DamperScale;
+	FVector DamperScale;
 
 	FVector Stiffness;
 	FVector Damping;

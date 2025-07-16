@@ -134,8 +134,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void DetachWeaponFromPlayer();
 
-	void FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
-	void FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil = nullptr, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil = nullptr, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 
 #pragma region HitScan
 protected:
@@ -530,7 +530,7 @@ protected:
 protected:
 	void StartTargetDetection();
 	void UpdateTargetDetection(float DeltaTime);
-	void StopTargetDetection(const TSubclassOf<ASuraProjectile>& InProjectileClass);
+	void StopTargetDetection(const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil = nullptr);
 
 	bool SearchOverlappedActor(FVector CenterLocation, float SearchRadius, TArray<AActor*>& OverlappedActors);
 	TTuple<FVector2D, bool> GetScreenPositionOfWorldLocation(const FVector& SearchLocation) const;
@@ -548,8 +548,8 @@ protected:
 	float MissileLaunchDelay = 0.2;
 	FTimerHandle MissileLaunchTimer;
 protected:
-	void StartMissileLaunch(TArray<AActor*> TargetActors, const TSubclassOf<ASuraProjectile>& InProjectileClass);
-	void UpdateMissileLaunch(const TSubclassOf<ASuraProjectile>& InProjectileClass);
+	void StartMissileLaunch(TArray<AActor*> TargetActors, const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil = nullptr);
+	void UpdateMissileLaunch(const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil = nullptr);
 	void StopMissileLaunch();
 #pragma endregion
 
@@ -611,8 +611,9 @@ public:
 #pragma region Recoil/ArmAnimation
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
-	FArmRecoilStruct ArmRecoil;
-
+	FArmRecoilStruct ArmRecoil_L;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil_R;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
 	FArmRecoilStruct ArmRecoil_Hand;
@@ -621,8 +622,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
 	FArmRecoilStruct ArmRecoil_LowerArm;
 public:
-	void AddArmRecoil();
-
+	void AddArmRecoil(FArmRecoilStruct* armrecoil = nullptr);
 	FArmRecoilStruct* GetArmRecoilInfo();
 	FArmRecoilStruct* GetArmRecoilInfo_Hand();
 	FArmRecoilStruct* GetArmRecoilInfo_UpperArm();

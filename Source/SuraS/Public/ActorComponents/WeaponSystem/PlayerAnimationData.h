@@ -15,7 +15,7 @@ struct SURAS_API FPlayerAnimationData : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpringDamper")
-	float DamperScale = 0.05f;
+	FVector DamperScale = {0.01f, 0.01f, 0.03f};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpringDamper")
 	FVector Stiffness = {100.f, 100.f, 100.f};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpringDamper")
