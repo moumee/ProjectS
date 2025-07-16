@@ -276,6 +276,7 @@ protected:
 	float WallRunCameraTiltInterpSpeed = 5.f;
 	float WallRunCameraTiltAngle = 15.f;
 	float PreWallRunDetectionRange = 200.f;
+	float WallRunJumpNormalForce = 1800.f;
 
 	bool bTiltRecovering = false;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|WallRun")
