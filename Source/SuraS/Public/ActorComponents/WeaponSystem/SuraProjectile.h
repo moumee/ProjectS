@@ -89,6 +89,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
 	float InitialRadius = 10.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
+	float ProjectileRadius;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosive")
 	bool bIsExplosive = false;
 
@@ -124,7 +127,7 @@ protected:
 
 public:	
 	ASuraProjectile();
-	void InitializeProjectile(AActor* Owner, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0);
+	void InitializeProjectile(AActor* Owner, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0, bool HitScan = false);
 	void LoadProjectileData();
 	void SetHomingTarget(bool bIsHoming, AActor* Target);
 	void LaunchProjectile();
@@ -161,6 +164,19 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void BeginDestroy() override;
+
+#pragma region HitScan
+protected:
+	bool bIsHitScan = false;
+	bool bActivatedMeshMovementForHitScan = false;
+	TArray<FVector> HitScanEndPoints;
+	void PerformHitScan(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, TArray<FVector>& OutHitLocations);
+	void UpdateHitScanProjectileMovement(float DeltaTime);
+public:
+	void SetHitScanActive(bool bflag);
+	void LaunchHitScan(FVector StartLocation, FVector TraceDirection);
+
+#pragma endregion
 
 #pragma region Penetration
 protected:
@@ -206,7 +222,7 @@ protected:
 #pragma region Ricochet
 protected:
 	bool CheckRicochetAngle(FVector normal, FVector vel);
-
-#pragma endregion
+	FVector GetReflectionAngle(FVector normal, FVector input);
+#pragma endregion;
 
 };
