@@ -83,11 +83,7 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 			SetAimPoint();
 			UpdateWeapon();
 
-			//UpdateSpringDamper(DeltaTime);
-			//UpdateSpringDamper_Test(DeltaTime);
-			//UpdateSpringDamper_Test_2(DeltaTime);
-			UpdateSpringDamper_Test_3(DeltaTime);
-
+			UpdateSpringDamper(DeltaTime);
 
 			UpdateArmRecoil(DeltaTime);
 			ConvertRecoilValueFrame();
@@ -510,7 +506,7 @@ float USuraPlayerAnimInstance_Weapon::fast_negexp(float x)
 {
 	return 1.0f / (1.0f + x + 0.48f * x * x + 0.235f * x * x * x);
 }
-void USuraPlayerAnimInstance_Weapon::SpringDamepr(FVector CurrPos, FVector CurrVel, FVector GoalPos, FVector GoalVel, FVector& OutPos, FVector& OutVel, FVector stiffness, FVector damping, float DeltaTime, float eps)
+void USuraPlayerAnimInstance_Weapon::SpringDamper(FVector CurrPos, FVector CurrVel, FVector GoalPos, FVector GoalVel, FVector& OutPos, FVector& OutVel, FVector stiffness, FVector damping, float DeltaTime, float eps)
 {
 	FVector x = CurrPos;
 	FVector v = CurrVel;
@@ -657,10 +653,10 @@ void USuraPlayerAnimInstance_Weapon::UpdateSpringDamper(float DeltaTime)
 	FVector OutPos; //Actor
 	FVector OutVel; //Actor
 
-	SpringDamepr(CurrPos, CurrVel, GoalPos, GoalVel, OutPos, OutVel, Stiffness, Damping, DeltaTime); //Local 기준 계산
+	SpringDamper(CurrPos, CurrVel, GoalPos, GoalVel, OutPos, OutVel, Stiffness, Damping, DeltaTime); //Local 기준 계산
 
 	//UE_LOG(LogTemp, Warning, TEXT("GoalVel: %s"), *GoalVel.ToString());
-	UE_LOG(LogTemp, Warning, TEXT("GoalPos: %s"), *GoalPos.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("GoalPos: %s"), *GoalPos.ToString());
 	//UE_LOG(LogTemp, Warning, TEXT("CurrVel: %s"), *CurrVel.ToString());
 	//UE_LOG(LogTemp, Warning, TEXT("CurrPos: %s"), *CurrPos.ToString());
 

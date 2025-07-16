@@ -229,7 +229,7 @@ protected:
 	FVector Damping;
 
 	float fast_negexp(float x);
-	void SpringDamepr_2(FVector CurrPos, FVector CurrVel, FVector GoalPos, FVector GoalVel, FVector& OutPos, FVector& OutVel, FVector stiffness, FVector damping, float DeltaTime, float eps = 1e-6f);
+	void SpringDamper(FVector CurrPos, FVector CurrVel, FVector GoalPos, FVector GoalVel, FVector& OutPos, FVector& OutVel, FVector stiffness, FVector damping, float DeltaTime, float eps = 1e-6f);
 	void UpdateSpringDamper(float DeltaTime);
 #pragma endregion
 

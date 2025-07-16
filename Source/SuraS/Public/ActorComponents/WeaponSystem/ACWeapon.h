@@ -134,12 +134,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void DetachWeaponFromPlayer();
 
-	/** Make the weapon Fire a Projectile */
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 	void FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
-	void SpawnProjectile();
 
+#pragma region HitScan
+protected:
+	bool bIsHitScan_Left = false;
+	bool bIsHitScan_Right = false;
+
+	void FireSingleHitScan(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
+	void FireMultiHitScan();
+#pragma endregion
+
+public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void ZoomToggle();
 

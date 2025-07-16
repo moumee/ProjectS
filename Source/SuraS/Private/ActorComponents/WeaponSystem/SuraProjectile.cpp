@@ -26,10 +26,11 @@ ASuraProjectile::ASuraProjectile()
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	//CollisionComp->InitSphereRadius(5.0f);
 	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
-	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel1);
+	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel6);
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); //Projectile
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Ignore); //Weapon
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Ignore); //Player
+	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Ignore); //PlayerProjectile
 	CollisionComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 
 	//CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);		// set up a notification for when this component hits something blocking
@@ -66,7 +67,7 @@ ASuraProjectile::ASuraProjectile()
 	UE_LOG(LogTemp, Warning, TEXT("Projectile is Spawned!!!"));
 }
 
-void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable)
+void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable, bool HitScan)
 {
 	if (IsValid(OwnerWeapon))
 	{
@@ -81,28 +82,35 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 		SpawnTrailEffect();
 	}
 
-	if (NumPenetrable > 0 || bCanPenetrate)
+	if (HitScan)
 	{
-		CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
-		CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
-
-		CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-
+		bIsHitScan = HitScan;
 		NumPenetrableObjects = NumPenetrable;
 		UE_LOG(LogTemp, Error, TEXT("Projectile Penetrable Num: %d"), NumPenetrableObjects);
 	}
 	else
 	{
-		CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
+		if (NumPenetrable > 0 || bCanPenetrate)
+		{
+			CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
+			CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
+			CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+			NumPenetrableObjects = NumPenetrable;
+			UE_LOG(LogTemp, Error, TEXT("Projectile Penetrable Num: %d"), NumPenetrableObjects);
+		}
+		else
+		{
+			CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
+		}
 	}
 
 	if (bCanSimpleBounce)
 	{
 		// MEMO: Test
-		ProjectileMovement->bShouldBounce = true; // ��ź Ȱ��ȭ
-		ProjectileMovement->Bounciness = 0.6f;    // �ݻ� ź�� (0~1)
-		ProjectileMovement->Friction = 0.2f;      // ǥ�� ����
-		ProjectileMovement->BounceVelocityStopSimulatingThreshold = 10.0f; // �Ӱ� �ӵ� ������ �� ����
+		ProjectileMovement->bShouldBounce = true; 
+		ProjectileMovement->Bounciness = 0.6f;    //(0~1)
+		ProjectileMovement->Friction = 0.2f;     
+		ProjectileMovement->BounceVelocityStopSimulatingThreshold = 10.0f;
 		ProjectileMovement->bRotationFollowsVelocity = true;
 	}
 
@@ -111,6 +119,7 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 
 	if (AdditionalRadius > 0.f)
 	{
+		ProjectileRadius = InitialRadius + AdditionalRadius;
 		CollisionComp->SetSphereRadius(InitialRadius + AdditionalRadius);
 	}
 
@@ -172,25 +181,24 @@ void ASuraProjectile::LoadProjectileData()
 void ASuraProjectile::SetHomingTarget(bool bIsHoming, AActor* Target)
 {
 	ProjectileMovement->bIsHomingProjectile = bIsHoming;
-	ProjectileMovement->HomingAccelerationMagnitude = HomingAccelerationMagnitude;
-	ProjectileMovement->HomingTargetComponent = Target->GetRootComponent();
 
-	TargetEnemy = Cast<ASuraCharacterEnemyBase>(Target);
-	if (TargetEnemy)
+	if (bIsHoming)
 	{
-		RecentTargetLocation = TargetEnemy->GetActorLocation();
+		ProjectileMovement->HomingAccelerationMagnitude = HomingAccelerationMagnitude;
+		ProjectileMovement->HomingTargetComponent = Target->GetRootComponent();
+
+		TargetEnemy = Cast<ASuraCharacterEnemyBase>(Target);
+		if (TargetEnemy)
+		{
+			RecentTargetLocation = TargetEnemy->GetActorLocation();
+		}
+		//UE_LOG(LogTemp, Warning, TEXT("Homing!!!"));
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("Homing!!!"));
 }
 
 void ASuraProjectile::LaunchProjectile()
 {
 	ProjectileMovement->Activate();
-
-	//if (ProjectileMovement->bIsHomingProjectile)
-	//{
-	//	UE_LOG(LogTemp, Error, TEXT("Is Homing!"));
-	//}
 }
 
 void ASuraProjectile::ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector CenterLocation)
@@ -235,8 +243,6 @@ void ASuraProjectile::ApplyDamage(AActor* OtherActor, float DamageAmount, EDamag
 	Damage.bCanForceDamage = bCanForceDamage;
 	Damage.BoneName = BoneName;
 
-	
-
 	if (OtherActor->GetClass()->ImplementsInterface(UDamageable::StaticClass()))
 	{
 		Cast<IDamageable>(OtherActor)->TakeDamage(Damage, this->ProjectileOwner);
@@ -255,7 +261,6 @@ bool ASuraProjectile::SearchOverlappedActor(FVector CenterLocation, float Search
 
 void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	//TODO: ������ �ʿ���
 	//TODO: Projectile�� �ٸ� actor���� hit ���� ��, OtherActor�� ������ ���� �ٸ� event �߻���Ű��. Interface ����ϱ�
 	if (bCanPenetrate)
 	{
@@ -358,6 +363,8 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	UE_LOG(LogTemp, Error, TEXT("Projectile Overlapped!!!"));
+
 	if (NumPenetrableObjects > 0 || bCanPenetrate)
 	{
 		if (OtherActor != nullptr)
@@ -388,6 +395,8 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 				else
 				{
 					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName);
+
+					UE_LOG(LogTemp, Error, TEXT("Projectile Overlapped!!!"));
 
 					if (Cast<ACharacter>(OtherActor))
 					{
@@ -539,6 +548,143 @@ void ASuraProjectile::DrawSphere(FVector Location, float Radius)
 	);
 }
 
+#pragma region HitScan
+void ASuraProjectile::SetHitScanActive(bool bflag)
+{
+	bIsHitScan = bflag;
+}
+void ASuraProjectile::LaunchHitScan(FVector StartLocation, FVector TraceDirection)
+{
+	PerformHitScan(StartLocation, TraceDirection, 50000.f, ProjectileRadius, HitScanEndPoints); //TODO: MaxDistnace 설정해야함
+
+	bActivatedMeshMovementForHitScan = true;
+
+}
+void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, TArray<FVector>& OutHitLocations)
+{
+	FVector Start = StartLocation;
+	FVector Direction = TraceDirection;
+	FVector End = StartLocation + TraceDirection * MaxDistance;
+
+	//TArray<FHitResult> HitResults;
+
+	TArray<FVector> HitStaticLocations;
+
+	FCollisionObjectQueryParams ObjectQueryParams;
+	//ObjectQueryParams.AddObjectTypesToQuery(ECC_Visibility);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(ProjectileOwner);
+	Params.AddIgnoredComponent(Weapon->GetWeaponMesh());
+	Params.AddIgnoredComponent(ProjectileMesh);
+	Params.AddIgnoredActor(this);
+
+
+	//-------------------------------
+	for (int32 RicochetCount = 0; RicochetCount <= MaxRicochetCount; RicochetCount++)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("reflection"));
+
+		TArray<FHitResult> TempHitResults;
+
+		bool bHit = GetWorld()->SweepMultiByObjectType(
+			TempHitResults,
+			Start,
+			End,
+			FQuat::Identity,
+			ObjectQueryParams,
+			FCollisionShape::MakeSphere(SphereRadius),
+			Params
+		);
+		
+		DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 10.f);
+
+		bool bIsBlockedByWorldStatic = false;
+
+		if (bHit)
+		{
+			TArray<AActor*> OnceDamagedEnemies;
+			for (const FHitResult& HitResult : TempHitResults)
+			{
+				// Damage
+				if (NumPenetratedObjects <= NumPenetrableObjects)
+				{
+					ACharacter* Enemy = Cast<ACharacter>(HitResult.GetActor());
+					if (Enemy && !OnceDamagedEnemies.Contains(Enemy))
+					{
+						OnceDamagedEnemies.AddUnique(Enemy);
+
+						if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(HitResult))
+						{
+							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, HitResult.BoneName);
+
+							if (OnHeadShot.IsBound())
+							{
+								OnHeadShot.Execute();
+							}
+						}
+						else
+						{
+							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName);
+							UE_LOG(LogTemp, Error, TEXT("bone11: %s"), *HitResult.BoneName.ToString());
+							if (OnBodyShot.IsBound())
+							{
+								OnBodyShot.Execute();
+							}
+						}
+
+						UpdatePenetration();
+					}
+				}
+
+
+				//WorldStatic
+				if (HitResult.GetComponent()->GetCollisionObjectType() == ECC_WorldStatic)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("ECC_WorldStatic"));
+
+					HitStaticLocations.Add(HitResult.ImpactPoint);
+					DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 12, FColor::Red, false, 50.f);
+
+					Start = HitResult.ImpactPoint;
+
+					if (CheckRicochetAngle(HitResult.ImpactNormal, Direction))
+					{
+						UE_LOG(LogTemp, Warning, TEXT("CheckRicochetAngle"));
+
+						Direction = GetReflectionAngle(HitResult.ImpactNormal, Direction);
+						Start = Start + Direction.GetSafeNormal() * (SphereRadius + 1.f);
+						End = Start + Direction * MaxDistance;
+						CurrentRicochetCount++;
+					}
+					else
+					{
+						RicochetCount = MaxRicochetCount + 1;
+					}
+					bIsBlockedByWorldStatic = true;
+					break;
+				}
+			}
+		}
+
+		if (!bHit || !bIsBlockedByWorldStatic)
+		{
+			HitStaticLocations.Add(End);
+			break;
+		}		
+	}
+
+	OutHitLocations = HitStaticLocations;
+}
+void ASuraProjectile::UpdateHitScanProjectileMovement(float DeltaTime)
+{
+
+}
+#pragma endregion
+
 #pragma region Penetration
 void ASuraProjectile::UpdatePenetration() //TODO: ���� �Լ��� �߾�� �߳�?
 {
@@ -641,6 +787,13 @@ bool ASuraProjectile::CheckRicochetAngle(FVector normal, FVector vel)
 {
 	return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(-normal.GetSafeNormal(), vel.GetSafeNormal()))) > MinIncidenceAngle;
 }
+FVector ASuraProjectile::GetReflectionAngle(FVector normal, FVector input)
+{
+	FVector norm = normal.GetSafeNormal();
+	FVector in = input.GetSafeNormal();
+
+	return in - 2 * (FVector::DotProduct(in, norm) * norm);
+}
 #pragma endregion
 
 
@@ -657,6 +810,12 @@ void ASuraProjectile::Tick(float DeltaTime)
 
 	UpdateTrailEffect();
 	UpdateTargetInfo();
+
+	if (bIsHitScan)
+	{
+		//Projectile Movement Update
+
+	}
 }
 
 void ASuraProjectile::EndPlay(const EEndPlayReason::Type EndPlayReason)
