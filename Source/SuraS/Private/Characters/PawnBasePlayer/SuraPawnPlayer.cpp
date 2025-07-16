@@ -138,7 +138,8 @@ void ASuraPawnPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::HandleMoveInput);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::HandleMoveInput);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::HandleLookInput);
-		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::ToggleRunInput);
+		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartRunInput);
+		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopRunInput);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartJumpInput);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopJumpInput);
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartDashInput);
@@ -203,7 +204,7 @@ void ASuraPawnPlayer::HandleLookInput(const FInputActionValue& Value)
 	AddControllerPitchInput(InputVector.Y);
 }
 
-void ASuraPawnPlayer::ToggleRunInput()
+void ASuraPawnPlayer::StartRunInput()
 {
 	if (!MovementComponent)
 	{
@@ -211,8 +212,21 @@ void ASuraPawnPlayer::ToggleRunInput()
 		return;
 	}
 	
-	MovementComponent->ToggleRunPressed();
+	MovementComponent->SetRunPressed(true);
 }
+
+void ASuraPawnPlayer::StopRunInput()
+{
+	if (!MovementComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player movement component is not valid!"));
+		return;
+	}
+	
+	MovementComponent->SetRunPressed(false);
+}
+
+
 
 
 void ASuraPawnPlayer::StartJumpInput()

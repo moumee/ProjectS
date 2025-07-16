@@ -76,7 +76,7 @@ public:
 
 	void SetMovementInputVector(const FVector2D& InMovementInputVector);
 
-	void ToggleRunPressed();
+	void SetRunPressed(bool bPressed);
 
 	void SetJumpPressed(bool bPressed);
 

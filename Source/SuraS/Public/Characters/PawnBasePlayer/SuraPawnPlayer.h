@@ -136,7 +136,8 @@ protected:
 
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);
-	void ToggleRunInput();
+	void StartRunInput();
+	void StopRunInput();
 	void StartJumpInput();
 	void StopJumpInput();
 	void StartDashInput();

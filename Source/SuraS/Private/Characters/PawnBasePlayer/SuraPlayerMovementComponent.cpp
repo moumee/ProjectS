@@ -383,11 +383,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		}
 		else
 		{
-			if (bRunPressed)
-			{
-				bRunPressed = false;
-				bIsRunning = !bIsRunning;
-			}
+			bIsRunning = bRunPressed;
 
 			if (bIsRunning)
 			{
@@ -1546,9 +1542,9 @@ void USuraPlayerMovementComponent::SetMovementInputVector(const FVector2D& InMov
 	MovementInputVector = InMovementInputVector;
 }
 
-void USuraPlayerMovementComponent::ToggleRunPressed()
+void USuraPlayerMovementComponent::SetRunPressed(bool bPressed)
 {
-	bRunPressed = true;
+	bRunPressed = bPressed;
 }
 
 void USuraPlayerMovementComponent::SetMovementState(EMovementState NewState)
