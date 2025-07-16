@@ -314,6 +314,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
 	int32 CurrentJumpCount = 0;
 
+	float CoyoteTime = 0.2f;
+	float AirborneStartTime;
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
+	bool bCoyoteTimeActivated = false;
+
 #pragma endregion Jump
 
 #pragma region Slide

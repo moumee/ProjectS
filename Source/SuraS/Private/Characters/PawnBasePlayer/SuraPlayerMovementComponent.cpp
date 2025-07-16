@@ -89,6 +89,7 @@ void USuraPlayerMovementComponent::InitMovementData()
 	SlideInitialWindow = Row->SlideInitialWindow;
 	SlideMaxDuration = Row->SlideMaxDuration;
 	GroundPointDetectionLength = Row->GroundPointDetectionLength;
+	CoyoteTime = Row->CoyoteTime;
 }
 
 void USuraPlayerMovementComponent::AddControllerRoll(float DeltaTime, const FVector& WallRunDirection, EWallRunSide WallRunSide)
@@ -289,7 +290,10 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 	if (!IsGrounded())
 	{
-		CurrentJumpCount++;
+		AirborneStartTime = GetWorld()->GetTimeSeconds();
+		bCoyoteTimeActivated = true;
+		
+		// CurrentJumpCount++; Commented out since we are going to implement coyote time!
 		OnAirborne.Broadcast();
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
@@ -542,6 +546,9 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 	
 	if (!IsGrounded() || GroundHit.ImpactNormal.Z < MinWalkableFloorZ)
 	{
+		AirborneStartTime = GetWorld()->GetTimeSeconds();
+		bCoyoteTimeActivated = true;
+		
 		bShouldKeepSlideSpeed = true;
 		LastSlideSpeedBeforeAirborne = Velocity;
 		OnAirborne.Broadcast();
@@ -937,17 +944,35 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	}
 
 	Velocity.Z = FMath::Max(Velocity.Z - GravityScale * DeltaTime, -MaxFallVerticalSpeed);
-	
 
-	if (bJumpPressed)
+	if (bCoyoteTimeActivated)
+	{
+		if (GetWorld()->GetTimeSeconds() - AirborneStartTime > CoyoteTime)
+		{
+			bCoyoteTimeActivated = false;
+			CurrentJumpCount++; // Prevent performing two jumps in air when player fell off
+		}
+	}
+
+	if (bJumpPressed && CurrentJumpCount < MaxJumpCount)
 	{
 		bJumpPressed = false;
-		if (CurrentJumpCount < MaxJumpCount)
+		CurrentJumpCount++;
+		
+		if (bCoyoteTimeActivated)
+		{
+			bCoyoteTimeActivated = false;
+			Velocity.Z = PrimaryJumpZVelocity;
+			if (bIsDashing) bHasDashedInAir = true;
+
+			OnPrimaryJump.Broadcast();
+			
+		}
+		else
 		{
 			// Commented out to prevent infinite slide boost using slide jump
 			// bHasRecentlySlid = false;
 			SlideElapsedTime = 0.f;
-			CurrentJumpCount++;
 			OnDoubleJump.Broadcast();
 			Velocity.Z = DoubleJumpZVelocity;
 		}
@@ -1451,6 +1476,8 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 		bShouldKeepSlideSpeed = false;
 		ElapsedTimeFromSurface = 0.f;
 		CurrentJumpCount = 0;
+
+		bCoyoteTimeActivated = false;
 	}
 
 	if (NewState == EMovementState::EMS_Mantle)

@@ -110,5 +110,8 @@ struct SURAS_API FPawnPlayerMovementRow : public FTableRowBase
 	
 	UPROPERTY(EditAnywhere, Category = "Movement")
     float GroundPointDetectionLength = 1000.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float CoyoteTime = 0.2f;
 	
 };
