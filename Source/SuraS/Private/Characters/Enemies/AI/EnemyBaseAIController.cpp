@@ -9,9 +9,10 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Navigation/CrowdFollowingComponent.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
 
-AEnemyBaseAIController::AEnemyBaseAIController(FObjectInitializer const& ObjectInitializer)
+AEnemyBaseAIController::AEnemyBaseAIController(FObjectInitializer const& ObjectInitializer) 
 {
 	SetupPerceptionSystem();
 }
@@ -39,6 +40,9 @@ void AEnemyBaseAIController::OnPossess(APawn* PossessedPawn)
 			if (const auto EnemyAttributesData = Enemy->EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(Enemy->GetEnemyType(), ""))
 			{
 				InitializeBlackBoard(EnemyAttributesData->StrafeRadius, EnemyAttributesData->ChaseStrafeRadius, EnemyAttributesData->AttackRadius, EnemyAttributesData->AttackRate);
+
+				SightConfig->SightRadius = EnemyAttributesData->MaxSightRadius;
+				SightConfig->PeripheralVisionAngleDegrees = EnemyAttributesData->SightAngle;
 			}
 
 			RunBehaviorTree(BehaviorTree);

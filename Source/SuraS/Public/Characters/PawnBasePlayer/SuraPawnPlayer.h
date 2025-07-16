@@ -90,7 +90,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "WeaponSystem")
 	TObjectPtr<UWeaponSystemComponent> WeaponSystem;  // <WeaponSystem>
-	// This actor component is for handling camera shakes and state based movement
+	
+	// This actor component is for handling camera shakes and state-based movement
 	// IT IS NOT THE CAMERA!!
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<USuraPlayerCameraComponent> CameraMovementComponent;
@@ -125,7 +126,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	TObjectPtr<UInputAction> CrouchAction;
-	
+
+	FTimerHandle PlayerHealthCheckTimer;
+	float ConditionalPlayerHP = 50.f;
+	float CorrectionSystemCheckTime = 10.f;
+	void CheckPlayerHealth();
 
 	FVector2D PlayerLookInputVector2D; // <WeaponSystem>
 

@@ -106,16 +106,15 @@ public:
 	bool IsDashing() const { return bIsDashing; }
 
 	UFUNCTION(BlueprintCallable)
+	float GetDashGauge() const { return DashGauge; }
+
+	UFUNCTION(BlueprintCallable)
 	float GetRunSpeed() const { return RunSpeed; }
 
 	UFUNCTION(BlueprintCallable)
 	float GetWalkSpeed() const { return WalkSpeed; }
 
 	EMovementState GetMovementState() const { return CurrentMovementState; }
-
-	int32 GetAvailableDashCount() const { return AvailableDashCount; }
-
-	TArray<float> GetDashCooldowns() const { return DashCooldowns; }
 
 	FOnMove	OnMove;
 	FOnWallRun OnWallRun;
@@ -277,6 +276,7 @@ protected:
 	float WallRunCameraTiltInterpSpeed = 5.f;
 	float WallRunCameraTiltAngle = 15.f;
 	float PreWallRunDetectionRange = 200.f;
+	float WallRunJumpNormalForce = 1800.f;
 
 	bool bTiltRecovering = false;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|WallRun")
@@ -293,13 +293,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	bool bIsDashing = false;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
-	TArray<float> DashCooldowns;
-	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
-	int32 AvailableDashCount = 2;
-	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	float ElapsedTimeFromDash = 0.f;
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
 	bool bHasDashedInAir = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
+	float DashGauge = 2.f;
 
 #pragma endregion Dash
 
@@ -421,6 +420,6 @@ protected:
 
 	void TickMantle(float DeltaTime);
 
-	void UpdateDashCooldowns(float DeltaTime);
+	void UpdateDashGauge(float DeltaTime);
 
 };

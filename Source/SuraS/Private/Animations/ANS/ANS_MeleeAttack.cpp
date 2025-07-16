@@ -20,7 +20,7 @@ void UANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 
 	if (Enemy && MeshComp)
 	{
-		FHitResult Hit;
+		TArray<FHitResult> Hits;
 		FCollisionQueryParams CollisionQueryParams;
 		CollisionQueryParams.AddIgnoredActor(GetEnemyChar());
 
@@ -28,8 +28,8 @@ void UANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 		const FVector End = Start + GetEnemyChar()->GetActorForwardVector() * Enemy->GetMeleeAttackRange();
 
 		// ANS cannot access GetWorld directly! Must be accessed through MeshComp or whoever has access to GetWorld function first
-		bool bHit = MeshComp->GetWorld()->SweepSingleByChannel(
-			Hit,
+		bool bHit = MeshComp->GetWorld()->SweepMultiByChannel(
+			Hits,
 			Start,
 			End,
 			FQuat::Identity,
@@ -40,18 +40,21 @@ void UANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 
 		if (bHit && bCanInflictDamage)
 		{
-			// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("poyo"));
-
-			if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(Hit.GetActor()))
+			for (auto Hit : Hits)
 			{
+				if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(Hit.GetActor()))
+				{
 
-				FDamageData DamageData;
-				DamageData.DamageAmount = Enemy->GetAttackDamageAmount() + AdditionalDamageAmount;
-				DamageData.DamageType = EDamageType::Melee;
+					FDamageData DamageData;
+					DamageData.DamageAmount = Enemy->GetAttackDamageAmount() + AdditionalDamageAmount;
+					DamageData.DamageType = EDamageType::Melee;
 
-				Player->TakeDamage(DamageData, GetEnemyChar());
+					Player->TakeDamage(DamageData, GetEnemyChar());
 
-				bCanInflictDamage = false;
+					bCanInflictDamage = false;
+
+					break;
+				}
 			}
 		}
 

@@ -6,11 +6,14 @@
 #include "Blueprint/UserWidget.h"
 #include "WeaponAimUIWidget.generated.h"
 
+
 class ASuraProjectile;
 
 class UImage;
 class UOverlay;
 class UProgressBar;
+class UTextBlock;
+class ASuraPawnPlayer;
 
 UCLASS()
 class SURAS_API UWeaponAimUIWidget : public UUserWidget
@@ -108,11 +111,15 @@ protected:
 #pragma endregion
 
 #pragma region DashCounter
-public:
+protected:
 	// WeaponAimUIWidget.h
 	FTimerHandle LeftDashTimerHandle;
 	FTimerHandle RightDashTimerHandle;
 
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* DashGauge;
+
+	float fDashGauge;
 	
 	// Dash Counter
 	UPROPERTY(meta = (BindWidget))
@@ -121,9 +128,11 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* RightDashCounter;
 	
-	void StartRecovery(float AmountToRecover, float RecoveryDuration);
-	void AnimateProgress(UProgressBar* TargetBar, float From, float To, float Duration);
-	bool TryUseDash(float CooldownTimePer1Gauge);
+	ASuraPawnPlayer* SuraPawnPlayer;
+
+public:
+	void SetDashGauge();
+	void UpdateDashUI(float InDashGauge);
 
 
 #pragma endregion 

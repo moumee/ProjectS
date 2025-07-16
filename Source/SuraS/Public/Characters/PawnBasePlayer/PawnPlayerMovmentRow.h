@@ -86,6 +86,9 @@ struct SURAS_API FPawnPlayerMovementRow : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
 	float WallRunJumpAirSpeed2D = 1400.f;
+	
+	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
+	float WallRunJumpNormalForce = 1800.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|WallRun")
 	float WallRunCameraTiltAngle = 15.f;

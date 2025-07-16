@@ -124,7 +124,7 @@ public:
 
 	virtual void OnClimbEnded(UAnimMontage* AnimMontage, bool bInterrupted);
 
-	virtual void LungeToTarget();
+	virtual void LungeToTarget(float LungeForce);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	TArray<UAnimMontage*> HitAnimations;

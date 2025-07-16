@@ -9,11 +9,11 @@
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
+#include "ActorComponents/WeaponSystem/WeaponAimUIWidget.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "GameFramework/SpringArmComponent.h"
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Widgets/Player/PlayerHitWidget.h"
@@ -91,6 +91,11 @@ void ASuraPawnPlayer::BeginPlay()
 			HitEffectWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
+
+	FTimerDelegate PlayerHealthCheckTimerDelegate;
+	PlayerHealthCheckTimerDelegate.BindUObject(this, &ASuraPawnPlayer::CheckPlayerHealth);
+	GetWorld()->GetTimerManager().SetTimer(PlayerHealthCheckTimer, PlayerHealthCheckTimerDelegate,
+		CorrectionSystemCheckTime, true);
 }
 
 UCapsuleComponent* ASuraPawnPlayer::GetCapsuleComponent()
@@ -157,6 +162,16 @@ void ASuraPawnPlayer::PossessedBy(AController* NewController)
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+	}
+}
+
+void ASuraPawnPlayer::CheckPlayerHealth()
+{
+	// UE_LOG(LogTemp, Display, TEXT("Checked Player Health. Current Player Health : %f"), DamageSystemComponent->GetHealth());
+	if (DamageSystemComponent->GetHealth() <= ConditionalPlayerHP)
+	{
+		// Reduce the number of max tokens in the AttackTokensComponent
+		// Change the AI variables according to game documents
 	}
 }
 
