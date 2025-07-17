@@ -116,13 +116,10 @@ protected:
 	TObjectPtr<UInputAction> LookAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	TObjectPtr<UInputAction> RunAction;
-
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	TObjectPtr<UInputAction> JumpAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
-	TObjectPtr<UInputAction> DashAction;
+	TObjectPtr<UInputAction> ShiftAction;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	TObjectPtr<UInputAction> CrouchAction;
@@ -137,11 +134,10 @@ protected:
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);
 	void StartRunInput();
-	void StopRunInput();
 	void StartJumpInput();
 	void StopJumpInput();
-	void StartDashInput();
-	void StopDashInput();
+	void StartShiftInput();
+	void StopShiftInput();
 	void StartCrouchInput();
 	void StopCrouchInput();
 	

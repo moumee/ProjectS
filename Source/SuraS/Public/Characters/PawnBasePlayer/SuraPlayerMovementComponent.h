@@ -76,11 +76,9 @@ public:
 
 	void SetMovementInputVector(const FVector2D& InMovementInputVector);
 
-	void SetRunPressed(bool bPressed);
-
 	void SetJumpPressed(bool bPressed);
 
-	void SetDashPressed(bool bPressed);
+	void SetShiftPressed(bool bPressed);
 
 	void SetCrouchPressed(bool bPressed);
 
@@ -384,13 +382,10 @@ protected:
 	float MinWalkableFloorZ;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
-	bool bRunPressed = false;
-
-	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
 	bool bJumpPressed = false;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
-	bool bDashPressed = false;
+	bool bShiftPressed = false;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Crouch")
 	bool bCrouchPressed = false;
