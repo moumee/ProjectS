@@ -8,6 +8,7 @@
 #include "Interfaces/Damageable.h"
 #include "SuraPawnPlayer.generated.h"
 
+class UAmmoCounterWidget;
 class USuraPlayerCameraComponent;
 class USpringArmComponent;
 class USuraPlayerMovementComponent;
@@ -29,6 +30,7 @@ class SURAS_API ASuraPawnPlayer : public APawn, public IDamageable
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UUserWidget> HitEffectWidgetClass;
 
 	UPROPERTY()
@@ -67,8 +69,7 @@ public:
 
 	// SuraPawnPlayer.h - suhyeon
 	UFUNCTION(BlueprintCallable)
-	UWeaponAimUIWidget* GetWeaponAimUIWidget() const;
-
+	UPlayerHitWidget* GetPlayerHitWidget() const {return HitEffectWidget;}
 
 protected:
 
@@ -105,6 +106,10 @@ protected:
 	// UI component - suhyeon
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
 	UACUIMangerComponent* UIManager;
+
+	// AmmoWidget - suhyeon
+	UPROPERTY()
+	UAmmoCounterWidget* AmmoWidget;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
