@@ -76,11 +76,9 @@ public:
 
 	void SetMovementInputVector(const FVector2D& InMovementInputVector);
 
-	void ToggleRunPressed();
-
 	void SetJumpPressed(bool bPressed);
 
-	void SetDashPressed(bool bPressed);
+	void SetShiftPressed(bool bPressed);
 
 	void SetCrouchPressed(bool bPressed);
 
@@ -314,6 +312,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
 	int32 CurrentJumpCount = 0;
 
+	float CoyoteTime = 0.2f;
+	float AirborneStartTime;
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
+	bool bCoyoteTimeActivated = false;
+
 #pragma endregion Jump
 
 #pragma region Slide
@@ -379,13 +382,10 @@ protected:
 	float MinWalkableFloorZ;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
-	bool bRunPressed = false;
-
-	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
 	bool bJumpPressed = false;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Dash")
-	bool bDashPressed = false;
+	bool bShiftPressed = false;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Crouch")
 	bool bCrouchPressed = false;

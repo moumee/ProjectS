@@ -8,6 +8,7 @@
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Characters/Enemies/SuraCharacterEnemyMelee.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "Characters/Enemies/AI/EnemyBaseAIController.h"
 
 void AAugmentedEnemySpawner::BeginPlay()
 {
@@ -26,14 +27,23 @@ void AAugmentedEnemySpawner::OnDeathTriggered()
 {
 	NumOfEnemiesToWatch--;
 
+	ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(GetWorld()->GetFirstPlayerController()->GetPawn());
+
 	if (NumOfEnemiesToWatch <= 0)
 	{
 		EnemiesToWatch.Empty();
 
-		for (FSpawnEnemyInfo EnemyToSpawn : EnemiesToSpawn)
+		for (auto [EnemyTypeToSpawn, EnemyBT, NumOfEnemiesToSpawn] : EnemiesToSpawn)
 		{
-			for (int32 i = 0; i < EnemyToSpawn.NumOfEnemiesToSpawn; i++)
-				UAIBlueprintHelperLibrary::SpawnAIFromClass(GetWorld(), EnemyToSpawn.EnemyTypeToSpawn, EnemyToSpawn.EnemyBT, GetRandomLocation(), FRotator(0, 0, 0), true);
+			for (int32 i = 0; i < NumOfEnemiesToSpawn; i++) 
+			{
+				APawn* SpawnedPawn = UAIBlueprintHelperLibrary::SpawnAIFromClass(GetWorld(), EnemyTypeToSpawn, EnemyBT, GetRandomLocation(), FRotator(0, 0, 0), true);
+
+				if (ASuraCharacterEnemyBase* SpawnedEnemy = Cast<ASuraCharacterEnemyBase>(SpawnedPawn))
+				{
+					SpawnedEnemy->GetAIController()->SetStateToChaseOrPursue(Player);
+				}
+			}
 		}
 	}
 }
