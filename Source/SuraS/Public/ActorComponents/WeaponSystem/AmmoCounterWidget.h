@@ -6,7 +6,9 @@
 #include "Blueprint/UserWidget.h"
 #include "AmmoCounterWidget.generated.h"
 
+class UPlayerHitWidget;
 class UImage;
+class ASuraPawnPlayer;
 
 UCLASS()
 
@@ -24,6 +26,12 @@ public:
 	void UpdateAmmoCount(int32 NewAmmoCount);
 	void UpdateTotalAmmo(int32 NewTotalAmmo);
 
+	UPROPERTY(EditAnyWhere, BlueprintReadWrite, meta = (BindWidget))
+	UTextBlock* CurrentHitStageText = nullptr;
+
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	void NativeConstruct() override;
+
 #pragma region HpBar
 private:
 	// HP 단계별 이미지 배열
@@ -32,9 +40,15 @@ private:
 
 	// 현재 피격 단계 (0~5)
 	int32 CurrentHitStage = 0;
-
+	
 	// 마지막으로 피격된 시간
-	FTimerHandle RecoveryyTimerHandle;
+	FTimerHandle RecoveryTimerHandle;
+
+	UPROPERTY()
+	UPlayerHitWidget* PlayerHitWidget;
+
+	ASuraPawnPlayer* SuraPawnPlayer;
+	
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

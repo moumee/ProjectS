@@ -14,13 +14,26 @@ UCLASS()
 class SURAS_API UPlayerHitWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget, AllowPrivateAccess = "true"))
-	UImage* HitEffect = nullptr;
 
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
 	class UWidgetAnimation* FadeInOutAnimation;
 
+	virtual void NativeConstruct() override;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<UTexture2D*> HitEffectTextures;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<UTexture2D*> HitEffectBackgrounds;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* HitEffect;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* HitEffectBackground;
+
 public:
-	void PlayFadeAnimtion();
+	void PlayFadeAnimation();
+	void UpdateHitScreen(int32 Stage);
 };

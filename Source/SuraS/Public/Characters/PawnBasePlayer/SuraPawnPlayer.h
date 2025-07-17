@@ -30,6 +30,7 @@ class SURAS_API ASuraPawnPlayer : public APawn, public IDamageable
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UUserWidget> HitEffectWidgetClass;
 
 	UPROPERTY()
@@ -68,8 +69,7 @@ public:
 
 	// SuraPawnPlayer.h - suhyeon
 	UFUNCTION(BlueprintCallable)
-	UWeaponAimUIWidget* GetWeaponAimUIWidget() const;
-
+	UPlayerHitWidget* GetPlayerHitWidget() const {return HitEffectWidget;}
 
 protected:
 
