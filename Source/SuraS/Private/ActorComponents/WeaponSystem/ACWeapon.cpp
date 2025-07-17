@@ -783,7 +783,7 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 	}
 }
 
-void AWeapon::FireSingleHitScan(const TSubclassOf<ASuraProjectile>& InProjectileClass, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
+void AWeapon::FireSingleHitScan(const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
 {
 	UE_LOG(LogTemp, Error, TEXT("FireSingleHitScan!"));
 
@@ -888,13 +888,13 @@ void AWeapon::FireSingleHitScan(const TSubclassOf<ASuraProjectile>& InProjectile
 		{
 			AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
 			ApplyCameraShake(ZoomCameraShakeClass);
-			AddArmRecoil();
+			AddArmRecoil(armrecoil);
 		}
 		else
 		{
 			AddRecoilValue(&DefaultRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
 			ApplyCameraShake(DefaultCameraShakeClass);
-			AddArmRecoil();
+			AddArmRecoil(armrecoil);
 		}
 	}
 }
@@ -1655,7 +1655,7 @@ void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, int32 N
 		{
 			if (bIsHitScan_Left)
 			{
-				FireSingleHitScan(LeftProjectileClass, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
+				FireSingleHitScan(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
 			}
 			else
 			{
@@ -1673,7 +1673,7 @@ void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, int32 N
 		{
 			if (bIsHitScan_Right)
 			{
-				FireSingleHitScan(RightProjectileClass, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
+				FireSingleHitScan(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
 			}
 			else
 			{
@@ -1703,7 +1703,14 @@ void AWeapon::StartBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 Nu
 		{
 			if (bSingleProjectile)
 			{
-				FireSingleProjectile(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+				if (bIsHitScan_Left)
+				{
+					FireSingleHitScan(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+				}
+				else
+				{
+					FireSingleProjectile(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+				}
 			}
 			else
 			{
@@ -1714,7 +1721,14 @@ void AWeapon::StartBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 Nu
 		{
 			if (bSingleProjectile)
 			{
-				FireSingleProjectile(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+				if (bIsHitScan_Right)
+				{
+					FireSingleHitScan(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+				}
+				else
+				{
+					FireSingleProjectile(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+				}
 			}
 			else
 			{
@@ -1759,11 +1773,25 @@ void AWeapon::UpdateFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int3
 	{
 		if (bIsLeftInput)
 		{
-			FireSingleProjectile(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left);
+			if (bIsHitScan_Left)
+			{
+				FireSingleHitScan(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left);
+			}
+			else
+			{
+				FireSingleProjectile(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left);
+			}
 		}
 		else
 		{
-			FireSingleProjectile(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right);
+			if (bIsHitScan_Right)
+			{
+				FireSingleHitScan(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right);
+			}
+			else
+			{
+				FireSingleProjectile(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right);
+			}
 		}
 	}
 	else

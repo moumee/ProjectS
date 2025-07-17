@@ -65,16 +65,16 @@ public:
 	//}
 
 	FArmRecoilStruct(
-		FRotator InRecoilAmount_Rot = FRotator(),
-		FRotator InRecoilRangeMin_Rot = FRotator(),
-		FRotator InRecoilRangeMax_Rot = FRotator(),
+		FRotator InRecoilAmount_Rot = FRotator(10.f, -20.f, 10.f),
+		FRotator InRecoilRangeMin_Rot = FRotator(-1.f, -0.1f, -1.f),
+		FRotator InRecoilRangeMax_Rot = FRotator(1.f, 1.1f, 1.f),
 
-		FVector InRecoilAmount_Vec = FVector(),
-		FVector InRecoilRangeMin_Vec = FVector(),
-		FVector InRecoilRangeMax_Vec = FVector(),
+		FVector InRecoilAmount_Vec = FVector(17.f, 3.f, 3.f),
+		FVector InRecoilRangeMin_Vec = FVector(1.f, 1.f, -1.f),
+		FVector InRecoilRangeMax_Vec = FVector(1.1f, 1.1f, 1.1f),
 
-		float InRecoilSpeed = 4.f,
-		float InRecoilRecoverSpeed = 3.5f
+		float InRecoilSpeed = 10.f,
+		float InRecoilRecoverSpeed = 40.f
 	) :
 		Recoil_Rot(InRecoilAmount_Rot),
 		RecoilRangeMin_Rot(InRecoilRangeMin_Rot),

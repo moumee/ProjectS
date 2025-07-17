@@ -170,7 +170,13 @@ protected:
 	bool bIsHitScan = false;
 	bool bActivatedMeshMovementForHitScan = false;
 	TArray<FVector> HitScanEndPoints;
+	int32 CurrEndPointIdx = 0;
+	float HitScanProjectileVelocity;
+	float DistanceMoved;
+	float TargetDistance;
+	FVector MovementDirection;
 	void PerformHitScan(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, TArray<FVector>& OutHitLocations);
+	void InitHitScanProjectileMovement();
 	void UpdateHitScanProjectileMovement(float DeltaTime);
 public:
 	void SetHitScanActive(bool bflag);
