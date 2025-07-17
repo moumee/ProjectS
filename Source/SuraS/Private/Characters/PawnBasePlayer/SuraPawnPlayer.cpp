@@ -9,6 +9,7 @@
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
+#include "ActorComponents/WeaponSystem/AmmoCounterWidget.h"
 #include "ActorComponents/WeaponSystem/WeaponAimUIWidget.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
@@ -96,6 +97,9 @@ void ASuraPawnPlayer::BeginPlay()
 	PlayerHealthCheckTimerDelegate.BindUObject(this, &ASuraPawnPlayer::CheckPlayerHealth);
 	GetWorld()->GetTimerManager().SetTimer(PlayerHealthCheckTimer, PlayerHealthCheckTimerDelegate,
 		CorrectionSystemCheckTime, true);
+
+	AmmoWidget = WeaponSystem->GetCurrentWeapon()->GetAmmoCounterWidget();
+
 }
 
 UCapsuleComponent* ASuraPawnPlayer::GetCapsuleComponent()
@@ -313,6 +317,17 @@ void ASuraPawnPlayer::OnDamaged()
 {
 	HitEffectWidget->SetVisibility(ESlateVisibility::Visible);
 	HitEffectWidget->PlayFadeAnimtion();
+
+	// hit effect - by suhyeon
+	// hpbar update call
+	// HUD 가져오기
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	// HUD에 있는 피격 처리 함수 호출
+	AmmoWidget->UpdateHpBar();  // 또는 내부 위젯에 위임
+	
+	// hit effect call
 }
 
 void ASuraPawnPlayer::OnDeath()

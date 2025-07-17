@@ -8,6 +8,7 @@
 #include "Interfaces/Damageable.h"
 #include "SuraPawnPlayer.generated.h"
 
+class UAmmoCounterWidget;
 class USuraPlayerCameraComponent;
 class USpringArmComponent;
 class USuraPlayerMovementComponent;
@@ -105,6 +106,10 @@ protected:
 	// UI component - suhyeon
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
 	UACUIMangerComponent* UIManager;
+
+	// AmmoWidget - suhyeon
+	UPROPERTY()
+	UAmmoCounterWidget* AmmoWidget;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
