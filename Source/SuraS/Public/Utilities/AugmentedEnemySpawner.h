@@ -33,12 +33,21 @@ class SURAS_API AAugmentedEnemySpawner : public AActor
 
 	void OnDeathTriggered();
 
-	FVector GetRandomLocation();
+	bool FindValidSpawnLocation(TSubclassOf<ASuraCharacterEnemyBase> EnemyClass, FVector& OutLocation, int32 MaxAttempts);
 
 protected:
 	virtual void BeginPlay() override;
 	
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Spawn System")
+	float SpawnRadius = 500.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Spawn System")
+	float MinSpawnDistanceBtwEnemies = 50.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Spawn System")
+	int32 MaxSpawnAttempts = 3;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Spawn System")
 	TArray<ASuraCharacterEnemyBase*> EnemiesToWatch;
 
