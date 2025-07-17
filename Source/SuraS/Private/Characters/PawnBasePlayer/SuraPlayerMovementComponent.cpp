@@ -261,8 +261,8 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 {
 	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();
 
-	const bool bWantsToDash = bDashPressed;
-	bDashPressed = false;
+	const bool bCachedShiftPressed = bShiftPressed;
+	bShiftPressed = false;
 	
 	if (bIsStepping)
 	{
@@ -387,7 +387,6 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		}
 		else
 		{
-			bIsRunning = bRunPressed;
 
 			if (bIsRunning)
 			{
@@ -516,23 +515,36 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		return;
 	}
 
-	if (bWantsToDash && DashGauge >= 1.f)
+	if (bCachedShiftPressed)
 	{
-		if (!bIsDashing)
+		// If dash is available
+		if (DashGauge >= 1.f)
 		{
-			bIsDashing = true;
+			if (!bIsDashing)
+			{
+				bIsDashing = true;
+			}
+			else
+			{
+				// Reset the ongoing dash timer to renew the dash since we used the dash again.
+				ElapsedTimeFromDash = 0.f;
+			}
+
+			bIsRunning = true; // Player will run after dash ends
+		
+			DashGauge = FMath::Clamp(DashGauge - 1.f, 0.f, 2.f);
+		
+			const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
+			Velocity = DashDirection * DashStartSpeed;
+			OnDash.Broadcast(MovementInputVector);
 		}
 		else
 		{
-			// Reset the ongoing dash timer to renew the dash since we used the dash again.
-			ElapsedTimeFromDash = 0.f;
+			if (!bIsDashing)
+			{
+				bIsRunning = !bIsRunning;
+			}
 		}
-
-		DashGauge = FMath::Clamp(DashGauge - 1.f, 0.f, 2.f);
-		
-		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
-		Velocity = DashDirection * DashStartSpeed;
-		OnDash.Broadcast(MovementInputVector);
 		
 	}
 	
@@ -541,8 +553,8 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 {
 	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();
-	const bool bWantsToDash = bDashPressed;
-	bDashPressed = false;
+	const bool bCachedShiftPressed = bShiftPressed;
+	bShiftPressed = false;
 	
 	if (!IsGrounded() || GroundHit.ImpactNormal.Z < MinWalkableFloorZ)
 	{
@@ -636,25 +648,38 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		return;
 	}
 
-	if (bWantsToDash && DashGauge >= 1.f)
+	if (bCachedShiftPressed)
 	{
-		if (!bIsDashing)
+		if (DashGauge >= 1.f)
 		{
-			bIsDashing = true;
+			if (!bIsDashing)
+			{
+				bIsDashing = true;
+			}
+			else
+			{
+				// Reset the ongoing dash timer to renew the dash since we used the dash again.
+				ElapsedTimeFromDash = 0.f;
+			}
+
+			bIsRunning = true; // Player will run after dash ends
+		
+			DashGauge = FMath::Clamp(DashGauge - 1.f, 0.f, 2.f);
+		
+			const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
+			Velocity = DashDirection * DashStartSpeed;
+			OnDash.Broadcast(MovementInputVector);
+			SetMovementState(EMovementState::EMS_Move);
+			return;
 		}
 		else
 		{
-			// Reset the ongoing dash timer to renew the dash since we used the dash again.
-			ElapsedTimeFromDash = 0.f;
+			if (!bIsDashing)
+			{
+				bIsRunning = !bIsRunning;
+			}
 		}
 		
-		DashGauge = FMath::Clamp(DashGauge - 1.f, 0.f, 2.f);
-		
-		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
-		Velocity = DashDirection * DashStartSpeed;
-		OnDash.Broadcast(MovementInputVector);
-		SetMovementState(EMovementState::EMS_Move);
-		return;
 	}
 	
 	
@@ -671,8 +696,8 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		ElapsedTimeFromSurface += DeltaTime;
 	}
 
-	const bool bWantsToDash = bDashPressed;
-	bDashPressed = false;
+	const bool bCachedShiftPressed = bShiftPressed;
+	bShiftPressed = false;
 
 	if (bCrouchPressed)
 	{
@@ -978,27 +1003,40 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		}
 	}
 
-	if (bWantsToDash && DashGauge >= 1.f)
+	if (bCachedShiftPressed)
 	{
-		if (!bIsDashing)
+		if (DashGauge >= 1.f)
 		{
-			bIsDashing = true;
+			if (!bIsDashing)
+			{
+				bIsDashing = true;
+			}
+			else
+			{
+				// Reset the ongoing dash timer to renew the dash since we used the dash again.
+				ElapsedTimeFromDash = 0.f;
+			}
+
+			bIsRunning = true; // Player will run after dash ends
+		
+			bHasDashedInAir = true;
+		
+			DashGauge = FMath::Clamp(DashGauge - 1.f, 0.f, 2.f);
+		
+			const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
+			// Commented out the Velocity.Z addition since it didn't seem smooth and user couldn't feel the second dash.
+			Velocity = DashDirection.GetSafeNormal2D() * DashStartSpeed; // + FVector(0, 0, Velocity.Z)
+		 
+			OnDash.Broadcast(MovementInputVector);
 		}
 		else
 		{
-			// Reset the ongoing dash timer to renew the dash since we used the dash again.
-			ElapsedTimeFromDash = 0.f;
+			if (!bIsDashing)
+			{
+				bIsRunning = !bIsRunning;
+			}
 		}
 		
-		bHasDashedInAir = true;
-		
-		DashGauge = FMath::Clamp(DashGauge - 1.f, 0.f, 2.f);
-		
-		const FVector DashDirection = InputDirection.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : InputDirection;
-		// Commented out the Velocity.Z addition since it didn't seem smooth and user couldn't feel the second dash.
-		Velocity = DashDirection.GetSafeNormal2D() * DashStartSpeed; // + FVector(0, 0, Velocity.Z)
-		 
-		OnDash.Broadcast(MovementInputVector);
 	}
 	
 }
@@ -1569,11 +1607,6 @@ void USuraPlayerMovementComponent::SetMovementInputVector(const FVector2D& InMov
 	MovementInputVector = InMovementInputVector;
 }
 
-void USuraPlayerMovementComponent::SetRunPressed(bool bPressed)
-{
-	bRunPressed = bPressed;
-}
-
 void USuraPlayerMovementComponent::SetMovementState(EMovementState NewState)
 {
 	PreviousMovementState = CurrentMovementState;
@@ -1587,10 +1620,9 @@ void USuraPlayerMovementComponent::SetJumpPressed(bool bPressed)
 	bJumpPressed = bPressed;
 }
 
-
-void USuraPlayerMovementComponent::SetDashPressed(bool bPressed)
+void USuraPlayerMovementComponent::SetShiftPressed(bool bPressed)
 {
-	bDashPressed = bPressed;
+	bShiftPressed = bPressed;
 }
 
 

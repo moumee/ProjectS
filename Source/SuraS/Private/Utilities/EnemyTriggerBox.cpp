@@ -18,6 +18,7 @@ AEnemyTriggerBox::AEnemyTriggerBox()
 	RootComponent = TriggerBox;
 	TriggerBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 	TriggerBox->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); // Ignore Projectile
+	TriggerBox->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Ignore); // Ignore Enemies Overlap channel
 	TriggerBox->SetGenerateOverlapEvents(true);
 }
 

@@ -87,6 +87,8 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 		bIsHitScan = HitScan;
 		NumPenetrableObjects = NumPenetrable;
 		UE_LOG(LogTemp, Error, TEXT("Projectile Penetrable Num: %d"), NumPenetrableObjects);
+		CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+		CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap);
 	}
 	else
 	{
@@ -159,8 +161,10 @@ void ASuraProjectile::LoadProjectileData()
 		// <Homing>
 		HomingAccelerationMagnitude = ProjectileData->HomingAccelerationMagnitude;
 
+		// <Velocity>
 		ProjectileMovement->InitialSpeed = ProjectileData->InitialSpeed;
 		ProjectileMovement->MaxSpeed = ProjectileData->MaxSpeed;
+		HitScanProjectileVelocity = ProjectileData->InitialSpeed;
 
 		InitialRadius = ProjectileData->InitialRadius;
 		CollisionComp->SetSphereRadius(InitialRadius);
@@ -176,6 +180,9 @@ void ASuraProjectile::LoadProjectileData()
 		bCanSimpleBounce = ProjectileData->bCanSimpleBounce;
 		MaxRicochetCount = ProjectileData->MaxRicochetCount;
 		MinIncidenceAngle = ProjectileData->MinIncidenceAngle;
+
+		// <HitScan>
+		bDebugHitScan = ProjectileData->bDebugHitScan;
 	}
 }
 
@@ -557,17 +564,13 @@ void ASuraProjectile::SetHitScanActive(bool bflag)
 void ASuraProjectile::LaunchHitScan(FVector StartLocation, FVector TraceDirection)
 {
 	PerformHitScan(StartLocation, TraceDirection, 50000.f, ProjectileRadius, HitScanEndPoints); //TODO: MaxDistnace 설정해야함
-
-	bActivatedMeshMovementForHitScan = true;
-
+	InitHitScanProjectileMovement();
 }
 void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, TArray<FVector>& OutHitLocations)
 {
 	FVector Start = StartLocation;
 	FVector Direction = TraceDirection;
 	FVector End = StartLocation + TraceDirection * MaxDistance;
-
-	//TArray<FHitResult> HitResults;
 
 	TArray<FVector> HitStaticLocations;
 
@@ -584,12 +587,8 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 	Params.AddIgnoredComponent(ProjectileMesh);
 	Params.AddIgnoredActor(this);
 
-
-	//-------------------------------
 	for (int32 RicochetCount = 0; RicochetCount <= MaxRicochetCount; RicochetCount++)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("reflection"));
-
 		TArray<FHitResult> TempHitResults;
 
 		bool bHit = GetWorld()->SweepMultiByObjectType(
@@ -602,7 +601,7 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 			Params
 		);
 		
-		DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 10.f);
+		if (bDebugHitScan) { DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 10.f); }
 
 		bool bIsBlockedByWorldStatic = false;
 
@@ -611,7 +610,6 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 			TArray<AActor*> OnceDamagedEnemies;
 			for (const FHitResult& HitResult : TempHitResults)
 			{
-				// Damage
 				if (NumPenetratedObjects <= NumPenetrableObjects)
 				{
 					ACharacter* Enemy = Cast<ACharacter>(HitResult.GetActor());
@@ -642,21 +640,16 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 					}
 				}
 
-
-				//WorldStatic
 				if (HitResult.GetComponent()->GetCollisionObjectType() == ECC_WorldStatic)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("ECC_WorldStatic"));
-
 					HitStaticLocations.Add(HitResult.ImpactPoint);
-					DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 12, FColor::Red, false, 50.f);
+
+					if (bDebugHitScan) { DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 12, FColor::Red, false, 50.f); }
 
 					Start = HitResult.ImpactPoint;
 
 					if (CheckRicochetAngle(HitResult.ImpactNormal, Direction))
 					{
-						UE_LOG(LogTemp, Warning, TEXT("CheckRicochetAngle"));
-
 						Direction = GetReflectionAngle(HitResult.ImpactNormal, Direction);
 						Start = Start + Direction.GetSafeNormal() * (SphereRadius + 1.f);
 						End = Start + Direction * MaxDistance;
@@ -681,9 +674,50 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 
 	OutHitLocations = HitStaticLocations;
 }
+void ASuraProjectile::InitHitScanProjectileMovement()
+{
+	bActivatedMeshMovementForHitScan = true;
+
+	if (!HitScanEndPoints.IsEmpty())
+	{
+		FVector CurrLocation = GetActorLocation();
+		FVector TargetLocation = HitScanEndPoints[0];
+		MovementDirection = (TargetLocation - CurrLocation).GetSafeNormal();
+		SetActorRotation(MovementDirection.Rotation());
+		TargetDistance = FVector::Dist(CurrLocation, TargetLocation);
+		CurrEndPointIdx = 0;
+	}
+}
 void ASuraProjectile::UpdateHitScanProjectileMovement(float DeltaTime)
 {
+	FVector CurrLocation = GetActorLocation();
+	FVector TargetLocation = HitScanEndPoints[CurrEndPointIdx];
 
+	FVector DeltaPosition = MovementDirection * HitScanProjectileVelocity * DeltaTime;
+
+	CurrLocation = CurrLocation + DeltaPosition;
+	SetActorLocation(CurrLocation);
+
+	DistanceMoved += DeltaPosition.Length();
+
+	if ((TargetLocation - CurrLocation).IsNearlyZero() || TargetDistance <= DistanceMoved)
+	{
+		if (CurrEndPointIdx + 1 > HitScanEndPoints.Num() - 1)
+		{
+			// 그대로 직진? Destroy?
+		}
+		else
+		{
+			CurrEndPointIdx++;
+			CurrLocation = TargetLocation;
+			SetActorLocation(CurrLocation);
+			TargetLocation = HitScanEndPoints[CurrEndPointIdx];
+			MovementDirection = (TargetLocation - CurrLocation).GetSafeNormal();
+			SetActorRotation(MovementDirection.Rotation());
+			TargetDistance = FVector::Dist(CurrLocation, TargetLocation);
+			DistanceMoved = 0;
+		}
+	}
 }
 #pragma endregion
 
@@ -816,6 +850,7 @@ void ASuraProjectile::Tick(float DeltaTime)
 	if (bIsHitScan)
 	{
 		//Projectile Movement Update
+		UpdateHitScanProjectileMovement(DeltaTime);
 
 	}
 }

@@ -2,7 +2,7 @@
 
 
 #include "ActorComponents/WeaponSystem/WeaponInterface.h"
-
+#include "ActorComponents/WeaponSystem/ArmRecoilStruct.h"
 
 // Add default functionality here for any IWeaponInterface functions that are not pure virtual.
 
@@ -22,6 +22,6 @@ void IWeaponInterface::SwitchToOtherWeapon()
 {
 }
 
-void IWeaponInterface::AddArmRecoil(float AdditionalRecoilAmountX, float AdditionalRecoilAmountY, float AdditionalRecoilAmountZ)
+void IWeaponInterface::AddArmRecoil(FArmRecoilStruct* armrecoil, float AdditionalRecoilAmountX, float AdditionalRecoilAmountY, float AdditionalRecoilAmountZ)
 {
 }
