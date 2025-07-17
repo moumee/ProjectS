@@ -180,6 +180,9 @@ void ASuraProjectile::LoadProjectileData()
 		bCanSimpleBounce = ProjectileData->bCanSimpleBounce;
 		MaxRicochetCount = ProjectileData->MaxRicochetCount;
 		MinIncidenceAngle = ProjectileData->MinIncidenceAngle;
+
+		// <HitScan>
+		bDebugHitScan = ProjectileData->bDebugHitScan;
 	}
 }
 
@@ -569,8 +572,6 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 	FVector Direction = TraceDirection;
 	FVector End = StartLocation + TraceDirection * MaxDistance;
 
-	//TArray<FHitResult> HitResults;
-
 	TArray<FVector> HitStaticLocations;
 
 	FCollisionObjectQueryParams ObjectQueryParams;
@@ -588,8 +589,6 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 
 	for (int32 RicochetCount = 0; RicochetCount <= MaxRicochetCount; RicochetCount++)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("reflection"));
-
 		TArray<FHitResult> TempHitResults;
 
 		bool bHit = GetWorld()->SweepMultiByObjectType(
@@ -602,7 +601,7 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 			Params
 		);
 		
-		DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 10.f);
+		if (bDebugHitScan) { DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 10.f); }
 
 		bool bIsBlockedByWorldStatic = false;
 
@@ -611,7 +610,6 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 			TArray<AActor*> OnceDamagedEnemies;
 			for (const FHitResult& HitResult : TempHitResults)
 			{
-				// Damage
 				if (NumPenetratedObjects <= NumPenetrableObjects)
 				{
 					ACharacter* Enemy = Cast<ACharacter>(HitResult.GetActor());
@@ -642,21 +640,16 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 					}
 				}
 
-
-				//WorldStatic
 				if (HitResult.GetComponent()->GetCollisionObjectType() == ECC_WorldStatic)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("ECC_WorldStatic"));
-
 					HitStaticLocations.Add(HitResult.ImpactPoint);
-					DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 12, FColor::Red, false, 50.f);
+
+					if (bDebugHitScan) { DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 12, FColor::Red, false, 50.f); }
 
 					Start = HitResult.ImpactPoint;
 
 					if (CheckRicochetAngle(HitResult.ImpactNormal, Direction))
 					{
-						UE_LOG(LogTemp, Warning, TEXT("CheckRicochetAngle"));
-
 						Direction = GetReflectionAngle(HitResult.ImpactNormal, Direction);
 						Start = Start + Direction.GetSafeNormal() * (SphereRadius + 1.f);
 						End = Start + Direction * MaxDistance;

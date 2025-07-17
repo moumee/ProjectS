@@ -167,6 +167,7 @@ public:
 
 #pragma region HitScan
 protected:
+	bool bDebugHitScan = false;
 	bool bIsHitScan = false;
 	bool bActivatedMeshMovementForHitScan = false;
 	TArray<FVector> HitScanEndPoints;
