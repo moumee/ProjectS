@@ -133,7 +133,6 @@ protected:
 
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);
-	void StartRunInput();
 	void StartJumpInput();
 	void StopJumpInput();
 	void StartShiftInput();
