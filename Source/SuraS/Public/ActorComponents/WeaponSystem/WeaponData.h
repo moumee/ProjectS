@@ -111,7 +111,10 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	FWeaponRecoilStruct ZoomRecoil;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
-	FArmRecoilStruct ArmRecoil;
+	FArmRecoilStruct ArmRecoil_L;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil_R;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
 	FArmRecoilStruct ArmRecoil_Hand;

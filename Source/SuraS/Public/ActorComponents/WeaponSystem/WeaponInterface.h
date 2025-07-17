@@ -7,13 +7,14 @@
 
 #include "WeaponInterface.generated.h"
 
+struct FArmRecoilStruct;
+
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
 class UWeaponInterface : public UInterface
 {
 	GENERATED_BODY()
 };
-
 /**
  * 
  */
@@ -32,5 +33,5 @@ public:
 	virtual void SwitchToOtherWeapon();
 
 	//<ArmRecoilAnimation>
-	virtual void AddArmRecoil(float AdditionalRecoilAmountX = 0.f, float AdditionalRecoilAmountY = 0.f, float AdditionalRecoilAmountZ = 0.f);
+	virtual void AddArmRecoil(FArmRecoilStruct* armrecoil = nullptr, float AdditionalRecoilAmountX = 0.f, float AdditionalRecoilAmountY = 0.f, float AdditionalRecoilAmountZ = 0.f);
 };

@@ -85,7 +85,7 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 
 			UpdateSpringDamper(DeltaTime);
 
-			UpdateArmRecoil(DeltaTime);
+			UpdateArmRecoil(DeltaTime); //TODO: left right 다르게 설정해야함
 			ConvertRecoilValueFrame();
 
 			LeftHandTransform = GetLeftHandTransform();
@@ -141,7 +141,7 @@ void USuraPlayerAnimInstance_Weapon::UpdateWeapon()
 				RightHandSocketTransform_Crouch = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetRightHandSocketTransform_Crouch();
 
 				// <Recoil>
-				ArmRecoil = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo();
+				ArmRecoil = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo(); //TODO: 이제 AddArmRecoil에서 struct 정보 가져오기 때문에 이 줄은 없어도 될듯
 				ArmRecoil_Hand = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo_Hand();
 				ArmRecoil_UpperArm = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo_UpperArm();
 				ArmRecoil_LowerArm = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo_LowerArm();
@@ -310,48 +310,12 @@ void USuraPlayerAnimInstance_Weapon::UpdateRightHandSocket(float DeltaTime)
 #pragma endregion
 
 #pragma region ArmRecoil
-void USuraPlayerAnimInstance_Weapon::AddArmRecoil(float AdditionalRecoilAmountX, float AdditionalRecoilAmountY, float AdditionalRecoilAmountZ)
+void USuraPlayerAnimInstance_Weapon::AddArmRecoil(FArmRecoilStruct* armrecoil, float AdditionalRecoilAmountX, float AdditionalRecoilAmountY, float AdditionalRecoilAmountZ)
 {
-	// <Old Version>
-
-	//bIsArmRecoiling = true;
-
-	//if (&ArmRecoil_Hand && &ArmRecoil_UpperArm && &ArmRecoil_LowerArm)
-	//{
-	//	//UE_LOG(LogTemp, Warning, TEXT("Arm Recoil Added!!!"));
-
-	//	// --- Hand ---
-	//	FRotator RandRecoil_Hand;
-	//	RandRecoil_Hand.Roll = FMath::RandRange((ArmRecoil_Hand.RecoilAmount.Roll + AdditionalRecoilAmountX) * ArmRecoil_Hand.RecoilRangeMin.Roll, (ArmRecoil_Hand.RecoilAmount.Roll + AdditionalRecoilAmountX) * ArmRecoil_Hand.RecoilRangeMax.Roll);
-	//	RandRecoil_Hand.Pitch = FMath::RandRange((ArmRecoil_Hand.RecoilAmount.Pitch + AdditionalRecoilAmountY) * ArmRecoil_Hand.RecoilRangeMin.Pitch, (ArmRecoil_Hand.RecoilAmount.Pitch + AdditionalRecoilAmountY) * ArmRecoil_Hand.RecoilRangeMax.Pitch);
-	//	RandRecoil_Hand.Yaw = FMath::RandRange((ArmRecoil_Hand.RecoilAmount.Yaw + AdditionalRecoilAmountZ) * ArmRecoil_Hand.RecoilRangeMin.Yaw, (ArmRecoil_Hand.RecoilAmount.Yaw + AdditionalRecoilAmountZ) * ArmRecoil_Hand.RecoilRangeMax.Yaw);
-
-	//	TotalTargetRecoil_Hand += RandRecoil_Hand;
-
-	//	// --- LowerArm ---
-	//	FRotator RandRecoil_LowerArm;
-	//	RandRecoil_LowerArm.Roll = FMath::RandRange((ArmRecoil_LowerArm.RecoilAmount.Roll + AdditionalRecoilAmountX) * ArmRecoil_LowerArm.RecoilRangeMin.Roll, (ArmRecoil_LowerArm.RecoilAmount.Roll + AdditionalRecoilAmountX) * ArmRecoil_LowerArm.RecoilRangeMax.Roll);
-	//	RandRecoil_LowerArm.Pitch = FMath::RandRange((ArmRecoil_LowerArm.RecoilAmount.Pitch + AdditionalRecoilAmountY) * ArmRecoil_LowerArm.RecoilRangeMin.Pitch, (ArmRecoil_LowerArm.RecoilAmount.Pitch + AdditionalRecoilAmountY) * ArmRecoil_LowerArm.RecoilRangeMax.Pitch);
-	//	RandRecoil_LowerArm.Yaw = FMath::RandRange((ArmRecoil_LowerArm.RecoilAmount.Yaw + AdditionalRecoilAmountZ) * ArmRecoil_LowerArm.RecoilRangeMin.Yaw, (ArmRecoil_LowerArm.RecoilAmount.Yaw + AdditionalRecoilAmountZ) * ArmRecoil_LowerArm.RecoilRangeMax.Yaw);
-
-	//	TotalTargetRecoil_LowerArm += RandRecoil_LowerArm;
-
-	//	// --- UpperArm ---
-	//	FRotator RandRecoil_UpperArm;
-	//	RandRecoil_UpperArm.Roll = FMath::RandRange((ArmRecoil_UpperArm.RecoilAmount.Roll + AdditionalRecoilAmountX) * ArmRecoil_UpperArm.RecoilRangeMin.Roll, (ArmRecoil_UpperArm.RecoilAmount.Roll + AdditionalRecoilAmountX) * ArmRecoil_UpperArm.RecoilRangeMax.Roll);
-	//	RandRecoil_UpperArm.Pitch = FMath::RandRange((ArmRecoil_UpperArm.RecoilAmount.Pitch + AdditionalRecoilAmountY) * ArmRecoil_UpperArm.RecoilRangeMin.Pitch, (ArmRecoil_UpperArm.RecoilAmount.Pitch + AdditionalRecoilAmountY) * ArmRecoil_UpperArm.RecoilRangeMax.Pitch);
-	//	RandRecoil_UpperArm.Yaw = FMath::RandRange((ArmRecoil_UpperArm.RecoilAmount.Yaw + AdditionalRecoilAmountZ) * ArmRecoil_UpperArm.RecoilRangeMin.Yaw, (ArmRecoil_UpperArm.RecoilAmount.Yaw + AdditionalRecoilAmountZ) * ArmRecoil_UpperArm.RecoilRangeMax.Yaw);
-
-	//	TotalTargetRecoil_UpperArm += RandRecoil_UpperArm;
-	//}
-
-	//-----------------------------------------------
-	// <New Version>
-
-	bIsArmRecoiling = true;
-
-	if (&ArmRecoil)
+	if (armrecoil)
 	{
+		bIsArmRecoiling = true;
+		ArmRecoil = *armrecoil;
 		//UE_LOG(LogTemp, Warning, TEXT("Arm Recoil Added!!!"));
 
 		FRotator RandRecoil_Rot;
