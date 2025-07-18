@@ -289,7 +289,6 @@ FTransform USuraPlayerAnimInstance_Weapon::GetTargetLeftHandTransfrom()
 		}
 	}
 
-	//UE_LOG(LogTemp, Warning, TEXT("NOOOOOO!!!"));
 	return FTransform();
 }
 
@@ -336,27 +335,6 @@ void USuraPlayerAnimInstance_Weapon::AddArmRecoil(FArmRecoilStruct* armrecoil, f
 
 void USuraPlayerAnimInstance_Weapon::ApplyArmRecoil(float DeltaTime)
 {
-	// <Old Version>
-
-	//if (&ArmRecoil_Hand && &ArmRecoil_UpperArm && &ArmRecoil_LowerArm)
-	//{
-	//	// --- Hand ---
-	//	FRotator InterpRecoilTarget_Hand = FMath::RInterpTo(FRotator(0.f, 0.f, 0.f), TotalTargetRecoil_Hand - CulmulatedRecoil_Hand, DeltaTime, ArmRecoil_Hand.RecoilSpeed);
-	//	CurrentRecoil_Hand += InterpRecoilTarget_Hand;
-	//	CulmulatedRecoil_Hand += InterpRecoilTarget_Hand;
-	//	// --- LowerArm ---
-	//	FRotator InterpRecoilTarget_LowerArm = FMath::RInterpTo(FRotator(0.f, 0.f, 0.f), TotalTargetRecoil_LowerArm - CulmulatedRecoil_LowerArm, DeltaTime, ArmRecoil_LowerArm.RecoilSpeed);
-	//	CurrentRecoil_LowerArm += InterpRecoilTarget_LowerArm;
-	//	CulmulatedRecoil_LowerArm += InterpRecoilTarget_LowerArm;
-	//	// --- UpperArm ---
-	//	FRotator InterpRecoilTarget_UpperArm = FMath::RInterpTo(FRotator(0.f, 0.f, 0.f), TotalTargetRecoil_UpperArm - CulmulatedRecoil_UpperArm, DeltaTime, ArmRecoil_UpperArm.RecoilSpeed);
-	//	CurrentRecoil_UpperArm += InterpRecoilTarget_UpperArm;
-	//	CulmulatedRecoil_UpperArm += InterpRecoilTarget_UpperArm;
-	//}
-
-	//-----------------------------------------------
-	// <New Version>
-
 	if (&ArmRecoil)
 	{
 		FRotator InterpRecoilTarget_Rot = FMath::RInterpTo(CurrentRecoil_Rot, TotalTargetRecoil_Rot, DeltaTime, ArmRecoil.RecoilSpeed);
@@ -369,46 +347,6 @@ void USuraPlayerAnimInstance_Weapon::ApplyArmRecoil(float DeltaTime)
 
 void USuraPlayerAnimInstance_Weapon::RecoverArmRecoil(float DeltaTime)
 {
-	// <Old Version>
-
-	//// --- Hand ---
-	//FRotator InterpRecoilRecoverTarget_Hand = FMath::RInterpTo(FRotator(0.f, 0.f, 0.f), CulmulatedRecoil_Hand - RecoveredRecoil_Hand, DeltaTime, ArmRecoil_Hand.RecoilRecoverSpeed);
-	//CurrentRecoil_Hand -= InterpRecoilRecoverTarget_Hand;
-	//RecoveredRecoil_Hand += InterpRecoilRecoverTarget_Hand;
-
-	//// --- LowerArm ---
-	//FRotator InterpRecoilRecoverTarget_LowerArm = FMath::RInterpTo(FRotator(0.f, 0.f, 0.f), CulmulatedRecoil_LowerArm - RecoveredRecoil_LowerArm, DeltaTime, ArmRecoil_LowerArm.RecoilRecoverSpeed);
-	//CurrentRecoil_LowerArm -= InterpRecoilRecoverTarget_LowerArm;
-	//RecoveredRecoil_LowerArm += InterpRecoilRecoverTarget_LowerArm;
-
-	//// --- UpperArm ---
-	//FRotator InterpRecoilRecoverTarget_UpperArm = FMath::RInterpTo(FRotator(0.f, 0.f, 0.f), CulmulatedRecoil_UpperArm - RecoveredRecoil_UpperArm, DeltaTime, ArmRecoil_UpperArm.RecoilRecoverSpeed);
-	//CurrentRecoil_UpperArm -= InterpRecoilRecoverTarget_UpperArm;
-	//RecoveredRecoil_UpperArm += InterpRecoilRecoverTarget_UpperArm;
-
-	//if ((CulmulatedRecoil_Hand - RecoveredRecoil_Hand).IsNearlyZero()
-	//	&& (CulmulatedRecoil_LowerArm - RecoveredRecoil_LowerArm).IsNearlyZero()
-	//	&& (CulmulatedRecoil_UpperArm - RecoveredRecoil_UpperArm).IsNearlyZero())
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Arm Recoil has been perfectly Recovered!!!"));
-
-	//	TotalTargetRecoil_Hand = FRotator::ZeroRotator;
-	//	TotalTargetRecoil_LowerArm = FRotator::ZeroRotator;
-	//	TotalTargetRecoil_UpperArm = FRotator::ZeroRotator;
-
-	//	CulmulatedRecoil_Hand = FRotator::ZeroRotator;
-	//	CulmulatedRecoil_LowerArm = FRotator::ZeroRotator;
-	//	CulmulatedRecoil_UpperArm = FRotator::ZeroRotator;
-
-	//	RecoveredRecoil_Hand = FRotator::ZeroRotator;
-	//	RecoveredRecoil_LowerArm = FRotator::ZeroRotator;
-	//	RecoveredRecoil_UpperArm = FRotator::ZeroRotator;
-
-	//	bIsArmRecoiling = false;
-	//}
-
-	//-----------------------------------------------
-	// <New Version>
 	FRotator InterpRecoilRecoverTarget_Rot = FMath::RInterpTo(TotalTargetRecoil_Rot, FRotator::ZeroRotator, DeltaTime, ArmRecoil.RecoilRecoverSpeed);
 	TotalTargetRecoil_Rot = InterpRecoilRecoverTarget_Rot;
 
@@ -443,23 +381,6 @@ void USuraPlayerAnimInstance_Weapon::UpdateArmRecoil(float DeltaTime)
 
 void USuraPlayerAnimInstance_Weapon::ConvertRecoilValueFrame()
 {
-	// <Old Version>
-	//if (bIsCrouching)
-	//{
-	//	ConvertedCurrentRecoil_Rot = (RightHandSocketTransform_Crouch.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
-	//	ConvertedCurrentRecoil_Vec = RightHandSocketTransform_Crouch.GetRotation().RotateVector(CurrentRecoil_Vec) + RightHandSocketTransform_Crouch.GetTranslation();
-	//}
-	//else
-	//{
-	//	ConvertedCurrentRecoil_Rot = (RightHandSocketTransform.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
-	//	ConvertedCurrentRecoil_Vec = RightHandSocketTransform.GetRotation().RotateVector(CurrentRecoil_Vec) + RightHandSocketTransform.GetTranslation();
-	//}
-	//----------------------
-	// <New Version>
-	//ConvertedCurrentRecoil_Rot = (CurrentRightHandSocketTransform.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
-	//ConvertedCurrentRecoil_Vec = CurrentRightHandSocketTransform.GetRotation().RotateVector(CurrentRecoil_Vec) + CurrentRightHandSocketTransform.GetTranslation();
-
-	// <New New Version>
 	ConvertedCurrentRecoil_Rot = (RightHandSocketSpringDamperTransform.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
 	ConvertedCurrentRecoil_Vec = RightHandSocketSpringDamperTransform.GetRotation().RotateVector(CurrentRecoil_Vec) + RightHandSocketSpringDamperTransform.GetTranslation();
 }
@@ -639,7 +560,35 @@ void USuraPlayerAnimInstance_Weapon::UpdateSpringDamper(float DeltaTime)
 	FQuat RotByZ = FQuat(FVector::ZAxisVector, -FMath::Atan(DirectionVec.X / DirectionVec.Y));
 	FQuat RotByX = FQuat(FVector::XAxisVector, FMath::Atan(DirectionVec.Z / FMath::Sqrt(DirectionVec.X * DirectionVec.X + DirectionVec.Y * DirectionVec.Y)));
 
+	//Tilt
+	FQuat RotByY = FQuat(FVector::YAxisVector, (CurrentRightHandSocketTransform.GetLocation().X - ConvertedPos.X) * (0.3f)); //Test
+
+
 	RightHandSocketSpringDamperTransform.SetLocation(ConvertedPos);
-	RightHandSocketSpringDamperTransform.SetRotation(RotByX * RotByZ * CurrentRightHandSocketTransform.GetRotation());
+	//RightHandSocketSpringDamperTransform.SetRotation(RotByX * RotByZ * CurrentRightHandSocketTransform.GetRotation());
+	RightHandSocketSpringDamperTransform.SetRotation(RotByY * RotByX * RotByZ * CurrentRightHandSocketTransform.GetRotation()); //Test
+
+}
+#pragma endregion
+
+#pragma region Tilt
+void USuraPlayerAnimInstance_Weapon::UpdateRightHandTilt(float DeltaTime)
+{
+	//FTransform MeshToWorldTransform = SuraPlayer->GetArmMesh()->GetComponentTransform();
+	//FTransform ActorToWorldTransform = SuraPlayer->GetTransform();
+
+	//FVector CurrPos = ActorToWorldTransform.InverseTransformPosition(SuraPlayer->GetActorLocation()); //Actor
+	//FVector GoalPos = ActorToWorldTransform.InverseTransformPosition(MeshToWorldTransform.TransformPosition(RightHandSocketSpringDamperTransform.GetLocation())); //Actor
+
+
+	//ConvertedPos = MeshToWorldTransform.InverseTransformPosition(ActorToWorldTransform.TransformPosition(ConvertedPos));
+
+
+	//FVector DirectionVec = ConvertedPos - (CurrentRightHandSocketTransform.GetLocation() + FVector(0.f, -20.f, 0.f));
+	//FQuat RotByZ = FQuat(FVector::ZAxisVector, -FMath::Atan(DirectionVec.X / DirectionVec.Y));
+	//FQuat RotByX = FQuat(FVector::XAxisVector, FMath::Atan(DirectionVec.Z / FMath::Sqrt(DirectionVec.X * DirectionVec.X + DirectionVec.Y * DirectionVec.Y)));
+
+	//RightHandSocketSpringDamperTransform.SetLocation(ConvertedPos);
+	//RightHandSocketSpringDamperTransform.SetRotation(RotByX * RotByZ * CurrentRightHandSocketTransform.GetRotation());
 }
 #pragma endregion

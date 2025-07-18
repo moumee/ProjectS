@@ -213,10 +213,6 @@ protected:
 
 #pragma region Spring Damper
 protected:
-
-	FVector PrevComponentPos;
-	FVector PrevComponentVel;
-
 	FVector CurrentComponentPos;
 	FVector CurrentComponentVel;
 
@@ -233,4 +229,8 @@ protected:
 	void UpdateSpringDamper(float DeltaTime);
 #pragma endregion
 
+#pragma region Tilt
+protected:
+	void UpdateRightHandTilt(float DeltaTime);
+#pragma endregion
 };
