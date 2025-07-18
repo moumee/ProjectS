@@ -9,6 +9,7 @@
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
+#include "ActorComponents/WeaponSystem/AmmoCounterWidget.h"
 #include "ActorComponents/WeaponSystem/WeaponAimUIWidget.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
@@ -64,13 +65,13 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	DamageSystemComponent = CreateDefaultSubobject<UACDamageSystem>(TEXT("Damage System Component"));
 
 	// Hit Effect Class Init - by Yoony
-	static ConstructorHelpers::FClassFinder<UPlayerHitWidget> WidgetClass{ TEXT("/Game/UI/Player/WBP_PlayerHit") };
+	//static ConstructorHelpers::FClassFinder<UPlayerHitWidget> WidgetClass{ TEXT("/Game/UI/Player/WBP_PlayerHit") };
 
 	// UIManager actor components - suhyeon
 	UIManager = CreateDefaultSubobject<UACUIMangerComponent>(TEXT("UI Manager Component"));
 
-	if (WidgetClass.Succeeded())
-		HitEffectWidgetClass = WidgetClass.Class;
+	// if (WidgetClass.Succeeded())
+	// 	HitEffectWidgetClass = WidgetClass.Class;
 }
 
 void ASuraPawnPlayer::BeginPlay()
@@ -88,7 +89,7 @@ void ASuraPawnPlayer::BeginPlay()
 		if (IsValid(HitEffectWidget))
 		{
 			HitEffectWidget->AddToViewport();
-			HitEffectWidget->SetVisibility(ESlateVisibility::Hidden);
+			//HitEffectWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
 
@@ -96,6 +97,13 @@ void ASuraPawnPlayer::BeginPlay()
 	PlayerHealthCheckTimerDelegate.BindUObject(this, &ASuraPawnPlayer::CheckPlayerHealth);
 	GetWorld()->GetTimerManager().SetTimer(PlayerHealthCheckTimer, PlayerHealthCheckTimerDelegate,
 		CorrectionSystemCheckTime, true);
+
+	if (WeaponSystem->GetCurrentWeapon())
+	{
+		AmmoWidget = WeaponSystem->GetCurrentWeapon()->GetAmmoCounterWidget();
+	}
+	
+
 }
 
 UCapsuleComponent* ASuraPawnPlayer::GetCapsuleComponent()
@@ -276,17 +284,13 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, const AActor* Da
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }
 
-UWeaponAimUIWidget* ASuraPawnPlayer::GetWeaponAimUIWidget() const
-{
-	AWeapon* EquippedWeapon = WeaponSystem->GetCurrentWeapon();
-	
-	return EquippedWeapon ? EquippedWeapon->GetAimUIWidget() : nullptr; // 현재 장착한 무기의 aimuiwidget을 반환
-}
-
 void ASuraPawnPlayer::OnDamaged()
 {
-	HitEffectWidget->SetVisibility(ESlateVisibility::Visible);
-	HitEffectWidget->PlayFadeAnimtion();
+	// HitEffectWidget->SetVisibility(ESlateVisibility::Visible);
+
+	// hit effect - by suhyeon
+	// hpbar update call
+	AmmoWidget->UpdateHpBar();  
 }
 
 void ASuraPawnPlayer::OnDeath()

@@ -329,7 +329,7 @@ void ASuraCharacterPlayer::OnDamaged()
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Player Damaged"));
 
 	HitEffectWidget->SetVisibility(ESlateVisibility::Visible);
-	HitEffectWidget->PlayFadeAnimtion();
+	HitEffectWidget->PlayFadeAnimation();
 }
 
 void ASuraCharacterPlayer::OnDeath()
