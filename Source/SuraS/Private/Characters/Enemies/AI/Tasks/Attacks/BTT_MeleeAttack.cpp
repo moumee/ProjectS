@@ -3,7 +3,6 @@
 
 #include "Characters/Enemies/AI/Tasks/Attacks/BTT_MeleeAttack.h"
 
-#include "ActorComponents/AttackComponents/ACPlayerAttackTokens.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
@@ -47,7 +46,6 @@ void UBTT_MeleeAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMe
 		// Target->GetAttackTokensComponent()->ReturnAttackToken(1);
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 	}
-		
 }
 
 void UBTT_MeleeAttack::OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted)
