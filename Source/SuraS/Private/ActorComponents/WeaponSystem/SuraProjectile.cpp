@@ -285,7 +285,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 			}
 		}
 
-		Destroy();
+		// Destroy(); //이게 문제가 됨
 	}
 	else
 	{

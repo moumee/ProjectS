@@ -181,7 +181,7 @@ void AWeapon::InitializeWeapon(ASuraPawnPlayer* NewCharacter)
 	if (Character)
 	{
 		CharacterAnimInstance = Character->GetArmMesh()->GetAnimInstance();
-		InitializeCamera(Character);
+		//InitializeCamera(Character);
 		LoadWeaponData();
 	}
 	InitializeUI();
@@ -546,10 +546,8 @@ void AWeapon::DetachWeaponFromPlayer()
 	}
 	else
 	{
-		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-		//DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 		//ActivateCrosshairWidget(false);
-		// 
+		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		//WeaponMesh->SetVisibility(false);
 		SetMeshVisibility(false);
 	}
@@ -1925,6 +1923,7 @@ bool AWeapon::SearchOverlappedActor(FVector CenterLocation, float SearchRadius, 
 {
 	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
 	traceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+	traceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel6));
 	TArray<AActor*> ignoreActors;
 	ignoreActors.Init(Character, 1);
 	bool bIsAnyActorExist = UKismetSystemLibrary::SphereOverlapActors(GetWorld(), CenterLocation, SearchRadius, traceObjectTypes, nullptr, ignoreActors, OverlappedActors);
@@ -2567,7 +2566,7 @@ void AWeapon::StartCameraSettingChange(FWeaponCamSettingValue* CamSetting)
 		GetWorld()->GetTimerManager().ClearTimer(CamSettingTimer);
 	}
 
-	UpdateCameraSetting(GetWorld()->GetDeltaSeconds(), CamSetting);
+	//UpdateCameraSetting(GetWorld()->GetDeltaSeconds(), CamSetting);
 }
 void AWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSetting)
 {
