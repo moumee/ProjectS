@@ -64,11 +64,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	EWeaponAction RightMouseAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
-	TSubclassOf<class ASuraProjectile> LeftProjectileClass;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
-	TSubclassOf<class ASuraProjectile> RightProjectileClass;
-
 	/** AnimMontage to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	UAnimMontage* FireAnimation;
@@ -130,15 +125,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void DetachWeaponFromPlayer();
 
-	void FireSingleProjectile(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
-	void FireMultiProjectile(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireSingleProjectile(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireMultiProjectile(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 
 #pragma region HitScan
 protected:
-	bool bIsHitScan_Left = false;
-	bool bIsHitScan_Right = false;
+	bool bIsHitScan_L = false;
+	bool bIsHitScan_R = false;
 
-	void FireSingleHitScan(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
+	void FireSingleHitScan(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 	void FireMultiHitScan();
 #pragma endregion
 
@@ -231,19 +226,16 @@ protected:
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Character")
 	UAnimMontage* AM_Fire_Character;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Character")
 	UAnimMontage* AM_Reload_Character;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Character")
 	UAnimMontage* AM_Equip_Character;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Character")
 	UAnimMontage* AM_Unequip_Character;
 #pragma endregion
 
 #pragma region Animation/Weapon
-protected:
+protected: // TODO: 처리 고려
 	UPROPERTY()
 	UAnimInstance* WeaponAnimInstance;
 public:
@@ -257,22 +249,20 @@ public:
 #pragma region Sound
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* FireSound;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* ChargeSound;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	UAudioComponent* ChargeAudioComponent;
+	UAudioComponent* WeaponAudioComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* TargetSearchLoopSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* TargetLockedSound;
 
-	void PlayChargeSound();
-	void StopChargeSound();
+	void PlayWeaponSound(USoundBase* weaponsound = nullptr);
+	void StopWeaponSound();
 #pragma endregion
 
 #pragma region Niagara
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UNiagaraSystem* MuzzleFireEffect;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	UNiagaraSystem* ChargeEffect;
 
@@ -354,12 +344,11 @@ protected:
 	UPROPERTY(EditAnywhere)
 	int32 LeftAmmoInCurrentMag;
 
-	UPROPERTY(EditAnywhere)
-	int32 AmmoConsumedPerShot_Left = 1;
-	UPROPERTY(EditAnywhere)
-	int32 AmmoConsumedPerShot_Right = 1;
-
 	FTimerHandle ReloadingTimer;
+
+	//---------------
+	//bool bAllowFireWithInsufficientAmmo = false;
+
 protected:
 	void HandleReload();
 	void CancelReload();
@@ -368,7 +357,7 @@ public:
 protected:
 	void StopReload();
 
-	void ConsumeAmmo(int32 AmmoCost = 1);
+	void ConsumeAmmo(int32 AmmoCost = 1, bool AllowFireWithInsufficientAmmo = false);
 	void ReloadAmmo();
 	bool HasAmmoInCurrentMag();
 	bool HasAmmoInCurrentMag(int32 AmmoCost);
@@ -573,10 +562,7 @@ protected:
 #pragma region Recoil/Aim
 protected:
 	bool bIsRecoiling = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FWeaponRecoilStruct DefaultRecoil;
-
+	FWeaponRecoilStruct* CurrentRecoil;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FWeaponRecoilStruct ZoomRecoil;
 
@@ -645,8 +631,6 @@ protected:
 	void ApplyOverheat(float DeltaTime);
 	void RecoverOverheat(float DeltaTime);
 	void UpdateOverheat(float DeltaTime);
-
-
 #pragma endregion
 
 #pragma region Projectile/SingleProjectileSpread
@@ -672,15 +656,9 @@ protected:
 #pragma region Projectile/MultiProjectileSpread
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectile")
-	bool bEnableMultiProjectile_Left;
+	bool bEnableMultiProjectile_L;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectile")
-	bool bEnableMultiProjectile_Right;
-
-	UPROPERTY(EditAnywhere)
-	int32 PelletsNum = 9;
-
-	UPROPERTY(EditAnywhere)
-	float MaxAngleOfMultiProjectileSpread = 15.f;
+	bool bEnableMultiProjectile_R;
 #pragma endregion
 
 #pragma region Camera
@@ -711,11 +689,7 @@ public:
 #pragma region CameraShake
 protected:
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
-	TSubclassOf<UWeaponCameraShakeBase> DefaultCameraShakeClass;
-
-	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
 	TSubclassOf<UWeaponCameraShakeBase> ZoomCameraShakeClass;
-
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
 	TSubclassOf<UWeaponCameraShakeBase> ChargingCameraShakeClass;
 public:

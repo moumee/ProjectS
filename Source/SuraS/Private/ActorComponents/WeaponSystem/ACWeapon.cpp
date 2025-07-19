@@ -82,97 +82,6 @@ AWeapon::AWeapon()
 	//AmmoCounterWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("AmmoCounterWidgetComponent"));
 	//AmmoCounterWidgetComponent->SetDrawSize(FVector2D());
 	//AmmoCounterWidgetComponent->SetHiddenInGame(false);
-
-	//  / Script / UMGEditor.WidgetBlueprint'/Game/FPWeapon/UI/WBP_AmmoCounter_2.WBP_AmmoCounter_2'
-	// E: / Unreal_engine_projects / PJSURA_2 / SuraS / Content / FPWeapon / UI / WBP_AmmoCounter_2.uasset
-
-
-	if (AmmoCounterWidgetComponent)
-	{
-		//UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidgetComponent Is Available!!!"));
-		//AmmoCounterWidgetComponent->SetupAttachment(this, FName(TEXT("AmmoCounter")));
-
-		//AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-		//AmmoCounterWidgetComponent->SetVisibility(true);
-		//AmmoCounterWidgetComponent->SetHiddenInGame(false);
-		//AmmoCounterWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 0.f));
-
-		//static ConstructorHelpers::FClassFinder<UUserWidget> WidgetClass{ TEXT("/Game/UI/Enemies/WBP_EnemyHealthBar") };
-
-		//if (WidgetClass.Succeeded())
-		//{
-		//	AmmoCounterWidgetComponent->SetWidgetClass((WidgetClass.Class));
-		//}
-
-		//static ConstructorHelpers::FClassFinder<UAmmoCounterWidget> WidgetClass{ TEXT("/Game/FPWeapon/UI/WBP_AmmoCounter_2") };
-
-		//if (WidgetClass.Succeeded())
-		//{
-		//	UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidgetClass Is Available!!!"));
-		//	//AmmoCounterWidgetComponent->SetWidgetClass(AmmoCounterWidgetClass);
-		//	AmmoCounterWidgetComponent->SetWidgetClass(WidgetClass.Class);
-		//	AmmoCounterWidget = Cast<UAmmoCounterWidget>(AmmoCounterWidgetComponent->GetWidget());
-		//	if (AmmoCounterWidget)
-		//	{
-		//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget Is Available!!!"));
-
-		//	}
-
-
-
-
-		//	//AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass, FName(TEXT("AmmoCounterWidget")));
-		//	//if (AmmoCounterWidget)
-		//	//{
-		//	//	UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget Is Available!!!"));
-		//	//	AmmoCounterWidgetComponent->SetWidget(AmmoCounterWidget);
-		//	//	if (AmmoCounterWidgetComponent->GetWidget() == AmmoCounterWidget)
-		//	//	{
-		//	//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget Is Set!!!"));
-		//	//	}
-		//	//}
-		//}
-
-	}
-
-
-
-	//if (AmmoCounterWidgetClass)
-	//{
-	//	AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass);
-	//	if (AmmoCounterWidgetComponent)
-	//	{
-	//		//AmmoCounterWidgetComponent->SetWidgetClass(AmmoCounterWidget->GetClass());
-	//		//AmmoCounterWidget = AmmoCounterWidgetComponent->GetWidget();
-	//		AmmoCounterWidgetComponent->SetWidget(AmmoCounterWidget);
-
-	//		if (AmmoCounterWidget)
-	//		{
-	//			UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget is Availlable"));
-	//		}
-
-	//		//AmmoCounterWidget->AddToViewport();
-	//		//AmmoCounterWidget->SetVisibility(ESlateVisibility::Visible);
-
-	//		//AmmoCounterWidget->AddToRoot();
-	//		//AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	//		AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
-	//		//AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	//		AmmoCounterWidgetComponent->SetDrawAtDesiredSize(true);
-	//		AmmoCounterWidgetComponent->SetDrawSize(FVector2D(500.f, 500.f));
-
-	//		AmmoCounterWidgetComponent->SetHiddenInGame(false);
-	//		AmmoCounterWidgetComponent->SetVisibility(true);
-
-	//		FAttachmentTransformRules AttachRule(EAttachmentRule::KeepRelative, true);
-	//		AmmoCounterWidgetComponent->AttachToComponent(this, AttachRule, FName(TEXT("AmmoCounter")));
-
-
-	//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget!!!"));
-	//	}
-	//}
-
-
 }
 
 void AWeapon::InitializeWeapon(ASuraPawnPlayer* NewCharacter)
@@ -190,7 +99,6 @@ void AWeapon::InitializeWeapon(ASuraPawnPlayer* NewCharacter)
 	CharacterController = Cast<APlayerController>(Character->GetController());
 	if (CharacterController)
 	{
-	
 		//TODO: 아래 코드에 대해서 알아봐야함. Multi Play를 위한 것인가?
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(CharacterController->GetLocalPlayer()))
 		{
@@ -199,14 +107,11 @@ void AWeapon::InitializeWeapon(ASuraPawnPlayer* NewCharacter)
 		}
 	}
 
-	// Set Aim Socket Relative Transform
-
 	SetMeshVisibility(false);
-
 	SetAimSocketRelativeTransform();
 }
 
-void AWeapon::InitializeCamera(ASuraPawnPlayer* NewCharacter)
+void AWeapon::InitializeCamera(ASuraPawnPlayer* NewCharacter) //TODO: Need to integrate camera system with player system
 {
 	if (NewCharacter)
 	{
@@ -218,11 +123,6 @@ void AWeapon::InitializeCamera(ASuraPawnPlayer* NewCharacter)
 
 void AWeapon::InitializeUI()
 {
-	//if (CrosshairWidgetClass)
-	//{
-		//CrosshairWidget = CreateWidget<UUserWidget>(GetWorld(), CrosshairWidgetClass);
-	//}
-
 	if (AimUIWidgetClass)
 	{
 		AimUIWidget = CreateWidget<UWeaponAimUIWidget>(GetWorld(), AimUIWidgetClass);
@@ -230,32 +130,7 @@ void AWeapon::InitializeUI()
 
 	if (AmmoCounterWidgetClass)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidgetClass Is Available!!!"));
-		//AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass, FName(TEXT("AmmoCounterWidget")));
 		AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass);
-		//AmmoCounterWidget = CreateWidget<UUserWidget>(GetWorld(), AmmoCounterWidgetClass, FName(TEXT("AmmoCounterWidget")));
-		//if (AmmoCounterWidget)
-		//{
-		//	//UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget Is Available!!!"));
-		//	//AmmoCounterWidgetComponent->SetWidget(AmmoCounterWidget);
-		//	if (AmmoCounterWidgetComponent->GetWidget() == AmmoCounterWidget)
-		//	{
-		//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget Is Set!!!"));
-
-		//		FAttachmentTransformRules AttachRule(EAttachmentRule::SnapToTarget, true);
-		//		AmmoCounterWidgetComponent->AttachToComponent(this, AttachRule, FName(TEXT("AmmoCounter")));
-
-
-		//		//AmmoCounterWidget->AddToViewport();
-		//		AmmoCounterWidget->SetVisibility(ESlateVisibility::Visible);
-
-		//		AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-		//		AmmoCounterWidgetComponent->SetDrawAtDesiredSize(true);
-		//		AmmoCounterWidgetComponent->SetDrawSize(FVector2D(100.f, 100.f));
-
-		//		AmmoCounterWidget->UpdateAmmoCount(NumOfLeftAmmo);
-		//	}
-		//}
 
 		if (AmmoCounterWidget)
 		{
@@ -263,42 +138,6 @@ void AWeapon::InitializeUI()
 			AmmoCounterWidget->UpdateTotalAmmo(TotalAmmo);
 		}
 	}
-
-	//----------------
-
-	//if (AmmoCounterWidgetClass)
-	//{
-	//	AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass);
-	//	if (AmmoCounterWidgetComponent)
-	//	{
-	//		//AmmoCounterWidgetComponent->SetWidgetClass(AmmoCounterWidget->GetClass());
-	//		//AmmoCounterWidget = AmmoCounterWidgetComponent->GetWidget();
-	//		AmmoCounterWidgetComponent->SetWidget(AmmoCounterWidget);
-
-	//		if (AmmoCounterWidget)
-	//		{
-	//			UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget is Availlable"));
-	//		}
-
-	//		//AmmoCounterWidget->AddToViewport();
-	//		//AmmoCounterWidget->SetVisibility(ESlateVisibility::Visible);
-
-	//		//AmmoCounterWidget->AddToRoot();
-	//		//AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	//		AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
-	//		//AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	//		AmmoCounterWidgetComponent->SetDrawAtDesiredSize(true);
-	//		AmmoCounterWidgetComponent->SetDrawSize(FVector2D(500.f, 500.f));
-
-	//		AmmoCounterWidgetComponent->SetHiddenInGame(false);
-	//		AmmoCounterWidgetComponent->SetVisibility(true);
-	//	
-	//		FAttachmentTransformRules AttachRule(EAttachmentRule::KeepRelative, true);
-	//		AmmoCounterWidgetComponent->AttachToComponent(this, AttachRule, FName(TEXT("AmmoCounter")));
-
-	//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget!!!"));
-	//	}
-	//}
 }
 
 void AWeapon::LoadWeaponData()
@@ -310,22 +149,20 @@ void AWeapon::LoadWeaponData()
 		LeftMouseAction = WeaponData->LeftMouseAction;
 		RightMouseAction = WeaponData->RightMouseAction;
 
-		// <Projectile>
-		LeftProjectileClass = WeaponData->LeftProjectileClass;
-		RightProjectileClass = WeaponData->RightProjectileClass;
-
+		// <Projectile Class>
 		FireData_L.ProjectileClass = WeaponData->LeftProjectileClass;
 		FireData_R.ProjectileClass = WeaponData->RightProjectileClass;
 
 		// <Sound>
-		FireSound = WeaponData->FireSound;
 		ChargeSound = WeaponData->ChargeSound;
 
 		FireData_L.FireSound = WeaponData->FireSound_L;
 		FireData_R.FireSound = WeaponData->FireSound_R;
 
+		TargetSearchLoopSound = WeaponData->TargetSearchLoopSound;
+		TargetLockedSound = WeaponData->TargetLockedSound;
+
 		// <Effect>
-		MuzzleFireEffect = WeaponData->FireEffect;
 		ChargeEffect = WeaponData->ChargeEffect;
 		ChargeEffectLocation = WeaponData->ChargeEffectLocation;
 		ChargeEffectRotation = WeaponData->ChargeEffectRotation;
@@ -339,12 +176,14 @@ void AWeapon::LoadWeaponData()
 		TotalAmmo = MaxTotalAmmo;
 		MaxAmmoPerMag = WeaponData->MaxAmmoPerMag;
 		LeftAmmoInCurrentMag = MaxAmmoPerMag;
-		AmmoConsumedPerShot_Left = WeaponData->AmmoConsumedPerShot_Left;
-		AmmoConsumedPerShot_Right = WeaponData->AmmoConsumedPerShot_Right;
+		FireData_L.AmmoCost = WeaponData->AmmoConsumedPerShot_Left;
+		FireData_R.AmmoCost = WeaponData->AmmoConsumedPerShot_Right;
+		FireData_L.bAllowFireWithInsufficientAmmo = WeaponData->bAllowFireWithInsufficientAmmo_L;
+		FireData_R.bAllowFireWithInsufficientAmmo = WeaponData->bAllowFireWithInsufficientAmmo_R;
 
 		// <HitScan>
-		bIsHitScan_Left = WeaponData->bIsHitScan_Left;
-		bIsHitScan_Right = WeaponData->bIsHitScan_Right;
+		bIsHitScan_L = WeaponData->bIsHitScan_Left;
+		bIsHitScan_R = WeaponData->bIsHitScan_Right;
 
 		// <SingleShot>
 		SingleShotDelay = WeaponData->SingleShotDelay;
@@ -362,13 +201,14 @@ void AWeapon::LoadWeaponData()
 		ZoomSpread = WeaponData->ZoomSpread;
 
 		// <MultiProjectileSpread>
-		bEnableMultiProjectile_Left = WeaponData->bEnableMultiProjectile_Left;
-		bEnableMultiProjectile_Right = WeaponData->bEnableMultiProjectile_Right;
-		MaxAngleOfMultiProjectileSpread = WeaponData->MaxAngleOfMultiProjectileSpread;
-		PelletsNum = WeaponData->PelletsNum;
+		bEnableMultiProjectile_L = WeaponData->bEnableMultiProjectile_Left;
+		bEnableMultiProjectile_R = WeaponData->bEnableMultiProjectile_Right;
+		FireData_L.MaxAngleOfMultiProjectileSpread = WeaponData->MaxAngleOfMultiProjectileSpread_L;
+		FireData_R.MaxAngleOfMultiProjectileSpread = WeaponData->MaxAngleOfMultiProjectileSpread_R;
+		FireData_L.PelletsNum = WeaponData->PelletsNum_L;
+		FireData_R.PelletsNum = WeaponData->PelletsNum_R;
 
 		// <Recoil>
-		DefaultRecoil = WeaponData->DefaultRecoil;
 		ZoomRecoil = WeaponData->ZoomRecoil;
 
 		FireData_L.Recoil = WeaponData->DefaultRecoil_L;
@@ -386,7 +226,6 @@ void AWeapon::LoadWeaponData()
 		RightHandSocketTransform_Crouch = WeaponData->RightHandSocketTransform_Crouch;
 
 		// <Camera Shake>
-		DefaultCameraShakeClass = WeaponData->DefaultCameraShakeClass;
 		ZoomCameraShakeClass = WeaponData->ZoomCameraShakeClass;
 		ChargingCameraShakeClass = WeaponData->ChargingCameraShakeClass;
 
@@ -568,21 +407,32 @@ void AWeapon::DetachWeaponFromPlayer()
 	}
 }
 
-void AWeapon::FireSingleProjectile(FWeaponFireData* FireData, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
+void AWeapon::FireSingleProjectile(FWeaponFireData* FireData, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
 {
 	if (CurrentState != UnequippedState)
 	{
-		if (Character == nullptr || Character->GetController() == nullptr)
+		if (Character == nullptr || Character->GetController() == nullptr || FireData == nullptr)
 		{
 			return;
 		}
 
-		if (AmmoCost > 0)
+		if (FireData->AmmoCost > 0)
 		{
-			if (!HasAmmoInCurrentMag(AmmoCost))
+			if (FireData->bAllowFireWithInsufficientAmmo)
 			{
-				return;
+				if (LeftAmmoInCurrentMag <= 0)
+				{
+					return;
+				}
 			}
+			else
+			{
+				if (!HasAmmoInCurrentMag(FireData->AmmoCost))
+				{
+					return;
+				}
+			}
+			ConsumeAmmo(FireData->AmmoCost, FireData->bAllowFireWithInsufficientAmmo);
 		}
 
 		FVector LineTraceStartLocation = Character->GetCameraComponent()->GetComponentLocation();
@@ -664,10 +514,6 @@ void AWeapon::FireSingleProjectile(FWeaponFireData* FireData, int32 NumPenetrabl
 		}
 
 		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
-		if (AmmoCost > 0)
-		{
-			ConsumeAmmo(AmmoCost);
-		}
 
 		// <Overheat>
 		if (bIsOverheatMode)
@@ -692,111 +538,121 @@ void AWeapon::FireSingleProjectile(FWeaponFireData* FireData, int32 NumPenetrabl
 	}
 }
 
-void AWeapon::FireMultiProjectile(FWeaponFireData* FireData, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 AdditionalPellet, bool bIsHoming, AActor* HomingTarget)
+void AWeapon::FireMultiProjectile(FWeaponFireData* FireData, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 AdditionalPellet, bool bIsHoming, AActor* HomingTarget)
 {
 	if (CurrentState != UnequippedState)
 	{
-		if (Character == nullptr || Character->GetController() == nullptr)
+		if (Character == nullptr || Character->GetController() == nullptr || FireData == nullptr)
 		{
 			return;
 		}
 
-		if (HasAmmoInCurrentMag(AmmoCost))
+		if (FireData->AmmoCost > 0)
 		{
-			if (bIsZoomIn)
+			if (FireData->bAllowFireWithInsufficientAmmo)
 			{
-				if (ZoomSpread.bEnableAimUISpread)
+				if (LeftAmmoInCurrentMag <= 0)
 				{
-					AddSpreadValue(&ZoomSpread);
+					return;
 				}
 			}
 			else
 			{
-				if (DefaultSpread.bEnableAimUISpread)
+				if (!HasAmmoInCurrentMag(FireData->AmmoCost))
 				{
-					AddSpreadValue(&DefaultSpread);
+					return;
 				}
 			}
-
-			FVector LineTraceStartLocation = Character->GetCameraComponent()->GetComponentLocation();
-			FVector LineTraceDirection = Character->GetCameraComponent()->GetForwardVector();
-			FVector LineTraceHitLocation;
-
-			if (PerformSphereTrace(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, SphereTraceRadius, LineTraceHitLocation))
-			{
-				TargetLocationOfProjectile = LineTraceHitLocation;
-			}
-			else
-			{
-				TargetLocationOfProjectile = LineTraceHitLocation;
-			}
-
-			// <Fire Projectile>
-			if (FireData != nullptr && FireData->ProjectileClass != nullptr)
-			{
-				UWorld* const World = GetWorld();
-				if (World != nullptr)
-				{
-					const FVector SpawnLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
-
-					for (int pellet = 0; pellet < (PelletsNum + AdditionalPellet); pellet++)
-					{
-						const FRotator SpawnRotation = UKismetMathLibrary::RandomUnitVectorInConeInDegrees((TargetLocationOfProjectile - SpawnLocation).GetSafeNormal(), MaxAngleOfMultiProjectileSpread).Rotation();
-
-						FActorSpawnParameters ActorSpawnParams;
-						ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-						ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(FireData->ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-						Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable);
-						SetUpAimUIDelegateBinding(Projectile);
-						Projectile->LaunchProjectile();
-
-						//TODO: 나중에는 Multi Homing Projectile도 가능하게 만들예정. 자동 타겟팅으로
-					}
-					UE_LOG(LogTemp, Error, TEXT("Pellet Num: %d"), (PelletsNum + AdditionalPellet));
-
-					SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, (TargetLocationOfProjectile - SpawnLocation).GetSafeNormal().Rotation());
-				}
-			}
-
-			// Try and play the sound if specified
-			if (FireData != nullptr && FireData->FireSound != nullptr)
-			{
-				UGameplayStatics::PlaySoundAtLocation(this, FireData->FireSound, Character->GetActorLocation());
-			}
-
-			StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
-
-			if (AmmoCost > 0)
-			{
-				ConsumeAmmo(AmmoCost);
-			}
-
-			// <Overheat>
-			if (bIsOverheatMode)
-			{
-				AddOverheatValue();
-			}
-
-			// <Recoil & CamShake>
-			if (bIsZoomIn)
-			{
-				AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-				ApplyCameraShake(ZoomCameraShakeClass);
-			}
-			else
-			{
-				AddRecoilValue(&FireData->Recoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-				ApplyCameraShake(FireData->CamShake);
-			}
-
-			// <ArmRecoil Animation>
-			AddArmRecoil(&FireData->Armrecoil);
+			ConsumeAmmo(FireData->AmmoCost, FireData->bAllowFireWithInsufficientAmmo);
 		}
+
+		if (bIsZoomIn)
+		{
+			if (ZoomSpread.bEnableAimUISpread)
+			{
+				AddSpreadValue(&ZoomSpread);
+			}
+		}
+		else
+		{
+			if (DefaultSpread.bEnableAimUISpread)
+			{
+				AddSpreadValue(&DefaultSpread);
+			}
+		}
+
+		FVector LineTraceStartLocation = Character->GetCameraComponent()->GetComponentLocation();
+		FVector LineTraceDirection = Character->GetCameraComponent()->GetForwardVector();
+		FVector LineTraceHitLocation;
+
+		if (PerformSphereTrace(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, SphereTraceRadius, LineTraceHitLocation))
+		{
+			TargetLocationOfProjectile = LineTraceHitLocation;
+		}
+		else
+		{
+			TargetLocationOfProjectile = LineTraceHitLocation;
+		}
+
+		// <Fire Projectile>
+		if (FireData != nullptr && FireData->ProjectileClass != nullptr)
+		{
+			UWorld* const World = GetWorld();
+			if (World != nullptr)
+			{
+				const FVector SpawnLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
+
+				for (int pellet = 0; pellet < (FireData->PelletsNum + AdditionalPellet); pellet++)
+				{
+					const FRotator SpawnRotation = UKismetMathLibrary::RandomUnitVectorInConeInDegrees((TargetLocationOfProjectile - SpawnLocation).GetSafeNormal(), FireData->MaxAngleOfMultiProjectileSpread).Rotation();
+
+					FActorSpawnParameters ActorSpawnParams;
+					ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+					ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(FireData->ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+					Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable);
+					SetUpAimUIDelegateBinding(Projectile);
+					Projectile->LaunchProjectile();
+
+					//TODO: 나중에는 Multi Homing Projectile도 가능하게 만들예정. 자동 타겟팅으로
+				}
+				//UE_LOG(LogTemp, Error, TEXT("Pellet Num: %d"), (FireData->PelletsNum + AdditionalPellet));
+				SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, (TargetLocationOfProjectile - SpawnLocation).GetSafeNormal().Rotation());
+			}
+		}
+
+		// <Sound>
+		if (FireData != nullptr && FireData->FireSound != nullptr)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, FireData->FireSound, Character->GetActorLocation());
+		}
+
+		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon); //TODO: 사용안함. 제거
+
+		// <Overheat>
+		if (bIsOverheatMode)
+		{
+			AddOverheatValue();
+		}
+
+		// <Recoil & CamShake>
+		if (bIsZoomIn)
+		{
+			AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+			ApplyCameraShake(ZoomCameraShakeClass);
+		}
+		else
+		{
+			AddRecoilValue(&FireData->Recoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+			ApplyCameraShake(FireData->CamShake);
+		}
+
+		// <ArmRecoil Animation>
+		AddArmRecoil(&FireData->Armrecoil);
 	}
 }
 
-void AWeapon::FireSingleHitScan(FWeaponFireData* FireData, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
+void AWeapon::FireSingleHitScan(FWeaponFireData* FireData, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
 {
 	UE_LOG(LogTemp, Error, TEXT("FireSingleHitScan!"));
 
@@ -807,12 +663,23 @@ void AWeapon::FireSingleHitScan(FWeaponFireData* FireData, int32 NumPenetrable, 
 			return;
 		}
 
-		if (AmmoCost > 0)
+		if (FireData->AmmoCost > 0)
 		{
-			if (!HasAmmoInCurrentMag(AmmoCost))
+			if (FireData->bAllowFireWithInsufficientAmmo)
 			{
-				return;
+				if (LeftAmmoInCurrentMag <= 0)
+				{
+					return;
+				}
 			}
+			else
+			{
+				if (!HasAmmoInCurrentMag(FireData->AmmoCost))
+				{
+					return;
+				}
+			}
+			ConsumeAmmo(FireData->AmmoCost, FireData->bAllowFireWithInsufficientAmmo);
 		}
 
 		FVector LineTraceStartLocation = Character->GetCameraComponent()->GetComponentLocation();
@@ -891,10 +758,6 @@ void AWeapon::FireSingleHitScan(FWeaponFireData* FireData, int32 NumPenetrable, 
 		}
 
 		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
-		if (AmmoCost > 0)
-		{
-			ConsumeAmmo(AmmoCost);
-		}
 
 		// <Recoil & CamShake>
 		if (bIsZoomIn)
@@ -1041,18 +904,18 @@ void AWeapon::CancelAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* We
 #pragma endregion
 
 
-void AWeapon::PlayChargeSound()
+void AWeapon::PlayWeaponSound(USoundBase* weaponsound)
 {
-	if (ChargeSound)
+	if (weaponsound)
 	{
-		ChargeAudioComponent = UGameplayStatics::SpawnSoundAttached(ChargeSound, GetRootComponent(), FName(TEXT("Muzzle")), FVector(0, 0, 0), EAttachLocation::KeepRelativeOffset);
+		WeaponAudioComponent = UGameplayStatics::SpawnSoundAttached(weaponsound, GetRootComponent(), FName(TEXT("Muzzle")), FVector(0, 0, 0), EAttachLocation::KeepRelativeOffset);
 	}
 }
-void AWeapon::StopChargeSound()
+void AWeapon::StopWeaponSound()
 {
-	if (ChargeAudioComponent)
+	if (WeaponAudioComponent)
 	{
-		ChargeAudioComponent->Stop();
+		WeaponAudioComponent->Stop();
 	}
 }
 
@@ -1304,7 +1167,7 @@ void AWeapon::SetInputActionBinding()
 						{
 							HandleSingleFire(bIsLeftInput, bSingleProjectile, NumPenetrable);
 						},
-						true, !bEnableMultiProjectile_Left, MaxPenetrableObjectsNum_Left
+						true, !bEnableMultiProjectile_L, MaxPenetrableObjectsNum_Left
 					));
 				}
 				else if (LeftMouseAction == EWeaponAction::WeaponAction_BurstShot)
@@ -1316,7 +1179,7 @@ void AWeapon::SetInputActionBinding()
 						{
 							HandleBurstFire(bIsLeftInput, bSingleProjectile, NumPenetrable);
 						},
-						true, !bEnableMultiProjectile_Left, MaxPenetrableObjectsNum_Left
+						true, !bEnableMultiProjectile_L, MaxPenetrableObjectsNum_Left
 					));
 				}
 				else if (LeftMouseAction == EWeaponAction::WeaponAction_FullAutoShot)
@@ -1328,7 +1191,7 @@ void AWeapon::SetInputActionBinding()
 						{
 							StartFullAutoShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
 						},
-						true, !bEnableMultiProjectile_Left, MaxPenetrableObjectsNum_Left
+						true, !bEnableMultiProjectile_L, MaxPenetrableObjectsNum_Left
 					));
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(LeftFullAutoShotAction, ETriggerEvent::Completed, this, &AWeapon::StopFullAutoShot));
 				}
@@ -1365,7 +1228,7 @@ void AWeapon::SetInputActionBinding()
 						{
 							HandleSingleFire(bIsLeftInput, bSingleProjectile, NumPenetrable);
 						},
-						false, !bEnableMultiProjectile_Right, MaxPenetrableObjectsNum_Right
+						false, !bEnableMultiProjectile_R, MaxPenetrableObjectsNum_Right
 					));
 				}
 				else if (RightMouseAction == EWeaponAction::WeaponAction_BurstShot)
@@ -1377,7 +1240,7 @@ void AWeapon::SetInputActionBinding()
 						{
 							HandleBurstFire(bIsLeftInput, bSingleProjectile, NumPenetrable);
 						},
-						false, !bEnableMultiProjectile_Right, MaxPenetrableObjectsNum_Right
+						false, !bEnableMultiProjectile_R, MaxPenetrableObjectsNum_Right
 					));
 				}
 				else if (RightMouseAction == EWeaponAction::WeaponAction_FullAutoShot)
@@ -1389,7 +1252,7 @@ void AWeapon::SetInputActionBinding()
 						{
 							StartFullAutoShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
 						},
-						false, !bEnableMultiProjectile_Right, MaxPenetrableObjectsNum_Right
+						false, !bEnableMultiProjectile_R, MaxPenetrableObjectsNum_Right
 					));
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(RightFullAutoShotAction, ETriggerEvent::Completed, this, &AWeapon::StopFullAutoShot));
 				}
@@ -1478,11 +1341,26 @@ void AWeapon::StopReload()
 	ChangeState(IdleState);
 }
 
-void AWeapon::ConsumeAmmo(int32 AmmoCost)
+void AWeapon::ConsumeAmmo(int32 AmmoCost, bool AllowFireWithInsufficientAmmo)
 {
 	if (LeftAmmoInCurrentMag > 0)
 	{
-		LeftAmmoInCurrentMag -= AmmoCost;
+		if (AllowFireWithInsufficientAmmo)
+		{
+			if (LeftAmmoInCurrentMag >= AmmoCost)
+			{
+				LeftAmmoInCurrentMag -= AmmoCost;
+			}
+			else
+			{
+				LeftAmmoInCurrentMag = 0;
+			}
+		}
+		else
+		{
+			LeftAmmoInCurrentMag -= AmmoCost;
+		}
+
 		if (AmmoCounterWidget)
 		{
 			AmmoCounterWidget->UpdateAmmoCount(LeftAmmoInCurrentMag);
@@ -1524,7 +1402,7 @@ bool AWeapon::HasAmmoInCurrentMag()
 }
 bool AWeapon::HasAmmoInCurrentMag(int32 AmmoCost)
 {
-	return (LeftAmmoInCurrentMag - AmmoCost >= 0);
+	return LeftAmmoInCurrentMag >= AmmoCost;
 }
 bool AWeapon::AddAmmo(int32 NumAmmo)
 {
@@ -1667,36 +1545,24 @@ void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, int32 N
 	{
 		if (bSingleProjectile)
 		{
-			if (bIsHitScan_Left)
-			{
-				FireSingleHitScan(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
-			}
-			else
-			{
-				FireSingleProjectile(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, false);
-			}
+			if (bIsHitScan_L) { FireSingleHitScan(&FireData_L, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius); }
+			else { FireSingleProjectile(&FireData_L, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, false); }
 		}
 		else
-		{
-			FireMultiProjectile(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, AdditionalPellet, false);
+		{ 
+			FireMultiProjectile(&FireData_L, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, AdditionalPellet, false);
 		}
 	}
 	else
 	{
 		if (bSingleProjectile)
 		{
-			if (bIsHitScan_Right)
-			{
-				FireSingleHitScan(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
-			}
-			else
-			{
-				FireSingleProjectile(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, false);
-			}
+			if (bIsHitScan_R) { FireSingleHitScan(&FireData_R, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius); }
+			else { FireSingleProjectile(&FireData_R, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, false); }
 		}
 		else
 		{
-			FireMultiProjectile(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, AdditionalPellet, false);
+			FireMultiProjectile(&FireData_R, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, AdditionalPellet, false);
 		}
 	}
 
@@ -1717,36 +1583,24 @@ void AWeapon::StartBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 Nu
 		{
 			if (bSingleProjectile)
 			{
-				if (bIsHitScan_Left)
-				{
-					FireSingleHitScan(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-				}
-				else
-				{
-					FireSingleProjectile(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
-				}
+				if (bIsHitScan_L) { FireSingleHitScan(&FireData_L, NumPenetrable,  AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw); }
+				else { FireSingleProjectile(&FireData_L, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false); }
 			}
 			else
 			{
-				FireMultiProjectile(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, 0, false);
+				FireMultiProjectile(&FireData_L, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, 0, false);
 			}
 		}
 		else
 		{
 			if (bSingleProjectile)
 			{
-				if (bIsHitScan_Right)
-				{
-					FireSingleHitScan(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-				}
-				else
-				{
-					FireSingleProjectile(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
-				}
+				if (bIsHitScan_R) { FireSingleHitScan(&FireData_R, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw); }
+				else { FireSingleProjectile(&FireData_R, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false); }
 			}
 			else
 			{
-				FireMultiProjectile(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, 0, false);
+				FireMultiProjectile(&FireData_R, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, 0, false);
 			}
 		}
 		BurstShotFired++;
@@ -1787,36 +1641,24 @@ void AWeapon::UpdateFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int3
 	{
 		if (bIsLeftInput)
 		{
-			if (bIsHitScan_Left)
-			{
-				FireSingleHitScan(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left);
-			}
-			else
-			{
-				FireSingleProjectile(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left);
-			}
+			if (bIsHitScan_L) { FireSingleHitScan(&FireData_L, NumPenetrable); }
+			else { FireSingleProjectile(&FireData_L, NumPenetrable); }
 		}
 		else
 		{
-			if (bIsHitScan_Right)
-			{
-				FireSingleHitScan(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right);
-			}
-			else
-			{
-				FireSingleProjectile(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right);
-			}
+			if (bIsHitScan_R) { FireSingleHitScan(&FireData_R, NumPenetrable); }
+			else { FireSingleProjectile(&FireData_R, NumPenetrable); }
 		}
 	}
 	else
 	{
 		if (bIsLeftInput)
 		{
-			FireMultiProjectile(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left);
+			FireMultiProjectile(&FireData_L, NumPenetrable);
 		}
 		else
 		{
-			FireMultiProjectile(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right);
+			FireMultiProjectile(&FireData_R, NumPenetrable);
 		}	
 	}
 
@@ -1849,6 +1691,7 @@ void AWeapon::StartTargetDetection()
 		UE_LOG(LogTemp, Warning, TEXT("Start Target Detection!!!"));
 
 		ChangeState(TargetingState);
+		PlayWeaponSound(TargetSearchLoopSound);
 		UpdateTargetDetection(GetWorld()->GetDeltaSeconds());
 	}
 }
@@ -1905,6 +1748,11 @@ void AWeapon::UpdateTargetDetection(float DeltaTime) //TODO: 해당 타겟 혹은 기존
 							NewTargetMarker->SetAlignmentInViewport(FVector2D(0.5f, 0.5f));
 							NewTargetMarker->SetVisibility(ESlateVisibility::Hidden);
 						}
+
+						if (TargetLockedSound)
+						{
+							UGameplayStatics::PlaySoundAtLocation(this, TargetLockedSound, Character->GetActorLocation());
+						}
 					}
 				}
 			}
@@ -1928,6 +1776,8 @@ void AWeapon::StopTargetDetection(FWeaponFireData* FireData)
 		CurrentTargetDetectionAngle = 0.f;
 
 		ResetTargetMarkers();
+
+		StopWeaponSound();
 
 		TArray<AActor*> TargetsArray = Targets.Array();
 		Targets.Empty();
@@ -2169,7 +2019,7 @@ void AWeapon::StartMissileLaunch(TArray<AActor*> TargetActors, FWeaponFireData* 
 }
 void AWeapon::UpdateMissileLaunch(FWeaponFireData* FireData)
 {
-	FireSingleProjectile(FireData, 0, 0, 0.f, 0.f, 0.f, 0.f, true, ConfirmedTargets[CurrentTargetIndex]);
+	FireSingleProjectile(FireData, 0, 0.f, 0.f, 0.f, 0.f, true, ConfirmedTargets[CurrentTargetIndex]);
 	CurrentTargetIndex++;
 	if (ConfirmedTargets.Num() <= CurrentTargetIndex)
 	{
@@ -2197,7 +2047,7 @@ void AWeapon::StartCharge()
 		ChangeState(ChargingState);
 
 		SpawnChargeEffect(ChargeEffectLocation, ChargeEffectRotation, ChargeEffenctScale);
-		PlayChargeSound();
+		PlayWeaponSound(ChargeSound);
 
 		UpdateCharge();
 	}
@@ -2234,7 +2084,7 @@ void AWeapon::StopCharge()
 		GetWorld()->GetTimerManager().ClearTimer(ChargingTimer);
 
 		DestroyChargeEffect();
-		StopChargeSound();
+		StopWeaponSound();
 
 		ChangeState(FiringState);
 
@@ -2281,6 +2131,8 @@ void AWeapon::AddRecoilValue(FWeaponRecoilStruct* RecoilStruct, float Additional
 
 	if (RecoilStruct)
 	{
+		CurrentRecoil = RecoilStruct;
+
 		float RandRecoilPitch = FMath::RandRange((RecoilStruct->RecoilAmountPitch + AdditionalRecoilAmountPitch) * RecoilStruct->RecoilRangeMinPitch, (RecoilStruct->RecoilAmountPitch + AdditionalRecoilAmountPitch) * RecoilStruct->RecoilRangeMaxPitch) * (-1);
 		float RandRecoilYaw = FMath::RandRange((RecoilStruct->RecoilAmountYaw + AdditionalRecoilAmountYaw) * RecoilStruct->RecoilRangeMinYaw, (RecoilStruct->RecoilAmountYaw + AdditionalRecoilAmountYaw) * RecoilStruct->RecoilRangeMaxYaw);
 
@@ -2393,8 +2245,8 @@ void AWeapon::UpdateRecoil(float DeltaTime)
 			}
 			else
 			{
-				ApplyRecoil(DeltaTime, &DefaultRecoil);
-				RecoverRecoil(DeltaTime, &DefaultRecoil);
+				ApplyRecoil(DeltaTime, CurrentRecoil);
+				RecoverRecoil(DeltaTime, CurrentRecoil);
 			}
 		}
 	}

@@ -34,6 +34,14 @@ public:
 	UNiagaraSystem* MuzzleFireEffect;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UWeaponCameraShakeBase> CamShake;
+	UPROPERTY(EditAnywhere)
+	int32 AmmoCost = 1;
+	UPROPERTY(EditAnywhere)
+	float MaxAngleOfMultiProjectileSpread = 3.f;
+	UPROPERTY(EditAnywhere)
+	int32 PelletsNum = 6;
+	UPROPERTY(EditAnywhere)
+	bool bAllowFireWithInsufficientAmmo = false;
 
 	FWeaponFireData() :
 		ProjectileClass(nullptr),
@@ -41,7 +49,11 @@ public:
 		Recoil(),
 		FireSound(nullptr),
 		MuzzleFireEffect(nullptr),
-		CamShake()
+		CamShake(),
+		AmmoCost(1),
+		MaxAngleOfMultiProjectileSpread(3.f),
+		PelletsNum(6),
+		bAllowFireWithInsufficientAmmo()
 	{
 	}
 
@@ -51,14 +63,22 @@ public:
 		FWeaponRecoilStruct InRecoil,
 		USoundBase* InFireSound,
 		UNiagaraSystem* InMuzzleFireEffect,
-		TSubclassOf<UWeaponCameraShakeBase> InCamShake
+		TSubclassOf<UWeaponCameraShakeBase> InCamShake,
+		int32 InAmmoCost,
+		float InMaxAngleOfMultiProjectileSpread,
+		int32 InPelletsNum,
+		bool InbAllowFireWithInsufficientAmmo
 	) :
 		ProjectileClass(InProjectileClass),
 		Armrecoil(InArmRecoilStruct),
 		Recoil(InRecoil),
 		FireSound(InFireSound),
 		MuzzleFireEffect(InMuzzleFireEffect),
-		CamShake(InCamShake)
+		CamShake(InCamShake),
+		AmmoCost(InAmmoCost),
+		MaxAngleOfMultiProjectileSpread(InMaxAngleOfMultiProjectileSpread),
+		PelletsNum(InPelletsNum),
+		bAllowFireWithInsufficientAmmo(InbAllowFireWithInsufficientAmmo)
 	{
 	}
 };
