@@ -314,9 +314,15 @@ void AWeapon::LoadWeaponData()
 		LeftProjectileClass = WeaponData->LeftProjectileClass;
 		RightProjectileClass = WeaponData->RightProjectileClass;
 
+		FireData_L.ProjectileClass = WeaponData->LeftProjectileClass;
+		FireData_R.ProjectileClass = WeaponData->RightProjectileClass;
+
 		// <Sound>
 		FireSound = WeaponData->FireSound;
 		ChargeSound = WeaponData->ChargeSound;
+
+		FireData_L.FireSound = WeaponData->FireSound_L;
+		FireData_R.FireSound = WeaponData->FireSound_R;
 
 		// <Effect>
 		MuzzleFireEffect = WeaponData->FireEffect;
@@ -324,6 +330,9 @@ void AWeapon::LoadWeaponData()
 		ChargeEffectLocation = WeaponData->ChargeEffectLocation;
 		ChargeEffectRotation = WeaponData->ChargeEffectRotation;
 		ChargeEffenctScale = WeaponData->ChargeEffenctScale;
+
+		FireData_L.MuzzleFireEffect = WeaponData->FireEffect_L;
+		FireData_R.MuzzleFireEffect = WeaponData->FireEffect_R;
 
 		// <Reload>
 		MaxTotalAmmo = WeaponData->MaxTotalAmmo;
@@ -362,6 +371,9 @@ void AWeapon::LoadWeaponData()
 		DefaultRecoil = WeaponData->DefaultRecoil;
 		ZoomRecoil = WeaponData->ZoomRecoil;
 
+		FireData_L.Recoil = WeaponData->DefaultRecoil_L;
+		FireData_R.Recoil = WeaponData->DefaultRecoil_R;
+
 		// <ArmRecoil Animation>
 		ArmRecoil_L = WeaponData->ArmRecoil_L;
 		ArmRecoil_R = WeaponData->ArmRecoil_R;
@@ -377,6 +389,9 @@ void AWeapon::LoadWeaponData()
 		DefaultCameraShakeClass = WeaponData->DefaultCameraShakeClass;
 		ZoomCameraShakeClass = WeaponData->ZoomCameraShakeClass;
 		ChargingCameraShakeClass = WeaponData->ChargingCameraShakeClass;
+
+		FireData_L.CamShake = WeaponData->DefaultCameraShakeClass_L;
+		FireData_R.CamShake = WeaponData->DefaultCameraShakeClass_R;
 
 		// <Targeting(Homing)>
 		MissileLaunchDelay = WeaponData->MissileLaunchDelay;
@@ -553,7 +568,7 @@ void AWeapon::DetachWeaponFromPlayer()
 	}
 }
 
-void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
+void AWeapon::FireSingleProjectile(FWeaponFireData* FireData, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
 {
 	if (CurrentState != UnequippedState)
 	{
@@ -591,7 +606,6 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 			{
 				LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
 			}
-
 			if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
 			{
 				AddSpreadValue(&DefaultSpread);
@@ -617,7 +631,7 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 		}
 
 		// Try and fire a projectile
-		if (InProjectileClass != nullptr)
+		if (FireData != nullptr && FireData->ProjectileClass != nullptr)
 		{
 			UWorld* const World = GetWorld();
 			if (World != nullptr)
@@ -630,7 +644,7 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 				// Spawn the projectile at the muzzle
-				ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(InProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+				ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(FireData->ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 				Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable);
 				SetUpAimUIDelegateBinding(Projectile);
 				if (bIsHoming)
@@ -639,16 +653,15 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 				}
 				Projectile->LaunchProjectile();
 
-				SpawnMuzzleFireEffect(SpawnLocation, SpawnRotation);
+				SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, SpawnRotation);
 			}
 		}
 
 		// Try and play the sound if specified
-		if (FireSound != nullptr)
+		if (FireData != nullptr && FireData->FireSound != nullptr)
 		{
-			UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(this, FireData->FireSound, Character->GetActorLocation());
 		}
-
 
 		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
 		if (AmmoCost > 0)
@@ -667,18 +680,19 @@ void AWeapon::FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProject
 		{
 			AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
 			ApplyCameraShake(ZoomCameraShakeClass);
-			AddArmRecoil(armrecoil);
 		}
 		else
 		{
-			AddRecoilValue(&DefaultRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-			ApplyCameraShake(DefaultCameraShakeClass);
-			AddArmRecoil(armrecoil);
+			AddRecoilValue(&FireData->Recoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+			ApplyCameraShake(FireData->CamShake);
 		}
+
+		// <ArmRecoil Animation>
+		AddArmRecoil(&FireData->Armrecoil);
 	}
 }
 
-void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 AdditionalPellet, bool bIsHoming, AActor* HomingTarget)
+void AWeapon::FireMultiProjectile(FWeaponFireData* FireData, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 AdditionalPellet, bool bIsHoming, AActor* HomingTarget)
 {
 	if (CurrentState != UnequippedState)
 	{
@@ -718,7 +732,7 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 			}
 
 			// <Fire Projectile>
-			if (InProjectileClass != nullptr)
+			if (FireData != nullptr && FireData->ProjectileClass != nullptr)
 			{
 				UWorld* const World = GetWorld();
 				if (World != nullptr)
@@ -732,7 +746,7 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 						FActorSpawnParameters ActorSpawnParams;
 						ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-						ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(InProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+						ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(FireData->ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 						Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable);
 						SetUpAimUIDelegateBinding(Projectile);
 						Projectile->LaunchProjectile();
@@ -741,14 +755,14 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 					}
 					UE_LOG(LogTemp, Error, TEXT("Pellet Num: %d"), (PelletsNum + AdditionalPellet));
 
-					SpawnMuzzleFireEffect(SpawnLocation, (TargetLocationOfProjectile - SpawnLocation).GetSafeNormal().Rotation());
+					SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, (TargetLocationOfProjectile - SpawnLocation).GetSafeNormal().Rotation());
 				}
 			}
 
 			// Try and play the sound if specified
-			if (FireSound != nullptr)
+			if (FireData != nullptr && FireData->FireSound != nullptr)
 			{
-				UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
+				UGameplayStatics::PlaySoundAtLocation(this, FireData->FireSound, Character->GetActorLocation());
 			}
 
 			StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
@@ -769,19 +783,20 @@ void AWeapon::FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjecti
 			{
 				AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
 				ApplyCameraShake(ZoomCameraShakeClass);
-				AddArmRecoil(armrecoil);
 			}
 			else
 			{
-				AddRecoilValue(&DefaultRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-				ApplyCameraShake(DefaultCameraShakeClass);
-				AddArmRecoil(armrecoil);
+				AddRecoilValue(&FireData->Recoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+				ApplyCameraShake(FireData->CamShake);
 			}
+
+			// <ArmRecoil Animation>
+			AddArmRecoil(&FireData->Armrecoil);
 		}
 	}
 }
 
-void AWeapon::FireSingleHitScan(const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
+void AWeapon::FireSingleHitScan(FWeaponFireData* FireData, int32 NumPenetrable, int32 AmmoCost, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
 {
 	UE_LOG(LogTemp, Error, TEXT("FireSingleHitScan!"));
 
@@ -843,7 +858,7 @@ void AWeapon::FireSingleHitScan(const TSubclassOf<ASuraProjectile>& InProjectile
 		}
 
 		// Try and fire a projectile
-		if (InProjectileClass != nullptr)
+		if (FireData != nullptr && FireData->ProjectileClass != nullptr)
 		{
 			UWorld* const World = GetWorld();
 			if (World != nullptr)
@@ -856,7 +871,7 @@ void AWeapon::FireSingleHitScan(const TSubclassOf<ASuraProjectile>& InProjectile
 				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 				// Spawn the projectile at the muzzle
-				ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(InProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+				ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(FireData->ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 				Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable, true);
 				SetUpAimUIDelegateBinding(Projectile);
 
@@ -865,14 +880,14 @@ void AWeapon::FireSingleHitScan(const TSubclassOf<ASuraProjectile>& InProjectile
 				//Projectile->LaunchProjectile(); //TODO: not to use Collision Check
 				Projectile->LaunchHitScan(LineTraceStartLocation, LineTraceDirection);
 
-				SpawnMuzzleFireEffect(SpawnLocation, SpawnRotation);
+				SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, SpawnRotation);
 			}
 		}
 
 		// Try and play the sound if specified
-		if (FireSound != nullptr)
+		if (FireData != nullptr && FireData->FireSound != nullptr)
 		{
-			UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(this, FireData->FireSound, Character->GetActorLocation());
 		}
 
 		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
@@ -886,14 +901,15 @@ void AWeapon::FireSingleHitScan(const TSubclassOf<ASuraProjectile>& InProjectile
 		{
 			AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
 			ApplyCameraShake(ZoomCameraShakeClass);
-			AddArmRecoil(armrecoil);
 		}
 		else
 		{
-			AddRecoilValue(&DefaultRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-			ApplyCameraShake(DefaultCameraShakeClass);
-			AddArmRecoil(armrecoil);
+			AddRecoilValue(&FireData->Recoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+			ApplyCameraShake(FireData->CamShake);
 		}
+
+		// <ArmRecoil Animation>
+		AddArmRecoil(&FireData->Armrecoil);
 	}
 }
 
@@ -1041,13 +1057,13 @@ void AWeapon::StopChargeSound()
 }
 
 #pragma region Niagara
-void AWeapon::SpawnMuzzleFireEffect(FVector SpawnLocation, FRotator SpawnRotation)
+void AWeapon::SpawnMuzzleFireEffect(UNiagaraSystem* FireEffect, FVector SpawnLocation, FRotator SpawnRotation)
 {
-	if (MuzzleFireEffect)
+	if (FireEffect)
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(), 
-			MuzzleFireEffect,
+			FireEffect,
 			SpawnLocation, 
 			SpawnRotation, 
 			FVector(1.0f),
@@ -1327,11 +1343,11 @@ void AWeapon::SetInputActionBinding()
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						LeftHoldAction,
 						ETriggerEvent::Completed,
-						[this](const FInputActionValue& InputActionValue, const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil)
+						[this](const FInputActionValue& InputActionValue, FWeaponFireData* InFireData)
 						{
-							StopTargetDetection(InProjectileClass, armrecoil);
+							StopTargetDetection(InFireData);
 						},
-						LeftProjectileClass, &ArmRecoil_L
+						&FireData_L
 					));
 				}
 				else if (LeftMouseAction == EWeaponAction::WeaponAction_Zoom)
@@ -1388,11 +1404,11 @@ void AWeapon::SetInputActionBinding()
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
 						RightHoldAction,
 						ETriggerEvent::Completed,
-						[this](const FInputActionValue& InputActionValue, const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil)
+						[this](const FInputActionValue& InputActionValue, FWeaponFireData* InFireData)
 						{
-							StopTargetDetection(InProjectileClass, armrecoil);
+							StopTargetDetection(InFireData);
 						},
-						RightProjectileClass, &ArmRecoil_R
+						&FireData_R
 					));
 				}
 				else if (RightMouseAction == EWeaponAction::WeaponAction_Zoom)
@@ -1653,16 +1669,16 @@ void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, int32 N
 		{
 			if (bIsHitScan_Left)
 			{
-				FireSingleHitScan(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
+				FireSingleHitScan(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
 			}
 			else
 			{
-				FireSingleProjectile(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, false);
+				FireSingleProjectile(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, false);
 			}
 		}
 		else
 		{
-			FireMultiProjectile(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, AdditionalPellet, false);
+			FireMultiProjectile(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, AdditionalPellet, false);
 		}
 	}
 	else
@@ -1671,16 +1687,16 @@ void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, int32 N
 		{
 			if (bIsHitScan_Right)
 			{
-				FireSingleHitScan(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
+				FireSingleHitScan(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius);
 			}
 			else
 			{
-				FireSingleProjectile(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, false);
+				FireSingleProjectile(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, false);
 			}
 		}
 		else
 		{
-			FireMultiProjectile(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, AdditionalPellet, false);
+			FireMultiProjectile(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, AdditionalPellet, false);
 		}
 	}
 
@@ -1703,16 +1719,16 @@ void AWeapon::StartBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 Nu
 			{
 				if (bIsHitScan_Left)
 				{
-					FireSingleHitScan(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+					FireSingleHitScan(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
 				}
 				else
 				{
-					FireSingleProjectile(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+					FireSingleProjectile(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 				}
 			}
 			else
 			{
-				FireMultiProjectile(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, 0, false);
+				FireMultiProjectile(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, 0, false);
 			}
 		}
 		else
@@ -1721,16 +1737,16 @@ void AWeapon::StartBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 Nu
 			{
 				if (bIsHitScan_Right)
 				{
-					FireSingleHitScan(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+					FireSingleHitScan(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
 				}
 				else
 				{
-					FireSingleProjectile(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+					FireSingleProjectile(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
 				}
 			}
 			else
 			{
-				FireMultiProjectile(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, 0, false);
+				FireMultiProjectile(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, 0, false);
 			}
 		}
 		BurstShotFired++;
@@ -1773,22 +1789,22 @@ void AWeapon::UpdateFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int3
 		{
 			if (bIsHitScan_Left)
 			{
-				FireSingleHitScan(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left);
+				FireSingleHitScan(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left);
 			}
 			else
 			{
-				FireSingleProjectile(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left);
+				FireSingleProjectile(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left);
 			}
 		}
 		else
 		{
 			if (bIsHitScan_Right)
 			{
-				FireSingleHitScan(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right);
+				FireSingleHitScan(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right);
 			}
 			else
 			{
-				FireSingleProjectile(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right);
+				FireSingleProjectile(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right);
 			}
 		}
 	}
@@ -1796,11 +1812,11 @@ void AWeapon::UpdateFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int3
 	{
 		if (bIsLeftInput)
 		{
-			FireMultiProjectile(LeftProjectileClass, &ArmRecoil_L, NumPenetrable, AmmoConsumedPerShot_Left);
+			FireMultiProjectile(&FireData_L, NumPenetrable, AmmoConsumedPerShot_Left);
 		}
 		else
 		{
-			FireMultiProjectile(RightProjectileClass, &ArmRecoil_R, NumPenetrable, AmmoConsumedPerShot_Right);
+			FireMultiProjectile(&FireData_R, NumPenetrable, AmmoConsumedPerShot_Right);
 		}	
 	}
 
@@ -1899,7 +1915,7 @@ void AWeapon::UpdateTargetDetection(float DeltaTime) //TODO: 해당 타겟 혹은 기존
 	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
 	GetWorld()->GetTimerManager().SetTimer(TargetDetectionTimer, [this, DeltaSeconds]() {UpdateTargetDetection(DeltaSeconds); }, DeltaSeconds, false);
 }
-void AWeapon::StopTargetDetection(const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil)
+void AWeapon::StopTargetDetection(FWeaponFireData* FireData)
 {
 	if (CurrentState == TargetingState)
 	{
@@ -1915,7 +1931,7 @@ void AWeapon::StopTargetDetection(const TSubclassOf<ASuraProjectile>& InProjecti
 
 		TArray<AActor*> TargetsArray = Targets.Array();
 		Targets.Empty();
-		StartMissileLaunch(TargetsArray, InProjectileClass, armrecoil);
+		StartMissileLaunch(TargetsArray, FireData);
 	}
 }
 
@@ -2137,7 +2153,7 @@ void AWeapon::ResetTargetMarkers()
 	MapTargetActorToWidget.Empty();
 }
 
-void AWeapon::StartMissileLaunch(TArray<AActor*> TargetActors, const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil)
+void AWeapon::StartMissileLaunch(TArray<AActor*> TargetActors, FWeaponFireData* FireData)
 {
 	ConfirmedTargets = TargetActors;
 	CurrentTargetIndex = 0;
@@ -2148,12 +2164,12 @@ void AWeapon::StartMissileLaunch(TArray<AActor*> TargetActors, const TSubclassOf
 	else
 	{
 		ChangeState(FiringState);
-		UpdateMissileLaunch(InProjectileClass, armrecoil);
+		UpdateMissileLaunch(FireData);
 	}
 }
-void AWeapon::UpdateMissileLaunch(const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil)
+void AWeapon::UpdateMissileLaunch(FWeaponFireData* FireData)
 {
-	FireSingleProjectile(InProjectileClass, armrecoil, 0, 0, 0.f, 0.f, 0.f, 0.f, true, ConfirmedTargets[CurrentTargetIndex]);
+	FireSingleProjectile(FireData, 0, 0, 0.f, 0.f, 0.f, 0.f, true, ConfirmedTargets[CurrentTargetIndex]);
 	CurrentTargetIndex++;
 	if (ConfirmedTargets.Num() <= CurrentTargetIndex)
 	{
@@ -2161,7 +2177,7 @@ void AWeapon::UpdateMissileLaunch(const TSubclassOf<ASuraProjectile>& InProjecti
 	}
 	else
 	{
-		GetWorld()->GetTimerManager().SetTimer(MissileLaunchTimer, [this, InProjectileClass, armrecoil] {UpdateMissileLaunch(InProjectileClass, armrecoil); }, MissileLaunchDelay, false);
+		GetWorld()->GetTimerManager().SetTimer(MissileLaunchTimer, [this, FireData] {UpdateMissileLaunch(FireData); }, MissileLaunchDelay, false);
 	}
 }
 void AWeapon::StopMissileLaunch()

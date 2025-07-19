@@ -31,13 +31,12 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 	TSubclassOf<class ASuraProjectile> RightProjectileClass;
 	//-----------------------------------------------------------------
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//EProjectileType ProjectileType; //TODO: 2개 선택 가능하도록 해야함
-	
-	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UNiagaraSystem* FireEffect;
+	UNiagaraSystem* FireEffect; //TODO: 제거
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	UNiagaraSystem* FireEffect_L;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	UNiagaraSystem* FireEffect_R;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	UNiagaraSystem* ChargeEffect;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
@@ -48,7 +47,11 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	FVector ChargeEffenctScale = { 1.f, 1.f, 1.f };
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* FireSound;
+	USoundBase* FireSound; //TODO: 제거
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* FireSound_L;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* FireSound_R;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* ChargeSound;
 	//-----------------------------------------------------------------
@@ -106,13 +109,16 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	int32 PelletsNum = 9;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
-	FWeaponRecoilStruct DefaultRecoil;
+	FWeaponRecoilStruct DefaultRecoil; //TODO: 제거
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
+	FWeaponRecoilStruct DefaultRecoil_L;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
+	FWeaponRecoilStruct DefaultRecoil_R;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
 	FWeaponRecoilStruct ZoomRecoil;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
 	FArmRecoilStruct ArmRecoil_L;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
 	FArmRecoilStruct ArmRecoil_R;
 
@@ -129,7 +135,11 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	FTransform RightHandSocketTransform_Crouch;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
-	TSubclassOf<UWeaponCameraShakeBase> DefaultCameraShakeClass;
+	TSubclassOf<UWeaponCameraShakeBase> DefaultCameraShakeClass; //TODO: 제거
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
+	TSubclassOf<UWeaponCameraShakeBase> DefaultCameraShakeClass_L;
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
+	TSubclassOf<UWeaponCameraShakeBase> DefaultCameraShakeClass_R;
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
 	TSubclassOf<UWeaponCameraShakeBase> ZoomCameraShakeClass;
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")

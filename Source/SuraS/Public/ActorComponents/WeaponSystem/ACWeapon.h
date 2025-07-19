@@ -15,6 +15,7 @@
 #include "ActorComponents/WeaponSystem/WeaponRecoilStruct.h"
 #include "ActorComponents/WeaponSystem/ArmRecoilStruct.h"
 #include "ActorComponents/WeaponSystem/ProjectileSpreadValue.h"
+#include "WeaponFireData.h"
 
 #include "Engine/DataTable.h"
 #include "WeaponData.h"
@@ -63,9 +64,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	EWeaponAction RightMouseAction;
 
-	UPROPERTY(EditDefaultsOnly, Category = Projectile)
-	TSubclassOf<class ASuraProjectile> ProjectileClass;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 	TSubclassOf<class ASuraProjectile> LeftProjectileClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
@@ -112,8 +110,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* RightZoomAction;
 
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ReloadAction;
 	
@@ -134,15 +130,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void DetachWeaponFromPlayer();
 
-	void FireSingleProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil = nullptr, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
-	void FireMultiProjectile(const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil = nullptr, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireSingleProjectile(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireMultiProjectile(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 
 #pragma region HitScan
 protected:
 	bool bIsHitScan_Left = false;
 	bool bIsHitScan_Right = false;
 
-	void FireSingleHitScan(const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil = nullptr, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
+	void FireSingleHitScan(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, int32 AmmoCost = 1, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 	void FireMultiHitScan();
 #pragma endregion
 
@@ -170,35 +166,26 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 #pragma region WeaponState
-protected: //TODO: public
+protected:
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponBaseState* CurrentState;
-
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponIdleState* IdleState;
-
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponFiringState* FiringState;
-
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponUnequippedState* UnequippedState;
-
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponReloadingState* ReloadingState;
-
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponSwitchingState* SwitchingState;
-
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponTargetingState* TargetingState;
-
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponChargingState* ChargingState;
-
 public:
 	UFUNCTION()
 	USuraWeaponBaseState* GetCurrentState() const { return CurrentState; }
-
 	void ChangeState(USuraWeaponBaseState* NewState);
 
 #pragma region suhyeon
@@ -213,14 +200,17 @@ public:
 	void SetCharacter(class ASuraCharacterPlayerWeapon* InCharacter);
 #pragma endregion
 	
-#pragma endregion
-
 protected:
 	/** The Character holding this weapon*/
 	ASuraPawnPlayer* Character;
-	
 	APlayerController* CharacterController;
-		
+
+#pragma region FireData
+protected:
+	FWeaponFireData FireData_L;
+	FWeaponFireData FireData_R;
+#pragma endregion
+
 #pragma region Animation
 protected:
 	FTransform RightHandSocketTransform;
@@ -293,7 +283,7 @@ protected:
 	UPROPERTY()
 	UNiagaraComponent* ChargeEffectComponent;
 public:
-	void SpawnMuzzleFireEffect(FVector SpawnLocation, FRotator SpawnRotation);
+	void SpawnMuzzleFireEffect(UNiagaraSystem* FireEffect = nullptr, FVector SpawnLocation = FVector(), FRotator SpawnRotation = FRotator());
 	void SpawnChargeEffect(FVector SpawnLocation, FRotator SpawnRotation, FVector EffectScale);
 	void DestroyChargeEffect();
 #pragma endregion
@@ -442,7 +432,6 @@ protected:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponName WeaponName;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponType WeaponType;
 public:
@@ -530,7 +519,7 @@ protected:
 protected:
 	void StartTargetDetection();
 	void UpdateTargetDetection(float DeltaTime);
-	void StopTargetDetection(const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil = nullptr);
+	void StopTargetDetection(FWeaponFireData* FireData = nullptr);
 
 	bool SearchOverlappedActor(FVector CenterLocation, float SearchRadius, TArray<AActor*>& OverlappedActors);
 	TTuple<FVector2D, bool> GetScreenPositionOfWorldLocation(const FVector& SearchLocation) const;
@@ -548,8 +537,8 @@ protected:
 	float MissileLaunchDelay = 0.2;
 	FTimerHandle MissileLaunchTimer;
 protected:
-	void StartMissileLaunch(TArray<AActor*> TargetActors, const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil = nullptr);
-	void UpdateMissileLaunch(const TSubclassOf<ASuraProjectile>& InProjectileClass, FArmRecoilStruct* armrecoil = nullptr);
+	void StartMissileLaunch(TArray<AActor*> TargetActors, FWeaponFireData* FireData = nullptr);
+	void UpdateMissileLaunch(FWeaponFireData* FireData = nullptr);
 	void StopMissileLaunch();
 #pragma endregion
 
