@@ -66,9 +66,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
 	UMaterialInterface* DecalMaterial;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HitSound; //TODO: Play different sound per object type
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float DefaultDamage = 0.f;
 
@@ -165,6 +162,21 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void BeginDestroy() override;
 
+#pragma region Sound
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* HitSound_Default;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* HitSound_Metal;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* HitSound_Grass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* HitSound_Enemy;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* HitSound_Energy;
+	void PlaySoundAtLocationByMaterial(EPhysicalSurface SurfaceType, FVector Location);
+#pragma endregion
+
 #pragma region HitScan
 protected:
 	bool bDebugHitScan = false;
@@ -203,7 +215,6 @@ protected:
 
 #pragma region Homing
 protected:
-
 	//TODO: DTȭ ��Ű��
 	float ExlosionTriggerRadius = 10.f;
 
@@ -222,8 +233,6 @@ protected:
 	float HitImpulseToEnemy = 100.f;
 protected:
 	void AddImpulseToEnemy(AActor* OtherActor, FVector Force);
-
-
 #pragma endregion
 
 #pragma region Ricochet

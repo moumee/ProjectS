@@ -146,7 +146,11 @@ void ASuraProjectile::LoadProjectileData()
 		SetLifeSpan(ProjectileData->InitialLifeSpan);
 
 		// <Sound>
-		HitSound = ProjectileData->HitSound;
+		HitSound_Default = ProjectileData->HitSound_Default;
+		HitSound_Metal = ProjectileData->HitSound_Metal;
+		HitSound_Grass = ProjectileData->HitSound_Grass;
+		HitSound_Enemy = ProjectileData->HitSound_Enemy;
+		HitSound_Energy = ProjectileData->HitSound_Energy;
 
 		// <Damage>
 		DefaultDamage = ProjectileData->DefaultDamage;
@@ -302,10 +306,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 				SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 				SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 
-				if (HitSound != nullptr)
-				{
-					UGameplayStatics::PlaySoundAtLocation(this, HitSound, Hit.ImpactPoint);
-				}
+				PlaySoundAtLocationByMaterial(UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()), Hit.ImpactPoint);
 
 				if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(Hit))
 				{
@@ -555,6 +556,53 @@ void ASuraProjectile::DrawSphere(FVector Location, float Radius)
 		2.0f                       // �� �β�
 	);
 }
+
+#pragma region Sound
+void ASuraProjectile::PlaySoundAtLocationByMaterial(EPhysicalSurface SurfaceType, FVector Location)
+{
+	switch (SurfaceType)
+	{
+	case SurfaceType1:
+		UE_LOG(LogTemp, Error, TEXT("Default"));
+		if (HitSound_Default != nullptr)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, HitSound_Default, Location);
+		}
+		break;
+	case SurfaceType2:
+		UE_LOG(LogTemp, Error, TEXT("Metal"));
+		if (HitSound_Metal != nullptr)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, HitSound_Metal, Location);
+		}
+		break;
+	case SurfaceType3:
+		UE_LOG(LogTemp, Error, TEXT("Grass"));
+		if (HitSound_Grass != nullptr)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, HitSound_Grass, Location);
+		}
+		break;
+	case SurfaceType4:
+		UE_LOG(LogTemp, Error, TEXT("Enemy"));
+		if (HitSound_Enemy != nullptr)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, HitSound_Enemy, Location);
+		}
+		break;
+	case SurfaceType5:
+		UE_LOG(LogTemp, Error, TEXT("Energy"));
+		if (HitSound_Energy != nullptr)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, HitSound_Energy, Location);
+		}
+		break;
+	default:
+		UE_LOG(LogTemp, Error, TEXT("Nothing"));
+		break;
+	}
+}
+#pragma endregion
 
 #pragma region HitScan
 void ASuraProjectile::SetHitScanActive(bool bflag)
