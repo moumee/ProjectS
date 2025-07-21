@@ -15,8 +15,12 @@ class SURAS_API UBTT_Climb : public UBTTask_BlackboardBase
 	GENERATED_BODY()
 
 	bool bDoneClimbing = false;
+	FVector TargetLocation = FVector::ZeroVector;
+	FRotator TargetRotation = FRotator::ZeroRotator;
 	
-	void Trace();
+	void TraceGroundAndWall(AActor* OwningActor);
+	void TraceLedge(AActor* OwningActor, float EnemyHalfHeight);
+	void Move(UBehaviorTreeComponent& OwnerComp) const;
 
 public:
 	explicit UBTT_Climb(FObjectInitializer const& ObjectInitializer);

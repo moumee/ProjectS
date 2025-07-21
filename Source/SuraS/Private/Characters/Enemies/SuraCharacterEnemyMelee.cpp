@@ -34,11 +34,11 @@ void ASuraCharacterEnemyMelee::Attack(const ASuraPawnPlayer* AttackTarget)
 		true
 	);
 
-	if (!AttackAnimations.IsEmpty())
+	/*if (!AttackAnimations.IsEmpty())
 	{
 		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
 		EnemyAnimInstance->Montage_Play(GetRandomAnimationMontage(AttackAnimations));
-	}
+	}*/
 
 	// To stop reset rotation timer
 	FTimerHandle ClearTimerHandle;

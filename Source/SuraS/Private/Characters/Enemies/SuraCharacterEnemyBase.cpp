@@ -231,13 +231,21 @@ bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, const AA
 	return GetDamageSystemComp()->TakeDamage(DamageData, DamageCauser);
 }
 
-void ASuraCharacterEnemyBase::Attack(const ASuraPawnPlayer* Player)
+UAnimMontage* ASuraCharacterEnemyBase::ChooseRandomAttackMontage()
 {
 	if (!AttackAnimations.IsEmpty())
+		return GetRandomAnimationMontage(AttackAnimations);
+
+	return nullptr;
+}
+
+void ASuraCharacterEnemyBase::Attack(const ASuraPawnPlayer* Player)
+{
+	/*if (!AttackAnimations.IsEmpty())
 	{
 		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
 		EnemyAnimInstance->Montage_Play(GetRandomAnimationMontage(AttackAnimations));
-	}
+	}*/
 }
 
 void ASuraCharacterEnemyBase::SetMovementSpeed(EEnemySpeed Speed)

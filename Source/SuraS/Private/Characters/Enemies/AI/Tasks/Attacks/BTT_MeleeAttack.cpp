@@ -22,19 +22,20 @@ EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerC
 		{
 			OnAttackMontageEnded.BindUObject(this, &UBTT_MeleeAttack::OnAttackEnded);
 
+			UAnimInstance* const EnemyAnimInstance = Enemy->GetMesh()->GetAnimInstance();
+			UAnimMontage* ChosenMontage = Enemy->ChooseRandomAttackMontage();
+
+			EnemyAnimInstance->Montage_Play(ChosenMontage);
+
 			IsAttacking = true;
-			Target = Player;
-			Enemy->Attack(Player);
+			// Enemy->Attack(Player);
 
-			Enemy->GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(OnAttackMontageEnded); // montage interrupted
-			Enemy->GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(OnAttackMontageEnded); // montage ended
-
-			FinishLatentTask(OwnerComp, EBTNodeResult::InProgress);
-			return EBTNodeResult::InProgress;
+			EnemyAnimInstance->Montage_SetBlendingOutDelegate(OnAttackMontageEnded); // montage interrupted
+			EnemyAnimInstance->Montage_SetEndDelegate(OnAttackMontageEnded); // montage ended
 		}
 	}
-
-	return EBTNodeResult::Failed;
+	
+	return EBTNodeResult::InProgress;
 }
 
 void UBTT_MeleeAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
