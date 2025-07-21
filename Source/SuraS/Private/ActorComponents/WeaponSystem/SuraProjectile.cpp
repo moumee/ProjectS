@@ -16,6 +16,12 @@
 
 #include "Kismet/GameplayStatics.h"
 
+#define SURFACE_DEFAULT SurfaceType1
+#define SURFACE_METAL SurfaceType2
+#define SURFACE_GLASS SurfaceType3
+#define SURFACE_ENEMY SurfaceType4
+#define SURFACE_ENERGY SurfaceType5
+
 // Sets default values
 ASuraProjectile::ASuraProjectile()
 {
@@ -32,6 +38,8 @@ ASuraProjectile::ASuraProjectile()
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Ignore); //Player
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel7, ECR_Ignore); //PlayerProjectile
 	CollisionComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+	CollisionComp->bReturnMaterialOnMove = true;
 
 	//CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);		// set up a notification for when this component hits something blocking
 	//CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
@@ -146,7 +154,11 @@ void ASuraProjectile::LoadProjectileData()
 		SetLifeSpan(ProjectileData->InitialLifeSpan);
 
 		// <Sound>
-		HitSound = ProjectileData->HitSound;
+		HitSound_Default = ProjectileData->HitSound_Default;
+		HitSound_Metal = ProjectileData->HitSound_Metal;
+		HitSound_Glass = ProjectileData->HitSound_Glass;
+		HitSound_Enemy = ProjectileData->HitSound_Enemy;
+		HitSound_Energy = ProjectileData->HitSound_Energy;
 
 		// <Damage>
 		DefaultDamage = ProjectileData->DefaultDamage;
@@ -302,10 +314,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 				SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 				SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 
-				if (HitSound != nullptr)
-				{
-					UGameplayStatics::PlaySoundAtLocation(this, HitSound, Hit.ImpactPoint);
-				}
+				PlaySoundAtLocationByMaterial(UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()), Hit.ImpactPoint);
 
 				if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(Hit))
 				{
@@ -555,6 +564,28 @@ void ASuraProjectile::DrawSphere(FVector Location, float Radius)
 		2.0f                       // �� �β�
 	);
 }
+
+#pragma region Sound
+void ASuraProjectile::PlaySoundAtLocationByMaterial(EPhysicalSurface SurfaceType, FVector Location)
+{
+	USoundBase* SoundToPlay = nullptr;
+
+	switch (SurfaceType)
+	{
+	case SURFACE_DEFAULT: SoundToPlay = HitSound_Default; break;
+	case SURFACE_METAL:   SoundToPlay = HitSound_Metal;  break;
+	case SURFACE_GLASS:   SoundToPlay = HitSound_Glass;  break;
+	case SURFACE_ENEMY:   SoundToPlay = HitSound_Enemy;  break;
+	case SURFACE_ENERGY:  SoundToPlay = HitSound_Energy; break;
+	default:              break;
+	}
+
+	if (SoundToPlay)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, SoundToPlay, Location);
+	}
+}
+#pragma endregion
 
 #pragma region HitScan
 void ASuraProjectile::SetHitScanActive(bool bflag)

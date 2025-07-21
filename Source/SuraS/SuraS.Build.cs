@@ -23,6 +23,7 @@ public class SuraS : ModuleRules
 			"Niagara",        //Added by Boranaga for the use of ParticleSystem
 			"AnimGraphRuntime", //Added by Boranaga for Animation
 			"BlueprintGraph",  //Added by Boranaga for Animation
+			"PhysicsCore", //Added by Boranaga for Animation
             "GameplayTags" // Added by <Eren Yeager> for the use of GameplayTags
         });
     }
