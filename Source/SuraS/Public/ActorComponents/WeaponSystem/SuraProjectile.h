@@ -169,7 +169,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* HitSound_Metal;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HitSound_Grass;
+	USoundBase* HitSound_Glass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* HitSound_Enemy;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")

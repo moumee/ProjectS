@@ -16,6 +16,12 @@
 
 #include "Kismet/GameplayStatics.h"
 
+#define SURFACE_DEFAULT SurfaceType1
+#define SURFACE_METAL SurfaceType2
+#define SURFACE_GLASS SurfaceType3
+#define SURFACE_ENEMY SurfaceType4
+#define SURFACE_ENERGY SurfaceType5
+
 // Sets default values
 ASuraProjectile::ASuraProjectile()
 {
@@ -32,6 +38,8 @@ ASuraProjectile::ASuraProjectile()
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Ignore); //Player
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel7, ECR_Ignore); //PlayerProjectile
 	CollisionComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+	CollisionComp->bReturnMaterialOnMove = true;
 
 	//CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);		// set up a notification for when this component hits something blocking
 	//CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
@@ -148,7 +156,7 @@ void ASuraProjectile::LoadProjectileData()
 		// <Sound>
 		HitSound_Default = ProjectileData->HitSound_Default;
 		HitSound_Metal = ProjectileData->HitSound_Metal;
-		HitSound_Grass = ProjectileData->HitSound_Grass;
+		HitSound_Glass = ProjectileData->HitSound_Glass;
 		HitSound_Enemy = ProjectileData->HitSound_Enemy;
 		HitSound_Energy = ProjectileData->HitSound_Energy;
 
@@ -560,46 +568,21 @@ void ASuraProjectile::DrawSphere(FVector Location, float Radius)
 #pragma region Sound
 void ASuraProjectile::PlaySoundAtLocationByMaterial(EPhysicalSurface SurfaceType, FVector Location)
 {
+	USoundBase* SoundToPlay = nullptr;
+
 	switch (SurfaceType)
 	{
-	case SurfaceType1:
-		UE_LOG(LogTemp, Error, TEXT("Default"));
-		if (HitSound_Default != nullptr)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, HitSound_Default, Location);
-		}
-		break;
-	case SurfaceType2:
-		UE_LOG(LogTemp, Error, TEXT("Metal"));
-		if (HitSound_Metal != nullptr)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, HitSound_Metal, Location);
-		}
-		break;
-	case SurfaceType3:
-		UE_LOG(LogTemp, Error, TEXT("Grass"));
-		if (HitSound_Grass != nullptr)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, HitSound_Grass, Location);
-		}
-		break;
-	case SurfaceType4:
-		UE_LOG(LogTemp, Error, TEXT("Enemy"));
-		if (HitSound_Enemy != nullptr)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, HitSound_Enemy, Location);
-		}
-		break;
-	case SurfaceType5:
-		UE_LOG(LogTemp, Error, TEXT("Energy"));
-		if (HitSound_Energy != nullptr)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, HitSound_Energy, Location);
-		}
-		break;
-	default:
-		UE_LOG(LogTemp, Error, TEXT("Nothing"));
-		break;
+	case SURFACE_DEFAULT: SoundToPlay = HitSound_Default; break;
+	case SURFACE_METAL:   SoundToPlay = HitSound_Metal;  break;
+	case SURFACE_GLASS:   SoundToPlay = HitSound_Glass;  break;
+	case SURFACE_ENEMY:   SoundToPlay = HitSound_Enemy;  break;
+	case SURFACE_ENERGY:  SoundToPlay = HitSound_Energy; break;
+	default:              break;
+	}
+
+	if (SoundToPlay)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, SoundToPlay, Location);
 	}
 }
 #pragma endregion
