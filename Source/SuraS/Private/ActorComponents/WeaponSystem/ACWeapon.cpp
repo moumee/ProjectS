@@ -145,6 +145,9 @@ void AWeapon::LoadWeaponData()
 	WeaponData = WeaponDataTableHandle.GetRow<FWeaponData>("");
 	if (WeaponData)
 	{
+		// <WeaponSocket>
+		WeaponSocketName = WeaponData->WeaponSocket;
+
 		// <Action>
 		LeftMouseAction = WeaponData->LeftMouseAction;
 		RightMouseAction = WeaponData->RightMouseAction;
@@ -334,40 +337,49 @@ bool AWeapon::AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter)
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 
-	//TODO: BP에서 입력하도록 해야함
-	if (WeaponName == EWeaponName::WeaponName_Rifle)
+	////TODO: BP에서 입력하도록 해야함
+	//if (WeaponName == EWeaponName::WeaponName_Rifle)
+	//{
+	//	AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun")));
+
+	//	//FTransform MeshRelativeTransform = WeaponMesh->GetRelativeTransform();
+	//	//FTransform MeshRelativeTransform = GetRootComponent()->GetRelativeTransform();
+	//	//FTransform RightHandSocketRelativeTransform = WeaponMesh->GetSocketTransform(FName(TEXT("RightHand")), ERelativeTransformSpace::RTS_Component);
+
+	//	//FRotator RelativeRotation = MeshRelativeTransform.Rotator() + RightHandSocketRelativeTransform.Rotator();
+
+	//	//GetRootComponent()->SetRelativeRotation(RelativeRotation * (-1));
+
+	//	//GetRootComponent()->SetRelativeTransform(RightHandOffset);
+
+	//	//WeaponMesh->SetRelativeTransform(RightHandOffset);
+	//	
+
+	//	//AttachToComponent()
+	//}
+	//else if (WeaponName == EWeaponName::WeaponName_ShotGun)
+	//{
+	//	AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun")));
+	//}
+	//else if (WeaponName == EWeaponName::WeaponName_MissileLauncher)
+	//{
+	//	AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_MissileLauncher")));
+	//}
+	//else if (WeaponName == EWeaponName::WeaponName_RailGun)
+	//{
+	//	AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_RailGun")));
+	//}
+
+	if (WeaponSocketName.IsNone())
 	{
-		//AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_Rifle")));
 		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun")));
-
-		//FTransform MeshRelativeTransform = WeaponMesh->GetRelativeTransform();
-		//FTransform MeshRelativeTransform = GetRootComponent()->GetRelativeTransform();
-		//FTransform RightHandSocketRelativeTransform = WeaponMesh->GetSocketTransform(FName(TEXT("RightHand")), ERelativeTransformSpace::RTS_Component);
-
-		//FRotator RelativeRotation = MeshRelativeTransform.Rotator() + RightHandSocketRelativeTransform.Rotator();
-
-		//GetRootComponent()->SetRelativeRotation(RelativeRotation * (-1));
-
-		//GetRootComponent()->SetRelativeTransform(RightHandOffset);
-
-		//WeaponMesh->SetRelativeTransform(RightHandOffset);
-		
-
-		//AttachToComponent()
 	}
-	else if (WeaponName == EWeaponName::WeaponName_ShotGun)
+	else
 	{
-		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun")));
-	}
-	else if (WeaponName == EWeaponName::WeaponName_MissileLauncher)
-	{
-		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_MissileLauncher")));
-	}
-	else if (WeaponName == EWeaponName::WeaponName_RailGun)
-	{
-		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_RailGun")));
+		AttachToComponent(Character->GetArmMesh(), AttachmentRules, WeaponSocketName);
 	}
 
+	//---------------------------------------------
 
 	//TODO: 더 좋은 방법을 생각해 봐야함
 	//RightHandToAimSocketOffset = this->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetMesh()->GetSocketLocation(FName("Gun"));
