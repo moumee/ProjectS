@@ -11,9 +11,6 @@
 // Sets default values
 AEnemyTriggerBox::AEnemyTriggerBox()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
 	TriggerBox = CreateDefaultSubobject<UBoxComponent>(FName("TriggerBox"));
 	RootComponent = TriggerBox;
 	TriggerBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));

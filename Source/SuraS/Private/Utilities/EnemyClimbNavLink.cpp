@@ -3,6 +3,7 @@
 
 #include "Utilities/EnemyClimbNavLink.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
+#include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "Components/SphereComponent.h"
 
 // Sets default values
@@ -19,6 +20,7 @@ AEnemyClimbNavLink::AEnemyClimbNavLink()
 	EndSphere->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 	EndSphere->SetSphereRadius(10.f);
 	EndSphere->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); // Ignore Projectile
+	EndSphere->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap);
 	EndSphere->SetGenerateOverlapEvents(true);
 }
 
@@ -37,7 +39,7 @@ void  AEnemyClimbNavLink::OnReceiveSmartLinkReached(AActor* Agent, const FVector
 	if (Destination.Z < Agent->GetActorLocation().Z)
 		return;
 	
-	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(Agent))
+	/*if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(Agent))
 	{
 		if (bIsOccupied && OccupyingEnemy.Get() != Enemy)
 			return;
@@ -46,17 +48,25 @@ void  AEnemyClimbNavLink::OnReceiveSmartLinkReached(AActor* Agent, const FVector
 
 		/*UCrowdFollowingComponent* CrowdComp = Cast<UCrowdFollowingComponent>(OccupyingEnemy->GetAIController()->GetPathFollowingComponent());
 		if (CrowdComp)
-			CrowdComp->PauseMove(FAIRequestID::CurrentRequest);*/
+			CrowdComp->PauseMove(FAIRequestID::CurrentRequest);#1#
 			//CrowdComp->SetCrowdSimulationState(ECrowdSimulationState::Disabled); // Disable crowd AI
 		
 		// SetLinkUsable(false);
 	}
 	else
-		return;
+		return;*/
 
 	// have the enemy climb up the wall
 	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(Agent))
-		Enemy->Climb(Destination);
+	{
+		Enemy->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay);
+		Enemy->SetActorRotation(FRotator(Enemy->GetActorRotation().Pitch, GetActorRotation().Yaw, Enemy->GetActorRotation().Roll));
+		
+		if (Enemy->GetAIController()->GetCurrentState() == EEnemyStates::Pursue || Enemy->GetAIController()->GetCurrentState() == EEnemyStates::Attacking)
+			Enemy->GetAIController()->EndPursueState();
+			
+		Enemy->GetAIController()->UpdateCurrentState(EEnemyStates::Climbing);
+	}
 }
 
 void AEnemyClimbNavLink::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,

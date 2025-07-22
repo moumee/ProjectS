@@ -126,6 +126,8 @@ public:
 
 	virtual void LungeToTarget(float LungeForce);
 
+	UAnimMontage* ChooseRandomAttackMontage();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	TArray<UAnimMontage*> HitAnimations;
 
