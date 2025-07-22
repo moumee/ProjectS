@@ -21,6 +21,9 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Name")
 	EWeaponName WeaponName;
 	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Socket")
+	FName WeaponSocket;
+	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	EWeaponAction LeftMouseAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
