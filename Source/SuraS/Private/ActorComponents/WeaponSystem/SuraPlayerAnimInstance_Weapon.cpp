@@ -315,7 +315,7 @@ void USuraPlayerAnimInstance_Weapon::AddArmRecoil(FArmRecoilStruct* armrecoil, f
 	{
 		bIsArmRecoiling = true;
 		ArmRecoil = *armrecoil;
-		//UE_LOG(LogTemp, Warning, TEXT("Arm Recoil Added!!!"));
+		UE_LOG(LogTemp, Warning, TEXT("Arm Recoil Added!!!"));
 
 		FRotator RandRecoil_Rot;
 		FVector RandRecoil_Vec;

@@ -224,8 +224,8 @@ void AWeapon::LoadWeaponData()
 		FireData_R.Recoil = WeaponData->DefaultRecoil_R;
 
 		// <ArmRecoil Animation>
-		ArmRecoil_L = WeaponData->ArmRecoil_L;
-		ArmRecoil_R = WeaponData->ArmRecoil_R;
+		FireData_L.Armrecoil = WeaponData->ArmRecoil_L;
+		FireData_R.Armrecoil = WeaponData->ArmRecoil_R;
 		ArmRecoil_Hand = WeaponData->ArmRecoil_Hand;
 		ArmRecoil_UpperArm = WeaponData->ArmRecoil_UpperArm;
 		ArmRecoil_LowerArm = WeaponData->ArmRecoil_LowerArm;
@@ -1392,17 +1392,29 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 		//--------
 		if (LeftAmmoInCurrentMag + 1 == MaxAmmoPerMag)
 		{
+			//GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_End, false);
+
 			if (CharacterAnimInstance != nullptr && AM_Reload_Character != nullptr)
 			{
-				AM_Reload_Character->BlendIn.SetBlendOption(EAlphaBlendOption::Linear);
-				AM_Reload_Character->BlendIn.SetAlpha(10.f);
-				AM_Reload_Character->BlendOut.SetBlendOption(EAlphaBlendOption::Linear);
-				AM_Reload_Character->BlendOut.SetAlpha(10.f);
+				//AM_Reload_Character->BlendIn.SetBlendOption(EAlphaBlendOption::Linear);
+				//AM_Reload_Character->BlendIn.SetAlpha(10.f);
+				//AM_Reload_Character->BlendOut.SetBlendOption(EAlphaBlendOption::Linear);
+				//AM_Reload_Character->BlendOut.SetAlpha(10.f);
+
+				AM_Reload_Character->BlendIn.SetBlendTime(0.f);
+				AM_Reload_Character->BlendOut.SetBlendTime(0.f);
 
 				float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopEnd")));
 
+				UE_LOG(LogTemp, Error, TEXT("SectionTime_End: %f"), SectionTime);
+				UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_End: %f"), PumpReloadingTime_End);
+
+
 				CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_End);
 				CharacterAnimInstance->Montage_JumpToSection(FName("LoopEnd"), AM_Reload_Character);
+
+				AM_Reload_Character->BlendIn.SetBlendTime(0.f);
+				AM_Reload_Character->BlendOut.SetBlendTime(0.f);
 			}
 
 			if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
@@ -1415,17 +1427,27 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 		}
 		else
 		{
+			//GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_Loop, false);
+
 			if (CharacterAnimInstance != nullptr && AM_Reload_Character != nullptr)
 			{
-				AM_Reload_Character->BlendIn.SetBlendOption(EAlphaBlendOption::Linear);
-				AM_Reload_Character->BlendIn.SetAlpha(10.f);
-				AM_Reload_Character->BlendOut.SetBlendOption(EAlphaBlendOption::Linear);
-				AM_Reload_Character->BlendOut.SetAlpha(10.f);
+				//AM_Reload_Character->BlendIn.SetBlendOption(EAlphaBlendOption::Linear);
+				//AM_Reload_Character->BlendIn.SetAlpha(10.f);
+				//AM_Reload_Character->BlendOut.SetBlendOption(EAlphaBlendOption::Linear);
+				//AM_Reload_Character->BlendOut.SetAlpha(10.f);
+				AM_Reload_Character->BlendIn.SetBlendTime(0.f);
+				AM_Reload_Character->BlendOut.SetBlendTime(0.f);
 
 				float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopStart")));
 
+				UE_LOG(LogTemp, Error, TEXT("SectionTime_Loop: %f"), SectionTime);
+				UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_Loop: %f"), PumpReloadingTime_Loop);
+
 				CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_Loop);
 				CharacterAnimInstance->Montage_JumpToSection(FName("LoopStart"), AM_Reload_Character);
+
+				AM_Reload_Character->BlendIn.SetBlendTime(0.f);
+				AM_Reload_Character->BlendOut.SetBlendTime(0.f);
 			}
 
 			if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
@@ -1439,6 +1461,9 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 	}
 	else
 	{
+		//GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_Start, false);
+
+
 		if (CharacterAnimInstance->Montage_IsPlaying(AM_Reload_Weapon))
 		{
 			CharacterAnimInstance->Montage_Stop(0.f, AM_Reload_Weapon);
@@ -1446,15 +1471,23 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 
 		if (CharacterAnimInstance != nullptr && AM_Reload_Character != nullptr)
 		{
-			AM_Reload_Character->BlendIn.SetBlendOption(EAlphaBlendOption::Linear);
-			AM_Reload_Character->BlendIn.SetAlpha(10.f);
-			AM_Reload_Character->BlendOut.SetBlendOption(EAlphaBlendOption::Linear);
-			AM_Reload_Character->BlendOut.SetAlpha(10.f);
+			//AM_Reload_Character->BlendIn.SetBlendOption(EAlphaBlendOption::Linear);
+			//AM_Reload_Character->BlendIn.SetAlpha(10.f);
+			//AM_Reload_Character->BlendOut.SetBlendOption(EAlphaBlendOption::Linear);
+			//AM_Reload_Character->BlendOut.SetAlpha(10.f);
+			AM_Reload_Character->BlendIn.SetBlendTime(0.f);
+			AM_Reload_Character->BlendOut.SetBlendTime(0.f);
 
 			float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("Start")));
 
+			UE_LOG(LogTemp, Error, TEXT("SectionTime_Start: %f"), SectionTime);
+			UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_Start: %f"), PumpReloadingTime_Start);
+
 			CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_Start);
 			CharacterAnimInstance->Montage_JumpToSection(FName("Start"), AM_Reload_Character);
+
+			AM_Reload_Character->BlendIn.SetBlendTime(0.f);
+			AM_Reload_Character->BlendOut.SetBlendTime(0.f);
 		}
 
 		if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
