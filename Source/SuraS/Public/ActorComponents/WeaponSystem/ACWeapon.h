@@ -344,9 +344,10 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	float ReloadingTime = 2.5f;
-	float PumpReloadingTime_Start = 1.2f;
-	float PumpReloadingTime_Loop = 1.f;
-	float PumpReloadingTime_End = 1.2f;
+	float PumpReloadingTime_Start = 0.6f;
+	float PumpReloadingTime_Loop = 0.4;
+	float PumpReloadingTime_End = 0.6;
+	float PumpReloadingTime_LoopToFire = 0.2f;
 
 	UPROPERTY(EditAnywhere)
 	int32 MaxTotalAmmo = 200.f;
@@ -371,6 +372,7 @@ public:
 protected:
 	void StopReload();
 	void StopPumpActionReload();
+	void InterruptReloadAndFire();
 
 	void ConsumeAmmo(int32 AmmoCost = 1, bool AllowFireWithInsufficientAmmo = false);
 	void ReloadAmmo(bool bPumpAction = false);

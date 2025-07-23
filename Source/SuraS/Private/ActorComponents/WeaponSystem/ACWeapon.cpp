@@ -180,6 +180,7 @@ void AWeapon::LoadWeaponData()
 		PumpReloadingTime_Start = WeaponData->PumpReloadingTime_Start;
 		PumpReloadingTime_Loop = WeaponData->PumpReloadingTime_Loop;
 		PumpReloadingTime_End = WeaponData->PumpReloadingTime_End;
+		PumpReloadingTime_LoopToFire = WeaponData->PumpReloadingTime_LoopToFire;
 		MaxTotalAmmo = WeaponData->MaxTotalAmmo;
 		TotalAmmo = MaxTotalAmmo;
 		MaxAmmoPerMag = WeaponData->MaxAmmoPerMag;
@@ -1401,8 +1402,8 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 				//AM_Reload_Character->BlendOut.SetBlendOption(EAlphaBlendOption::Linear);
 				//AM_Reload_Character->BlendOut.SetAlpha(10.f);
 
-				AM_Reload_Character->BlendIn.SetBlendTime(0.f);
-				AM_Reload_Character->BlendOut.SetBlendTime(0.f);
+				//AM_Reload_Character->BlendIn.SetBlendTime(0.f);
+				//AM_Reload_Character->BlendOut.SetBlendTime(0.f);
 
 				float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopEnd")));
 
@@ -1413,8 +1414,9 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 				CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_End);
 				CharacterAnimInstance->Montage_JumpToSection(FName("LoopEnd"), AM_Reload_Character);
 
-				AM_Reload_Character->BlendIn.SetBlendTime(0.f);
-				AM_Reload_Character->BlendOut.SetBlendTime(0.f);
+				//AM_Reload_Character->BlendOut.SetBlendTime(1000.f);
+				//AM_Reload_Character->bEnableAutoBlendOut = false;
+				//AM_Reload_Character->BlendIn.SetBlendTime(0.f);
 			}
 
 			if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
@@ -1435,8 +1437,8 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 				//AM_Reload_Character->BlendIn.SetAlpha(10.f);
 				//AM_Reload_Character->BlendOut.SetBlendOption(EAlphaBlendOption::Linear);
 				//AM_Reload_Character->BlendOut.SetAlpha(10.f);
-				AM_Reload_Character->BlendIn.SetBlendTime(0.f);
-				AM_Reload_Character->BlendOut.SetBlendTime(0.f);
+
+				//AM_Reload_Character->BlendOut.SetBlendTime(0.f);
 
 				float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopStart")));
 
@@ -1447,7 +1449,8 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 				CharacterAnimInstance->Montage_JumpToSection(FName("LoopStart"), AM_Reload_Character);
 
 				AM_Reload_Character->BlendIn.SetBlendTime(0.f);
-				AM_Reload_Character->BlendOut.SetBlendTime(0.f);
+				AM_Reload_Character->bEnableAutoBlendOut = false;
+				//AM_Reload_Character->BlendOut.SetBlendTime(1000.f);
 			}
 
 			if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
@@ -1475,8 +1478,8 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 			//AM_Reload_Character->BlendIn.SetAlpha(10.f);
 			//AM_Reload_Character->BlendOut.SetBlendOption(EAlphaBlendOption::Linear);
 			//AM_Reload_Character->BlendOut.SetAlpha(10.f);
-			AM_Reload_Character->BlendIn.SetBlendTime(0.f);
-			AM_Reload_Character->BlendOut.SetBlendTime(0.f);
+			//AM_Reload_Character->BlendIn.SetBlendTime(0.f);
+			//AM_Reload_Character->BlendOut.SetBlendTime(0.f);
 
 			float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("Start")));
 
@@ -1486,8 +1489,9 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 			CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_Start);
 			CharacterAnimInstance->Montage_JumpToSection(FName("Start"), AM_Reload_Character);
 
-			AM_Reload_Character->BlendIn.SetBlendTime(0.f);
-			AM_Reload_Character->BlendOut.SetBlendTime(0.f);
+			//AM_Reload_Character->BlendIn.SetBlendTime(0.f);
+			AM_Reload_Character->BlendOut.SetBlendTime(1000.f);
+			AM_Reload_Character->bEnableAutoBlendOut = false;
 		}
 
 		if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
@@ -1513,6 +1517,81 @@ void AWeapon::StopPumpActionReload()
 
 	if (BufferedFireRequest.IsSet())
 	{
+		if (LeftAmmoInCurrentMag >= MaxAmmoPerMag)
+		{
+			ChangeState(IdleState);
+
+			const FBufferedFireRequest& Request = BufferedFireRequest.GetValue();
+			if (Request.ActionName == EWeaponAction::WeaponAction_SingleShot)
+			{
+				HandleSingleFire(Request.bIsLeftInput, Request.bSingleProjectile, Request.NumPenetrable);
+				BufferedFireRequest.Reset();
+				//UE_LOG(LogTemp, Log, TEXT("Buffered fire executed after reload"));
+			}
+			else
+			{
+				HandleBurstFire(Request.bIsLeftInput, Request.bSingleProjectile, Request.NumPenetrable);
+				BufferedFireRequest.Reset();
+				//UE_LOG(LogTemp, Log, TEXT("Buffered fire executed after reload"));
+			}
+		}
+		else
+		{
+			float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("End")));
+
+			CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_LoopToFire);
+			CharacterAnimInstance->Montage_JumpToSection(FName("End"), AM_Reload_Character);
+
+			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::InterruptReloadAndFire, PumpReloadingTime_LoopToFire, false);
+		}
+
+	}
+	else if (bFireInputDuringReload)
+	{
+		if (LeftAmmoInCurrentMag >= MaxAmmoPerMag)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Why1?"));
+			bFireInputDuringReload = false;
+			ChangeState(IdleState);
+		}
+		else
+		{
+			float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("End")));
+
+			CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_LoopToFire);
+			CharacterAnimInstance->Montage_JumpToSection(FName("End"), AM_Reload_Character);
+
+			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::InterruptReloadAndFire, PumpReloadingTime_LoopToFire, false);
+		}
+	}
+	//if (BufferedFireRequest.IsSet() || bFireInputDuringReload)
+	//{
+	//	float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("End")));
+
+	//	CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_LoopToFire);
+	//	CharacterAnimInstance->Montage_JumpToSection(FName("End"), AM_Reload_Character);
+
+	//	GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::InterruptReloadAndFire, PumpReloadingTime_LoopToFire, false);
+	//}
+	else
+	{
+		if (LeftAmmoInCurrentMag < MaxAmmoPerMag)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Why2?"));
+			StartPumpActionReload(true);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Why3?"));
+			ChangeState(IdleState);
+		}
+	}
+}
+
+void AWeapon::InterruptReloadAndFire()
+{
+	if (BufferedFireRequest.IsSet())
+	{
 		ChangeState(IdleState);
 
 		const FBufferedFireRequest& Request = BufferedFireRequest.GetValue();
@@ -1534,19 +1613,6 @@ void AWeapon::StopPumpActionReload()
 		UE_LOG(LogTemp, Error, TEXT("Why1?"));
 		bFireInputDuringReload = false;
 		ChangeState(IdleState);
-	}
-	else
-	{
-		if (LeftAmmoInCurrentMag < MaxAmmoPerMag)
-		{
-			UE_LOG(LogTemp, Error, TEXT("Why2?"));
-			StartPumpActionReload(true);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("Why3?"));
-			ChangeState(IdleState);
-		}
 	}
 }
 
