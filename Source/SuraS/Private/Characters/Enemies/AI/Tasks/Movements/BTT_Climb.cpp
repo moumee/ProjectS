@@ -13,6 +13,7 @@ UBTT_Climb::UBTT_Climb(FObjectInitializer const& ObjectInitializer)
 {
 	NodeName = "Climb";
 	bNotifyTick = true;
+	bCreateNodeInstance = true;
 }
 
 EBTNodeResult::Type UBTT_Climb::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -21,11 +22,17 @@ EBTNodeResult::Type UBTT_Climb::ExecuteTask(UBehaviorTreeComponent& OwnerComp, u
 	
 	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(OwnerComp.GetAIOwner()->GetCharacter()))
 	{
-		Enemy->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay);
+		// Enemy->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay);
+
+		CachedEnemy = Enemy;
 		
-		Enemy->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+		CachedEnemy->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 		
-		TargetLocation = Enemy->GetActorLocation();
+		TargetLocation = CachedEnemy->GetActorLocation();
+		Destination = OwnerComp.GetBlackboardComponent()->GetValueAsVector("TargetLocation");
+
+		FRotator Rotation = OwnerComp.GetBlackboardComponent()->GetValueAsRotator("TargetRotation");
+		CachedEnemy->SetActorRotation(Rotation);
 		
 		FinishLatentTask(OwnerComp, EBTNodeResult::InProgress);
 		return EBTNodeResult::InProgress;
@@ -34,28 +41,21 @@ EBTNodeResult::Type UBTT_Climb::ExecuteTask(UBehaviorTreeComponent& OwnerComp, u
 	return EBTNodeResult::Failed;
 }
 
-void UBTT_Climb::TraceGroundAndWall(AActor* OwningActor)
+void UBTT_Climb::TraceGroundAndWall()
 {
 	float EnemyHalfHeight = 0.f;
-
-	if (const UCapsuleComponent* CapsuleComp = OwningActor->FindComponentByClass<UCapsuleComponent>())
-	{
-		EnemyHalfHeight = CapsuleComp->GetScaledCapsuleHalfHeight();
-	}
-	else // if no capsule component, but I doubt
-	{
-		EnemyHalfHeight = 90.0f; // Typical enemy character half-height
-	}
+	
+	EnemyHalfHeight = CachedEnemy->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 
 	// Trace to the ground in the front
 	FHitResult HitRightAhead;
 
 	FCollisionQueryParams CollisionQueryParams;
-	CollisionQueryParams.AddIgnoredActor(OwningActor);
+	CollisionQueryParams.AddIgnoredActor(CachedEnemy);
 
-	FVector Start = OwningActor->GetActorLocation();
-	FVector MovementDirection = OwningActor->GetActorForwardVector().GetSafeNormal();
-	FVector End = Start + (MovementDirection * 500.f + OwningActor->GetActorUpVector() * -500.f).GetSafeNormal() * 200.f;
+	FVector Start = CachedEnemy->GetActorLocation();
+	FVector MovementDirection = CachedEnemy->GetActorForwardVector().GetSafeNormal();
+	FVector End = Start + (MovementDirection * 500.f + CachedEnemy->GetActorUpVector() * -500.f).GetSafeNormal() * 200.f;
 
 	bool bIsGroundRightAhead = GetWorld()->LineTraceSingleByChannel(
 		HitRightAhead,
@@ -67,11 +67,11 @@ void UBTT_Climb::TraceGroundAndWall(AActor* OwningActor)
 
 	if (bIsGroundRightAhead)
 	{
-		DrawDebugLine(GetWorld(), Start, HitRightAhead.Location, FColor::Red);
+		// DrawDebugLine(GetWorld(), Start, HitRightAhead.Location, FColor::Red);
 		
 		FHitResult HitFurtherAhead;
 		
-		End = Start + (MovementDirection * 600.f + OwningActor->GetActorUpVector() * -500.f).GetSafeNormal() * 200.f;
+		End = Start + (MovementDirection * 600.f + CachedEnemy->GetActorUpVector() * -500.f).GetSafeNormal() * 200.f;
 		
 		bool bIsGroundFurtherAhead = GetWorld()->LineTraceSingleByChannel(
 			HitFurtherAhead,
@@ -83,68 +83,49 @@ void UBTT_Climb::TraceGroundAndWall(AActor* OwningActor)
 
 		if (bIsGroundFurtherAhead)
 		{
-			DrawDebugLine(GetWorld(), Start, HitFurtherAhead.Location, FColor::Red);
+			// DrawDebugLine(GetWorld(), Start, HitFurtherAhead.Location, FColor::Red);
 			
-			FHitResult HitRightAheadSide;
-			
-			End = Start + MovementDirection * 500.f + OwningActor->GetActorUpVector() * -500.f + MovementDirection.RotateAngleAxis(90.f, OwningActor->GetActorUpVector()) * 100.f;
+			TargetLocation = HitRightAhead.Location + EnemyHalfHeight * HitRightAhead.Normal;
 
-			bool bIsGroundRightAheadSide = GetWorld()->LineTraceSingleByChannel(
-				HitRightAheadSide,
-				Start,
-				End,
-				ECollisionChannel::ECC_Visibility,
-				CollisionQueryParams
+			FVector ActorForwardDirection = (HitFurtherAhead.Location - HitRightAhead.Location).GetSafeNormal();
+
+			if (ActorForwardDirection.IsNearlyZero())
+			{
+				ActorForwardDirection = CachedEnemy->GetActorForwardVector().ProjectOnTo(HitRightAhead.Normal).GetSafeNormal();
+
+				if (ActorForwardDirection.IsNearlyZero())
+					ActorForwardDirection = FVector::ForwardVector.ProjectOnTo(HitRightAhead.Normal).GetSafeNormal();
+			}
+			
+			FMatrix RotationMatrix(
+				ActorForwardDirection,
+				FVector::CrossProduct(HitRightAhead.Normal, ActorForwardDirection),
+				HitRightAhead.Normal,
+				FVector::ZeroVector
 			);
 
-			if (bIsGroundRightAheadSide)
-			{
-				DrawDebugLine(GetWorld(), Start, HitRightAheadSide.Location, FColor::Red);
+			TargetRotation = FRotator(90.f, RotationMatrix.Rotator().Yaw, RotationMatrix.Rotator().Roll);
 
-				TargetLocation = HitRightAhead.Location + EnemyHalfHeight * HitRightAhead.Normal;
-				
-				FMatrix RotationMatrix(
-					(HitFurtherAhead.Location - HitRightAhead.Location).GetSafeNormal(),
-					(HitRightAheadSide.Location - HitRightAhead.Location).GetSafeNormal(),
-					HitRightAhead.Normal,
-					FVector::ZeroVector
-				);
-
-				TargetRotation = RotationMatrix.Rotator();
-
-				/*FVector TempForwardAlongWall = OwningActor->GetActorForwardVector().ProjectOnTo(HitRightAhead.Normal);
-				TempForwardAlongWall.Normalize();
-				if (TempForwardAlongWall.IsNearlyZero())
-				{
-					// Fallback if current forward is parallel to wall normal
-					TempForwardAlongWall = FVector::CrossProduct(HitRightAhead.Normal, FVector::UpVector).GetSafeNormal();
-					if (TempForwardAlongWall.IsNearlyZero())
-					{
-						TempForwardAlongWall = FVector::CrossProduct(HitRightAhead.Normal, OwningActor->GetActorRightVector()).GetSafeNormal();
-					}
-				}
-
-				TargetRotation  = FRotationMatrix::MakeFromXZ(TempForwardAlongWall, HitRightAhead.Normal).Rotator();*/
-			}
-			else
-				TraceLedge(OwningActor, EnemyHalfHeight);
+			// UE_LOG(LogTemp, Error, TEXT("Enemy Rotation %f, %f, %f"), TargetRotation.Pitch, TargetRotation.Yaw, TargetRotation.Roll);
 		}
 		else
-			TraceLedge(OwningActor, EnemyHalfHeight);
+			TraceLedge(EnemyHalfHeight);
 	}
 	else // hit the top of the wall so that the surface is curved out; previous hit detection can only detect an empty space of air
-		TraceLedge(OwningActor, EnemyHalfHeight);
+		TraceLedge(EnemyHalfHeight);
 }
 
-void UBTT_Climb::TraceLedge(AActor* OwningActor, float EnemyHalfHeight)
+void UBTT_Climb::TraceLedge(const float EnemyHalfHeight)
 {
-	FCollisionQueryParams CollisionQueryParams;
-	CollisionQueryParams.AddIgnoredActor(OwningActor);
+	// bHasReachedLedge = true;
 	
-	FVector MovementDirection = OwningActor->GetActorForwardVector().GetSafeNormal();
-	FVector LedgeStartGap = (MovementDirection * 500.f + OwningActor->GetActorUpVector() * -500.f).GetSafeNormal();
-	FVector Start = OwningActor->GetActorLocation() + LedgeStartGap * 100.f;
-	FVector End = Start + LedgeStartGap.RotateAngleAxis(90.f, OwningActor->GetActorRightVector()) * 200.f;
+	FCollisionQueryParams CollisionQueryParams;
+	CollisionQueryParams.AddIgnoredActor(CachedEnemy);
+	
+	FVector MovementDirection = CachedEnemy->GetActorForwardVector().GetSafeNormal();
+	FVector LedgeStartGap = (MovementDirection * 500.f + CachedEnemy->GetActorUpVector() * -500.f).GetSafeNormal();
+	FVector Start = CachedEnemy->GetActorLocation() + LedgeStartGap * 100.f;
+	FVector End = Start + LedgeStartGap.RotateAngleAxis(90.f, CachedEnemy->GetActorRightVector()) * 200.f;
 	
 	FHitResult HitWallLedge;
 		
@@ -158,11 +139,11 @@ void UBTT_Climb::TraceLedge(AActor* OwningActor, float EnemyHalfHeight)
 
 	if (bIsOnLedge)
 	{
-		DrawDebugLine(GetWorld(), Start, HitWallLedge.Location, FColor::Red);
+		// DrawDebugLine(GetWorld(), Start, HitWallLedge.Location, FColor::Red);
 
 		FHitResult HitFurtherWallLedge;
 
-		End = Start + LedgeStartGap.RotateAngleAxis(85.f, OwningActor->GetActorRightVector()) * 200.f;
+		End = Start + LedgeStartGap.RotateAngleAxis(85.f, CachedEnemy->GetActorRightVector()) * 200.f;
 			
 		bool bIsOnFurtherLedge = GetWorld()->LineTraceSingleByChannel(
 			HitFurtherWallLedge,
@@ -174,11 +155,11 @@ void UBTT_Climb::TraceLedge(AActor* OwningActor, float EnemyHalfHeight)
 
 		if (bIsOnFurtherLedge)
 		{
-			DrawDebugLine(GetWorld(), Start, HitFurtherWallLedge.Location, FColor::Red);
+			// DrawDebugLine(GetWorld(), Start, HitFurtherWallLedge.Location, FColor::Red);
 
 			FHitResult HitWallLedgeSide;
 
-			End = Start + LedgeStartGap.RotateAngleAxis(90.f, OwningActor->GetActorRightVector()).RotateAngleAxis(5.f, LedgeStartGap) * 200.f;
+			End = Start + LedgeStartGap.RotateAngleAxis(90.f, CachedEnemy->GetActorRightVector()).RotateAngleAxis(5.f, LedgeStartGap) * 200.f;
 
 			bool bIsOnWallLedgeSide = GetWorld()->LineTraceSingleByChannel(
 				HitWallLedgeSide,
@@ -211,37 +192,44 @@ void UBTT_Climb::TraceLedge(AActor* OwningActor, float EnemyHalfHeight)
 
 void UBTT_Climb::Move(UBehaviorTreeComponent& OwnerComp) const
 {
-	ACharacter* Character = Cast<ACharacter>(OwnerComp.GetAIOwner()->GetPawn());
-	if (!Character)
+	if (!CachedEnemy)
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 	
-	Character->SetActorRotation(FMath::RInterpTo(Character->GetActorRotation(), TargetRotation, GetWorld()->GetDeltaSeconds(), 15.f));
+	CachedEnemy->SetActorRotation(FMath::RInterpTo(CachedEnemy->GetActorRotation(), TargetRotation, GetWorld()->GetDeltaSeconds(), 15.f));
 	
-	if (FVector::Dist(TargetLocation, Character->GetActorLocation()) > 2.f)
+	if (FVector::Dist(TargetLocation, CachedEnemy->GetActorLocation()) > 2.f)
 	{
-		Character->AddMovementInput((TargetLocation - Character->GetActorLocation()).GetSafeNormal());
+		CachedEnemy->AddMovementInput((TargetLocation - CachedEnemy->GetActorLocation()).GetSafeNormal());
 	}
 }
 
 void UBTT_Climb::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	Super::TickTask(OwnerComp, NodeMemory, DeltaSeconds);
-
-	AActor* OwningEnemy = OwnerComp.GetAIOwner()->GetCharacter();
-	ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget"));
-
-	TraceGroundAndWall(OwningEnemy);
+	
+	TraceGroundAndWall();
 	Move(OwnerComp);
+
+	UE_LOG(LogTemp, Error, TEXT("Climbing Destination Dist: %f"), FVector::Distance(CachedEnemy->GetActorLocation(), Destination));
+
+	if (FVector::Distance(CachedEnemy->GetActorLocation(), Destination) < ArrivalAcceptance)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Climbing Destination"));
+		bDoneClimbing = true;
+	}
 
 	if (bDoneClimbing)
 	{
-		bDoneClimbing = false;
+		// UE_LOG(LogTemp, Error, TEXT("Climbing Done"));
 		
-		if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(OwnerComp.GetAIOwner()->GetCharacter()))
-		{
-			Enemy->GetAIController()->SetFocus(Player, EAIFocusPriority::Gameplay);
-			Enemy->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-		}
+		ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget"));
+
+		// CachedEnemy->SetActorLocation(Destination);
+		CachedEnemy->SetActorRotation(OwnerComp.GetBlackboardComponent()->GetValueAsRotator("TargetRotation"));
+		CachedEnemy->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		
+		CachedEnemy->GetAIController()->SetFocus(Player, EAIFocusPriority::Gameplay);
+		CachedEnemy->GetAIController()->SetStateToChaseOrPursue(Player);
 		
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 	}
