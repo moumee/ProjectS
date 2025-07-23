@@ -275,7 +275,7 @@ void ASuraCharacterEnemyBase::Climb(const FVector& Destination)
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 
 	FVector ToVector = Destination - GetActorLocation();
-	AddMovementInput(FVector(ToVector.X, ToVector.Y, ToVector.Z), 2.0f);
+	AddMovementInput(FVector(ToVector.X, ToVector.Y, ToVector.Z + 100.f), 5.0f);
 
 	FOnMontageEnded OnClimbMontageEnded;
 
