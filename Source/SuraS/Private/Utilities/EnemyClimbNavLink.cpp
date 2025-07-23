@@ -59,13 +59,15 @@ void  AEnemyClimbNavLink::OnReceiveSmartLinkReached(AActor* Agent, const FVector
 	// have the enemy climb up the wall
 	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(Agent))
 	{
-		Enemy->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay);
+		Enemy->Climb(Destination);
+		
+		/*Enemy->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay);
 		Enemy->SetActorRotation(FRotator(Enemy->GetActorRotation().Pitch, GetActorRotation().Yaw, Enemy->GetActorRotation().Roll));
 		
 		if (Enemy->GetAIController()->GetCurrentState() == EEnemyStates::Pursue || Enemy->GetAIController()->GetCurrentState() == EEnemyStates::Attacking)
 			Enemy->GetAIController()->EndPursueState();
 			
-		Enemy->GetAIController()->UpdateCurrentState(EEnemyStates::Climbing);
+		Enemy->GetAIController()->UpdateCurrentState(EEnemyStates::Climbing);*/
 	}
 }
 
