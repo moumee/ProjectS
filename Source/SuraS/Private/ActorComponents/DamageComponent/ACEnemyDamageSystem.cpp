@@ -35,14 +35,7 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 		HeadHealth -= DamageData.DamageAmount;
 		if (HeadHealth <= 0)
 		{
-			OwningEnemyActor->GetComponentByClass<USkeletalMeshComponent>()
-				->HideBoneByName(FName(TEXT("head")), PBO_Term);
-			FVector SpawnLocation = OwningEnemyActor->FindComponentByClass<USkeletalMeshComponent>()
-				->GetSocketLocation(FName(TEXT("head")));
-			if (RArm != nullptr)
-			{
-				GetWorld()->SpawnActor<AActor>(Head, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
-			}
+			PartBroken(OwningEnemyActor, DamageData, "head", Head);
 		}
 	}
 	if (LArmBoneNames.Contains((DamageData.BoneName)))
@@ -50,14 +43,7 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 		LArmHealth -= DamageData.DamageAmount;
 		if (LArmHealth <= 0)
 		{
-			OwningEnemyActor->GetComponentByClass<USkeletalMeshComponent>()
-				->HideBoneByName(FName(TEXT("upperarm_l")), PBO_Term);
-			FVector SpawnLocation = OwningEnemyActor->FindComponentByClass<USkeletalMeshComponent>()
-				->GetSocketLocation(FName(TEXT("upperarm_l")));
-			if (RArm != nullptr)
-			{
-				GetWorld()->SpawnActor<AActor>(LArm, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
-			}
+			PartBroken(OwningEnemyActor, DamageData, "upperarm_l", LArm);
 		}
 	}
 	if (RArmBoneNames.Contains((DamageData.BoneName)))
@@ -65,14 +51,7 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 		RArmHealth -= DamageData.DamageAmount;
 		if (RArmHealth <= 0)
 		{
-			OwningEnemyActor->GetComponentByClass<USkeletalMeshComponent>()
-				->HideBoneByName(FName(TEXT("upperarm_r")), PBO_Term);
-			FVector SpawnLocation = OwningEnemyActor->FindComponentByClass<USkeletalMeshComponent>()
-				->GetSocketLocation(FName(TEXT("upperarm_r")));
-			if (RArm != nullptr)
-			{
-				GetWorld()->SpawnActor<AActor>(RArm, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
-			}
+			PartBroken(OwningEnemyActor, DamageData, "upperarm_r", RArm);
 			
 		}
 	}
@@ -92,4 +71,23 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 	UE_LOG(LogTemp, Error, TEXT("bone: %s"), *DamageData.BoneName.ToString());
 	
 	return Super::TakeDamage(DamageData, DamageCauser);
+}
+
+
+void UACEnemyDamageSystem::PartBroken(AActor* OwningEnemyActor, const FDamageData& DamageData, const FName PartsParent, TSubclassOf<AActor> SeparatedPart)
+{
+	OwningEnemyActor->GetComponentByClass<USkeletalMeshComponent>()
+				->HideBoneByName(PartsParent, PBO_Term);
+	FVector SpawnLocation = OwningEnemyActor->FindComponentByClass<USkeletalMeshComponent>()
+		->GetSocketLocation(PartsParent);
+
+	AActor* bodyPart;
+	bodyPart = GetWorld()->SpawnActor<AActor>(LArm, SpawnLocation-FVector(0,0,70), FRotator::ZeroRotator, SpawnParams);
+			
+	UPrimitiveComponent* Enemy = Cast<UPrimitiveComponent>(bodyPart->GetRootComponent());
+	UE_LOG(LogTemp, Error, TEXT("vector: %s"), *(DamageData.ImpulseDirection).ToString());
+	if (Enemy)
+	{
+		Enemy->AddImpulse(DamageData.ImpulseDirection * 300, PartsParent, true );
+	}
 }

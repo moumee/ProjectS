@@ -25,4 +25,7 @@ struct SURAS_API FDamageData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName BoneName = NAME_None;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector ImpulseDirection = FVector::ZeroVector;
 };
