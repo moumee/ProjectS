@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 
-//TODO: ��� �����ϱ�
 #include "WeaponInterface.h"
+#include "WeaponSystemComponentData.h"
 #include "WeaponSystemComponent.generated.h"
 
 // delegate about inventory widget (writted by suhyeon)
@@ -73,7 +73,18 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* RightMouseButtonAction;
 
+	//---------------------------------------------------
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon)
+	FDataTableRowHandle WSCDataTableHandle;
+	FWeaponSystemComponentData* WSCData;
 
+protected:
+	EWeaponName StartingWeaponName;
+	TSubclassOf<class AWeapon> StartingWeaponClass;
+
+	void LoadWSCData();
+	void InitializeStartingWeapon();
 	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "TargetingSystem|PlayerReference", Meta = (AllowPrivateAccess = "true"))
 	//class APlayerCameraManager* PlayerCameraManager;
 #pragma endregion
