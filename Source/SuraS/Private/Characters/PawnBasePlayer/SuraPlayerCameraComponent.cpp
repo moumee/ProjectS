@@ -51,7 +51,7 @@ void USuraPlayerCameraComponent::BeginPlay()
 
 void USuraPlayerCameraComponent::ChangeCameraLoopShake(const TSubclassOf<UCameraShakeBase>& InShake)
 {
-	if (CurrentLoopShake)
+	if (CurrentLoopShake && CurrentLoopShake != InShake)
 	{
 		PlayerController->PlayerCameraManager->StopAllInstancesOfCameraShake(CurrentLoopShake, false);
 	}
@@ -74,17 +74,11 @@ void USuraPlayerCameraComponent::TickMoveStateCamera(float DeltaTime)
 		{
 			if (MovementComponent->Velocity.IsNearlyZero(0.001))
 			{
-				if (CurrentLoopShake != CrouchIdleCameraShake)
-				{
-					ChangeCameraLoopShake(CrouchIdleCameraShake);
-				}
+				ChangeCameraLoopShake(CrouchIdleCameraShake);
 			}
 			else
 			{
-				if (CurrentLoopShake != CrouchMoveCameraShake)
-				{
-					ChangeCameraLoopShake(CrouchMoveCameraShake);
-				}
+				ChangeCameraLoopShake(CrouchMoveCameraShake);
 			}
 
 			InterpCameraData(CrouchCameraData, DeltaTime);
@@ -93,29 +87,19 @@ void USuraPlayerCameraComponent::TickMoveStateCamera(float DeltaTime)
 		{
 			if (MovementComponent->Velocity.IsNearlyZero(0.001))
 			{
-				if (CurrentLoopShake != IdleCameraShake)
-				{
-					ChangeCameraLoopShake(IdleCameraShake);
-				}
+				ChangeCameraLoopShake(IdleCameraShake);
 				
 				InterpCameraData(IdleCameraData, DeltaTime);
 			}
-			else if (MovementComponent->GetMovementInputVector().Y > 0.f)
+			else if (MovementComponent->IsRunning())
 			{
-				if (CurrentLoopShake != RunCameraShake)
-				{
-					ChangeCameraLoopShake(RunCameraShake);
-				}
+				ChangeCameraLoopShake(RunCameraShake);
 
 				InterpCameraData(RunCameraData, DeltaTime);
 			}
 			else
 			{
-				if (CurrentLoopShake != WallRunCameraShake)
-				{
-					ChangeCameraLoopShake(WalkCameraShake);
-
-				}
+				ChangeCameraLoopShake(WalkCameraShake);
 
 				if (MovementComponent->GetMovementInputVector().Y < 0.f)
 				{
