@@ -57,4 +57,13 @@ struct SURAS_API FEnemyAttributesData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UAnimMontage* ClimbAnimation = nullptr;
+
+	UPROPERTY(editAnywhere, BlueprintReadWrite)
+	float partsKnockback_Weak = 200;
+
+	UPROPERTY(editAnywhere, BlueprintReadWrite)
+	float partsKnockback_Normal = 300;
+
+	UPROPERTY(editAnywhere, BlueprintReadWrite)
+	float partsKnockback_Hard = 400;
 };

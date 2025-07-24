@@ -10,12 +10,17 @@ TSet<FName> UACEnemyDamageSystem::LArmBoneNames = {FName(TEXT("upperarm_l")), FN
 TSet<FName> UACEnemyDamageSystem::RArmBoneNames = {FName(TEXT("upperarm_r")), FName(TEXT("lowerarm_r")), FName(TEXT("hand_r"))};
 TSet<FName> UACEnemyDamageSystem::LLegBoneNames = {FName(TEXT("thigh_l")), FName(TEXT("calf_l")), FName(TEXT("foot_l")), FName(TEXT("ball_l"))};
 TSet<FName> UACEnemyDamageSystem::RLegBoneNames = {FName(TEXT("thigh_r")), FName(TEXT("calf_r")), FName(TEXT("foot_r")), FName(TEXT("ball_r"))};
+//TArray<float> UACEnemyDamageSystem::ImpulsePower = 
 
 // Sets default values for this component's properties
 UACEnemyDamageSystem::UACEnemyDamageSystem()
 {
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	//if (const auto EnemyAttributesData = EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(EnemyType, ""))
+	
 }
+
+
 
 bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
 {
@@ -35,7 +40,7 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 		HeadHealth -= DamageData.DamageAmount;
 		if (HeadHealth <= 0)
 		{
-			PartBroken(OwningEnemyActor, DamageData, "head", Head);
+			PartBroken(OwningEnemyActor, DamageData, MaxHealth ,"head", Head);
 		}
 	}
 	if (LArmBoneNames.Contains((DamageData.BoneName)))
@@ -43,7 +48,7 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 		LArmHealth -= DamageData.DamageAmount;
 		if (LArmHealth <= 0)
 		{
-			PartBroken(OwningEnemyActor, DamageData, "upperarm_l", LArm);
+			PartBroken(OwningEnemyActor, DamageData, MaxLArmHealth, "upperarm_l", LArm);
 		}
 	}
 	if (RArmBoneNames.Contains((DamageData.BoneName)))
@@ -51,7 +56,7 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 		RArmHealth -= DamageData.DamageAmount;
 		if (RArmHealth <= 0)
 		{
-			PartBroken(OwningEnemyActor, DamageData, "upperarm_r", RArm);
+			PartBroken(OwningEnemyActor, DamageData, MaxRArmHealth, "upperarm_r", RArm);
 			
 		}
 	}
@@ -60,7 +65,7 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 		LLegHealth -= DamageData.DamageAmount;
 		if (LLegHealth <= 0)
 		{
-			PartBroken(OwningEnemyActor, DamageData, "thigh_l", LLeg);
+			PartBroken(OwningEnemyActor, DamageData, MaxLLegHealth, "thigh_l", LLeg);
 		}
 	}
 	if (RLegBoneNames.Contains((DamageData.BoneName)))
@@ -68,7 +73,7 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 		RLegHealth -= DamageData.DamageAmount;
 		if (RLegHealth <= 0)
 		{
-			PartBroken(OwningEnemyActor, DamageData, "thigh_l", RLeg);
+			PartBroken(OwningEnemyActor, DamageData, MaxRLegHealth, "thigh_l", RLeg);
 		}
 	}
 	
@@ -77,8 +82,23 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 	return Super::TakeDamage(DamageData, DamageCauser);
 }
 
+void UACEnemyDamageSystem::SetImpulsePower(float weak, float normal, float hard)
+{
+	ImpulsePower.Empty();
+	ImpulsePower.Add(weak);
+	ImpulsePower.Add(normal);
+	ImpulsePower.Add(hard);
+}
 
-void UACEnemyDamageSystem::PartBroken(AActor* OwningEnemyActor, const FDamageData& DamageData, const FName PartsParent, TSubclassOf<AActor> SeparatedPart)
+float UACEnemyDamageSystem::CalculateImpulsePower(float Damage, float PartMaxHealth)
+{
+	float DamageRatio = Damage/PartMaxHealth*3;
+	if (DamageRatio < 1) return ImpulsePower[0];
+	if (DamageRatio < 2) return ImpulsePower[1];
+	return ImpulsePower[2];
+}
+
+void UACEnemyDamageSystem::PartBroken(AActor* OwningEnemyActor, const FDamageData& DamageData, float PartMaxHealth, const FName PartsParent, TSubclassOf<AActor> SeparatedPart)
 {
 	OwningEnemyActor->GetComponentByClass<USkeletalMeshComponent>()
 				->HideBoneByName(PartsParent, PBO_Term);
@@ -94,7 +114,7 @@ void UACEnemyDamageSystem::PartBroken(AActor* OwningEnemyActor, const FDamageDat
 		UE_LOG(LogTemp, Error, TEXT("vector: %s"), *(DamageData.ImpulseDirection).ToString());
 		if (Enemy)
 		{
-			Enemy->AddImpulse(DamageData.ImpulseDirection * -200, PartsParent, true );
+			Enemy->AddImpulse(DamageData.ImpulseDirection * -CalculateImpulsePower(DamageData.DamageAmount, PartMaxHealth), PartsParent, true );
 		}
 	}
 }
