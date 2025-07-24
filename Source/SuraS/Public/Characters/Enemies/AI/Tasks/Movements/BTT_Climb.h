@@ -6,6 +6,7 @@
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "BTT_Climb.generated.h"
 
+class ASuraCharacterEnemyBase;
 /**
  * 
  */
@@ -16,14 +17,21 @@ class SURAS_API UBTT_Climb : public UBTTask_BlackboardBase
 
 	bool bDoneClimbing = false;
 	FVector TargetLocation = FVector::ZeroVector;
+	FVector Destination = FVector::ZeroVector;
 	FRotator TargetRotation = FRotator::ZeroRotator;
+
+	UPROPERTY()
+	ASuraCharacterEnemyBase* CachedEnemy = nullptr;
 	
-	void TraceGroundAndWall(AActor* OwningActor);
-	void TraceLedge(AActor* OwningActor, float EnemyHalfHeight);
+	void TraceGroundAndWall();
+	void TraceLedge(float EnemyHalfHeight);
 	void Move(UBehaviorTreeComponent& OwnerComp) const;
 
 public:
 	explicit UBTT_Climb(FObjectInitializer const& ObjectInitializer);
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float ArrivalAcceptance = 100.f;
 };

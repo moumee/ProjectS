@@ -161,6 +161,7 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Puruse Token Returned"));
 	}
 
+	AIController->ClearFocus(EAIFocusPriority::Gameplay);
 	AIController->GetBrainComponent()->StopLogic("Death");
 
 	// Disable all collisions on capsule

@@ -79,7 +79,7 @@ void AEnemyBaseAIController::SetupPerceptionSystem()
 
 void AEnemyBaseAIController::OnTargetSighted(AActor* SeenTarget, FAIStimulus const Stimulus)
 {
-	if (GetCurrentState() != EEnemyStates::Pursue && GetCurrentState() != EEnemyStates::Attacking)
+	if (GetCurrentState() != EEnemyStates::Pursue && GetCurrentState() != EEnemyStates::Attacking && GetCurrentState() != EEnemyStates::Climbing)
 		SetStateToChaseOrPursue(SeenTarget);
 }
 

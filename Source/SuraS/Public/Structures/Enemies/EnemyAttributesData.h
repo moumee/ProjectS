@@ -14,37 +14,37 @@ struct SURAS_API FEnemyAttributesData : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxHealth;
+	float MaxHealth = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxWalkSpeed;
+	float MaxWalkSpeed = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxSightRadius;
+	float MaxSightRadius = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float SightAngle;
+	float SightAngle = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float StrafeRadius;
+	float StrafeRadius = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float ChaseStrafeRadius;
+	float ChaseStrafeRadius = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float AttackRadius;
+	float AttackRadius = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float AttackRate;
+	float AttackRate = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MeleeAttackRange;
+	float MeleeAttackRange = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MeleeAttackSphereRadius;
+	float MeleeAttackSphereRadius = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float AttackDamageAmount;
+	float AttackDamageAmount = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<UAnimMontage*> HitAnimations;
@@ -56,5 +56,5 @@ struct SURAS_API FEnemyAttributesData : public FTableRowBase
 	TArray<UAnimMontage*> AttackAnimations;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UAnimMontage* ClimbAnimation;
+	UAnimMontage* ClimbAnimation = nullptr;
 };

@@ -14,26 +14,26 @@ struct SURAS_API FEnemyProjectileAttributesData : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DamageAmount;
+	float DamageAmount = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float HeadshotAdditionalDamage;
+	float HeadshotAdditionalDamage = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float LifeSpan;
+	float LifeSpan = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float InitialSpeed;
+	float InitialSpeed = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxSpeed;
+	float MaxSpeed = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float InitialRadius;
+	float InitialRadius = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float ExplosionRadius;
+	float ExplosionRadius = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float HomingAccelerationMagnitude;
+	float HomingAccelerationMagnitude = 0.f;
 };

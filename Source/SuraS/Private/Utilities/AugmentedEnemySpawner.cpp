@@ -114,8 +114,8 @@ bool AAugmentedEnemySpawner::FindValidSpawnLocation(TSubclassOf<ASuraCharacterEn
 				QueryParams
 			);
 
-    		if (!bOverlap)
-    		{
+    		/*if (!bOverlap)
+    		{*/
     			// a downward line trace to snap to the ground.
     			FHitResult HitResult;
     			FVector TraceStart = TestLocation + FVector(0,0,HalfHeight + 10.0f); // Start slightly above predicted spot
@@ -137,11 +137,11 @@ bool AAugmentedEnemySpawner::FindValidSpawnLocation(TSubclassOf<ASuraCharacterEn
     				UE_LOG(LogTemp, Warning, TEXT("Found valid spawn location from navmesh (no trace hit): %s"), *OutLocation.ToString());
     				return true;
     			}
-    		}
+    		/*}
     		else
     		{
     			UE_LOG(LogTemp, Warning, TEXT("Overlapped when spawning somehow"));
-    		}
+    		}*/
     	}
     }
 
