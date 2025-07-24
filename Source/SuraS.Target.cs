@@ -11,5 +11,6 @@ public class SuraSTarget : TargetRules
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_5;
 		ExtraModuleNames.Add("SuraS");
-	}
+        ExtraModuleNames.Add("BoranagaSKControl");
+    }
 }
