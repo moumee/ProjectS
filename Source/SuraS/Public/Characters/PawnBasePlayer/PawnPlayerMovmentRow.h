@@ -108,6 +108,9 @@ struct SURAS_API FPawnPlayerMovementRow : public FTableRowBase
 	UPROPERTY(EditAnywhere, Category = "Movement|Slide")
 	float SlideMaxDuration = 1.25f;
 	
+	UPROPERTY(EditAnywhere, Category = "Movement|Slide")
+	float SlideAdditionalSpeed = 700.f;
+	
 	UPROPERTY(EditAnywhere, Category = "Movement")
     float GroundPointDetectionLength = 1000.f;
 
