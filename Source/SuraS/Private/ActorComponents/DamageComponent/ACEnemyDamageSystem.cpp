@@ -58,14 +58,18 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 	if (LLegBoneNames.Contains((DamageData.BoneName)))
 	{
 		LLegHealth -= DamageData.DamageAmount;
-		if (LLegHealth <= 0) OwningEnemyActor->GetComponentByClass<USkeletalMeshComponent>()
-		->HideBoneByName(FName(TEXT("thigh_l")), PBO_Term);
+		if (LLegHealth <= 0)
+		{
+			PartBroken(OwningEnemyActor, DamageData, "thigh_l", LLeg);
+		}
 	}
 	if (RLegBoneNames.Contains((DamageData.BoneName)))
 	{
 		RLegHealth -= DamageData.DamageAmount;
-		if (RLegHealth <= 0) OwningEnemyActor->GetComponentByClass<USkeletalMeshComponent>()
-		->HideBoneByName(FName(TEXT("thigh_r")), PBO_Term);
+		if (RLegHealth <= 0)
+		{
+			PartBroken(OwningEnemyActor, DamageData, "thigh_l", RLeg);
+		}
 	}
 	
 	UE_LOG(LogTemp, Error, TEXT("bone: %s"), *DamageData.BoneName.ToString());
@@ -81,13 +85,16 @@ void UACEnemyDamageSystem::PartBroken(AActor* OwningEnemyActor, const FDamageDat
 	FVector SpawnLocation = OwningEnemyActor->FindComponentByClass<USkeletalMeshComponent>()
 		->GetSocketLocation(PartsParent);
 
-	AActor* bodyPart;
-	bodyPart = GetWorld()->SpawnActor<AActor>(LArm, SpawnLocation-FVector(0,0,70), FRotator::ZeroRotator, SpawnParams);
-			
-	UPrimitiveComponent* Enemy = Cast<UPrimitiveComponent>(bodyPart->GetRootComponent());
-	UE_LOG(LogTemp, Error, TEXT("vector: %s"), *(DamageData.ImpulseDirection).ToString());
-	if (Enemy)
+	if (SeparatedPart != nullptr)
 	{
-		Enemy->AddImpulse(DamageData.ImpulseDirection * 300, PartsParent, true );
+		AActor* bodyPart;
+		bodyPart = GetWorld()->SpawnActor<AActor>(SeparatedPart, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
+			
+		UPrimitiveComponent* Enemy = Cast<UPrimitiveComponent>(bodyPart->GetRootComponent());
+		UE_LOG(LogTemp, Error, TEXT("vector: %s"), *(DamageData.ImpulseDirection).ToString());
+		if (Enemy)
+		{
+			Enemy->AddImpulse(DamageData.ImpulseDirection * -200, PartsParent, true );
+		}
 	}
 }

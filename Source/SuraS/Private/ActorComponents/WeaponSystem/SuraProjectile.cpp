@@ -320,7 +320,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 				if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(Hit))
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, Hit.BoneName);
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, Hit.BoneName, Hit.ImpactNormal);
 
 					if (OnHeadShot.IsBound())
 					{
@@ -329,7 +329,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 				}
 				else
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, Hit.BoneName);
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, Hit.BoneName, Hit.ImpactNormal);
 					UE_LOG(LogTemp, Error, TEXT("bone11: %s"), *Hit.BoneName.ToString());
 					if (Cast<ACharacter>(OtherActor))
 					{
@@ -652,7 +652,7 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 
 						if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(HitResult))
 						{
-							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, HitResult.BoneName);
+							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, TraceDirection);
 
 							if (OnHeadShot.IsBound())
 							{
@@ -661,7 +661,7 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 						}
 						else
 						{
-							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName);
+							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, TraceDirection);
 							UE_LOG(LogTemp, Error, TEXT("bone11: %s"), *HitResult.BoneName.ToString());
 							if (OnBodyShot.IsBound())
 							{

@@ -37,7 +37,7 @@ class SURAS_API UACEnemyDamageSystem : public UACDamageSystem
 	static TSet<FName> RLegBoneNames;
 	FActorSpawnParameters SpawnParams;
 
-	void PartBroken(AActor* OwningEnemyActor, const FDamageData& DamageData, const FName PartsParent, TSubclassOf<AActor> SeparatedPart);
+	void PartBroken(AActor* OwningEnemyActor, const FDamageData& DamageData, const FName PartsParent, TSubclassOf<AActor> SeparatedPart = nullptr);
 
 public:
 	// Sets default values for this component's properties
@@ -53,4 +53,10 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> Head;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> LLeg;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> RLeg;
 };
