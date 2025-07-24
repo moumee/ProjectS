@@ -15,6 +15,11 @@ class SURAS_API AEnemyClimbNavLink : public ANavLinkProxy
 {
 	GENERATED_BODY()
 
+	UPROPERTY()
+	ASuraCharacterEnemyBase* CachedEnemy;
+
+	void OnCachedEnemyDeath();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -25,4 +30,9 @@ protected:
 public:
 	// Sets default values for this actor's properties
 	AEnemyClimbNavLink();
+
+	void SetLinkUsable(bool bIsUsable);
+
+	UFUNCTION()
+	ASuraCharacterEnemyBase* GetCachedEnemy() const { return CachedEnemy; };
 };

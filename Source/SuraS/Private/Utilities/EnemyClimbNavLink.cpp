@@ -3,6 +3,7 @@
 
 #include "Utilities/EnemyClimbNavLink.h"
 
+#include "ActorComponents/DamageComponent/ACEnemyDamageSystem.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
@@ -34,23 +35,44 @@ void  AEnemyClimbNavLink::OnReceiveSmartLinkReached(AActor* Agent, const FVector
 	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(Agent))
 	{
 		// Enemy->Climb(Destination);
-		
-		Enemy->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay);
-		
-		if (Enemy->GetAIController()->GetCurrentState() == EEnemyStates::Pursue || Enemy->GetAIController()->GetCurrentState() == EEnemyStates::Attacking)
-			Enemy->GetAIController()->EndPursueState();
 
-		Enemy->GetMovementComponent()->StopMovementImmediately(); // prevent unwanted climbing due to movement
+		CachedEnemy = Enemy;
+		CachedEnemy->GetDamageSystemComp()->OnDeath.AddUObject(this, &AEnemyClimbNavLink::OnCachedEnemyDeath); // if enemy dies while climbing up, re-enable the link
+
+		SetLinkUsable(false);
 		
-		Enemy->GetAIController()->UpdateCurrentState(EEnemyStates::Climbing);
-		Enemy->GetAIController()->GetBlackboardComponent()->SetValueAsVector("TargetLocation", Destination); // to straighten the climbing rotation
+		CachedEnemy->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay);
+		
+		if (CachedEnemy->GetAIController()->GetCurrentState() == EEnemyStates::Pursue || CachedEnemy->GetAIController()->GetCurrentState() == EEnemyStates::Attacking)
+			CachedEnemy->GetAIController()->EndPursueState();
+
+		CachedEnemy->GetMovementComponent()->StopMovementImmediately(); // prevent unwanted climbing due to movement
+		
+		CachedEnemy->GetAIController()->UpdateCurrentState(EEnemyStates::Climbing);
+		CachedEnemy->GetAIController()->GetBlackboardComponent()->SetValueAsVector("TargetLocation", Destination); // to straighten the climbing rotation
 		
 		FRotator TargetYawRotation = UKismetMathLibrary::FindLookAtRotation(GetActorTransform().TransformPosition(PointLinks[0].Left), GetActorTransform().TransformPosition(PointLinks[0].Right));
 		FRotator TargetRotation = FRotator(Enemy->GetActorRotation().Pitch, TargetYawRotation.Yaw, Enemy->GetActorRotation().Roll);
 
-		Enemy->GetAIController()->GetBlackboardComponent()->SetValueAsRotator("TargetRotation", TargetRotation); // to straighten the climbing rotation
+		CachedEnemy->GetAIController()->GetBlackboardComponent()->SetValueAsRotator("TargetRotation", TargetRotation); // to straighten the climbing rotation
 		
-		Enemy->SetActorLocation(GetActorTransform().TransformPosition(PointLinks[0].Left));
-		Enemy->SetActorRotation(TargetRotation);
+		// CachedEnemy->SetActorLocation(GetActorTransform().TransformPosition(PointLinks[0].Left));
+		CachedEnemy->SetActorRotation(TargetRotation);
 	}
+}
+
+void AEnemyClimbNavLink::OnCachedEnemyDeath()
+{
+	SetLinkUsable(true);
+}
+
+void AEnemyClimbNavLink::SetLinkUsable(bool bIsUsable)
+{
+	SetSmartLinkEnabled(bIsUsable);
+
+	if (!bIsUsable)
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Enemy Climb disabled"));
+
+	if (bIsUsable)
+		CachedEnemy = nullptr;
 }
