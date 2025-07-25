@@ -255,13 +255,15 @@ void ASuraProjectile::ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector Cen
 		}
 	}
 }
-void ASuraProjectile::ApplyDamage(AActor* OtherActor, float DamageAmount, EDamageType DamageType, bool bCanForceDamage, FName BoneName)
+void ASuraProjectile::ApplyDamage(AActor* OtherActor, float DamageAmount, EDamageType DamageType, bool bCanForceDamage,
+	const FName BoneName, const FVector ImpulseDirection)
 {
 	FDamageData Damage;
 	Damage.DamageAmount = DamageAmount;
 	Damage.DamageType = DamageType;
 	Damage.bCanForceDamage = bCanForceDamage;
 	Damage.BoneName = BoneName;
+	Damage.ImpulseDirection = ImpulseDirection;
 
 	if (OtherActor->GetClass()->ImplementsInterface(UDamageable::StaticClass()))
 	{

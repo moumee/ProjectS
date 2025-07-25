@@ -161,6 +161,7 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Puruse Token Returned"));
 	}
 
+	AIController->ClearFocus(EAIFocusPriority::Gameplay);
 	AIController->GetBrainComponent()->StopLogic("Death");
 
 	// Disable all collisions on capsule
@@ -275,7 +276,7 @@ void ASuraCharacterEnemyBase::Climb(const FVector& Destination)
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 
 	FVector ToVector = Destination - GetActorLocation();
-	AddMovementInput(FVector(ToVector.X, ToVector.Y, ToVector.Z), 2.0f);
+	AddMovementInput(FVector(ToVector.X, ToVector.Y, ToVector.Z + 100.f), 5.0f);
 
 	FOnMontageEnded OnClimbMontageEnded;
 

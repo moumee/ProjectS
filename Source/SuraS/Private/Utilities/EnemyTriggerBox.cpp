@@ -15,7 +15,7 @@ AEnemyTriggerBox::AEnemyTriggerBox()
 	RootComponent = TriggerBox;
 	TriggerBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 	TriggerBox->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); // Ignore Projectile
-	TriggerBox->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Ignore); // Ignore Enemies Overlap channel
+	TriggerBox->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap); // Ignore Enemies Overlap channel
 	TriggerBox->SetGenerateOverlapEvents(true);
 }
 
@@ -38,9 +38,9 @@ void AEnemyTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 		{
 			Enemy->GetAIController()->SetStateToChaseOrPursue(Player);
 		}
-	}
 
-	EnemiesToTrigger.Empty();
-	Destroy();
+		EnemiesToTrigger.Empty();
+		Destroy();
+	}
 }
 

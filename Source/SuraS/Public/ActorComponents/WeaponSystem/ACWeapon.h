@@ -15,6 +15,7 @@
 #include "ActorComponents/WeaponSystem/WeaponRecoilStruct.h"
 #include "ActorComponents/WeaponSystem/ArmRecoilStruct.h"
 #include "ActorComponents/WeaponSystem/ProjectileSpreadValue.h"
+#include "ActorComponents/WeaponSystem/BufferedFireRequest.h"
 #include "WeaponFireData.h"
 
 #include "Engine/DataTable.h"
@@ -30,6 +31,7 @@ class USuraWeaponIdleState;
 class USuraWeaponFiringState;
 class USuraWeaponUnequippedState;
 class USuraWeaponReloadingState;
+class USuraWeaponPumpActionReloadState;
 class USuraWeaponSwitchingState;
 class USuraWeaponTargetingState;
 class USuraWeaponChargingState;
@@ -109,7 +111,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ReloadAction;
-	
+
 	TArray<FInputBindingHandle*> InputActionBindingHandles;
 
 	AWeapon();
@@ -129,6 +131,12 @@ public:
 
 	void FireSingleProjectile(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 	void FireMultiProjectile(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+
+#pragma region Socket
+protected:
+	FName WeaponSocketName;
+
+#pragma endregion
 
 #pragma region HitScan
 protected:
@@ -175,6 +183,8 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponReloadingState* ReloadingState;
 	UPROPERTY(VisibleAnywhere)
+	USuraWeaponPumpActionReloadState* PumpActionReloadingState;
+	UPROPERTY(VisibleAnywhere)
 	USuraWeaponSwitchingState* SwitchingState;
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponTargetingState* TargetingState;
@@ -214,7 +224,7 @@ protected:
 	FTransform RightHandSocketTransform_Crouch;
 protected:
 	void StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMontage* WeaponFireAnimation);
-	void StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation, float CharacterAnimPlayRate, float WeaponAnimPlayRate);
+	void StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation, float CharacterAnimPlayRate, float WeaponAnimPlayRate, FName StartSection = FName());
 	void CancelAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation);
 public:
 	FTransform GetRightHandSocketTransform() const { return RightHandSocketTransform; }
@@ -330,9 +340,16 @@ public:
 protected:
 	UPROPERTY(EditAnywhere)
 	bool bCanAutoReload = true;
+	bool bActivePumpActionReload = false;
+	bool bFireInputDuringReload = false;
+	TOptional<FBufferedFireRequest> BufferedFireRequest;
 
 	UPROPERTY(EditAnywhere)
 	float ReloadingTime = 2.5f;
+	float PumpReloadingTime_Start = 0.6f;
+	float PumpReloadingTime_Loop = 0.4;
+	float PumpReloadingTime_End = 0.6;
+	float PumpReloadingTime_LoopToFire = 0.2f;
 
 	UPROPERTY(EditAnywhere)
 	int32 MaxTotalAmmo = 200.f;
@@ -347,20 +364,20 @@ protected:
 	int32 LeftAmmoInCurrentMag;
 
 	FTimerHandle ReloadingTimer;
-
-	//---------------
-	//bool bAllowFireWithInsufficientAmmo = false;
-
 protected:
 	void HandleReload();
+	void HandlePumpActionReload();
 	void CancelReload();
 public:
 	void StartReload();
+	void StartPumpActionReload(bool bStartFromMiddle = false);
 protected:
 	void StopReload();
+	void StopPumpActionReload();
+	void InterruptReloadAndFire();
 
 	void ConsumeAmmo(int32 AmmoCost = 1, bool AllowFireWithInsufficientAmmo = false);
-	void ReloadAmmo();
+	void ReloadAmmo(bool bPumpAction = false);
 	bool HasAmmoInCurrentMag();
 	bool HasAmmoInCurrentMag(int32 AmmoCost);
 public:

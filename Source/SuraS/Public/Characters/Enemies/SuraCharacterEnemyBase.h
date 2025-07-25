@@ -85,7 +85,7 @@ protected:
 public:
 	ASuraCharacterEnemyBase();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (RowType = "EnemyAttributesData"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (RowType = "/Script/SuraS.EnemyAttributesData"))
 	FDataTableRowHandle EnemyAttributesDT;
 
 	// ai controller getter

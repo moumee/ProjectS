@@ -42,7 +42,7 @@ public:
 	// Sets default values for this actor's properties
 	ASuraEnemyProjectile();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (RowType = "EnemyProjectileAttributesData"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (RowType = "/Script/SuraS.EnemyProjectileAttributesData"))
 	FDataTableRowHandle EnemyProjectileAttributesDT;
 
 	void InitializeProjectile();

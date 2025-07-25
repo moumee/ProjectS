@@ -21,6 +21,9 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Name")
 	EWeaponName WeaponName;
 	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Socket")
+	FName WeaponSocket;
+	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	EWeaponAction LeftMouseAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
@@ -73,6 +76,16 @@ struct SURAS_API FWeaponData : public FTableRowBase
 
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
+	float ReloadingTime = 2.5f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
+	float PumpReloadingTime_Start = 0.6f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
+	float PumpReloadingTime_Loop = 0.4;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
+	float PumpReloadingTime_End = 0.6f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
+	float PumpReloadingTime_LoopToFire = 0.2f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
 	int32 MaxAmmoPerMag = 10.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
 	int32 MaxTotalAmmo = 200.f;
@@ -84,6 +97,8 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	bool bAllowFireWithInsufficientAmmo_L = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
 	bool bAllowFireWithInsufficientAmmo_R = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
+	bool bActivePumpActionReload = false;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SingleShot")
 	float SingleShotDelay = 1.f;

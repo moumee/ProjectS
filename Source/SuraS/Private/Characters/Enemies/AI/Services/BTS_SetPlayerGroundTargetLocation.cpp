@@ -1,22 +1,22 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Characters/Enemies/AI/Services/BTS_CalculateDistanceToAttackTarget.h"
+#include "Characters/Enemies/AI/Services/BTS_SetPlayerGroundTargetLocation.h"
 
+#include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
-#include "Characters/Enemies/AI/EnemyBaseAIController.h"
-#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
+#include "Characters/PawnBAsePlayer/SuraPawnPlayer.h"
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 
-UBTS_CalculateDistanceToAttackTarget::UBTS_CalculateDistanceToAttackTarget()
+UBTS_SetPlayerGroundTargetLocation::UBTS_SetPlayerGroundTargetLocation()
 {
-	NodeName = "Calculate Distance To Attack Target";
+	NodeName = "Set Player Ground Target Location";
 	bNotifyBecomeRelevant = true;
 	bNotifyTick = true;
 }
 
-void UBTS_CalculateDistanceToAttackTarget::OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+void UBTS_SetPlayerGroundTargetLocation::OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	Super::OnBecomeRelevant(OwnerComp, NodeMemory);
 
@@ -27,7 +27,8 @@ void UBTS_CalculateDistanceToAttackTarget::OnBecomeRelevant(UBehaviorTreeCompone
 		TargetPlayer = Player;
 }
 
-void UBTS_CalculateDistanceToAttackTarget::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
+void UBTS_SetPlayerGroundTargetLocation::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
+	float DeltaSeconds)
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
@@ -36,6 +37,6 @@ void UBTS_CalculateDistanceToAttackTarget::TickNode(UBehaviorTreeComponent& Owne
 		FVector PlayerGroundLocation = FVector::ZeroVector;
 		
 		if (TargetPlayer->GetPlayerMovementComponent()->FindGroundPoint(PlayerGroundLocation))
-			OwnerComp.GetBlackboardComponent()->SetValueAsFloat("DistanceToAttackTarget", FVector::Dist(OwnerEnemy->GetActorLocation(), PlayerGroundLocation));
+			OwnerComp.GetBlackboardComponent()->SetValueAsVector("TargetLocation", PlayerGroundLocation);
 	}
 }

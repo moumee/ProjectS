@@ -6,7 +6,7 @@
 #include "Navigation/NavLinkProxy.h"
 #include "EnemyClimbNavLink.generated.h"
 
-class USphereComponent;
+class UBoxComponent;
 class ASuraCharacterEnemyBase;
 class UNavModifierComponent;
 
@@ -15,12 +15,10 @@ class SURAS_API AEnemyClimbNavLink : public ANavLinkProxy
 {
 	GENERATED_BODY()
 
-	TWeakObjectPtr<ASuraCharacterEnemyBase> OccupyingEnemy;
+	UPROPERTY()
+	ASuraCharacterEnemyBase* CachedEnemy;
 
-	bool bIsOccupied = false;
-
-	UFUNCTION()
-	void SetLinkUsable(bool bIsUsable);
+	void OnCachedEnemyDeath();
 
 protected:
 	// Called when the game starts or when spawned
@@ -33,9 +31,8 @@ public:
 	// Sets default values for this actor's properties
 	AEnemyClimbNavLink();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadwRITE, Category = "Collision")
-	USphereComponent* EndSphere;
+	void SetLinkUsable(bool bIsUsable);
 
 	UFUNCTION()
-	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	ASuraCharacterEnemyBase* GetCachedEnemy() const { return CachedEnemy; };
 };

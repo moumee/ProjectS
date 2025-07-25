@@ -2,26 +2,19 @@
 
 
 #include "Utilities/EnemyClimbNavLink.h"
+
+#include "ActorComponents/DamageComponent/ACEnemyDamageSystem.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
-#include "Components/SphereComponent.h"
+#include "GameFramework/PawnMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 AEnemyClimbNavLink::AEnemyClimbNavLink()
 {
 	SetSmartLinkEnabled(true);
 	bSmartLinkIsRelevant = true;
-
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
-	EndSphere = CreateDefaultSubobject<USphereComponent>(FName("EndSphere"));
-	EndSphere->SetupAttachment(RootComponent);
-	EndSphere->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
-	EndSphere->SetSphereRadius(10.f);
-	EndSphere->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); // Ignore Projectile
-	EndSphere->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap);
-	EndSphere->SetGenerateOverlapEvents(true);
 }
 
 // Called when the game starts or when spawned
@@ -30,7 +23,6 @@ void AEnemyClimbNavLink::BeginPlay()
 	Super::BeginPlay();
 
 	OnSmartLinkReached.AddDynamic(this, &AEnemyClimbNavLink::OnReceiveSmartLinkReached);
-	EndSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemyClimbNavLink::OnOverlapBegin);
 }
 
 void  AEnemyClimbNavLink::OnReceiveSmartLinkReached(AActor* Agent, const FVector& Destination)
@@ -38,57 +30,49 @@ void  AEnemyClimbNavLink::OnReceiveSmartLinkReached(AActor* Agent, const FVector
 	// let the enemy jump off the ledge if on the higher ground
 	if (Destination.Z < Agent->GetActorLocation().Z)
 		return;
-	
-	/*if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(Agent))
-	{
-		if (bIsOccupied && OccupyingEnemy.Get() != Enemy)
-			return;
-		
-		OccupyingEnemy = Enemy;
-
-		/*UCrowdFollowingComponent* CrowdComp = Cast<UCrowdFollowingComponent>(OccupyingEnemy->GetAIController()->GetPathFollowingComponent());
-		if (CrowdComp)
-			CrowdComp->PauseMove(FAIRequestID::CurrentRequest);#1#
-			//CrowdComp->SetCrowdSimulationState(ECrowdSimulationState::Disabled); // Disable crowd AI
-		
-		// SetLinkUsable(false);
-	}
-	else
-		return;*/
 
 	// have the enemy climb up the wall
 	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(Agent))
 	{
-		Enemy->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay);
-		Enemy->SetActorRotation(FRotator(Enemy->GetActorRotation().Pitch, GetActorRotation().Yaw, Enemy->GetActorRotation().Roll));
+		// Enemy->Climb(Destination);
+
+		CachedEnemy = Enemy;
+		CachedEnemy->GetDamageSystemComp()->OnDeath.AddUObject(this, &AEnemyClimbNavLink::OnCachedEnemyDeath); // if enemy dies while climbing up, re-enable the link
+
+		SetLinkUsable(false);
 		
-		if (Enemy->GetAIController()->GetCurrentState() == EEnemyStates::Pursue || Enemy->GetAIController()->GetCurrentState() == EEnemyStates::Attacking)
-			Enemy->GetAIController()->EndPursueState();
-			
-		Enemy->GetAIController()->UpdateCurrentState(EEnemyStates::Climbing);
+		CachedEnemy->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay);
+		
+		if (CachedEnemy->GetAIController()->GetCurrentState() == EEnemyStates::Pursue || CachedEnemy->GetAIController()->GetCurrentState() == EEnemyStates::Attacking)
+			CachedEnemy->GetAIController()->EndPursueState();
+
+		CachedEnemy->GetMovementComponent()->StopMovementImmediately(); // prevent unwanted climbing due to movement
+		
+		CachedEnemy->GetAIController()->UpdateCurrentState(EEnemyStates::Climbing);
+		CachedEnemy->GetAIController()->GetBlackboardComponent()->SetValueAsVector("TargetLocation", Destination); // to straighten the climbing rotation
+		
+		FRotator TargetYawRotation = UKismetMathLibrary::FindLookAtRotation(GetActorTransform().TransformPosition(PointLinks[0].Left), GetActorTransform().TransformPosition(PointLinks[0].Right));
+		FRotator TargetRotation = FRotator(Enemy->GetActorRotation().Pitch, TargetYawRotation.Yaw, Enemy->GetActorRotation().Roll);
+
+		CachedEnemy->GetAIController()->GetBlackboardComponent()->SetValueAsRotator("TargetRotation", TargetRotation); // to straighten the climbing rotation
+		
+		// CachedEnemy->SetActorLocation(GetActorTransform().TransformPosition(PointLinks[0].Left));
+		CachedEnemy->SetActorRotation(TargetRotation);
 	}
 }
 
-void AEnemyClimbNavLink::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AEnemyClimbNavLink::OnCachedEnemyDeath()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, OtherActor->GetName());
-	
-	if (const ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(OtherActor))
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Enemy Overlapped"));
-		UE_LOG(LogTemp, Warning, TEXT("Enemy Overlapped"));
-
-		if (Enemy == OccupyingEnemy)
-			SetLinkUsable(true);
-	}
+	SetLinkUsable(true);
 }
 
 void AEnemyClimbNavLink::SetLinkUsable(bool bIsUsable)
 {
-	bIsOccupied = !bIsUsable;
 	SetSmartLinkEnabled(bIsUsable);
 
+	if (!bIsUsable)
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Enemy Climb disabled"));
+
 	if (bIsUsable)
-		OccupyingEnemy.Reset();
+		CachedEnemy = nullptr;
 }

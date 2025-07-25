@@ -18,7 +18,7 @@ struct FSpawnEnemyInfo
 	TSubclassOf<ASuraCharacterEnemyBase> EnemyTypeToSpawn;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Spawn System")
-	UBehaviorTree* EnemyBT;
+	UBehaviorTree* EnemyBT = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Spawn System")
 	int32 NumOfEnemiesToSpawn = 0;

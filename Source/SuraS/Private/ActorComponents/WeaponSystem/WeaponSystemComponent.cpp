@@ -35,6 +35,8 @@ void UWeaponSystemComponent::BeginPlay()
 	// ...
 	
 	InitializePlayerReference();
+	LoadWSCData();
+	InitializeStartingWeapon();
 }
 
 void UWeaponSystemComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -83,6 +85,59 @@ void UWeaponSystemComponent::InitializePlayerReference()
 			}
 		}
 	}
+}
+void UWeaponSystemComponent::LoadWSCData()
+{
+	WSCData = WSCDataTableHandle.GetRow<FWeaponSystemComponentData>("");
+	if (WSCData)
+	{
+		StartingWeaponName = WSCData->StartingWeaponName;
+		StartingWeaponClass = WSCData->StartingWeaponClass;
+	}
+}
+void UWeaponSystemComponent::InitializeStartingWeapon()
+{
+	for (int32 i = 0; i < WeaponInventory.Num(); i++)
+	{
+		if (WeaponInventory[i]->GetWeaponName() == StartingWeaponName)
+		{
+			//TODO: 이 경우에는 해당 무기로 변경
+
+			CurrentWeaponIndex = i;
+			ChangeWeapon(CurrentWeaponIndex);
+
+			return;
+		}
+	}
+
+	//TODO: 여기서는 그냥 Spawn 해도 됨
+
+	AWeapon* NewWeapon;
+
+	if (StartingWeaponClass != nullptr)
+	{
+		UWorld* const World = GetWorld();
+		if (World != nullptr && PlayerOwner != nullptr)
+		{
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			NewWeapon = GetWorld()->SpawnActor<AWeapon>(StartingWeaponClass, PlayerOwner->GetActorTransform(), ActorSpawnParams);
+			NewWeapon->InitializeWeapon(PlayerOwner);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("NO Starting Weapon!!!!!"));
+		return;
+	}
+
+	WeaponInventory.AddUnique(NewWeapon);
+
+	if (CurrentWeapon == nullptr)
+	{
+		CurrentWeapon = NewWeapon;
+		CurrentWeapon->SwitchWeapon(PlayerOwner, true);
+	}	
 }
 #pragma endregion
 
