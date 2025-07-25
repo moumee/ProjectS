@@ -6,17 +6,9 @@
 
 void UAN_ReloadingEnd::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
-	//UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
-
-	//if (MeshComp->GetOwner() && MeshComp->GetOwner()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
-	//	Cast<IWeaponInterface>(MeshComp->GetOwner())->ReloadingEnd();
-	//}
-
-	if (MeshComp && MeshComp->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
+	if (MeshComp->GetOwner() && MeshComp->GetOwner()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
-		Cast<IWeaponInterface>(MeshComp)->ReloadingEnd();
+		Cast<IWeaponInterface>(MeshComp->GetOwner())->ReloadingEnd();
 	}
 }
