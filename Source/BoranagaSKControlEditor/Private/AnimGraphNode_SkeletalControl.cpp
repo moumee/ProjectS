@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ActorComponents/WeaponSystem/AnimGraphNode_SkeletalControl.h"
+#include "AnimGraphNode_SkeletalControl.h"
 #include "UnrealWidgetFwd.h"
 #include "AnimationGraphSchema.h"
 #include "Animation/AnimationSettings.h"

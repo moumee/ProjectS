@@ -27,13 +27,13 @@ public class SuraS : ModuleRules
         });
 
 
-        if (Target.bBuildEditor)
-        {
-            PrivateDependencyModuleNames.AddRange(new string[]
-            {
-                "BlueprintGraph" //Added by Boranaga for Animation
-            });
-        }
+        //if (Target.bBuildEditor)
+        //{
+        //    PrivateDependencyModuleNames.AddRange(new string[]
+        //    {
+        //        "BlueprintGraph" //Added by Boranaga for Animation
+        //    });
+        //}
 
     }
 }

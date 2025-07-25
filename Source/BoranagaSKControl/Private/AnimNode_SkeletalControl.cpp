@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ActorComponents/WeaponSystem/AnimNode_SkeletalControl.h"
+#include "AnimNode_SkeletalControl.h"
 #include "Engine/SkeletalMesh.h"
 #include "Animation/AnimInstanceProxy.h"
 

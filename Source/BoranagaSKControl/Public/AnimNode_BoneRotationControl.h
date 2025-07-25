@@ -14,7 +14,7 @@
  * 
  */
 USTRUCT(BlueprintInternalUseOnly)
-struct SURAS_API FAnimNode_BoneRotationControl : public FAnimNode_Base
+struct FAnimNode_BoneRotationControl : public FAnimNode_Base
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -82,10 +82,10 @@ public:
 #endif //#if WITH_EDITORONLY_DATA
 
 	// FAnimNode_Base interface
-	virtual void Initialize_AnyThread(const FAnimationInitializeContext& Context) override;
-	virtual void CacheBones_AnyThread(const FAnimationCacheBonesContext& Context)  override;
-	virtual void Update_AnyThread(const FAnimationUpdateContext& Context) final;
-	virtual void EvaluateComponentSpace_AnyThread(FComponentSpacePoseContext& Output) final;
+	BORANAGASKCONTROL_API virtual void Initialize_AnyThread(const FAnimationInitializeContext& Context) override;
+	BORANAGASKCONTROL_API virtual void CacheBones_AnyThread(const FAnimationCacheBonesContext& Context)  override;
+	BORANAGASKCONTROL_API virtual void Update_AnyThread(const FAnimationUpdateContext& Context) final;
+	BORANAGASKCONTROL_API virtual void EvaluateComponentSpace_AnyThread(FComponentSpacePoseContext& Output) final;
 	virtual int32 GetLODThreshold() const override { return LODThreshold; }
 	// End of FAnimNode_Base interface
 
@@ -93,35 +93,35 @@ public:
 	// Visual warnings are shown on the node but not logged as an error for build system, use with care
 	// The warnigns are cleared at CacheBones_AnyThread and should be added during InitializeBoneReferences
 #if WITH_EDITOR
-	void AddBoneRefMissingVisualWarning(const FString& BoneName, const FString& SkeletalMeshName);
-	void AddValidationVisualWarning(FText ValidationVisualWarning);
-	bool HasValidationVisualWarnings() const;
-	void ClearValidationVisualWarnings();
-	FText GetValidationVisualWarningMessage() const;
+	BORANAGASKCONTROL_API void AddBoneRefMissingVisualWarning(const FString& BoneName, const FString& SkeletalMeshName);
+	BORANAGASKCONTROL_API void AddValidationVisualWarning(FText ValidationVisualWarning);
+	BORANAGASKCONTROL_API bool HasValidationVisualWarnings() const;
+	BORANAGASKCONTROL_API void ClearValidationVisualWarnings();
+	BORANAGASKCONTROL_API FText GetValidationVisualWarningMessage() const;
 #endif
 
 protected:
 	// Interface for derived skeletal controls to implement
 	// use this function to update for skeletal control base
-	virtual void UpdateInternal(const FAnimationUpdateContext& Context);
+	BORANAGASKCONTROL_API virtual void UpdateInternal(const FAnimationUpdateContext& Context);
 
 	// Update incoming component pose.
-	virtual void UpdateComponentPose_AnyThread(const FAnimationUpdateContext& Context);
+	BORANAGASKCONTROL_API virtual void UpdateComponentPose_AnyThread(const FAnimationUpdateContext& Context);
 
 	// Evaluate incoming component pose.
-	virtual void EvaluateComponentPose_AnyThread(FComponentSpacePoseContext& Output);
+	BORANAGASKCONTROL_API virtual void EvaluateComponentPose_AnyThread(FComponentSpacePoseContext& Output);
 
 	// use this function to evaluate for skeletal control base
-	virtual void EvaluateComponentSpaceInternal(FComponentSpacePoseContext& Context);
+	BORANAGASKCONTROL_API virtual void EvaluateComponentSpaceInternal(FComponentSpacePoseContext& Context);
 
 	// Evaluate the new component-space transforms for the affected bones.
-	virtual void EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms);
+	BORANAGASKCONTROL_API virtual void EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms);
 
 	// return true if it is valid to Evaluate
-	virtual bool IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer& RequiredBones);
+	BORANAGASKCONTROL_API virtual bool IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer& RequiredBones);
 
 	// initialize any bone references you have
-	virtual void InitializeBoneReferences(const FBoneContainer& RequiredBones);
+	BORANAGASKCONTROL_API virtual void InitializeBoneReferences(const FBoneContainer& RequiredBones);
 
 private:
 	// Resused bone transform array to avoid reallocating in skeletal controls

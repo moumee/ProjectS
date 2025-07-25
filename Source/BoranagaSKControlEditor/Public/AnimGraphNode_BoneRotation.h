@@ -6,20 +6,19 @@
 #include "UObject/ObjectMacros.h"
 #include "BonePose.h"
 #include "AnimGraphNode_Base.h"
-#include "AnimNode_SkeletalControl.h"
-#include "AnimGraphNode_SkeletalControl.generated.h"
+#include "AnimNode_BoneRotationControl.h"
+#include "AnimGraphNode_BoneRotation.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SURAS_API UAnimGraphNode_SkeletalControl : public UAnimGraphNode_Base
+class BORANAGASKCONTROLEDITOR_API UAnimGraphNode_BoneRotation : public UAnimGraphNode_Base
 {
 	GENERATED_BODY()
 
-
 public:
-	UAnimGraphNode_SkeletalControl(const FObjectInitializer& ObjectInitializer);
+	UAnimGraphNode_BoneRotation(const FObjectInitializer& ObjectInitializer);
 
 public:
 	// UEdGraphNode interface
@@ -88,13 +87,11 @@ protected:
 	// Returns the short descriptive name of the controller
 	virtual FText GetControllerDescription() const;
 
-	virtual const FAnimNode_SkeletalControl* GetNode() const PURE_VIRTUAL(UAnimGraphNode_SkeletalControl::GetNode, return nullptr;);
+	virtual const FAnimNode_BoneRotationControl* GetNode() const PURE_VIRTUAL(UAnimGraphNode_SkeletalControl::GetNode, return nullptr;);
 
-	FAnimNode_SkeletalControl* GetDebuggedNode() const;
-
+	FAnimNode_BoneRotationControl* GetDebuggedNode() const;
 
 private:
-
 	UPROPERTY(EditAnywhere)
-	FAnimNode_SkeletalControl Node;
+	FAnimNode_BoneRotationControl Node;
 };
