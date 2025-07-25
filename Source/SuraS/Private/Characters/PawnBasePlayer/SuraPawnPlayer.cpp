@@ -7,6 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "ActorComponents/AttackComponents/ACPlayerAttackTokens.h"
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
+#include "ActorComponents/UISystem/ACPlayerHudManager.h"
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
