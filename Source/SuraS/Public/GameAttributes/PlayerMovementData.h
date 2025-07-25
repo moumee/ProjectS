@@ -14,91 +14,91 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "중력 스케일"))
-	float GravityScale;
+	float GravityScale = 1.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "걷기 속력"))
-	float WalkSpeed;
+	float WalkSpeed = 400.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "걷기/달리기 속력 전환 시간"))
-	float WalkRunTransitionDuration;
+	float WalkRunTransitionDuration = 0.2f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "걷기/대쉬 속력 전환 시간"))
-	float WalkDashTransitionDuration;
+	float WalkDashTransitionDuration = 0.2f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "달리기/대쉬 속력 전환 시간"))
-	float RunDashTransitionDuration;
+	float RunDashTransitionDuration = 0.2f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "걷기/앉기 속력 전환 시간"))
-	float WalkCrouchTransitionDuration;
+	float WalkCrouchTransitionDuration = 0.2f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "앉기/달리기 속력 전환 시간"))
-	float CrouchRunTransitionDuration;
+	float CrouchRunTransitionDuration = 0.2f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "앉기/대쉬 속력 전환 시간"))
-	float CrouchDashTransitionDuration;
+	float CrouchDashTransitionDuration = 0.2f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DashSpeedDecreaseDuration;
+	float DashSpeedDecreaseDuration = 0.5f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "달리기 속력"))
-	float RunSpeed;
+	float RunSpeed = 700.f;
 
 	// The Z value of the launch velocity when jumping
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "일반 점프 Z축 속력"))
-	float PrimaryJumpZSpeed;
+	float PrimaryJumpZSpeed = 500.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "더블 점프 Z축 속력"))
-	float DoubleJumpZSpeed;
+	float DoubleJumpZSpeed = 400.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "더블 점프 XY평면 속력"))
-	float DoubleJumpXYSpeed;
+	float DoubleJumpXYSpeed = 700.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0", ClampMax = "1.0", ToolTip = "공중 컨트롤"))
-	float AirControl;
+	float AirControl = 1.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "앉기 속력"))
-	float CrouchSpeed;
+	float CrouchSpeed = 300.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "대쉬 후 속력"))
-	float DashEndSpeed;
+	float DashEndSpeed = 700.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "대쉬 속력"))
-	float DashImpulseSpeed;
+	float DashImpulseSpeed = 1000.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0"))
-	int DashMaxStack;
+	int DashMaxStack = 2;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0"))
-	float DashCooldown;
+	float DashCooldown = 5.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "슬라이딩 추가 속력"))
-	float SlidingAdditionalSpeed;
+	float SlidingAdditionalSpeed = 500.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "슬라이딩 속력 증가 시간"))
-	float SlidingSpeedIncreaseTime;
+	float SlidingSpeedIncreaseTime = 0.1f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "슬라이딩 속력 감소 시간"))
-	float SlidingSpeedDecreaseTime;
+	float SlidingSpeedDecreaseTime = 0.8f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float WallRunningMaxDuration;
+	float WallRunningMaxDuration = 2.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxCameraFOV;
+	float MaxCameraFOV = 100;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxCameraFOVSpeed;
+	float MaxCameraFOVSpeed = 10;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxWallRunSpeed;
+	float MaxWallRunSpeed = 850.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float WallRunEnterZVelocityThreshold;
+	float WallRunEnterZVelocityThreshold = 200.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float WallRunEnterVerticalForce;
+	float WallRunEnterVerticalForce = 300.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float WallRunCameraTiltAngle;
+	float WallRunCameraTiltAngle = 15.f;
 	
 };
