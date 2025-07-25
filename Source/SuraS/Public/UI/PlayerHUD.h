@@ -3,8 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ActorComponents/UISystem/ACPlayerHUDManager.h"
-#include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "UI/BaseUIWidget.h"
 #include "PlayerHUD.generated.h"
 
@@ -20,6 +18,7 @@ class UOverlay;
 class AWeapon;
 class UWidgetAnimation;
 class UTextBlock;
+class UACPlayerHUDManager;
 
 UCLASS()
 class SURAS_API UPlayerHUD : public UBaseUIWidget
