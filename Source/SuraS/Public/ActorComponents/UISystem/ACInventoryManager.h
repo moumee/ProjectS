@@ -23,7 +23,7 @@ public:
 
 	//inventorywidget 참조
 	void SetInventoryWidget(UInventoryWidget* InWidget);
-	UInventoryWidget* GetInventoryWidget() const;
+	UInventoryWidget* GetInventoryWidget() const {return InventoryWidget; }
 
 	// UIManagerComponent 할당
 	void SetUIManager(UACUIMangerComponent* UIMangerComponent);

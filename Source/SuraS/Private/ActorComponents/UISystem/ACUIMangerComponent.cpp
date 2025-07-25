@@ -5,8 +5,10 @@
 #include "EnhancedInputComponent.h"
 #include "ActorComponents/UISystem/ACInventoryManager.h"
 #include "ActorComponents/UISystem/ACKillLogManager.h"
+#include "ActorComponents/UISystem/ACPlayerHudManager.h"
 #include "UI/InventoryWidget.h"
 #include "UI/KillLogWidget.h"
+#include "UI/PlayerHUD.h"
 
 
 // Sets default values for this component's properties
@@ -104,12 +106,21 @@ void UACUIMangerComponent::InitializeWidgets()
 				break;
 			}
 
-		//case EUIType::HUD:
-			// HUD 위젯 초기화 및 매니저 연결
-				//break;
+		case EUIType::PlayerHUD:
+			{
+				if (UPlayerHUD* PW = Cast<UPlayerHUD>(NewWidget))
+				{
+					PlayerHUDManager->SetPlayerHUDWidget(PW);
+					PW->SetPlayerHUDManager(PlayerHUDManager);
+					PW->AddToViewport(); // ✅ 반드시 필요
 
-		default:
-			break;
+					UE_LOG(LogTemp, Warning, TEXT("✔ KillLogWidget Viewport에 추가됨"));
+				}
+				break;
+
+				default:
+					break;
+			}
 		}
 	}
 }
@@ -125,7 +136,8 @@ void UACUIMangerComponent::InitializeManagers()
 	KillLogManager->SetUIManager(this);
 	
 	// HUDManager, PauseMenuManager 등도 여기에 추가
-
+	PlayerHUDManager = CreateDefaultSubobject<UACPlayerHUDManager>(TEXT("PlayerHUD"));
+	PlayerHUDManager->SetUIManager(this);
 }
 
 void UACUIMangerComponent::TestKillLog()

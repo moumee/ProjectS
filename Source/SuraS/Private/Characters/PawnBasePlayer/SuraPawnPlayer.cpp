@@ -7,16 +7,15 @@
 #include "EnhancedInputSubsystems.h"
 #include "ActorComponents/AttackComponents/ACPlayerAttackTokens.h"
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
+#include "ActorComponents/UISystem/ACPlayerHudManager.h"
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
-#include "ActorComponents/WeaponSystem/ACWeapon.h"
-#include "ActorComponents/WeaponSystem/AmmoCounterWidget.h"
-#include "ActorComponents/WeaponSystem/WeaponAimUIWidget.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
+#include "UI/PlayerHUD.h"
 #include "Widgets/Player/PlayerHitWidget.h"
 
 ASuraPawnPlayer::ASuraPawnPlayer()
@@ -97,13 +96,6 @@ void ASuraPawnPlayer::BeginPlay()
 	PlayerHealthCheckTimerDelegate.BindUObject(this, &ASuraPawnPlayer::CheckPlayerHealth);
 	GetWorld()->GetTimerManager().SetTimer(PlayerHealthCheckTimer, PlayerHealthCheckTimerDelegate,
 		CorrectionSystemCheckTime, true);
-
-	if (WeaponSystem->GetCurrentWeapon())
-	{
-		AmmoWidget = WeaponSystem->GetCurrentWeapon()->GetAmmoCounterWidget();
-	}
-	
-
 }
 
 UCapsuleComponent* ASuraPawnPlayer::GetCapsuleComponent()
@@ -290,7 +282,7 @@ void ASuraPawnPlayer::OnDamaged()
 
 	// hit effect - by suhyeon
 	// hpbar update call
-	AmmoWidget->UpdateHpBar();  
+	UIManager->GetPlayerHudManger()->GetPlayerHudWidget()->UpdateHpBar();
 }
 
 void ASuraPawnPlayer::OnDeath()

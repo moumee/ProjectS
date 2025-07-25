@@ -6,12 +6,15 @@
 #include "Components/ActorComponent.h"
 #include "ACUIMangerComponent.generated.h"
 
+class UPlayerHUD;
+class UACPlayerHUDManager;
 class UInputAction;
 class UEnhancedInputComponent;
 class UBaseUIWidget;
 class UACInventoryManager;
 class UACCrosshairManager;
 class UACKillLogManager;
+class UACPlayerHUDManager;
 
 UENUM(BlueprintType)
 enum class EUIType : uint8
@@ -19,7 +22,8 @@ enum class EUIType : uint8
 	None UMETA(DisplayName = "None"),
 	Inventory UMETA(DisplayName = "Inventory"),
 	Pause UMETA(DisplayName = "Pause"),
-	KillLog UMETA(DisplayName = "KillLog")
+	KillLog UMETA(DisplayName = "KillLog"),
+	PlayerHUD UMETA(DisplayName = "PlayerHUD")
 };
 
 
@@ -51,6 +55,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	UACKillLogManager* GetKillLogManager() const { return KillLogManager; }
+
+	UFUNCTION(BlueprintCallable)
+	UACPlayerHUDManager* GetPlayerHudManger() const { return PlayerHUDManager; }
 
 	UDataTable* GetWeaponDataTable() const
 	{
@@ -85,6 +92,9 @@ private:
 
 	UPROPERTY()
 	UACKillLogManager* KillLogManager;
+
+	UPROPERTY()
+	UACPlayerHUDManager* PlayerHUDManager;
 
 
 	
