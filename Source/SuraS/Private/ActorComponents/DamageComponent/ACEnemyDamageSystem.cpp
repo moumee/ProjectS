@@ -124,7 +124,8 @@ void UACEnemyDamageSystem::PartBroken(AActor* OwningEnemyActor, const FDamageDat
 		UE_LOG(LogTemp, Error, TEXT("vector: %s"), *(DamageData.ImpulseDirection).ToString());
 		if (Enemy)
 		{
-			Enemy->AddImpulse(DamageData.ImpulseDirection * -CalculateImpulsePower(DamageData.DamageAmount, PartMaxHealth), PartsParent, true );
+			bodyPart->SetActorRotation(OwningEnemyActor->GetComponentByClass<USkeletalMeshComponent>()->GetSocketRotation(PartsParent));
+			Enemy->AddImpulse(DamageData.ImpulseDirection * -CalculateImpulsePower(DamageData.DamageAmount, PartMaxHealth) * 3, PartsParent, true );
 		}
 	}
 }

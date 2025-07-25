@@ -10,6 +10,8 @@ UCLASS()
 class SURAS_API ASuraCharacterEnemyBodyPartBase : public AActor
 {
 	GENERATED_BODY()
+
+	void BeginPlay() override;
 	
 public:	
 	// Sets default values for this actor's properties
