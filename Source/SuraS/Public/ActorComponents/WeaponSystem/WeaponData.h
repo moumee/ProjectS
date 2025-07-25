@@ -19,15 +19,15 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	GENERATED_BODY()
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Name")
-	EWeaponName WeaponName;
+	EWeaponName WeaponName = EWeaponName::WeaponName_Rifle;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Socket")
-	FName WeaponSocket;
+	FName WeaponSocket = FName();
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
-	EWeaponAction LeftMouseAction;
+	EWeaponAction LeftMouseAction = EWeaponAction::WeaponAction_SingleShot;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
-	EWeaponAction RightMouseAction;
+	EWeaponAction RightMouseAction = EWeaponAction::WeaponAction_SingleShot;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 	TSubclassOf<class ASuraProjectile> LeftProjectileClass;
@@ -35,39 +35,39 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	TSubclassOf<class ASuraProjectile> RightProjectileClass;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UNiagaraSystem* FireEffect_L;
+	UNiagaraSystem* FireEffect_L = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UNiagaraSystem* FireEffect_R;
+	UNiagaraSystem* FireEffect_R = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UNiagaraSystem* ChargeEffect;
+	UNiagaraSystem* ChargeEffect = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	FVector ChargeEffectLocation;
+	FVector ChargeEffectLocation = FVector();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	FRotator ChargeEffectRotation;
+	FRotator ChargeEffectRotation = FRotator();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	FVector ChargeEffenctScale = { 1.f, 1.f, 1.f };
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* FireSound_L;
+	USoundBase* FireSound_L = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* FireSound_R;
+	USoundBase* FireSound_R = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* ChargeSound;
+	USoundBase* ChargeSound = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* TargetSearchLoopSound;
+	USoundBase* TargetSearchLoopSound = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* TargetLockedSound;
+	USoundBase* TargetLockedSound = nullptr;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IK")
-	FTransform RightHandOffset;
+	FTransform RightHandOffset = FTransform();
 	//-----------------------------------------------------------------
 
 	/** Start Suhyeon  **/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UTexture2D* WeaponImage; // 총기 이미지
+	UTexture2D* WeaponImage = nullptr; // 총기 이미지
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bIsWeaponOwned; // 총기 소유 불값
+	bool bIsWeaponOwned = false; // 총기 소유 불값
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class AWeapon> WeaponClass; // weaponinventory 동기화 위해서
@@ -119,9 +119,9 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	FProjectileSpreadValue ZoomSpread;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectile")
-	bool bEnableMultiProjectile_Left;
+	bool bEnableMultiProjectile_Left = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectile")
-	bool bEnableMultiProjectile_Right;
+	bool bEnableMultiProjectile_Right = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectile")
 	float MaxAngleOfMultiProjectileSpread_L = 3.5f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectile")
@@ -153,9 +153,9 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	FArmRecoilStruct ArmRecoil_LowerArm;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	FTransform RightHandSocketTransform;
+	FTransform RightHandSocketTransform = FTransform();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	FTransform RightHandSocketTransform_Crouch;
+	FTransform RightHandSocketTransform_Crouch = FTransform();
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
 	TSubclassOf<UWeaponCameraShakeBase> DefaultCameraShakeClass_L;

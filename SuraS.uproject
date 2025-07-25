@@ -12,9 +12,18 @@
 				"Engine",
 				"CoreUObject",
 				"UMG",
-				"AIModule",
-				"AnimGraph"
+				"AIModule"
 			]
+		},
+		{
+			"Name": "BoranagaSKControl",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "BoranagaSKControlEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
