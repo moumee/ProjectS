@@ -58,6 +58,8 @@ public:
 	USkeletalMeshComponent* WeaponMesh;
 	UFUNCTION()
 	USkeletalMeshComponent* GetWeaponMesh() { return WeaponMesh; }
+	UFUNCTION()
+	UTexture2D* GetWeaponImage() {return WeaponData->WeaponImage;}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	EWeaponAction LeftMouseAction;
