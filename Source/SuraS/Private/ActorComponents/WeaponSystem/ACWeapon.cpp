@@ -1388,35 +1388,17 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 
 	if (bStartFromMiddle)
 	{
-		//StartAnimation(AM_Reload_Character, AM_Reload_Weapon, ReloadingTime, ReloadingTime, FName("LoopStart"));
-
-		//--------
 		if (LeftAmmoInCurrentMag + 1 == MaxAmmoPerMag)
 		{
-			//GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_End, false);
-
 			if (CharacterAnimInstance != nullptr && AM_Reload_Character != nullptr)
 			{
-				//AM_Reload_Character->BlendIn.SetBlendOption(EAlphaBlendOption::Linear);
-				//AM_Reload_Character->BlendIn.SetAlpha(10.f);
-				//AM_Reload_Character->BlendOut.SetBlendOption(EAlphaBlendOption::Linear);
-				//AM_Reload_Character->BlendOut.SetAlpha(10.f);
-
-				//AM_Reload_Character->BlendIn.SetBlendTime(0.f);
-				//AM_Reload_Character->BlendOut.SetBlendTime(0.f);
-
 				float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopEnd")));
 
 				UE_LOG(LogTemp, Error, TEXT("SectionTime_End: %f"), SectionTime);
 				UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_End: %f"), PumpReloadingTime_End);
 
-
 				CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_End);
 				CharacterAnimInstance->Montage_JumpToSection(FName("LoopEnd"), AM_Reload_Character);
-
-				//AM_Reload_Character->BlendOut.SetBlendTime(1000.f);
-				//AM_Reload_Character->bEnableAutoBlendOut = false;
-				//AM_Reload_Character->BlendIn.SetBlendTime(0.f);
 			}
 
 			if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
@@ -1429,17 +1411,8 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 		}
 		else
 		{
-			//GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_Loop, false);
-
 			if (CharacterAnimInstance != nullptr && AM_Reload_Character != nullptr)
 			{
-				//AM_Reload_Character->BlendIn.SetBlendOption(EAlphaBlendOption::Linear);
-				//AM_Reload_Character->BlendIn.SetAlpha(10.f);
-				//AM_Reload_Character->BlendOut.SetBlendOption(EAlphaBlendOption::Linear);
-				//AM_Reload_Character->BlendOut.SetAlpha(10.f);
-
-				//AM_Reload_Character->BlendOut.SetBlendTime(0.f);
-
 				float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopStart")));
 
 				UE_LOG(LogTemp, Error, TEXT("SectionTime_Loop: %f"), SectionTime);
@@ -1450,7 +1423,6 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 
 				AM_Reload_Character->BlendIn.SetBlendTime(0.f);
 				AM_Reload_Character->bEnableAutoBlendOut = false;
-				//AM_Reload_Character->BlendOut.SetBlendTime(1000.f);
 			}
 
 			if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
@@ -1464,9 +1436,6 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 	}
 	else
 	{
-		//GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_Start, false);
-
-
 		if (CharacterAnimInstance->Montage_IsPlaying(AM_Reload_Weapon))
 		{
 			CharacterAnimInstance->Montage_Stop(0.f, AM_Reload_Weapon);
@@ -1474,13 +1443,6 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 
 		if (CharacterAnimInstance != nullptr && AM_Reload_Character != nullptr)
 		{
-			//AM_Reload_Character->BlendIn.SetBlendOption(EAlphaBlendOption::Linear);
-			//AM_Reload_Character->BlendIn.SetAlpha(10.f);
-			//AM_Reload_Character->BlendOut.SetBlendOption(EAlphaBlendOption::Linear);
-			//AM_Reload_Character->BlendOut.SetAlpha(10.f);
-			//AM_Reload_Character->BlendIn.SetBlendTime(0.f);
-			//AM_Reload_Character->BlendOut.SetBlendTime(0.f);
-
 			float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("Start")));
 
 			UE_LOG(LogTemp, Error, TEXT("SectionTime_Start: %f"), SectionTime);
@@ -1489,7 +1451,6 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 			CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_Start);
 			CharacterAnimInstance->Montage_JumpToSection(FName("Start"), AM_Reload_Character);
 
-			//AM_Reload_Character->BlendIn.SetBlendTime(0.f);
 			AM_Reload_Character->BlendOut.SetBlendTime(1000.f);
 			AM_Reload_Character->bEnableAutoBlendOut = false;
 		}
@@ -1502,8 +1463,6 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 
 		GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_Start, false);
 	}
-
-	//GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, ReloadingTime, false);
 }
 void AWeapon::StopReload()
 {
@@ -1513,7 +1472,7 @@ void AWeapon::StopReload()
 
 void AWeapon::StopPumpActionReload()
 {
-	ReloadAmmo(true);
+	//ReloadAmmo(true);
 
 	if (BufferedFireRequest.IsSet())
 	{
@@ -1728,9 +1687,10 @@ void AWeapon::AutoReload()
 		}
 	}
 }
-void AWeapon::ReloadingEnd() //Legacy: 사용 안함. animation이 끝날 때의 처리를 위해 남겨 둠.
+void AWeapon::ReloadingEnd()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
+	ReloadAmmo(true);
 }
 #pragma endregion
 

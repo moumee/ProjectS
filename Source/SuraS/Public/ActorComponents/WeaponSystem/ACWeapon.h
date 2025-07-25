@@ -383,7 +383,7 @@ protected:
 public:
 	bool AddAmmo(int32 NumAmmo);
 	void AutoReload();
-	virtual void ReloadingEnd() override; //Legacy
+	virtual void ReloadingEnd() override;
 #pragma endregion
 
 #pragma region UI
