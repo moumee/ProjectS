@@ -329,6 +329,8 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 			GetDamageSystemComp()->SetHealth(EnemyAttributesData->MaxHealth);
 			GetDamageSystemComp()->SetImpulsePower(EnemyAttributesData->partsKnockback_Weak,
 				EnemyAttributesData->partsKnockback_Normal, EnemyAttributesData->partsKnockback_Hard);
+			GetDamageSystemComp()->SetPartsHealth(EnemyAttributesData->HeadHealth, EnemyAttributesData->BodyHealth, EnemyAttributesData -> RArmHealth,
+				EnemyAttributesData->LArmHealth, EnemyAttributesData->RLegHealth, EnemyAttributesData->LLegHealth);
 
 			GetCharacterMovement()->MaxWalkSpeed = EnemyAttributesData->MaxWalkSpeed;
 

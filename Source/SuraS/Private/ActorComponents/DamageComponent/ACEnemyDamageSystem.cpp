@@ -5,7 +5,7 @@
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 
-TSet<FName> UACEnemyDamageSystem::HeadBoneNames = {FName(TEXT("head")), FName(TEXT("neck_01"))};
+TSet<FName> UACEnemyDamageSystem::HeadBoneNames = {FName(TEXT("head"))};
 TSet<FName> UACEnemyDamageSystem::LArmBoneNames = {FName(TEXT("upperarm_l")), FName(TEXT("lowerarm_l")), FName(TEXT("hand_l"))};
 TSet<FName> UACEnemyDamageSystem::RArmBoneNames = {FName(TEXT("upperarm_r")), FName(TEXT("lowerarm_r")), FName(TEXT("hand_r"))};
 TSet<FName> UACEnemyDamageSystem::LLegBoneNames = {FName(TEXT("thigh_l")), FName(TEXT("calf_l")), FName(TEXT("foot_l")), FName(TEXT("ball_l"))};
@@ -88,6 +88,16 @@ void UACEnemyDamageSystem::SetImpulsePower(float weak, float normal, float hard)
 	ImpulsePower.Add(weak);
 	ImpulsePower.Add(normal);
 	ImpulsePower.Add(hard);
+}
+
+void UACEnemyDamageSystem::SetPartsHealth(float head, float body, float rArm, float lArm, float lLeg, float rLeg)
+{
+	MaxHeadHealth = head;	HeadHealth = head;
+	MaxBodyHealth = body;	BodyHealth = body;
+	MaxRArmHealth = rArm;	RArmHealth = rArm;
+	MaxLArmHealth = lArm;	LArmHealth = lArm;
+	MaxRLegHealth = rLeg;	RLegHealth = rLeg;
+	MaxLLegHealth = lLeg;	LLegHealth = lLeg;
 }
 
 float UACEnemyDamageSystem::CalculateImpulsePower(float Damage, float PartMaxHealth)

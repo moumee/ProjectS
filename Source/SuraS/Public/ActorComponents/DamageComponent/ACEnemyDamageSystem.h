@@ -64,4 +64,5 @@ public:
 	TSubclassOf<AActor> RLeg;
 
 	FORCEINLINE void SetImpulsePower(float weak, float normal, float hard);
+	FORCEINLINE void SetPartsHealth(float head, float body, float rArm, float lArm, float lLeg, float rLeg);
 };
