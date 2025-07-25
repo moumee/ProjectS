@@ -487,6 +487,8 @@ void UWeaponSystemComponent::SwitchToIndex1()
 	{
 		CurrentWeaponIndex = 0;
 		ChangeWeapon(CurrentWeaponIndex);
+
+		OnWeaponSwitched.Broadcast(CurrentWeaponIndex);
 	}
 }
 
@@ -496,6 +498,8 @@ void UWeaponSystemComponent::SwitchToIndex2()
 	{
 		CurrentWeaponIndex = 1;
 		ChangeWeapon(CurrentWeaponIndex);
+
+		OnWeaponSwitched.Broadcast(CurrentWeaponIndex);
 	}
 }
 
@@ -505,6 +509,8 @@ void UWeaponSystemComponent::SwitchToIndex3()
 	{
 		CurrentWeaponIndex = 2;
 		ChangeWeapon(CurrentWeaponIndex);
+
+		OnWeaponSwitched.Broadcast(CurrentWeaponIndex);
 	}
 }
 

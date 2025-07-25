@@ -11,6 +11,8 @@
 
 // delegate about inventory widget (writted by suhyeon)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponPickedUp, FName, WeaponName);
+// delegate about ammocounter widget (writted by suhyeon)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponSwitched, int32, NewIndex);
 
 class AWeapon;
 
@@ -26,6 +28,8 @@ public:
 	// 델리게이트 선언 (by suhyeon)
 	UPROPERTY(BlueprintAssignable, Category = "Weapon")
 	FOnWeaponPickedUp OnWeaponPickedUp;
+	UPROPERTY(BlueprintAssignable, Category = "Weapon")
+	FOnWeaponSwitched OnWeaponSwitched;
 
 protected:
 	// Called when the game starts

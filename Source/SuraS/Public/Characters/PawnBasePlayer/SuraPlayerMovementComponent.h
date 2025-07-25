@@ -345,7 +345,8 @@ protected:
 
 	bool bShouldKeepSlideSpeed = false;
 	
-
+	float SlideAdditionalSpeed = 700.f;
+	
 	FVector LastSlideSpeedBeforeAirborne;
 
 	
