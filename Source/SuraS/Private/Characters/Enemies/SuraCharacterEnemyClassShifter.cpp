@@ -3,11 +3,13 @@
 
 #include "Characters/Enemies/SuraCharacterEnemyClassShifter.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
+#include "ActorComponents/DamageComponent/ACEnemyDamageSystem.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 ASuraCharacterEnemyClassShifter::ASuraCharacterEnemyClassShifter()
 {
-	EnemyType = "Melee";
+	EnemyType = DefaultClass;
 }
 
 void ASuraCharacterEnemyClassShifter::BeginPlay()
@@ -41,4 +43,39 @@ void ASuraCharacterEnemyClassShifter::Attack(const ASuraPawnPlayer* AttackTarget
 		1.f,
 		false
 	);
+}
+
+void ASuraCharacterEnemyClassShifter::ClassShiftingInitializeEnemy()
+{
+
+		if (const auto EnemyAttributesData = EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(EnemyType, ""))
+		{
+			GetDamageSystemComp()->SetMaxHealth(EnemyAttributesData->MaxHealth);
+			GetDamageSystemComp()->SetImpulsePower(EnemyAttributesData->partsKnockback_Weak,
+				EnemyAttributesData->partsKnockback_Normal, EnemyAttributesData->partsKnockback_Hard);
+			GetDamageSystemComp()->SetPartsHealth(EnemyAttributesData->HeadHealth, EnemyAttributesData->BodyHealth, EnemyAttributesData -> RArmHealth,
+				EnemyAttributesData->LArmHealth, EnemyAttributesData->RLegHealth, EnemyAttributesData->LLegHealth);
+
+			GetCharacterMovement()->MaxWalkSpeed = EnemyAttributesData->MaxWalkSpeed;
+
+			AttackDamageAmount = EnemyAttributesData->AttackDamageAmount;
+			MeleeAttackRange = EnemyAttributesData->MeleeAttackRange;
+			MeleeAttackSphereRadius = EnemyAttributesData->MeleeAttackSphereRadius;
+
+			HitAnimations = EnemyAttributesData->HitAnimations;
+			DeathAnimations = EnemyAttributesData->DeathAnimations;
+			AttackAnimations = EnemyAttributesData->AttackAnimations;
+			ClimbAnimation = EnemyAttributesData->ClimbAnimation;
+
+			GetMesh()->SetAnimInstanceClass(ChangedAnimBP);
+		}
+	
+}
+
+void ASuraCharacterEnemyClassShifter::SetCrippled()
+{
+	UE_LOG(LogTemp, Error, TEXT("bonhjgjjvjvj"));
+	Super::SetCrippled();
+	EnemyType = ChangedClass;
+	ClassShiftingInitializeEnemy();
 }

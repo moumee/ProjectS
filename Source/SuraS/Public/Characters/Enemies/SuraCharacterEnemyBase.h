@@ -146,4 +146,9 @@ public:
 
 	//killLog Binding
 	void BindKillLogOnDeath() const;
+
+	//classShift
+	virtual void SetCrippled(){IsCrippled = false;}
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Check")
+	bool IsCrippled = false;
 };

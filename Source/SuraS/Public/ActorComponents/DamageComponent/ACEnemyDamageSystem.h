@@ -23,7 +23,8 @@ class SURAS_API UACEnemyDamageSystem : public UACDamageSystem
 	
 	float LArmHealth = 100.f;
 	float MaxLArmHealth = 100.f;
-	
+
+	UPROPERTY(EditAnywhere)
 	float RLegHealth = 400.f;
 	float MaxRLegHealth = 400.f;
 	

@@ -30,8 +30,15 @@ public:
 	virtual void Attack(const ASuraPawnPlayer* Player) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shape")
-	FName DefaultClass = "Melee";
+	FName DefaultClass = "Rifle";
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shape")
-	FName ChagedClass = "Melee";
+	FName ChangedClass = "Melee";
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shape")
+	TSubclassOf<UAnimInstance> ChangedAnimBP;
+	
+	void ClassShiftingInitializeEnemy();
+
+	void SetCrippled() override;
 };

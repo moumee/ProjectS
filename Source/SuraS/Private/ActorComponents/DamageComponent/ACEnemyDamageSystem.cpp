@@ -49,6 +49,7 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 		if (LArmHealth <= 0)
 		{
 			PartBroken(OwningEnemyActor, DamageData, MaxLArmHealth, "upperarm_l", LArm);
+			Cast<ASuraCharacterEnemyBase>(OwningEnemyActor)->SetCrippled();
 		}
 	}
 	if (RArmBoneNames.Contains((DamageData.BoneName)))
@@ -57,7 +58,7 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 		if (RArmHealth <= 0)
 		{
 			PartBroken(OwningEnemyActor, DamageData, MaxRArmHealth, "upperarm_r", RArm);
-			
+			Cast<ASuraCharacterEnemyBase>(OwningEnemyActor)->SetCrippled();
 		}
 	}
 	if (LLegBoneNames.Contains((DamageData.BoneName)))
@@ -66,18 +67,21 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 		if (LLegHealth <= 0)
 		{
 			PartBroken(OwningEnemyActor, DamageData, MaxLLegHealth, "thigh_l", LLeg);
+			Cast<ASuraCharacterEnemyBase>(OwningEnemyActor)->SetCrippled();
+			
 		}
+		
 	}
 	if (RLegBoneNames.Contains((DamageData.BoneName)))
 	{
 		RLegHealth -= DamageData.DamageAmount;
 		if (RLegHealth <= 0)
 		{
-			PartBroken(OwningEnemyActor, DamageData, MaxRLegHealth, "thigh_l", RLeg);
+			PartBroken(OwningEnemyActor, DamageData, MaxRLegHealth, "thigh_r", RLeg);
+			Cast<ASuraCharacterEnemyBase>(OwningEnemyActor)->SetCrippled();
 		}
+		
 	}
-	
-	UE_LOG(LogTemp, Error, TEXT("bone: %s"), *DamageData.BoneName.ToString());
 	
 	return Super::TakeDamage(DamageData, DamageCauser);
 }
