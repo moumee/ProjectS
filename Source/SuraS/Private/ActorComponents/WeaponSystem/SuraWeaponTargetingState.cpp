@@ -16,16 +16,17 @@ USuraWeaponTargetingState::~USuraWeaponTargetingState()
 void USuraWeaponTargetingState::EnterState(AWeapon* Weapon)
 {
 	Super::EnterState(Weapon);
+	Weapon->SetGlobalTimeDilation(Weapon->TargetingGlobalTimeScale);
 }
 
 void USuraWeaponTargetingState::UpdateState(AWeapon* Weapon, float DeltaTime)
 {
 	Super::UpdateState(Weapon, DeltaTime);
-
 	Weapon->UpdateTargetMarkers();
 }
 
 void USuraWeaponTargetingState::ExitState(AWeapon* Weapon)
 {
 	Super::ExitState(Weapon);
+	Weapon->SetGlobalTimeDilation(1.f);
 }

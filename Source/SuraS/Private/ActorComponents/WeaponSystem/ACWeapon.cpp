@@ -1,7 +1,5 @@
 
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
-//#include "Characters/Player/SuraCharacterPlayer.h"
-//#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 
 #include "ActorComponents/WeaponSystem/SuraProjectile.h"
@@ -20,6 +18,7 @@
 #include "ActorComponents/WeaponSystem/WeaponCameraShakeBase.h"
 #include "ActorComponents/WeaponSystem/AmmoCounterWidget.h"
 #include "ActorComponents/WeaponSystem/WeaponAimUIWidget.h"
+#include "ActorComponents/WeaponSystem/TargetingSkillWidget.h"
 
 
 #include "GameFramework/PlayerController.h"
@@ -47,8 +46,6 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/CanvasRenderTarget2D.h"
 
-
-
 // Sets default values for this component's properties
 AWeapon::AWeapon()
 {
@@ -70,7 +67,6 @@ AWeapon::AWeapon()
 	//TODO: 일단은 기본 Single로 하는데, WeaponName에 따라서 생성자에서 지정해주는 식으로 수정하기
 	WeaponName = EWeaponName::WeaponName_Rifle;
 	WeaponType = EWeaponType::WeaponType_Rifle;
-	WeaponFireMode = EWeaponFireMode::WeaponFireMode_Single;
 	
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponMesh->SetCollisionObjectType(ECC_GameTraceChannel3); //Weapon
@@ -128,15 +124,22 @@ void AWeapon::InitializeUI()
 	{
 		AimUIWidget = CreateWidget<UWeaponAimUIWidget>(GetWorld(), AimUIWidgetClass);
 	}
-
 	if (AmmoCounterWidgetClass)
 	{
 		AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass);
-
 		if (AmmoCounterWidget)
 		{
 			AmmoCounterWidget->UpdateAmmoCount(LeftAmmoInCurrentMag);
 			AmmoCounterWidget->UpdateTotalAmmo(TotalAmmo);
+		}
+	}
+	if (TargetingSkillWidgetClass)
+	{
+		TargetingSkillWidget = CreateWidget<UTargetingSkillWidget>(GetWorld(), TargetingSkillWidgetClass);
+		if (TargetingSkillWidget)
+		{
+			TargetingSkillWidget->InitializeUI(TargetingSkillCoolDown, TargetingSkillCoolDown, ElapsedTimeAfterTargetingStarted, MaxTargetingTime);
+			TargetingSkillWidget->SetDetectionTimeUIVisible(false);
 		}
 	}
 }
@@ -258,6 +261,10 @@ void AWeapon::LoadWeaponData()
 		MaxTargetDetectionAngle = WeaponData->MaxTargetDetectionAngle;
 		MaxTargetDetectionTime = WeaponData->MaxTargetDetectionTime;
 		TimeToReachMaxTargetDetectionRange = WeaponData->TimeToReachMaxTargetDetectionRange;
+		TargetingGlobalTimeScale = WeaponData->TargetingGlobalTimeScale;
+		TargetingGlobalTimeDilationSpeed = WeaponData->TargetingGlobalTimeDilationSpeed;
+		TargetingSkillCoolDown = WeaponData->TargetingSkillCoolDown;
+		MaxTargetingTime = WeaponData->MaxTargetingTime;
 
 		// <Charging>
 		bAutoFireAtMaxChargeTime = WeaponData->bAutoFireAtMaxChargeTime;
@@ -325,14 +332,14 @@ void AWeapon::BeginPlay()
 void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 	if (CurrentState)
 	{
 		CurrentState->UpdateState(this, DeltaTime);
 	}
 	UpdateRecoil(DeltaTime);
-
 	UpdateSpread(DeltaTime);
+	UpdateGlobalTimeDiation(DeltaTime); //TODO: If the player tries to switch weapons, reset the global time dilation to its default value
+	UpdateTargetingSkillUI(); //TODO: Should Update UI When even TargetingSkillTimer is not activated
 
 	UpdateOverheat(DeltaTime); //TODO: Overheat 기능은 안쓸거라고 하는데, 혹시 mesh에 과열 효과 적용할 수도 있으니까 일단은 놔둠
 }
@@ -413,6 +420,7 @@ bool AWeapon::AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter)
 	// TODO: WidgetInstance 생성은 Weapon Initialize에서만 진행하고, 키고 끄는 기능만 ActivateCrosshairWidget에서 하기
 	ActivateCrosshairWidget(true);
 	ActivateAmmoCounterWidget(true);
+	ActivateTargetingSkillWidget(true);
 
 	//TODO: BP에서 부가적으로 부착한 Mesh들도 Visibility를 관리해야함. 근데 에디터에서 WeaponMesh가 부모 소켓으로 되어있으면 하위의 것들은 알아서 처리되는 듯?
 	//WeaponMesh->SetVisibility(true);
@@ -1342,7 +1350,7 @@ void AWeapon::SetInputActionBinding()
 				// <Skill>
 				if (SkillAction == EWeaponAction::WeaponAction_SkillToggle)
 				{
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(SkillToggleAction, ETriggerEvent::Started, this, &AWeapon::StartTargetDetection));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(SkillToggleAction, ETriggerEvent::Started, this, &AWeapon::HandleTargetDetectionSkill));
 				}
 
 				// <Reload>
@@ -1733,38 +1741,7 @@ void AWeapon::ReloadingEnd()
 }
 #pragma endregion
 
-void AWeapon::Create3DUI()
-{
-	////RenderTarget 생성
-	//RenderTarget = NewObject<UTextureRenderTarget2D>();
-	//RenderTarget->InitAutoFormat(512, 512); // UI 해상도 설정
-	//RenderTarget->ClearColor = FLinearColor::Transparent;
-	//RenderTarget->UpdateResource();
-
-	////UUserWidget을 RenderTarget에 그리기
-	//UUserWidget* AmmoCounterWidget = CreateWidget<UUserWidget>(GetWorld(), LoadClass<UUserWidget>(nullptr, TEXT("/Game/UI/AmmoCounterWidget_BP.AmmoCounterWidget_BP_C")));
-	//if (AmmoCounterWidget)
-	//{
-	//	UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(
-	//		GetWorld()->GetFirstPlayerController(),
-	//		GetComponentLocation(),
-	//		RenderTarget-,
-	//		true
-	//	);
-
-	//	AmmoCounterWidget->AddToViewport();
-	//}
-
-	////머티리얼 동적 인스턴스 생성 및 RenderTarget 적용
-	//UMaterialInterface* BaseMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_UI_BaseMaterial.M_UI_BaseMaterial"));
-	//if (BaseMaterial)
-	//{
-	//	WidgetMaterialInstance = UMaterialInstanceDynamic::Create(BaseMaterial, this);
-	//	WidgetMaterialInstance->SetTextureParameterValue(FName("RenderTargetTexture"), RenderTarget);
-	//	SetMaterial(0, WidgetMaterialInstance);
-	//}
-}
-
+#pragma region UI
 void AWeapon::ActivateCrosshairWidget(bool bflag)
 {
 	if (bflag)
@@ -1800,7 +1777,23 @@ void AWeapon::ActivateAmmoCounterWidget(bool bflag)
 		}
 	}
 }
-
+void AWeapon::ActivateTargetingSkillWidget(bool bflag)
+{
+	if (bflag)
+	{
+		if (TargetingSkillWidget)
+		{
+			TargetingSkillWidget->AddToViewport();
+		}
+	}
+	else
+	{
+		if (TargetingSkillWidget)
+		{
+			TargetingSkillWidget->RemoveFromViewport();
+		}
+	}
+}
 void AWeapon::SetUpAimUIDelegateBinding(ASuraProjectile* Projectile)
 {
 	if (AimUIWidget)
@@ -1808,6 +1801,7 @@ void AWeapon::SetUpAimUIDelegateBinding(ASuraProjectile* Projectile)
 		AimUIWidget->SetUpAimUIDelegateBinding(Projectile);
 	}
 }
+#pragma endregion
 
 #pragma region FireMode
 void AWeapon::HandleSingleFire(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
@@ -2443,15 +2437,18 @@ void AWeapon::StopCharge()
 #pragma endregion
 
 #pragma region Skill/Targeting
-void AWeapon::StartTargetDetectionSkill()
+void AWeapon::HandleTargetDetectionSkill()
 {
-	if (CurrentState == IdleState)
+	if (CurrentState == IdleState && bCanUseTargetingSkill)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Start Target Detection Skill!!!"));
-
 		ChangeState(TargetingState);
 		PlayWeaponSound(TargetSearchLoopSound);
+		if (TargetingSkillWidget) { TargetingSkillWidget->SetDetectionTimeUIVisible(true); }
 		UpdateTargetDetectionSkill(GetWorld()->GetDeltaSeconds());
+	}
+	else if (CurrentState == TargetingState)
+	{
+		CancelTargetingSkill();
 	}
 }
 void AWeapon::UpdateTargetDetectionSkill(float DeltaTime)
@@ -2514,28 +2511,19 @@ void AWeapon::UpdateTargetDetectionSkill(float DeltaTime)
 		}
 	}
 
-	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
-	GetWorld()->GetTimerManager().SetTimer(TargetDetectionTimer, [this, DeltaSeconds]() {UpdateTargetDetectionSkill(DeltaSeconds); }, DeltaSeconds, false);
-}
-void AWeapon::StopTargetDetectionSkill(FWeaponFireData* FireData)
-{
-	if (CurrentState == TargetingState)
+	if (TargetingSkillWidget) 
+	{ 
+		TargetingSkillWidget->SetTargetingTimeUI(FMath::Clamp(ElapsedTimeAfterTargetingStarted, 0.f, MaxTargetingTime));
+	}
+
+	if (ElapsedTimeAfterTargetingStarted >= MaxTargetingTime)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Stop Target Detection!!!"));
-
-		GetWorld()->GetTimerManager().ClearTimer(TargetDetectionTimer);
-
-		ElapsedTimeAfterTargetingStarted = 0.f;
-		CurrentTargetDetectionRadius = 0.f;
-		CurrentTargetDetectionAngle = 0.f;
-
-		ResetTargetMarkers();
-
-		StopWeaponSound();
-
-		TArray<AActor*> TargetsArray = Targets.Array();
-		Targets.Empty();
-		StartMissileLaunch(TargetsArray, FireData);
+		CancelTargetingSkill();
+	}
+	else
+	{
+		float DeltaSeconds = GetWorld()->GetDeltaSeconds();
+		GetWorld()->GetTimerManager().SetTimer(TargetDetectionTimer, [this, DeltaSeconds]() {UpdateTargetDetectionSkill(DeltaSeconds); }, DeltaSeconds, false);
 	}
 }
 void AWeapon::HandleTargetingSkillFire(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
@@ -2551,9 +2539,15 @@ void AWeapon::HandleTargetingSkillFire(bool bIsLeftInput, bool bSingleProjectile
 		ResetTargetMarkers();
 		StopWeaponSound();
 
+		if (TargetingSkillWidget) { TargetingSkillWidget->SetDetectionTimeUIVisible(false); }
+
 		TArray<AActor*> TargetsArray = Targets.Array();
 		Targets.Empty();
 
+		bCanUseTargetingSkill = false;
+		bool bflag = true;
+		GetWorld()->GetTimerManager().SetTimer(TargetingSkillTimer, [this, bflag]() {EnableTargetingSkill(bflag); }, TargetingSkillCoolDown, false);
+		
 		if (TargetsArray.Num() == 0)
 		{
 			StartMissileLaunch(TargetsArray, &FireData_Skill);
@@ -2576,6 +2570,70 @@ void AWeapon::HandleTargetingSkillFire(bool bIsLeftInput, bool bSingleProjectile
 	else if (CurrentState == PumpActionReloadingState)
 	{
 		BufferedFireRequest = FBufferedFireRequest(EWeaponAction::WeaponAction_SingleShot, bIsLeftInput, bSingleProjectile, NumPenetrable);
+	}
+}
+void AWeapon::CancelTargetingSkill()
+{
+	GetWorld()->GetTimerManager().ClearTimer(TargetDetectionTimer);
+
+	ElapsedTimeAfterTargetingStarted = 0.f;
+	CurrentTargetDetectionRadius = 0.f;
+	CurrentTargetDetectionAngle = 0.f;
+
+	ResetTargetMarkers();
+	StopWeaponSound();
+
+	Targets.Empty();
+
+	ConfirmedTargets.Empty();
+	CurrentTargetIndex = 0;
+
+	if (TargetingSkillWidget) { TargetingSkillWidget->SetDetectionTimeUIVisible(false); }
+
+	ChangeState(IdleState);
+}
+void AWeapon::EnableTargetingSkill(bool bflag)
+{
+	bCanUseTargetingSkill = bflag;
+
+	if (TargetingSkillWidget)
+	{
+		TargetingSkillWidget->SetTargetingSkillCoolDown(TargetingSkillCoolDown);
+	}
+}
+void AWeapon::UpdateTargetingSkillUI()
+{
+	if (GetWorld()->GetTimerManager().IsTimerActive(TargetingSkillTimer))
+	{
+		float ElapsedTime = GetWorld()->GetTimerManager().GetTimerElapsed(TargetingSkillTimer);
+		ElapsedTime = FMath::Clamp(ElapsedTime, 0.f, TargetingSkillCoolDown);
+
+		if (TargetingSkillWidget)
+		{
+			TargetingSkillWidget->SetTargetingSkillCoolDown(ElapsedTime);
+		}
+	}
+}
+void AWeapon::SetGlobalTimeDilation(float targettimescale)
+{
+	TargetGlobalTimeScale = targettimescale;
+	bIsGlobalTimeScaleChanging = true;
+}
+void AWeapon::UpdateGlobalTimeDiation(float DeltaTime)
+{
+	if (bIsGlobalTimeScaleChanging)
+	{
+		float Current = GetWorld()->GetWorldSettings()->GetEffectiveTimeDilation();
+
+		float New = FMath::FInterpTo(Current, TargetGlobalTimeScale, DeltaTime, TargetingGlobalTimeDilationSpeed);
+		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), New);
+
+		if (FMath::IsNearlyEqual(New, TargetGlobalTimeScale, 0.1f))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Global Time Scale is Stabilized!!!"));
+			bIsGlobalTimeScaleChanging = false;
+			UGameplayStatics::SetGlobalTimeDilation(GetWorld(), TargetGlobalTimeScale);
+		}
 	}
 }
 #pragma endregion

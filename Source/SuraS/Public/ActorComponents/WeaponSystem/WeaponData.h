@@ -196,6 +196,14 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	float MaxTargetDetectionTime = 8.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
 	float TimeToReachMaxTargetDetectionRange = 2.5f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
+	float TargetingGlobalTimeScale = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
+	float TargetingGlobalTimeDilationSpeed = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
+	float TargetingSkillCoolDown = 3.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
+	float MaxTargetingTime = 10.f;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging")
 	bool bAutoFireAtMaxChargeTime = true;
