@@ -2,7 +2,6 @@
 
 
 #include "ActorComponents/WeaponSystem/AmmoCounterWidget.h"
-
 #include "Components/TextBlock.h"
 
 void UAmmoCounterWidget::UpdateAmmoCount(int32 NewAmmoCount)

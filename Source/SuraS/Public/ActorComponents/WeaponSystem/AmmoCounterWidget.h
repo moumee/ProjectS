@@ -6,9 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "AmmoCounterWidget.generated.h"
 
-
 UCLASS()
-
 class SURAS_API UAmmoCounterWidget : public UUserWidget
 {
 	GENERATED_BODY()
