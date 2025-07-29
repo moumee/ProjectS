@@ -274,6 +274,7 @@ bool ASuraProjectile::SearchOverlappedActor(FVector CenterLocation, float Search
 {
 	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
 	traceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+	traceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel6));
 	TArray<AActor*> ignoreActors;
 	ignoreActors.Init(ProjectileOwner, 1);
 	bool bIsAnyActorExist = UKismetSystemLibrary::SphereOverlapActors(GetWorld(), CenterLocation, SearchRadius, traceObjectTypes, nullptr, ignoreActors, OverlappedActors);
@@ -524,16 +525,16 @@ void ASuraProjectile::SpawnDecalEffect(FVector SpawnLocation, FRotator SpawnRota
 {
 	if (DecalMaterial)
 	{
-		FVector DecalSize = FVector(2.0f, 8.0f, 8.0f);     // X: �β�, YZ: ũ��
+		FVector DecalSize = FVector(2.0f, 8.0f, 8.0f);
 
 		UDecalComponent* ProjectileDecal =
 		UGameplayStatics::SpawnDecalAtLocation(
-			GetWorld(),          // ���� ���ؽ�Ʈ
-			DecalMaterial,       // ��Į ��Ƽ����
-			DecalSize,           // ��Į ũ��
-			SpawnLocation,       // ��ġ
-			SpawnRotation,       // ȸ��
-			10.0f                // ���� (�� ����)
+			GetWorld(),   
+			DecalMaterial,   
+			DecalSize,         
+			SpawnLocation,    
+			SpawnRotation,    
+			10.0f       
 		);
 		ProjectileDecal->SetFadeScreenSize(0.0001f);
 	}
@@ -549,8 +550,6 @@ void ASuraProjectile::UpdateTrailEffect()
 		}
 	}
 }
-
-
 
 void ASuraProjectile::DrawSphere(FVector Location, float Radius)
 {
