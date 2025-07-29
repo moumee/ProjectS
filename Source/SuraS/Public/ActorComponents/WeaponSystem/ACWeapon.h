@@ -67,6 +67,8 @@ public:
 	EWeaponAction LeftMouseAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	EWeaponAction RightMouseAction;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
+	EWeaponAction SkillAction;
 
 	/** AnimMontage to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
@@ -107,10 +109,13 @@ public:
 	UInputAction* RightChargeAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* RightZoomAction;
+	UInputAction* SkillToggleAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* ReloadAction;
+	UInputAction* RightZoomAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ReloadAction;
 
 	TArray<FInputBindingHandle*> InputActionBindingHandles;
 
@@ -216,6 +221,7 @@ protected:
 protected:
 	FWeaponFireData FireData_L;
 	FWeaponFireData FireData_R;
+	FWeaponFireData FireData_Skill;
 #pragma endregion
 
 #pragma region Animation
@@ -507,12 +513,10 @@ protected:
 	TArray<UUserWidget*> TargetMarkerWidgets;
 	UPROPERTY()
 	TSet<AActor*> Targets;
-
 	UPROPERTY()
 	TMap<AActor*, UUserWidget*> MapTargetActorToWidget;
 
 	FTimerHandle TargetDetectionTimer;
-
 	int32 MaxTargetNum = 10;
 
 	float MaxTargetDetectionRadius = 3000.f;
@@ -562,7 +566,6 @@ protected:
 	float ChargingAdditionalProjectileRadiusBase = 20.f;
 
 	int32 ChargingAdditionalPelletMaxNum = 0;
-	//int32 MaxPenetrableObjectsNum = 4;
 
 	float ElapsedChargeTime = 0.f;
 	FTimerHandle ChargingTimer;
@@ -572,7 +575,15 @@ protected:
 	void StopCharge();
 #pragma endregion
 
-#pragma region
+#pragma region Skill/Targeting
+protected:
+	void StartTargetDetectionSkill();
+	void UpdateTargetDetectionSkill(float DeltaTime);
+	void StopTargetDetectionSkill(FWeaponFireData* FireData = nullptr);
+	void HandleTargetingSkillFire(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
+#pragma endregion
+
+#pragma region Penetration
 protected:
 	int32 MaxPenetrableObjectsNum_Left = 4;
 	int32 MaxPenetrableObjectsNum_Right = 4;

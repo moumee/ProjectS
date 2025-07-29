@@ -152,16 +152,19 @@ void AWeapon::LoadWeaponData()
 		// <Action>
 		LeftMouseAction = WeaponData->LeftMouseAction;
 		RightMouseAction = WeaponData->RightMouseAction;
+		SkillAction = WeaponData->SkillAction;
 
 		// <Projectile Class>
 		FireData_L.ProjectileClass = WeaponData->LeftProjectileClass;
 		FireData_R.ProjectileClass = WeaponData->RightProjectileClass;
+		FireData_Skill.ProjectileClass = WeaponData->SkillProjectileClass;
 
 		// <Sound>
 		ChargeSound = WeaponData->ChargeSound;
 
 		FireData_L.FireSound = WeaponData->FireSound_L;
 		FireData_R.FireSound = WeaponData->FireSound_R;
+		FireData_Skill.FireSound = WeaponData->FireSound_Skill;
 
 		TargetSearchLoopSound = WeaponData->TargetSearchLoopSound;
 		TargetLockedSound = WeaponData->TargetLockedSound;
@@ -174,6 +177,7 @@ void AWeapon::LoadWeaponData()
 
 		FireData_L.MuzzleFireEffect = WeaponData->FireEffect_L;
 		FireData_R.MuzzleFireEffect = WeaponData->FireEffect_R;
+		FireData_Skill.MuzzleFireEffect = WeaponData->FireEffect_Skill;
 
 		// <Reload>
 		ReloadingTime = WeaponData->ReloadingTime;
@@ -187,8 +191,10 @@ void AWeapon::LoadWeaponData()
 		LeftAmmoInCurrentMag = MaxAmmoPerMag;
 		FireData_L.AmmoCost = WeaponData->AmmoConsumedPerShot_Left;
 		FireData_R.AmmoCost = WeaponData->AmmoConsumedPerShot_Right;
+		FireData_Skill.AmmoCost = WeaponData->AmmoCost_Skill;
 		FireData_L.bAllowFireWithInsufficientAmmo = WeaponData->bAllowFireWithInsufficientAmmo_L;
 		FireData_R.bAllowFireWithInsufficientAmmo = WeaponData->bAllowFireWithInsufficientAmmo_R;
+		FireData_Skill.bAllowFireWithInsufficientAmmo = WeaponData->bAllowFireWithInsufficientAmmo_Skill;
 		bActivePumpActionReload = WeaponData->bActivePumpActionReload;
 
 		// <HitScan>
@@ -223,10 +229,12 @@ void AWeapon::LoadWeaponData()
 
 		FireData_L.Recoil = WeaponData->DefaultRecoil_L;
 		FireData_R.Recoil = WeaponData->DefaultRecoil_R;
+		FireData_Skill.Recoil = WeaponData->DefaultRecoil_Skill;
 
 		// <ArmRecoil Animation>
 		FireData_L.Armrecoil = WeaponData->ArmRecoil_L;
 		FireData_R.Armrecoil = WeaponData->ArmRecoil_R;
+		FireData_Skill.Armrecoil = WeaponData->ArmRecoil_Skill;
 		ArmRecoil_Hand = WeaponData->ArmRecoil_Hand;
 		ArmRecoil_UpperArm = WeaponData->ArmRecoil_UpperArm;
 		ArmRecoil_LowerArm = WeaponData->ArmRecoil_LowerArm;
@@ -241,6 +249,7 @@ void AWeapon::LoadWeaponData()
 
 		FireData_L.CamShake = WeaponData->DefaultCameraShakeClass_L;
 		FireData_R.CamShake = WeaponData->DefaultCameraShakeClass_R;
+		FireData_Skill.CamShake = WeaponData->DefaultCameraShakeClass_Skill;
 
 		// <Targeting(Homing)>
 		MissileLaunchDelay = WeaponData->MissileLaunchDelay;
@@ -1244,6 +1253,18 @@ void AWeapon::SetInputActionBinding()
 				{
 					// No Left Zoom
 				}
+				else if (LeftMouseAction == EWeaponAction::WeaponAction_SkillFire)
+				{
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
+						LeftSingleShotAction,
+						ETriggerEvent::Started,
+						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
+						{
+							HandleTargetingSkillFire(bIsLeftInput, bSingleProjectile, NumPenetrable);
+						},
+						true, !bEnableMultiProjectile_L, MaxPenetrableObjectsNum_Left
+					));
+				}
 
 				// <RightMouseAction>
 				if (RightMouseAction == EWeaponAction::WeaponAction_SingleShot)
@@ -1304,6 +1325,24 @@ void AWeapon::SetInputActionBinding()
 				else if (RightMouseAction == EWeaponAction::WeaponAction_Zoom)
 				{
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(RightZoomAction, ETriggerEvent::Started, this, &AWeapon::ZoomToggle));
+				}
+				else if (RightMouseAction == EWeaponAction::WeaponAction_SkillFire)
+				{
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindActionValueLambda(
+						RightSingleShotAction,
+						ETriggerEvent::Started,
+						[this](const FInputActionValue& InputActionValue, bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
+						{
+							HandleTargetingSkillFire(bIsLeftInput, bSingleProjectile, NumPenetrable);
+						},
+						false, !bEnableMultiProjectile_R, MaxPenetrableObjectsNum_Right
+					));
+				}
+
+				// <Skill>
+				if (SkillAction == EWeaponAction::WeaponAction_SkillToggle)
+				{
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(SkillToggleAction, ETriggerEvent::Started, this, &AWeapon::StartTargetDetection));
 				}
 
 				// <Reload>
@@ -2399,6 +2438,144 @@ void AWeapon::StopCharge()
 
 
 		ElapsedChargeTime = 0.f;
+	}
+}
+#pragma endregion
+
+#pragma region Skill/Targeting
+void AWeapon::StartTargetDetectionSkill()
+{
+	if (CurrentState == IdleState)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Start Target Detection Skill!!!"));
+
+		ChangeState(TargetingState);
+		PlayWeaponSound(TargetSearchLoopSound);
+		UpdateTargetDetectionSkill(GetWorld()->GetDeltaSeconds());
+	}
+}
+void AWeapon::UpdateTargetDetectionSkill(float DeltaTime)
+{
+	ElapsedTimeAfterTargetingStarted += DeltaTime;
+	TArray<AActor*> NewOverlappedActors;
+	CurrentTargetDetectionRadius = (FMath::Clamp(ElapsedTimeAfterTargetingStarted, 0.f, TimeToReachMaxTargetDetectionRange) / TimeToReachMaxTargetDetectionRange) * MaxTargetDetectionRadius;
+	CurrentTargetDetectionAngle = (FMath::Clamp(ElapsedTimeAfterTargetingStarted, 0.f, TimeToReachMaxTargetDetectionRange) / TimeToReachMaxTargetDetectionRange) * MaxTargetDetectionAngle;
+	SearchOverlappedActor(Character->GetActorLocation(), CurrentTargetDetectionRadius, NewOverlappedActors);
+
+	//TODO: Targets에 대한 Update가 필요함. 죽었으면 Targets에서 제외시켜야함
+	// TargetMarker의 경우에는 Visibility만 false로 바꿔주는 식으로 관리하기
+
+	for (TSet<AActor*>::TIterator It = Targets.CreateIterator(); It; ++It)
+	{
+		AActor* PreviousTarget = *It;
+		if (IsValid(PreviousTarget) && CheckIfTargetIsBlockedByObstacle(PreviousTarget))
+		{
+			UUserWidget** TargetMarkerPtr = MapTargetActorToWidget.Find(PreviousTarget);
+			(*TargetMarkerPtr)->RemoveFromViewport();
+			(*TargetMarkerPtr)->RemoveFromParent();
+			TargetMarkerWidgets.Remove(*TargetMarkerPtr);
+
+			It.RemoveCurrent();
+			MapTargetActorToWidget.Remove(PreviousTarget);
+		}
+	}
+
+	for (AActor* NewOverlappedActor : NewOverlappedActors)
+	{
+		if (Targets.Num() >= MaxTargetNum || ElapsedTimeAfterTargetingStarted > MaxTargetDetectionTime)
+		{
+			break;
+		}
+		if (!Targets.Contains(NewOverlappedActor))
+		{
+			if (IsInViewport(GetScreenPositionOfWorldLocation(NewOverlappedActor->GetActorLocation()).Get<0>(), 1.f, 1.f))
+			{
+				if (GetUnsignedAngleBetweenVectors(Character->GetActorForwardVector(), NewOverlappedActor->GetActorLocation() - Character->GetActorLocation(), FVector::ZAxisVector) < CurrentTargetDetectionAngle)
+				{
+					if (!CheckIfTargetIsBlockedByObstacle(NewOverlappedActor))
+					{
+						Targets.Add(NewOverlappedActor);
+						UUserWidget* NewTargetMarker = CreateTargetMarkerWidget(NewOverlappedActor);
+						if (NewTargetMarker)
+						{
+							TargetMarkerWidgets.Add(NewTargetMarker);
+							NewTargetMarker->AddToViewport();
+							NewTargetMarker->SetAlignmentInViewport(FVector2D(0.5f, 0.5f));
+							NewTargetMarker->SetVisibility(ESlateVisibility::Hidden);
+						}
+
+						if (TargetLockedSound)
+						{
+							UGameplayStatics::PlaySoundAtLocation(this, TargetLockedSound, Character->GetActorLocation());
+						}
+					}
+				}
+			}
+		}
+	}
+
+	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
+	GetWorld()->GetTimerManager().SetTimer(TargetDetectionTimer, [this, DeltaSeconds]() {UpdateTargetDetectionSkill(DeltaSeconds); }, DeltaSeconds, false);
+}
+void AWeapon::StopTargetDetectionSkill(FWeaponFireData* FireData)
+{
+	if (CurrentState == TargetingState)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Stop Target Detection!!!"));
+
+		GetWorld()->GetTimerManager().ClearTimer(TargetDetectionTimer);
+
+		ElapsedTimeAfterTargetingStarted = 0.f;
+		CurrentTargetDetectionRadius = 0.f;
+		CurrentTargetDetectionAngle = 0.f;
+
+		ResetTargetMarkers();
+
+		StopWeaponSound();
+
+		TArray<AActor*> TargetsArray = Targets.Array();
+		Targets.Empty();
+		StartMissileLaunch(TargetsArray, FireData);
+	}
+}
+void AWeapon::HandleTargetingSkillFire(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
+{
+	if (CurrentState == TargetingState)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TargetDetectionTimer);
+
+		ElapsedTimeAfterTargetingStarted = 0.f;
+		CurrentTargetDetectionRadius = 0.f;
+		CurrentTargetDetectionAngle = 0.f;
+
+		ResetTargetMarkers();
+		StopWeaponSound();
+
+		TArray<AActor*> TargetsArray = Targets.Array();
+		Targets.Empty();
+
+		if (TargetsArray.Num() == 0)
+		{
+			StartMissileLaunch(TargetsArray, &FireData_Skill);
+			if (CurrentState == IdleState)
+			{
+				ChangeState(FiringState);
+				StartSingleShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
+			}
+		}
+		else
+		{
+			StartMissileLaunch(TargetsArray, &FireData_Skill);
+		}
+	}
+	else if (CurrentState == IdleState)
+	{
+		ChangeState(FiringState);
+		StartSingleShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
+	}
+	else if (CurrentState == PumpActionReloadingState)
+	{
+		BufferedFireRequest = FBufferedFireRequest(EWeaponAction::WeaponAction_SingleShot, bIsLeftInput, bSingleProjectile, NumPenetrable);
 	}
 }
 #pragma endregion
