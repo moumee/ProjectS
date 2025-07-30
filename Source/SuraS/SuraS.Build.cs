@@ -15,16 +15,25 @@ public class SuraS : ModuleRules
 			"Engine",
 			"InputCore",
 			"EnhancedInput",
-			"AnimGraphRuntime",
+			"AnimGraphRuntime", //Added by Boranaga for Animation
 			"AIModule",			// Added by Yoony for AI
 			"NavigationSystem",	// Added by Yoony for AI Navigation
             "UMG",			 //Added by Boranaga for the use of UI
             "EngineCameras", //Added by Boranaga for the use of CameraShake
 			"Niagara",        //Added by Boranaga for the use of ParticleSystem
-			"AnimGraphRuntime", //Added by Boranaga for Animation
-			"BlueprintGraph",  //Added by Boranaga for Animation
 			"PhysicsCore", //Added by Boranaga for Animation
+			"BoranagaSKControl", //Added by Boranaga for Animation
             "GameplayTags" // Added by <Eren Yeager> for the use of GameplayTags
         });
+
+
+        //if (Target.bBuildEditor)
+        //{
+        //    PrivateDependencyModuleNames.AddRange(new string[]
+        //    {
+        //        "BlueprintGraph" //Added by Boranaga for Animation
+        //    });
+        //}
+
     }
 }

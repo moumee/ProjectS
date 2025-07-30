@@ -23,11 +23,11 @@ struct SURAS_API FPlayerAnimationData : public FTableRowBase
 	//--------------------------------------------------------------
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	FRotator RotationWhenCrouching_Hand_R;
+	FRotator RotationWhenCrouching_Hand_R = FRotator();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	FRotator RotationWhenCrouching_LowerArm_R;
+	FRotator RotationWhenCrouching_LowerArm_R = FRotator();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	FRotator RotationWhenCrouching_UpperArm_R;
+	FRotator RotationWhenCrouching_UpperArm_R = FRotator();
 };

@@ -1,9 +1,20 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ActorComponents/WeaponSystem/AnimNode_SkeletalControl.h"
+#include "AnimNode_SkeletalControl.h"
 #include "Engine/SkeletalMesh.h"
 #include "Animation/AnimInstanceProxy.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(AnimNode_SkeletalControl)
+
+#define LOCTEXT_NAMESPACE "AnimNode_SkeletalControl"
+
+#if UE_BUILD_SHIPPING || UE_BUILD_TEST
+	DECLARE_LOG_CATEGORY_EXTERN(LogCustomSkeletalControl, Log, Warning);
+#else
+	DECLARE_LOG_CATEGORY_EXTERN(LogCustomSkeletalControl, Log, All);
+#endif
+DEFINE_LOG_CATEGORY(LogCustomSkeletalControl);
 
 // Macro to disable inlining of function calls within the statement that follows
 // e.g: UE_DONT_INLINE_CALL ThisFunctionCallWontBeInlined(Foo->ThisIsntInlinedEither());

@@ -88,6 +88,7 @@ void USuraPlayerMovementComponent::InitMovementData()
 	WallRunTiltRecoverCurve = Row->WallRunTiltRecoverCurve;
 	SlideInitialWindow = Row->SlideInitialWindow;
 	SlideMaxDuration = Row->SlideMaxDuration;
+	SlideAdditionalSpeed = Row->SlideAdditionalSpeed;
 	GroundPointDetectionLength = Row->GroundPointDetectionLength;
 	CoyoteTime = Row->CoyoteTime;
 }
@@ -307,7 +308,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		if (Velocity.Size() >= RunSpeed - 50.f && GroundHit.ImpactNormal.Z >= MinWalkableFloorZ && !bIsDashing)
 		{
 			SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
-			Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + 700.f);
+			Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + SlideAdditionalSpeed);
 			bIsDashing = false;
 			ElapsedTimeFromDash = 0.f;
 			SlideResetTimer = 0.f;
@@ -756,7 +757,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 				{
 					SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
 					// TODO: Slide Additional Speed to Variable and Data Table 
-					Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + 700.f);
+					Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + SlideAdditionalSpeed);
 					bIsDashing = false;
 					ElapsedTimeFromDash = 0.f;
 					SlideResetTimer = 0.f;
@@ -1466,7 +1467,7 @@ bool USuraPlayerMovementComponent::CheckWallCooldown(const FWallInfo& InWallInfo
 		{
 			return true;
 		}
-		else if (XYDistance >= 700.f)
+		else if (XYDistance >= 2000.f)
 		{
 			return true;
 		}

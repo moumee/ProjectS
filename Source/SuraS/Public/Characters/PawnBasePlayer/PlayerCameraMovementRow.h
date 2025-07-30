@@ -11,28 +11,28 @@ struct FMovementCameraData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ToolTip="목표 시야각"))
-	float TargetFOV;
+	float TargetFOV = 90.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ToolTip="시야각 전환 속도"))
-	float FOVInterpSpeed;
+	float FOVInterpSpeed = 10.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ToolTip="목표 초점 거리"))
-	float TargetFocalDistance;
+	float TargetFocalDistance = 200.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ToolTip="초점 전환 속도"))
-	float FocalDistanceInterpSpeed;
+	float FocalDistanceInterpSpeed = 10.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ToolTip="목표 카메라 위치"))
-	FVector TargetCameraPosition;
+	FVector TargetCameraPosition = FVector(0, 0, 70.f);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ToolTip="카메라 위치 전환 속도"))
-	float CameraPositionInterpSpeed;
+	float CameraPositionInterpSpeed = 10.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ToolTip="목표 카메라 회전"))
-	float TargetCameraRoll;
+	float TargetCameraRoll = 15.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ToolTip="카메라 회전 전환 속도"))
-	float CameraRotationInterpSpeed;
+	float CameraRotationInterpSpeed = 10.f;
 
 };
 

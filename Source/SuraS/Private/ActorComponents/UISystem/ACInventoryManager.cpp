@@ -42,11 +42,6 @@ void UACInventoryManager::SetInventoryWidget(UInventoryWidget* InWidget)
 	InventoryWidget = InWidget;
 }
 
-UInventoryWidget* UACInventoryManager::GetInventoryWidget() const
-{
-	return InventoryWidget;
-}
-
 void UACInventoryManager::SetUIManager(UACUIMangerComponent* UIMangerComponent)
 {
 	UIManager = UIMangerComponent;

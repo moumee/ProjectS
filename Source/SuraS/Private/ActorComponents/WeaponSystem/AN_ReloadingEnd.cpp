@@ -3,20 +3,33 @@
 
 #include "ActorComponents/WeaponSystem/AN_ReloadingEnd.h"
 #include "ActorComponents/WeaponSystem/WeaponInterface.h"
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
+#include "ActorComponents/WeaponSystem/ACWeapon.h"
+#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
+
+namespace
+{
+	void TryCallReloadingEnd(UObject* Object)
+	{
+		if (!Object) return;
+		IWeaponInterface* WeaponInterface = Cast<IWeaponInterface>(Object);
+		if (WeaponInterface) { WeaponInterface->ReloadingEnd(); }
+	}
+}
 
 void UAN_ReloadingEnd::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
-	//UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
+	if (!MeshComp) return;
 
-	//if (MeshComp->GetOwner() && MeshComp->GetOwner()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
-	//	Cast<IWeaponInterface>(MeshComp->GetOwner())->ReloadingEnd();
-	//}
+	AActor* Owner = MeshComp->GetOwner();
+	TryCallReloadingEnd(Owner);
 
-	if (MeshComp && MeshComp->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
-	{
-		//UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
-		Cast<IWeaponInterface>(MeshComp)->ReloadingEnd();
-	}
+	ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(Owner);
+	if (!Player) return;
+
+	UWeaponSystemComponent* WeaponSystem = Player->GetWeaponSystemComponent();
+	if (!WeaponSystem) return;
+
+	AActor* CurrentWeapon = WeaponSystem->GetCurrentWeapon();
+	TryCallReloadingEnd(CurrentWeapon);
 }

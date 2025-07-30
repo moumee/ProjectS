@@ -1,9 +1,20 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
-#include "ActorComponents/WeaponSystem/AnimNode_BoneRotationControl.h"
+#include "AnimNode_BoneRotationControl.h"
 #include "Engine/SkeletalMesh.h"
 #include "Animation/AnimInstanceProxy.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(AnimNode_BoneRotationControl)
+
+#define LOCTEXT_NAMESPACE "AnimNode_BoneRotationControl"
+
+#if UE_BUILD_SHIPPING || UE_BUILD_TEST
+DECLARE_LOG_CATEGORY_EXTERN(LogBoneRotationControl, Log, Warning);
+#else
+DECLARE_LOG_CATEGORY_EXTERN(LogBoneRotationControl, Log, All);
+#endif
+DEFINE_LOG_CATEGORY(LogBoneRotationControl);
+
 
 // Macro to disable inlining of function calls within the statement that follows
 // e.g: UE_DONT_INLINE_CALL ThisFunctionCallWontBeInlined(Foo->ThisIsntInlinedEither());

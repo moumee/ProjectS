@@ -14,53 +14,53 @@ struct SURAS_API FProjectileData : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EProjectileType ProjectileType;
+	EProjectileType ProjectileType = EProjectileType::Projectile_Rifle;
 
 	// <Effect>
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UNiagaraSystem* TrailEffect;
+	UNiagaraSystem* TrailEffect = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UNiagaraSystem* ImpactEffect;
+	UNiagaraSystem* ImpactEffect = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UNiagaraSystem* ExplosionEffect;
+	UNiagaraSystem* ExplosionEffect = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UMaterialInterface* HoleDecal;
+	UMaterialInterface* HoleDecal = nullptr;
 	//--------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HitSound; //TODO: 삭제
+	USoundBase* HitSound = nullptr; //TODO: 삭제
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HitSound_Default;
+	USoundBase* HitSound_Default = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HitSound_Metal;
+	USoundBase* HitSound_Metal = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HitSound_Glass;
+	USoundBase* HitSound_Glass = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HitSound_Enemy;
+	USoundBase* HitSound_Enemy = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HitSound_Energy;
+	USoundBase* HitSound_Energy = nullptr;
 	//--------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
-	float DefaultDamage;
+	float DefaultDamage = 1.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
-	float HeadShotAdditionalDamage;
+	float HeadShotAdditionalDamage = 1.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float InitialLifeSpan;
+	float InitialLifeSpan = 5.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float InitialSpeed;
+	float InitialSpeed = 1000.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxSpeed;
+	float MaxSpeed = 1000.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float InitialRadius = 10.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosive")
-	bool bIsExplosive;
+	bool bIsExplosive = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosive")
 	bool bVisualizeExplosionRadius = false;
