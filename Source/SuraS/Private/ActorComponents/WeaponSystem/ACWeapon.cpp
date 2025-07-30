@@ -1139,7 +1139,7 @@ FTransform AWeapon::GetAimSocketRelativeTransform()
 void AWeapon::SwitchWeapon(ASuraPawnPlayer* TargetCharacter, bool bEquip)
 {
 	//TODO: Reloading 중이였다면, CancelReload 해줘야함
-	if (CurrentState == ReloadingState)
+	if (CurrentState == ReloadingState) //TODO: Targeting 중이라면 무기 교체 불가능 해야함
 	{
 		CancelReload();
 	}
@@ -1156,6 +1156,9 @@ void AWeapon::SwitchWeapon(ASuraPawnPlayer* TargetCharacter, bool bEquip)
 	{
 		GetWorld()->GetTimerManager().SetTimer(SwitchingTimer, [this, TargetCharacter, bEquip]() {EndWeaponSwitch(TargetCharacter, bEquip); }, WeaponSwitchingRate, false);
 		StartAnimation(AM_Unequip_Character, nullptr, WeaponSwitchingRate, WeaponSwitchingRate);
+
+		AM_Unequip_Character->BlendOut.SetBlendTime(1000.f);
+		AM_Unequip_Character->bEnableAutoBlendOut = false;
 	}
 }
 void AWeapon::EndWeaponSwitch(ASuraPawnPlayer* TargetCharacter, bool bEquip)

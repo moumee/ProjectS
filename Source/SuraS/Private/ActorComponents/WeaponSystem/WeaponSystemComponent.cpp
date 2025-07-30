@@ -18,22 +18,14 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 
-// Sets default values for this component's properties
 UWeaponSystemComponent::UWeaponSystemComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
 
 void UWeaponSystemComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
-	
 	InitializePlayerReference();
 	LoadWSCData();
 	InitializeStartingWeapon();
@@ -42,11 +34,7 @@ void UWeaponSystemComponent::BeginPlay()
 void UWeaponSystemComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
-
 	SearchWeapon();
-
 	//CalculateScreenCenterWorldPositionAndDirection(ScreenCenterWorldLocation, ScreenCenterWorldDirection);
 	CalculateTargetRightHandPosition();
 }
@@ -95,7 +83,7 @@ void UWeaponSystemComponent::LoadWSCData()
 		StartingWeaponClass = WSCData->StartingWeaponClass;
 	}
 }
-void UWeaponSystemComponent::InitializeStartingWeapon()
+void UWeaponSystemComponent::InitializeStartingWeapon() //TODO: 뭔가 이상함
 {
 	for (int32 i = 0; i < WeaponInventory.Num(); i++)
 	{
@@ -127,7 +115,7 @@ void UWeaponSystemComponent::InitializeStartingWeapon()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("NO Starting Weapon!!!!!"));
+		UE_LOG(LogTemp, Warning, TEXT("NO Starting Weapon!!!!!"));
 		return;
 	}
 
@@ -145,7 +133,7 @@ void UWeaponSystemComponent::InitializeStartingWeapon()
 bool UWeaponSystemComponent::SearchWeapon()
 {
 	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
-	traceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Visibility)); //TODO: Collision Channel �����ϱ�
+	traceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Visibility)); //TODO: Customize Collision Channel
 
 	TArray<AActor*> ignoreActors;
 	ignoreActors.Init(PlayerOwner, 1);
@@ -526,16 +514,10 @@ void UWeaponSystemComponent::ChangeWeapon(int32 WeaponIndex)
 	{
 		if (IsValid(CurrentWeapon))
 		{
-			//CurrentWeapon->UnequipWeapon(PlayerOwner);
-			//TODO: ���⼭ CurrentWeapon�� state�� Ȯ���ؼ� ���� ��ȯ ���� �����ϱ�
 			CurrentWeapon->SwitchWeapon(PlayerOwner, false);
 		}
-		//WeaponInventory[WeaponIndex]->EquipWeapon(PlayerOwner);
-		//CurrentWeapon = WeaponInventory[WeaponIndex];
 	}
 }
-
-
 #pragma endregion
 
 
