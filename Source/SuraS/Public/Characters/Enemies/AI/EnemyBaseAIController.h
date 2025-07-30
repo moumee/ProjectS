@@ -44,5 +44,6 @@ public:
 
 	void EndPursueState();
 
+	UFUNCTION(BlueprintCallable)
 	ASuraPawnPlayer* GetAttackTarget();
 };

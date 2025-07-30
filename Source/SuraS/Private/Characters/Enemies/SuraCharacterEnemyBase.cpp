@@ -8,6 +8,7 @@
 #include "ActorComponents/UISystem/ACKillLogManager.h"
 #include "ActorComponents/WeaponSystem/ProjectileType.h"
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
+#include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/CapsuleComponent.h"
@@ -216,15 +217,35 @@ UAnimMontage* ASuraCharacterEnemyBase::GetRandomAnimationMontage(TArray<UAnimMon
 
 void ASuraCharacterEnemyBase::LungeToTarget(float LungeForce = 1000.f)
 {
+	if (!GetAIController())
+		return;
+
+	GetAIController()->StopMovement();
+	
 	FVector TargetLocation = GetAIController()->GetAttackTarget()->GetActorLocation();
-	FVector MyLocation = GetActorLocation();
+	
+	float OriginalMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = LungeForce;
+
+	FTimerHandle LungeSpeedResetHandle;
+	GetWorldTimerManager().SetTimer(LungeSpeedResetHandle, [this, OriginalMaxWalkSpeed]()
+	{
+		GetCharacterMovement()->MaxWalkSpeed = OriginalMaxWalkSpeed;
+	}, 0.5f, false);
+
+	UAIBlueprintHelperLibrary::SimpleMoveToLocation(GetAIController(), TargetLocation);
+	
+	/*FVector MyLocation = GetActorLocation();
 	FVector Direction = (TargetLocation - MyLocation).GetSafeNormal();
+	float Distance = FVector::Dist(MyLocation, TargetLocation);
+
+	UE_LOG(LogTemp, Error, TEXT("Distance: %f"), Distance);
 
 	// float LungeDistance = FVector::Dist(TargetLocation, MyLocation);
 	// FVector NewLocation = MyLocation + Direction * LungeDistance;
 
 	// or use interpolation?
-	LaunchCharacter(Direction * LungeForce, true, true);
+	LaunchCharacter(Direction * Distance, true, true);*/
 }
 
 bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
