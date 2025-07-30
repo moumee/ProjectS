@@ -41,6 +41,7 @@ class UNiagaraSystem;
 class UWidgetComponent;
 class UAmmoCounterWidget;
 class UWeaponAimUIWidget;
+class UTargetingSkillWidget;
 
 class UInputAction;
 struct FInputBindingHandle;
@@ -67,6 +68,8 @@ public:
 	EWeaponAction LeftMouseAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	EWeaponAction RightMouseAction;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
+	EWeaponAction SkillAction;
 
 	/** AnimMontage to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
@@ -107,10 +110,13 @@ public:
 	UInputAction* RightChargeAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* RightZoomAction;
+	UInputAction* SkillToggleAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* ReloadAction;
+	UInputAction* RightZoomAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ReloadAction;
 
 	TArray<FInputBindingHandle*> InputActionBindingHandles;
 
@@ -160,10 +166,8 @@ public:
 protected:
 	UFUNCTION()
 	virtual void BeginPlay() override;
-
 public:
 	virtual void Tick(float DeltaTime) override;
-	//virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
 	/** Ends gameplay for this component. */
@@ -216,6 +220,7 @@ protected:
 protected:
 	FWeaponFireData FireData_L;
 	FWeaponFireData FireData_R;
+	FWeaponFireData FireData_Skill;
 #pragma endregion
 
 #pragma region Animation
@@ -388,50 +393,36 @@ public:
 
 #pragma region UI
 protected:
-	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|CrosshairWidget")
-	TSubclassOf<UUserWidget> CrosshairWidgetClass;
-
-	UPROPERTY()
-	UUserWidget* CrosshairWidget;
-
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "AimUIWidget")
 	TSubclassOf<UWeaponAimUIWidget> AimUIWidgetClass;
-
 	UPROPERTY()
 	UWeaponAimUIWidget* AimUIWidget;
-
-
-	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|AmmoCounterWidget")
-	//TSubclassOf<UUserWidget> AmmoCounterWidgetClass;
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "AmmoCounterWidget")
 	TSubclassOf<UAmmoCounterWidget> AmmoCounterWidgetClass;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|AmmoCounterWidget")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AmmoCounterWidget")
 	UWidgetComponent* AmmoCounterWidgetComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|AmmoCounterWidget")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AmmoCounterWidget")
 	UAmmoCounterWidget* AmmoCounterWidget;
 
-	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|TargetMarkerWidget")
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "TargetMarkerWidget")
 	TSubclassOf<UUserWidget> TargetMarkerWidgetClass;
 
-	//-----------------------------------------------------------
-	//TODO: for 3D UI Test
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "UTargetingSkillWidget")
+	TSubclassOf<UTargetingSkillWidget> TargetingSkillWidgetClass;
 	UPROPERTY()
-	UTextureRenderTarget2D* RenderTarget;
-
-	//TODO: 3D UI Test
-	UPROPERTY()
-	UMaterialInstanceDynamic* WidgetMaterialInstance;
-
-	void Create3DUI();
+	UTargetingSkillWidget* TargetingSkillWidget;
 public:
 	void ActivateCrosshairWidget(bool bflag);
 	void ActivateAmmoCounterWidget(bool bflag);
-	UAmmoCounterWidget* GetAmmoCounterWidget() const { return AmmoCounterWidget; } // suhyeon
-	// suhyeon
+	void ActivateTargetingSkillWidget(bool bflag);
 	UFUNCTION(BlueprintCallable)
-	UWeaponAimUIWidget* GetAimUIWidget() const { return AimUIWidget; }
-	
+	UAmmoCounterWidget* GetAmmoCounterWidget() const { return AmmoCounterWidget; } //suhyeon
+	UFUNCTION(BlueprintCallable)
+	UWeaponAimUIWidget* GetAimUIWidget() const { return AimUIWidget; } //suhyeon
+	UFUNCTION(BlueprintCallable)
+	UTargetingSkillWidget* GetTargetingSkillWidget() const { return TargetingSkillWidget; }
 protected:
 	void SetUpAimUIDelegateBinding(ASuraProjectile* Projectile);
 #pragma endregion
@@ -447,9 +438,6 @@ public:
 #pragma endregion
 
 #pragma region FireMode
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EWeaponFireMode WeaponFireMode;
 protected:
 	void HandleSingleFire(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
 	void HandleBurstFire(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
@@ -507,12 +495,10 @@ protected:
 	TArray<UUserWidget*> TargetMarkerWidgets;
 	UPROPERTY()
 	TSet<AActor*> Targets;
-
 	UPROPERTY()
 	TMap<AActor*, UUserWidget*> MapTargetActorToWidget;
 
 	FTimerHandle TargetDetectionTimer;
-
 	int32 MaxTargetNum = 10;
 
 	float MaxTargetDetectionRadius = 3000.f;
@@ -562,7 +548,6 @@ protected:
 	float ChargingAdditionalProjectileRadiusBase = 20.f;
 
 	int32 ChargingAdditionalPelletMaxNum = 0;
-	//int32 MaxPenetrableObjectsNum = 4;
 
 	float ElapsedChargeTime = 0.f;
 	FTimerHandle ChargingTimer;
@@ -572,7 +557,28 @@ protected:
 	void StopCharge();
 #pragma endregion
 
-#pragma region
+#pragma region Skill/Targeting
+protected:
+	bool bCanUseTargetingSkill = true;
+	float TargetingSkillCoolDown = 3.f;
+	float MaxTargetingTime = 10.f;
+	FTimerHandle TargetingSkillTimer;
+	void HandleTargetDetectionSkill();
+	void UpdateTargetDetectionSkill(float DeltaTime);
+	void HandleTargetingSkillFire(bool bIsLeftInput = true, bool bSingleProjectile = true, int32 NumPenetrable = 0);
+	void CancelTargetingSkill();
+	void EnableTargetingSkill(bool bflag);
+	void UpdateTargetingSkillUI();
+	float TargetGlobalTimeScale = 1.f;
+	float TargetingGlobalTimeDilationSpeed = 1.f;
+	bool bIsGlobalTimeScaleChanging = false;
+public:
+	float TargetingGlobalTimeScale = 1.f;
+	void SetGlobalTimeDilation(float targettimescale = 1.f);
+	void UpdateGlobalTimeDiation(float DeltaTime);
+#pragma endregion
+
+#pragma region Penetration
 protected:
 	int32 MaxPenetrableObjectsNum_Left = 4;
 	int32 MaxPenetrableObjectsNum_Right = 4;

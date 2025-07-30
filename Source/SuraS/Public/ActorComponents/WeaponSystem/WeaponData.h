@@ -28,16 +28,22 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	EWeaponAction LeftMouseAction = EWeaponAction::WeaponAction_SingleShot;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	EWeaponAction RightMouseAction = EWeaponAction::WeaponAction_SingleShot;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
+	EWeaponAction SkillAction = EWeaponAction::WeaponAction_SkillToggle;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 	TSubclassOf<class ASuraProjectile> LeftProjectileClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 	TSubclassOf<class ASuraProjectile> RightProjectileClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+	TSubclassOf<class ASuraProjectile> SkillProjectileClass;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	UNiagaraSystem* FireEffect_L = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	UNiagaraSystem* FireEffect_R = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	UNiagaraSystem* FireEffect_Skill = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	UNiagaraSystem* ChargeEffect = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
@@ -51,6 +57,8 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	USoundBase* FireSound_L = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* FireSound_R = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* FireSound_Skill = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* ChargeSound = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
@@ -94,9 +102,13 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
 	int32 AmmoConsumedPerShot_Right = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
+	int32 AmmoCost_Skill = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
 	bool bAllowFireWithInsufficientAmmo_L = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
 	bool bAllowFireWithInsufficientAmmo_R = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
+	bool bAllowFireWithInsufficientAmmo_Skill = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
 	bool bActivePumpActionReload = false;
 	//-----------------------------------------------------------------
@@ -138,12 +150,16 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
 	FWeaponRecoilStruct DefaultRecoil_R;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
+	FWeaponRecoilStruct DefaultRecoil_Skill;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
 	FWeaponRecoilStruct ZoomRecoil;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
 	FArmRecoilStruct ArmRecoil_L;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
 	FArmRecoilStruct ArmRecoil_R;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil_Skill;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
 	FArmRecoilStruct ArmRecoil_Hand;
@@ -162,6 +178,8 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
 	TSubclassOf<UWeaponCameraShakeBase> DefaultCameraShakeClass_R;
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
+	TSubclassOf<UWeaponCameraShakeBase> DefaultCameraShakeClass_Skill;
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
 	TSubclassOf<UWeaponCameraShakeBase> ZoomCameraShakeClass;
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
 	TSubclassOf<UWeaponCameraShakeBase> ChargingCameraShakeClass;
@@ -178,6 +196,14 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	float MaxTargetDetectionTime = 8.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
 	float TimeToReachMaxTargetDetectionRange = 2.5f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
+	float TargetingGlobalTimeScale = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
+	float TargetingGlobalTimeDilationSpeed = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
+	float TargetingSkillCoolDown = 3.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
+	float MaxTargetingTime = 10.f;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging")
 	bool bAutoFireAtMaxChargeTime = true;

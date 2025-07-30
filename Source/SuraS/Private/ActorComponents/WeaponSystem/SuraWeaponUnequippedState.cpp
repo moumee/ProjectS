@@ -22,6 +22,7 @@ void USuraWeaponUnequippedState::EnterState(AWeapon* Weapon)
 	Weapon->ForceStopCamModification();
 	Weapon->ActivateCrosshairWidget(false);
 	Weapon->ActivateAmmoCounterWidget(false);
+	Weapon->ActivateTargetingSkillWidget(false);
 }
 
 void USuraWeaponUnequippedState::UpdateState(AWeapon* Weapon, float DeltaTime)
