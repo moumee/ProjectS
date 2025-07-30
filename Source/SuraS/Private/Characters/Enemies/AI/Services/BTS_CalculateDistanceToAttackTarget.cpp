@@ -14,6 +14,8 @@ UBTS_CalculateDistanceToAttackTarget::UBTS_CalculateDistanceToAttackTarget()
 	NodeName = "Calculate Distance To Attack Target";
 	bNotifyBecomeRelevant = true;
 	bNotifyTick = true;
+
+	bCreateNodeInstance = true;
 }
 
 void UBTS_CalculateDistanceToAttackTarget::OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -33,9 +35,16 @@ void UBTS_CalculateDistanceToAttackTarget::TickNode(UBehaviorTreeComponent& Owne
 
 	if (OwnerEnemy && TargetPlayer)
 	{
-		FVector PlayerGroundLocation = FVector::ZeroVector;
+		FVector PlayerGroundLocation = FVector(TargetPlayer->GetActorLocation().X, TargetPlayer->GetActorLocation().Y, OwnerEnemy->GetActorLocation().Z);
+		OwnerComp.GetBlackboardComponent()->SetValueAsFloat("DistanceToAttackTarget", FVector::Dist(OwnerEnemy->GetActorLocation(), PlayerGroundLocation));
 		
-		if (TargetPlayer->GetPlayerMovementComponent()->FindGroundPoint(PlayerGroundLocation))
+		
+		/*if (TargetPlayer->GetPlayerMovementComponent()->FindGroundPoint(PlayerGroundLocation))
+		{
 			OwnerComp.GetBlackboardComponent()->SetValueAsFloat("DistanceToAttackTarget", FVector::Dist(OwnerEnemy->GetActorLocation(), PlayerGroundLocation));
+			// UE_LOG(LogTemp, Error, TEXT("Player Location: %f, Ground Location: %f"), FVector::Dist(OwnerEnemy->GetActorLocation(), TargetPlayer->GetActorLocation()), FVector::Dist(OwnerEnemy->GetActorLocation(), PlayerGroundLocation));
+		}
+		else
+			UE_LOG(LogTemp, Error, TEXT("Player Movement Component Not Found"));*/
 	}
 }
