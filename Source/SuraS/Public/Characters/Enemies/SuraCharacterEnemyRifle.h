@@ -15,8 +15,8 @@ class SURAS_API ASuraCharacterEnemyRifle : public ASuraCharacterEnemyBase
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
-	ASuraFirearmRifle* Firearm;
+	/*UPROPERTY()
+	ASuraFirearmRifle* Firearm;*/
 
 protected:
 	virtual void BeginPlay() override;
@@ -24,8 +24,11 @@ protected:
 public:
 	ASuraCharacterEnemyRifle();
 
-	UPROPERTY(EditAnywhere, Category = "Firearm")
-	TSubclassOf<class ASuraFirearmRifle> RifleClass;
+	UPROPERTY(EditAnywhere, Category = "Projectile")
+	TSubclassOf<class ASuraEnemyProjectile> ProjectileClass;
+
+	/*UPROPERTY(EditAnywhere, Category = "Firearm")
+	TSubclassOf<class ASuraFirearmRifle> RifleClass;*/
 
 	virtual void Attack(const ASuraPawnPlayer* Player) override;
 };
