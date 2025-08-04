@@ -11,21 +11,21 @@ void UANS_MeleeAttack::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequen
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EvetnRef);
 
-	Enemy = Cast<ASuraCharacterEnemyBase>(MeshComp->GetOwner());
+	CachedEnemy = Cast<ASuraCharacterEnemyBase>(MeshComp->GetOwner());
 }
 
 void UANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EvetnRef)
 {
 	Super::NotifyTick(MeshComp, Animation, TotalDuration, EvetnRef);
 
-	if (Enemy && MeshComp)
+	if (CachedEnemy && MeshComp)
 	{
 		TArray<FHitResult> Hits;
 		FCollisionQueryParams CollisionQueryParams;
 		CollisionQueryParams.AddIgnoredActor(GetEnemyChar());
 
 		const FVector Start = GetEnemyChar()->GetActorLocation() + GetEnemyChar()->GetActorForwardVector() * GetEnemyChar()->GetCapsuleComponent()->GetScaledCapsuleRadius();
-		const FVector End = Start + GetEnemyChar()->GetActorForwardVector() * Enemy->GetMeleeAttackRange();
+		const FVector End = Start + GetEnemyChar()->GetActorForwardVector() * CachedEnemy->GetMeleeAttackRange();
 
 		// ANS cannot access GetWorld directly! Must be accessed through MeshComp or whoever has access to GetWorld function first
 		bool bHit = MeshComp->GetWorld()->SweepMultiByChannel(
@@ -34,7 +34,7 @@ void UANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 			End,
 			FQuat::Identity,
 			ECollisionChannel::ECC_Pawn,
-			FCollisionShape::MakeSphere(Enemy->GetMeleeAttackSphereRadius()),
+			FCollisionShape::MakeSphere(CachedEnemy->GetMeleeAttackSphereRadius()),
 			CollisionQueryParams
 		);
 
@@ -46,7 +46,7 @@ void UANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 				{
 
 					FDamageData DamageData;
-					DamageData.DamageAmount = Enemy->GetAttackDamageAmount() + AdditionalDamageAmount;
+					DamageData.DamageAmount = CachedEnemy->GetAttackDamageAmount() + AdditionalDamageAmount;
 					DamageData.DamageType = EDamageType::Melee;
 
 					Player->TakeDamage(DamageData, GetEnemyChar());
