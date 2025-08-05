@@ -6,6 +6,7 @@
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
+#include "Components/Overlay.h"
 #include "Components/TextBlock.h"
 #include "Widgets/Player/PlayerHitWidget.h"
 
@@ -16,6 +17,8 @@ void UPlayerHUD::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	CurrentHitStageText->SetText(FText::AsNumber(CurrentHitStage));
 
 	UpdateWeaponIcons();
+
+	//InitializeHUD();
 }
 
 void UPlayerHUD::NativeConstruct()
@@ -26,7 +29,10 @@ void UPlayerHUD::NativeConstruct()
 	if (SuraPawnPlayer)
 	{
 		WeaponSystemComponent = SuraPawnPlayer->GetWeaponSystemComponent();
-		WeaponSystemComponent->OnWeaponSwitched.AddDynamic(this, &UPlayerHUD::OnWeaponSwitchAnim);
+		if (WeaponSystemComponent)
+		{
+			WeaponSystemComponent->OnWeaponPickedUp.AddDynamic(this, &UPlayerHUD::UpdatePickup);
+		}
 	}
 
 	// Overlay / 이미지 배열 순서대로 추가
@@ -167,3 +173,40 @@ void UPlayerHUD::OnWeaponSwitchAnim(int32 NewIndex)
 	// 	break;
 	// }
 }
+
+void UPlayerHUD::InitializeHUD()
+{
+	if (!WeaponSystemComponent) return;
+	
+	const TArray<AWeapon*>& Inventory = WeaponSystemComponent->GetWeaponInventory();
+	int32 WeaponCount = WeaponSystemComponent->GetWeaponNum();
+
+	WeaponInventoryNum->SetText(FText::AsNumber(WeaponCount));
+
+	
+	// 모든 슬롯을 먼저 숨김 처리
+	if (WeaponSlot_0) WeaponSlot_0->SetVisibility(ESlateVisibility::Collapsed);
+	if (WeaponSlot_1) WeaponSlot_1->SetVisibility(ESlateVisibility::Collapsed);
+	if (WeaponSlot_2) WeaponSlot_2->SetVisibility(ESlateVisibility::Collapsed);
+
+	// 인벤토리 수에 따라 슬롯을 보여줌
+	if (WeaponCount >= 1 && WeaponSlot_0)
+	{
+		WeaponSlot_0->SetVisibility(ESlateVisibility::Visible);
+	}
+	if (WeaponCount >= 2 && WeaponSlot_1)
+	{
+		WeaponSlot_1->SetVisibility(ESlateVisibility::Visible);
+	}
+	if (WeaponCount >= 3 && WeaponSlot_2)
+	{
+		WeaponSlot_2->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+void UPlayerHUD::UpdatePickup(FName WeaponName)
+{
+	InitializeHUD();
+}
+
+
