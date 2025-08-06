@@ -170,7 +170,14 @@ void ASuraPawnPlayer::CheckPlayerHealth()
 	if (DamageSystemComponent->GetHealth() <= ConditionalPlayerHP)
 	{
 		// Reduce the number of max tokens in the AttackTokensComponent
-		// Change the AI variables according to game documents
+		AttackTokensComponent->SetMaxEnemyAttackTokens(3); // TODO: make magic numbers into variables in a data table
+		AttackTokensComponent->SetMaxEnemyPursuitTokens(3);
+	}
+	else
+	{
+		// Restore the number of max tokens
+		AttackTokensComponent->SetMaxEnemyAttackTokens(8);
+		AttackTokensComponent->SetMaxEnemyPursuitTokens(6);
 	}
 }
 
