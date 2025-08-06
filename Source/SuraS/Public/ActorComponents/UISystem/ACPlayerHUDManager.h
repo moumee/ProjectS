@@ -7,6 +7,7 @@
 #include "ACPlayerHUDManager.generated.h"
 
 
+class UWeaponSystemComponent;
 class UPlayerHUD;
 class UACUIMangerComponent;
 
@@ -28,6 +29,7 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	UWeaponSystemComponent* WeaponSystemComponent = nullptr;
 
 public:	
 	// Called every frame
@@ -39,6 +41,5 @@ public:
 
 	// UIManagerComponent 할당
 	void SetUIManager(UACUIMangerComponent* UIMangerComponent);
-
-		
+	
 };

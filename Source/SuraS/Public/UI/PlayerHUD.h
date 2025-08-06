@@ -106,6 +106,9 @@ private:
 	UWidgetAnimation* Slot2_BottomToTop;
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
 	UWidgetAnimation* Slot2_TopToCenter;
+
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* WeaponInventoryNum;
 	
 	// 배열로 정리
 	TArray<UOverlay*> WeaponSlots;
@@ -126,6 +129,13 @@ public:
 	// 애니메이션 함수.
 	UFUNCTION()
 	void OnWeaponSwitchAnim(int32 NewIndex);
+
+	UFUNCTION()
+	void InitializeHUD();
+
+	UFUNCTION()
+	void UpdatePickup(FName WeaponName);
+
 
 #pragma endregion
 };
