@@ -116,7 +116,7 @@ public:
 
 	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
 
-	virtual void Attack(const ASuraPawnPlayer* Player) override;
+	virtual void Attack(ASuraPawnPlayer* Player) override;
 
 	virtual void SetMovementSpeed(EEnemySpeed Speed) override;
 

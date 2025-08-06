@@ -22,7 +22,7 @@ void ASuraCharacterEnemyMelee::RotateTowardPlayer()
 	SetActorRotation(FMath::RInterpTo(GetActorRotation(), FRotator(GetActorRotation().Pitch, NewRotationYaw, GetActorRotation().Roll), GetWorld()->GetDeltaSeconds(), 15.f));
 }
 
-void ASuraCharacterEnemyMelee::Attack(const ASuraPawnPlayer* AttackTarget)
+void ASuraCharacterEnemyMelee::Attack(ASuraPawnPlayer* AttackTarget)
 {
 	Player = AttackTarget;
 

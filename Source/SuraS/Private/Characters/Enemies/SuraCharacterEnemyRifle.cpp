@@ -3,6 +3,7 @@
 
 #include "Characters/Enemies/SuraCharacterEnemyRifle.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "Weapons/Firearms/SuraFirearmRifle.h"
 #include "Weapons/Projectiles/SuraEnemyProjectile.h"
 
@@ -28,7 +29,7 @@ void ASuraCharacterEnemyRifle::BeginPlay()
 	EnemyWeapon = Firearm;*/
 }
 
-void ASuraCharacterEnemyRifle::Attack(const ASuraPawnPlayer* Player)
+void ASuraCharacterEnemyRifle::Attack(ASuraPawnPlayer* Player)
 {
 	if (ProjectileClass)
 	{
@@ -41,7 +42,15 @@ void ASuraCharacterEnemyRifle::Attack(const ASuraPawnPlayer* Player)
 		ASuraEnemyProjectile* Projectile = GetWorld()->SpawnActor<ASuraEnemyProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 
 		Projectile->SetOwner(this);
-		Projectile->LaunchProjectile();
+
+		UE_LOG(LogTemp, Error, TEXT("Player Velocity: %f, %f, %f"), Player->GetVelocity().X, Player->GetVelocity().Y, Player->GetVelocity().Z);
+		
+		FVector LaunchVelocity;
+		float TimeToTarget = FVector::Dist(GetActorLocation(), Player->GetActorLocation()) / Projectile->GetProjectileMovement()->InitialSpeed;
+		
+		UGameplayStatics::SuggestProjectileVelocity_MovingTarget(this, LaunchVelocity, SpawnLocation, Player, FVector(0.f, 0.f, 80.f), 0.f, TimeToTarget);
+		
+		Projectile->LaunchProjectileWithVelocity(LaunchVelocity);
 	}
 	
 	/*if (!AttackAnimations.IsEmpty())

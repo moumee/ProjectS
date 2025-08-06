@@ -48,6 +48,8 @@ public:
 	void InitializeProjectile();
 	
 	void SetOwner(AActor* TheOwner);
+	
+	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
@@ -60,4 +62,6 @@ public:
 	void SetHomingTarget(const AActor* Target);
 
 	void LaunchProjectile();
+
+	void LaunchProjectileWithVelocity(const FVector& Velocity);
 };
