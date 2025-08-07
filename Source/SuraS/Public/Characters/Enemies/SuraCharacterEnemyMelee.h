@@ -27,5 +27,5 @@ protected:
 public:
 	ASuraCharacterEnemyMelee();
 
-	virtual void Attack(const ASuraPawnPlayer* Player) override;
+	virtual void Attack(ASuraPawnPlayer* Player) override;
 };

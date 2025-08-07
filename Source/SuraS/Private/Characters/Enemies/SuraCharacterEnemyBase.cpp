@@ -261,7 +261,7 @@ UAnimMontage* ASuraCharacterEnemyBase::ChooseRandomAttackMontage()
 	return nullptr;
 }
 
-void ASuraCharacterEnemyBase::Attack(const ASuraPawnPlayer* Player)
+void ASuraCharacterEnemyBase::Attack(ASuraPawnPlayer* Player)
 {
 	/*if (!AttackAnimations.IsEmpty())
 	{
