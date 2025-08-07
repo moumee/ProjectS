@@ -203,6 +203,8 @@ public:
 	int32 GetCurrentWeaponIndex() const {return CurrentWeaponIndex; }
 
 	void EquipFirstWeapon();
+
+	void WeaponInventoryClear();
 	/** suhyeon**/
 #pragma endregion
 	

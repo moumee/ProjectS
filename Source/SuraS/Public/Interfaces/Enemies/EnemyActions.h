@@ -24,6 +24,6 @@ class SURAS_API IEnemyActions
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void Attack(const ASuraPawnPlayer* Player) = 0;
+	virtual void Attack(ASuraPawnPlayer* Player) = 0;
 	virtual void SetMovementSpeed(EEnemySpeed Speed) = 0;
 };

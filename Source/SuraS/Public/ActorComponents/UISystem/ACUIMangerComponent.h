@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "ACUIMangerComponent.generated.h"
 
+class UWeaponSystemComponent;
 class UPlayerHUD;
 class UACPlayerHUDManager;
 class UInputAction;
@@ -46,6 +47,8 @@ public:
 	// Called every frame
 	// virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	
+
 	/** 특정 UI 열기/ 닫기 **/
 	void OpenUI(EUIType UIType);
 
@@ -63,6 +66,8 @@ public:
 	{
 		return DTWeapon;	
 	}
+
+	UWeaponSystemComponent* GetWeaponSystemComponent() const {return WeaponSystemComponent;}
 
 	void TestKillLog();
 
@@ -96,6 +101,7 @@ private:
 	UPROPERTY()
 	UACPlayerHUDManager* PlayerHUDManager;
 
+	UWeaponSystemComponent* WeaponSystemComponent = nullptr;
 
 	
 
