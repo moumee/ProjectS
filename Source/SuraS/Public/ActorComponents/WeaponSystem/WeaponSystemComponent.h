@@ -12,7 +12,7 @@
 // delegate about inventory widget (writted by suhyeon)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponPickedUp, FName, WeaponName);
 // delegate about ammocounter widget (writted by suhyeon)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponSwitched, int32, NewIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponSwitched, int32, PrevIndex, int32, NewIndex);
 
 class AWeapon;
 
