@@ -27,7 +27,7 @@ protected:
 public:
 	ASuraCharacterEnemyClassShifter();
 
-	virtual void Attack(const ASuraPawnPlayer* Player) override;
+	virtual void Attack(ASuraPawnPlayer* Player) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shape")
 	FName DefaultClass = "Rifle";

@@ -43,7 +43,6 @@ ASuraEnemyProjectile::ASuraEnemyProjectile()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->bAutoActivate = false;
-	ProjectileMovement->ProjectileGravityScale = 0.f;
 
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh"));
 	ProjectileMesh->SetupAttachment(RootComponent);
@@ -89,9 +88,9 @@ void ASuraEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("hit"));
 
-	UE_LOG(LogTemp, Warning, TEXT("hit actor: %s"), *OtherActor->GetName());
+	// UE_LOG(LogTemp, Warning, TEXT("hit actor: %s"), *OtherActor->GetName());
 
-	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OtherActor))
+	if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OtherActor))
 	{
 		FDamageData DamageData;
 		DamageData.DamageAmount = M_DamageAmount;
@@ -124,7 +123,7 @@ void ASuraEnemyProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, A
 {
 	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("overlap"));
 	
-	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OtherActor))
+	if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OtherActor))
 	{
 		FDamageData DamageData;
 		DamageData.DamageAmount = M_DamageAmount;
@@ -160,3 +159,10 @@ void ASuraEnemyProjectile::LaunchProjectile()
 {
 	ProjectileMovement->Activate();
 }
+
+void ASuraEnemyProjectile::LaunchProjectileWithVelocity(const FVector& Velocity)
+{
+	ProjectileMovement->Velocity = Velocity;
+	ProjectileMovement->Activate();
+}
+

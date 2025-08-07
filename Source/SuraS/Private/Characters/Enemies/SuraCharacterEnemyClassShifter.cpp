@@ -24,7 +24,7 @@ void ASuraCharacterEnemyClassShifter::RotateTowardPlayer()
 	SetActorRotation(FMath::RInterpTo(GetActorRotation(), FRotator(GetActorRotation().Pitch, NewRotationYaw, GetActorRotation().Roll), GetWorld()->GetDeltaSeconds(), 15.f));
 }
 
-void ASuraCharacterEnemyClassShifter::Attack(const ASuraPawnPlayer* AttackTarget)
+void ASuraCharacterEnemyClassShifter::Attack(ASuraPawnPlayer* AttackTarget)
 {
 	Player = AttackTarget;
 
