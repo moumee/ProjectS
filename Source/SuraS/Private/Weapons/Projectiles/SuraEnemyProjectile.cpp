@@ -3,6 +3,7 @@
 
 #include "Weapons/Projectiles/SuraEnemyProjectile.h"
 
+#include "NiagaraComponent.h"
 #include "Characters/PawnBAsePlayer/SuraPawnPlayer.h"
 #include "Interfaces/Damageable.h"
 #include "Structures/DamageData.h"
@@ -49,6 +50,9 @@ ASuraEnemyProjectile::ASuraEnemyProjectile()
 	ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	ProjectileMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 	ProjectileMesh->SetCastShadow(false);
+
+	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComp"));
+	NiagaraComponent->SetupAttachment(RootComponent);
 
 	ProjectileType = "Base";
 }
