@@ -15,6 +15,7 @@
 #include "ActorComponents/WeaponSystem/SuraWeaponSwitchingState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponTargetingState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponChargingState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponWaitingState.h"
 #include "ActorComponents/WeaponSystem/WeaponCameraShakeBase.h"
 #include "ActorComponents/WeaponSystem/AmmoCounterWidget.h"
 #include "ActorComponents/WeaponSystem/WeaponAimUIWidget.h"
@@ -152,6 +153,10 @@ void AWeapon::LoadWeaponData()
 		// <WeaponSocket>
 		WeaponSocketName = WeaponData->WeaponSocket;
 
+		// <Skill>
+		bIsSkillWeapon = WeaponData->bIsSkillWeapon;
+		bAllowNormalFireForSkillWeapon = WeaponData->bAllowNormalFireForSkillWeapon;
+
 		// <Action>
 		LeftMouseAction = WeaponData->LeftMouseAction;
 		RightMouseAction = WeaponData->RightMouseAction;
@@ -245,6 +250,10 @@ void AWeapon::LoadWeaponData()
 		// <Animation>
 		RightHandSocketTransform = WeaponData->RightHandSocketTransform;
 		RightHandSocketTransform_Crouch = WeaponData->RightHandSocketTransform_Crouch;
+		RightHandSocketTransform_Targeting = WeaponData->RightHandSocketTransform_Targeting;
+		RightHandSocketTransform_Targeting_Crouch = WeaponData->RightHandSocketTransform_Targeting_Crouch;
+		SkillWeaponSocketTransform_Active = WeaponData->SkillWeaponSocketTransform_Active;
+		SkillWeaponSocketTransform_Inactive = WeaponData->SkillWeaponSocketTransform_Inactive;
 
 		// <Camera Shake>
 		ZoomCameraShakeClass = WeaponData->ZoomCameraShakeClass;
@@ -313,6 +322,7 @@ void AWeapon::BeginPlay()
 
 	TargetingState = NewObject<USuraWeaponTargetingState>(this, USuraWeaponTargetingState::StaticClass());
 	ChargingState = NewObject<USuraWeaponChargingState>(this, USuraWeaponChargingState::StaticClass());
+	WaitingState = NewObject<USuraWeaponWaitingState>(this, USuraWeaponWaitingState::StaticClass());
 
 	WeaponAnimInstance = WeaponMesh->GetAnimInstance();
 
@@ -352,47 +362,10 @@ void AWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 bool AWeapon::AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter)
 {
 	Character = TargetCharacter;
-
-	if (Character == nullptr)
-	{
-		return false;
-	}
+	if (Character == nullptr) { return false; }
 
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-
-	////TODO: BP에서 입력하도록 해야함
-	//if (WeaponName == EWeaponName::WeaponName_Rifle)
-	//{
-	//	AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun")));
-
-	//	//FTransform MeshRelativeTransform = WeaponMesh->GetRelativeTransform();
-	//	//FTransform MeshRelativeTransform = GetRootComponent()->GetRelativeTransform();
-	//	//FTransform RightHandSocketRelativeTransform = WeaponMesh->GetSocketTransform(FName(TEXT("RightHand")), ERelativeTransformSpace::RTS_Component);
-
-	//	//FRotator RelativeRotation = MeshRelativeTransform.Rotator() + RightHandSocketRelativeTransform.Rotator();
-
-	//	//GetRootComponent()->SetRelativeRotation(RelativeRotation * (-1));
-
-	//	//GetRootComponent()->SetRelativeTransform(RightHandOffset);
-
-	//	//WeaponMesh->SetRelativeTransform(RightHandOffset);
-	//	
-
-	//	//AttachToComponent()
-	//}
-	//else if (WeaponName == EWeaponName::WeaponName_ShotGun)
-	//{
-	//	AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun")));
-	//}
-	//else if (WeaponName == EWeaponName::WeaponName_MissileLauncher)
-	//{
-	//	AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_MissileLauncher")));
-	//}
-	//else if (WeaponName == EWeaponName::WeaponName_RailGun)
-	//{
-	//	AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_RailGun")));
-	//}
 
 	if (WeaponSocketName.IsNone())
 	{
@@ -404,7 +377,6 @@ bool AWeapon::AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter)
 	}
 
 	//---------------------------------------------
-
 	//TODO: 더 좋은 방법을 생각해 봐야함
 	//RightHandToAimSocketOffset = this->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetMesh()->GetSocketLocation(FName("Gun"));
 	RightHandToAimSocketOffset = WeaponMesh->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetArmMesh()->GetBoneLocation(FName(TEXT("hand_r")));
@@ -422,10 +394,7 @@ bool AWeapon::AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter)
 	ActivateAmmoCounterWidget(true);
 	ActivateTargetingSkillWidget(true);
 
-	//TODO: BP에서 부가적으로 부착한 Mesh들도 Visibility를 관리해야함. 근데 에디터에서 WeaponMesh가 부모 소켓으로 되어있으면 하위의 것들은 알아서 처리되는 듯?
-	//WeaponMesh->SetVisibility(true);
 	SetMeshVisibility(true);
-
 	return true;
 }
 
@@ -571,7 +540,8 @@ void AWeapon::FireSingleProjectile(FWeaponFireData* FireData, int32 NumPenetrabl
 		}
 
 		// <ArmRecoil Animation>
-		AddArmRecoil(&FireData->Armrecoil);
+		if (bIsSkillWeapon) { AddSkillWeaponRecoil(&FireData->Armrecoil); }
+		else { AddArmRecoil(&FireData->Armrecoil); }
 	}
 }
 
@@ -1163,36 +1133,38 @@ void AWeapon::SwitchWeapon(ASuraPawnPlayer* TargetCharacter, bool bEquip)
 }
 void AWeapon::EndWeaponSwitch(ASuraPawnPlayer* TargetCharacter, bool bEquip)
 {
-	if (bEquip)
-	{
-		EquipWeapon(TargetCharacter);
-	}
+	if (!TargetCharacter) { return; }
+
+	if (bEquip) { EquipWeapon(TargetCharacter); }
 	else
 	{
 		UnequipWeapon(TargetCharacter);
-		//TODO: 이걸 굳이 Interface로 처리했어야 했나? 다른 방법이 더 좋을 것 같음
-		if (TargetCharacter && TargetCharacter->GetWeaponSystemComponent()
-			&& TargetCharacter->GetWeaponSystemComponent()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
+		if (UActorComponent* WeaponSystem = TargetCharacter->GetWeaponSystemComponent())
 		{
-			Cast<IWeaponInterface>(TargetCharacter->GetWeaponSystemComponent())->SwitchToOtherWeapon();
+			if (IWeaponInterface* WeaponInterface = Cast<IWeaponInterface>(WeaponSystem))
+			{
+				WeaponInterface->SwitchToOtherWeapon();
+			}
 		}
 	}
 }
-void AWeapon::EquipWeapon(ASuraPawnPlayer* TargetCharacter)
+void AWeapon::EquipWeapon(ASuraPawnPlayer* TargetCharacter, bool bActivateDirectly)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Equip Weapon!!!"));
-
 	SetInputActionBinding();
-
 	ChangeState(IdleState);
+
+	if (bActivateDirectly)
+	{
+		AttachWeaponToPlayer(TargetCharacter);
+		//SetMeshVisibility(true);
+		//ActivateTargetingSkillWidget(true);
+	}
 }
 
 void AWeapon::UnequipWeapon(ASuraPawnPlayer* TargetCharacter)
 {
 	ResetInputActionBinding();
 	DetachWeaponFromPlayer();
-
-	UE_LOG(LogTemp, Warning, TEXT("Unequip Weapon!!!"));
 	ChangeState(UnequippedState);
 }
 
@@ -1809,8 +1781,7 @@ void AWeapon::SetUpAimUIDelegateBinding(ASuraProjectile* Projectile)
 #pragma region FireMode
 void AWeapon::HandleSingleFire(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
 {
-	UE_LOG(LogTemp, Error, TEXT("Handle Single Fire"));
-
+	//UE_LOG(LogTemp, Warning, TEXT("Handle Single Fire"));
 	if (CurrentState == IdleState)
 	{
 		ChangeState(FiringState);
@@ -2350,6 +2321,7 @@ void AWeapon::StopMissileLaunch()
 	ConfirmedTargets.Empty();
 	CurrentTargetIndex = 0;
 
+	ReleaseControl();
 	ChangeState(IdleState);
 }
 #pragma endregion
@@ -2444,6 +2416,7 @@ void AWeapon::HandleTargetDetectionSkill()
 {
 	if (CurrentState == IdleState && bCanUseTargetingSkill)
 	{
+		if (!TryTakeControl()) { return; };
 		ChangeState(TargetingState);
 		PlayWeaponSound(TargetSearchLoopSound);
 		if (TargetingSkillWidget) { TargetingSkillWidget->SetDetectionTimeUIVisible(true); }
@@ -2567,11 +2540,13 @@ void AWeapon::HandleTargetingSkillFire(bool bIsLeftInput, bool bSingleProjectile
 	}
 	else if (CurrentState == IdleState)
 	{
+		if (!bAllowNormalFireForSkillWeapon) { return; }
 		ChangeState(FiringState);
 		StartSingleShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
 	}
 	else if (CurrentState == PumpActionReloadingState)
 	{
+		if (!bAllowNormalFireForSkillWeapon) { return; }
 		BufferedFireRequest = FBufferedFireRequest(EWeaponAction::WeaponAction_SingleShot, bIsLeftInput, bSingleProjectile, NumPenetrable);
 	}
 }
@@ -2593,6 +2568,7 @@ void AWeapon::CancelTargetingSkill()
 
 	if (TargetingSkillWidget) { TargetingSkillWidget->SetDetectionTimeUIVisible(false); }
 
+	ReleaseControl();
 	ChangeState(IdleState);
 }
 void AWeapon::EnableTargetingSkill(bool bflag)
@@ -2616,6 +2592,20 @@ void AWeapon::UpdateTargetingSkillUI()
 			TargetingSkillWidget->SetTargetingSkillCoolDown(ElapsedTime);
 		}
 	}
+}
+bool AWeapon::TryTakeControl()
+{
+	if (!Character) { return false; }
+	UWeaponSystemComponent* WSC = Character->GetWeaponSystemComponent();
+	if (!WSC) { return false; }
+	return WSC->TryTakeControl(this);
+}
+void AWeapon::ReleaseControl()
+{
+	if (!Character) { return; }
+	UWeaponSystemComponent* WSC = Character->GetWeaponSystemComponent();
+	if (!WSC) { return; }
+	WSC->ReleaseControl();
 }
 void AWeapon::SetGlobalTimeDilation(float targettimescale)
 {
@@ -2793,6 +2783,16 @@ FArmRecoilStruct* AWeapon::GetArmRecoilInfo_UpperArm()
 FArmRecoilStruct* AWeapon::GetArmRecoilInfo_LowerArm()
 {
 	return &ArmRecoil_LowerArm;
+}
+#pragma endregion
+
+#pragma region Recoil/SkilWeapon
+void AWeapon::AddSkillWeaponRecoil(FArmRecoilStruct* armrecoil)
+{
+	if (armrecoil != nullptr && CharacterAnimInstance->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
+	{
+		Cast<IWeaponInterface>(CharacterAnimInstance)->AddSkillWeaponRecoil(armrecoil);
+	}
 }
 #pragma endregion
 

@@ -24,6 +24,11 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Socket")
 	FName WeaponSocket = FName();
 	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
+	bool bIsSkillWeapon = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
+	bool bAllowNormalFireForSkillWeapon = false;
+	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	EWeaponAction LeftMouseAction = EWeaponAction::WeaponAction_SingleShot;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
@@ -172,6 +177,14 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	FTransform RightHandSocketTransform = FTransform();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	FTransform RightHandSocketTransform_Crouch = FTransform();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	FTransform RightHandSocketTransform_Targeting = FTransform();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	FTransform RightHandSocketTransform_Targeting_Crouch = FTransform();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	FTransform SkillWeaponSocketTransform_Active = FTransform();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	FTransform SkillWeaponSocketTransform_Inactive = FTransform();
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
 	TSubclassOf<UWeaponCameraShakeBase> DefaultCameraShakeClass_L;

@@ -10,6 +10,15 @@
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponName.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponBaseState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponIdleState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponFiringState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponUnequippedState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponReloadingState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponPumpActionReloadState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponSwitchingState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponTargetingState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponChargingState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponWaitingState.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -291,7 +300,7 @@ void UWeaponSystemComponent::PickUpWeapon()
 
 				/** suhyeon **/
 				// WeaponName을 FName으로 변환
-					FName WeaponNameAsFName = FName(*UEnum::GetValueAsString(OverlappedWeapon->GetWeaponName()));
+				FName WeaponNameAsFName = FName(*UEnum::GetValueAsString(OverlappedWeapon->GetWeaponName()));
 				//
 				// 델리게이트 호출
 				OnWeaponPickedUp.Broadcast(WeaponNameAsFName);
@@ -303,30 +312,54 @@ void UWeaponSystemComponent::PickUpWeapon()
 
 bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 {
-	for (AWeapon* WeaponInPossession : WeaponInventory)
+	if (!NewWeaponPickUp || !PlayerOwner)
 	{
-		if (WeaponInPossession->GetWeaponName() == NewWeaponPickUp->GetWeaponName())
+		return false;
+	}
+	const EWeaponName NewWeaponName = NewWeaponPickUp->GetWeaponName();
+	const int32 NewAmmo = NewWeaponPickUp->GetAmmo();
+
+	auto TryAddAmmoIfAlreadyOwned = [&](TArray<AWeapon*>& Inventory) -> bool
+	{
+		for (AWeapon* Weapon : Inventory)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Already Possess"));
-			if (WeaponInPossession->AddAmmo(NewWeaponPickUp->GetAmmo()))
+			if (Weapon && Weapon->GetWeaponName() == NewWeaponName)
 			{
-				NewWeaponPickUp->DestroyWeaponPickUp();
+				UE_LOG(LogTemp, Warning, TEXT("Already Possess"));
+				if (Weapon->AddAmmo(NewAmmo))
+				{
+					NewWeaponPickUp->DestroyWeaponPickUp();
+				}
+				return true;
 			}
-			return false;
 		}
+		return false;
+	};
+
+	if (TryAddAmmoIfAlreadyOwned(WeaponInventory) || TryAddAmmoIfAlreadyOwned(SkillWeaponInventory))
+	{
+		return false;
 	}
 
 	AWeapon* NewWeapon = NewWeaponPickUp->SpawnWeapon(PlayerOwner);
+	if (!NewWeapon) { return false; }
 	NewWeaponPickUp->DestroyWeaponPickUp();
 
-	WeaponInventory.AddUnique(NewWeapon);
-
-	if (CurrentWeapon == nullptr)
+	if (NewWeapon->IsSkillWeapon())
 	{
-		CurrentWeapon = NewWeapon;
-		CurrentWeapon->SwitchWeapon(PlayerOwner, true);
+		SkillWeaponInventory.AddUnique(NewWeapon);
+		CurrentSkillWeapon = NewWeapon;
+		CurrentSkillWeapon->EquipWeapon(PlayerOwner, true);
 	}
-
+	else
+	{
+		WeaponInventory.AddUnique(NewWeapon);
+		if (!CurrentWeapon)
+		{
+			CurrentWeapon = NewWeapon;
+			CurrentWeapon->SwitchWeapon(PlayerOwner, true);
+		}
+	}
 	return true;
 }
 
@@ -343,6 +376,19 @@ bool UWeaponSystemComponent::ObtainAmmo(ASuraWeaponPickUp* MagazinePickUp)
 			}
 		}
 	}
+
+	for (AWeapon* WeaponInPossession : SkillWeaponInventory)
+	{
+		if (WeaponInPossession->GetWeaponName() == MagazinePickUp->GetWeaponName())
+		{
+			if (WeaponInPossession->AddAmmo(MagazinePickUp->GetAmmo()))
+			{
+				MagazinePickUp->DestroyWeaponPickUp();
+				return true;
+			}
+		}
+	}
+
 	return false;
 }
 
@@ -417,11 +463,6 @@ FVector UWeaponSystemComponent::CalculateTargetRightHandPosition()
 
 FTransform UWeaponSystemComponent::GetWeaponAimSocketRelativeTransform()
 {
-
-
-
-
-
 	return FTransform();
 }
 
@@ -537,3 +578,47 @@ void UWeaponSystemComponent::EquipFirstWeapon()
 		CurrentWeaponIndex = 0;
 	}
 }
+
+#pragma region Control
+bool UWeaponSystemComponent::TryTakeControl(AWeapon* NewWeapon)
+{
+	if (!CurrentWeapon)
+	{
+		ControllingWeapon = NewWeapon;
+		return true;
+	}
+	else
+	{
+		EWeaponStateType CurrWeaponStateType = CurrentWeapon->GetCurrentState()->GetWeaponStateType();
+		if (CurrWeaponStateType == EWeaponStateType::WeaponStateType_Idle) //TODO: 다른 state일 때 스킬 어떻게 작동해야 하는지
+		{
+			CurrentWeapon->ChangeState(CurrentWeapon->WaitingState);
+			ControllingWeapon = NewWeapon;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+}
+void UWeaponSystemComponent::ReleaseControl()
+{
+	if (!CurrentWeapon)
+	{
+		ControllingWeapon = nullptr;
+	}
+	else
+	{
+		EWeaponStateType CurrWeaponStateType = CurrentWeapon->GetCurrentState()->GetWeaponStateType();
+		if (CurrWeaponStateType == EWeaponStateType::WeaponStateType_Waiting)
+		{
+			CurrentWeapon->ChangeState(CurrentWeapon->IdleState);
+			ControllingWeapon = CurrentWeapon;
+		}
+		else
+		{
+		}
+	}
+}
+#pragma endregion

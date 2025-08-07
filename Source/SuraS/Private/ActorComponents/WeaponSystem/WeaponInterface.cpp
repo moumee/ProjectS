@@ -25,3 +25,7 @@ void IWeaponInterface::SwitchToOtherWeapon()
 void IWeaponInterface::AddArmRecoil(FArmRecoilStruct* armrecoil, float AdditionalRecoilAmountX, float AdditionalRecoilAmountY, float AdditionalRecoilAmountZ)
 {
 }
+
+void IWeaponInterface::AddSkillWeaponRecoil(FArmRecoilStruct* armrecoil, float AdditionalRecoilAmountX, float AdditionalRecoilAmountY, float AdditionalRecoilAmountZ)
+{
+}

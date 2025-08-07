@@ -35,6 +35,7 @@ class USuraWeaponPumpActionReloadState;
 class USuraWeaponSwitchingState;
 class USuraWeaponTargetingState;
 class USuraWeaponChargingState;
+class USuraWeaponWaitingState;
 class UWeaponCameraShakeBase;
 
 class UNiagaraSystem;
@@ -175,7 +176,7 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 #pragma region WeaponState
-protected:
+public:
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponBaseState* CurrentState;
 	UPROPERTY(VisibleAnywhere)
@@ -194,6 +195,8 @@ protected:
 	USuraWeaponTargetingState* TargetingState;
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponChargingState* ChargingState;
+	UPROPERTY(VisibleAnywhere)
+	USuraWeaponWaitingState* WaitingState;
 public:
 	UFUNCTION()
 	USuraWeaponBaseState* GetCurrentState() const { return CurrentState; }
@@ -227,6 +230,10 @@ protected:
 protected:
 	FTransform RightHandSocketTransform;
 	FTransform RightHandSocketTransform_Crouch;
+	FTransform RightHandSocketTransform_Targeting;
+	FTransform RightHandSocketTransform_Targeting_Crouch;
+	FTransform SkillWeaponSocketTransform_Active;
+	FTransform SkillWeaponSocketTransform_Inactive;
 protected:
 	void StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMontage* WeaponFireAnimation);
 	void StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation, float CharacterAnimPlayRate, float WeaponAnimPlayRate, FName StartSection = FName());
@@ -234,6 +241,10 @@ protected:
 public:
 	FTransform GetRightHandSocketTransform() const { return RightHandSocketTransform; }
 	FTransform GetRightHandSocketTransform_Crouch() const { return RightHandSocketTransform_Crouch; }
+	FTransform GetRightHandSocketTransform_Targeting() const { return RightHandSocketTransform_Targeting; }
+	FTransform GetRightHandSocketTransform_Targeting_Crouch() const { return RightHandSocketTransform_Targeting_Crouch; }
+	FTransform GetSkillWeaponSocketTransform_Active() const { return SkillWeaponSocketTransform_Active; }
+	FTransform GetSkillWeaponSocketTransform_Inactive() const { return SkillWeaponSocketTransform_Inactive; }
 #pragma endregion
 
 #pragma region Animation/Character
@@ -335,7 +346,7 @@ protected:
 public:
 	void SwitchWeapon(ASuraPawnPlayer* TargetCharacter, bool bEquip);
 	void EndWeaponSwitch(ASuraPawnPlayer* TargetCharacter, bool bEquip);
-	void EquipWeapon(ASuraPawnPlayer* TargetCharacter);
+	void EquipWeapon(ASuraPawnPlayer* TargetCharacter, bool bActivateDirectly = false);
 	void UnequipWeapon(ASuraPawnPlayer* TargetCharacter);
 	void SetInputActionBinding();
 	void ResetInputActionBinding();
@@ -399,16 +410,12 @@ protected:
 	UWeaponAimUIWidget* AimUIWidget;
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "AmmoCounterWidget")
 	TSubclassOf<UAmmoCounterWidget> AmmoCounterWidgetClass;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AmmoCounterWidget")
-	UWidgetComponent* AmmoCounterWidgetComponent;
-
+	UWidgetComponent* AmmoCounterWidgetComponent; //TODO: 삭제
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AmmoCounterWidget")
 	UAmmoCounterWidget* AmmoCounterWidget;
-
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "TargetMarkerWidget")
 	TSubclassOf<UUserWidget> TargetMarkerWidgetClass;
-
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "UTargetingSkillWidget")
 	TSubclassOf<UTargetingSkillWidget> TargetingSkillWidgetClass;
 	UPROPERTY()
@@ -559,6 +566,11 @@ protected:
 
 #pragma region Skill/Targeting
 protected:
+	bool bIsSkillWeapon = false;
+	bool bAllowNormalFireForSkillWeapon = false;
+public:
+	bool IsSkillWeapon() const { return bIsSkillWeapon; }
+protected:
 	bool bCanUseTargetingSkill = true;
 	float TargetingSkillCoolDown = 3.f;
 	float MaxTargetingTime = 10.f;
@@ -572,6 +584,9 @@ protected:
 	float TargetGlobalTimeScale = 1.f;
 	float TargetingGlobalTimeDilationSpeed = 1.f;
 	bool bIsGlobalTimeScaleChanging = false;
+
+	bool TryTakeControl();
+	void ReleaseControl();
 public:
 	float TargetingGlobalTimeScale = 1.f;
 	void SetGlobalTimeDilation(float targettimescale = 1.f);
@@ -629,6 +644,12 @@ public:
 	FArmRecoilStruct* GetArmRecoilInfo_LowerArm();
 #pragma endregion
 
+#pragma region Recoil/SkilWeapon
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArmRecoil")
+	FArmRecoilStruct ArmRecoil_SkillWeapon;
+	void AddSkillWeaponRecoil(FArmRecoilStruct* armrecoil = nullptr);
+#pragma endregion
 
 #pragma region Overheat
 protected:

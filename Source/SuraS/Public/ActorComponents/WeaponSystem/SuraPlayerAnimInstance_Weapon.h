@@ -93,6 +93,9 @@ protected:
 	AWeapon* CurrentWeapon;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	AWeapon* CurrentSkillWeapon;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	bool bHasWeapon = false;
 
 	//--------------------------
@@ -139,6 +142,10 @@ protected:
 	FTransform RightHandSocketTransform;
 	UPROPERTY(BlueprintReadOnly, Category = "RightHandSocket")
 	FTransform RightHandSocketTransform_Crouch;
+	UPROPERTY(BlueprintReadOnly, Category = "RightHandSocket")
+	FTransform RightHandSocketTransform_Targeting;
+	UPROPERTY(BlueprintReadOnly, Category = "RightHandSocket")
+	FTransform RightHandSocketTransform_Targeting_Crouch;
 
 	UPROPERTY(BlueprintReadOnly, Category = "RightHandSocket")
 	FTransform CurrentRightHandSocketTransform;
@@ -202,6 +209,44 @@ public:
 	void RecoverArmRecoil(float DeltaTime);
 	void UpdateArmRecoil(float DeltaTime);
 	void ConvertRecoilValueFrame();
+#pragma endregion
+
+#pragma region SkillWeaponRecoil
+protected:
+	UPROPERTY(BlueprintReadOnly, Category = "SkillWeaponSocket")
+	FTransform SkillWeaponSocketTransform_Active;
+	UPROPERTY(BlueprintReadOnly, Category = "SkillWeaponSocket")
+	FTransform SkillWeaponSocketTransform_Inactive;
+
+	UPROPERTY(BlueprintReadOnly, Category = "RightHandSocket")
+	FTransform CurrentSkillWeaponSocketTransform;
+public:
+	void UpdateSkillWeaponSocket(float DeltaTime);
+public:
+	virtual void AddSkillWeaponRecoil(FArmRecoilStruct* armrecoil = nullptr, float AdditionalRecoilAmountX = 0.f, float AdditionalRecoilAmountY = 0.f, float AdditionalRecoilAmountZ = 0.f) override;
+	void ApplySkillWeaponRecoil(float DeltaTime);
+	void RecoverSkillWeaponRecoil(float DeltaTime);
+	void UpdateSkillWeaponRecoil(float DeltaTime);
+	void ConvertSkillWeaponRecoilValueFrame();
+protected:
+	bool bIsSkillWeaponRecoiling = false;
+
+	UPROPERTY()
+	FArmRecoilStruct SkillWeaponRecoil;
+
+	FRotator TotalTargetSkillWeaponRecoil_Rot;
+	FVector TotalTargetSkillWeaponRecoil_Vec;
+
+	UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
+	FRotator CurrentSkillWeaponRecoil_Rot;
+	UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
+	FVector CurrentSkillWeaponRecoil_Vec;
+
+	UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
+	FRotator ConvertedSkillWeaponCurrentRecoil_Rot;
+	UPROPERTY(BlueprintReadOnly, Category = "ArmRecoil")
+	FVector ConvertedSkillWeaponCurrentRecoil_Vec;
+
 #pragma endregion
 
 #pragma region Crouch
