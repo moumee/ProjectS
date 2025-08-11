@@ -75,6 +75,8 @@ void ASuraEnemyProjectile::InitializeProjectile()
 		M_InitialRadius = ProjectileAttributeData->InitialRadius;
 		M_ExplosionRadius = ProjectileAttributeData->ExplosionRadius;
 		M_HomingAccelerationMagnitude = ProjectileAttributeData->HomingAccelerationMagnitude;
+		M_DestroyDurationAfterLaunch = ProjectileAttributeData->DestroyDurationAfterLaunch;
+		M_DestroyDurationAfterHit = ProjectileAttributeData->DestroyDurationAfterHit;
 	}
 	
 	CollisionComp->SetSphereRadius(M_InitialRadius);
@@ -104,6 +106,22 @@ void ASuraEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 		Player->TakeDamage(DamageData, ProjectileOwner);
 
 		Destroy();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("hit with other"));
+
+		FTimerHandle DestroyHandle;
+	
+		GetWorldTimerManager().SetTimer(
+			DestroyHandle,
+			FTimerDelegate::CreateLambda([&]()
+			{
+				Destroy();
+			}),
+			M_DestroyDurationAfterHit,
+			false
+		);
 	}
 
 	/*if (OtherActor != nullptr && OtherActor != ProjectileOwner) 
@@ -139,6 +157,22 @@ void ASuraEnemyProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, A
 
 		Destroy();
 	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("overlapped with other"));
+
+		FTimerHandle DestroyHandle;
+	
+		GetWorldTimerManager().SetTimer(
+			DestroyHandle,
+			FTimerDelegate::CreateLambda([&]()
+			{
+				Destroy();
+			}),
+			M_DestroyDurationAfterHit,
+			false
+		);
+	}
 }
 
 void ASuraEnemyProjectile::ApplyDamage(AActor* OtherActor, float TheDamageAmount, EDamageType DamageType, bool bCanForceDamage)
@@ -168,5 +202,16 @@ void ASuraEnemyProjectile::LaunchProjectileWithVelocity(const FVector& Velocity)
 {
 	ProjectileMovement->Velocity = Velocity;
 	ProjectileMovement->Activate();
-}
 
+	FTimerHandle DestroyHandle;
+	
+	GetWorldTimerManager().SetTimer(
+		DestroyHandle,
+		FTimerDelegate::CreateLambda([&]()
+		{
+			Destroy();
+		}),
+		M_DestroyDurationAfterLaunch,
+		false
+	);
+}

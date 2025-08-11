@@ -42,6 +42,8 @@ protected:
 	float M_InitialRadius;
 	float M_ExplosionRadius;
 	float M_HomingAccelerationMagnitude;
+	float M_DestroyDurationAfterLaunch;
+	float M_DestroyDurationAfterHit;
 
 public:	
 	// Sets default values for this actor's properties
@@ -55,6 +57,8 @@ public:
 	virtual void SetOwner(AActor* TheOwner) override;
 	
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
+
+	UNiagaraComponent* GetNiagaraComponent() const { return NiagaraComponent; }
 
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);

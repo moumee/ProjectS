@@ -3,6 +3,7 @@
 
 #include "Weapons/Projectiles/EnemyProjectileRifleBullet.h"
 
+#include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 
 AEnemyProjectileRifleBullet::AEnemyProjectileRifleBullet()
@@ -24,5 +25,26 @@ void AEnemyProjectileRifleBullet::BeginPlay()
 			FRotator::ZeroRotator,
 			EAttachLocation::KeepRelativeOffset,
 			true);
+
+		GetNiagaraComponent()->Activate();
+	}
+}
+
+void AEnemyProjectileRifleBullet::ActivateShootingEffect()
+{
+	if (ShootingEffect)
+	{
+		GetNiagaraComponent()->Deactivate();
+		
+		UNiagaraFunctionLibrary::SpawnSystemAttached(
+			ShootingEffect,
+			ProjectileMesh,
+			NAME_None,
+			FVector::ZeroVector,
+			FRotator::ZeroRotator,
+			EAttachLocation::KeepRelativeOffset,
+			true);
+
+		GetNiagaraComponent()->Activate();
 	}
 }

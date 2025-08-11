@@ -26,4 +26,6 @@ protected:
 
 public:
 	AEnemyProjectileRifleBullet();
+
+	void ActivateShootingEffect();
 };
