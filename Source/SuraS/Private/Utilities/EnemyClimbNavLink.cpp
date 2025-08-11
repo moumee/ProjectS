@@ -52,7 +52,7 @@ void  AEnemyClimbNavLink::OnReceiveSmartLinkReached(AActor* Agent, const FVector
 		CachedEnemy->GetAIController()->GetBlackboardComponent()->SetValueAsVector("TargetLocation", Destination); // to straighten the climbing rotation
 		
 		FRotator TargetYawRotation = UKismetMathLibrary::FindLookAtRotation(GetActorTransform().TransformPosition(PointLinks[0].Left), GetActorTransform().TransformPosition(PointLinks[0].Right));
-		FRotator TargetRotation = FRotator(Enemy->GetActorRotation().Pitch, TargetYawRotation.Yaw, Enemy->GetActorRotation().Roll);
+		FRotator TargetRotation = FRotator(0, TargetYawRotation.Yaw, 0);
 
 		CachedEnemy->GetAIController()->GetBlackboardComponent()->SetValueAsRotator("TargetRotation", TargetRotation); // to straighten the climbing rotation
 		
