@@ -5,7 +5,7 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "Weapons/Firearms/SuraFirearmRifle.h"
-#include "Weapons/Projectiles/SuraEnemyProjectile.h"
+#include "Weapons/Projectiles/EnemyProjectileRifleBullet.h"
 
 ASuraCharacterEnemyRifle::ASuraCharacterEnemyRifle()
 {
@@ -39,11 +39,11 @@ void ASuraCharacterEnemyRifle::Attack(ASuraPawnPlayer* Player)
 		FActorSpawnParameters ActorSpawnParams;
 		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		ASuraEnemyProjectile* Projectile = GetWorld()->SpawnActor<ASuraEnemyProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+		AEnemyProjectileRifleBullet* Projectile = GetWorld()->SpawnActor<AEnemyProjectileRifleBullet>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 
 		Projectile->SetOwner(this);
 
-		UE_LOG(LogTemp, Error, TEXT("Player Velocity: %f, %f, %f"), Player->GetVelocity().X, Player->GetVelocity().Y, Player->GetVelocity().Z);
+		// UE_LOG(LogTemp, Error, TEXT("Player Velocity: %f, %f, %f"), Player->GetVelocity().X, Player->GetVelocity().Y, Player->GetVelocity().Z);
 		
 		FVector LaunchVelocity;
 		float TimeToTarget = FVector::Dist(GetActorLocation(), Player->GetActorLocation()) / Projectile->GetProjectileMovement()->InitialSpeed;

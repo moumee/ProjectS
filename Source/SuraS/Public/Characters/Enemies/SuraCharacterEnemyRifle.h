@@ -6,7 +6,7 @@
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "SuraCharacterEnemyRifle.generated.h"
 
-class ASuraFirearmRifle;
+// class ASuraFirearmRifle;
 /**
  * 
  */
@@ -25,7 +25,7 @@ public:
 	ASuraCharacterEnemyRifle();
 
 	UPROPERTY(EditAnywhere, Category = "Projectile")
-	TSubclassOf<class ASuraEnemyProjectile> ProjectileClass;
+	TSubclassOf<class AEnemyProjectileRifleBullet> ProjectileClass;
 
 	/*UPROPERTY(EditAnywhere, Category = "Firearm")
 	TSubclassOf<class ASuraFirearmRifle> RifleClass;*/

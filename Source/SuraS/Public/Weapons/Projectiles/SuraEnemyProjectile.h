@@ -9,6 +9,8 @@
 #include "Enumerations/EDamageType.h"
 #include "SuraEnemyProjectile.generated.h"
 
+class UNiagaraComponent;
+
 UCLASS()
 class SURAS_API ASuraEnemyProjectile : public AActor
 {
@@ -28,6 +30,9 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Projectile")
 	USphereComponent* CollisionComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Niagara")
+	UNiagaraComponent* NiagaraComponent;
+
 	UPROPERTY(VisibleAnywhere)
 	AActor* ProjectileOwner;
 	
@@ -46,8 +51,8 @@ public:
 	FDataTableRowHandle EnemyProjectileAttributesDT;
 
 	void InitializeProjectile();
-	
-	void SetOwner(AActor* TheOwner);
+
+	virtual void SetOwner(AActor* TheOwner) override;
 	
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 
@@ -61,7 +66,7 @@ public:
 
 	void SetHomingTarget(const AActor* Target);
 
-	void LaunchProjectile();
+	virtual void LaunchProjectile();
 
-	void LaunchProjectileWithVelocity(const FVector& Velocity);
+	virtual void LaunchProjectileWithVelocity(const FVector& Velocity);
 };
