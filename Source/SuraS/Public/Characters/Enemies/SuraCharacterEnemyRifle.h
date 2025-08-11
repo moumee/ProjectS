@@ -6,6 +6,7 @@
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "SuraCharacterEnemyRifle.generated.h"
 
+class AEnemyProjectileRifleBullet;
 // class ASuraFirearmRifle;
 /**
  * 
@@ -18,6 +19,9 @@ class SURAS_API ASuraCharacterEnemyRifle : public ASuraCharacterEnemyBase
 	/*UPROPERTY()
 	ASuraFirearmRifle* Firearm;*/
 
+	UPROPERTY()
+	AEnemyProjectileRifleBullet* Projectile;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -29,6 +33,10 @@ public:
 
 	/*UPROPERTY(EditAnywhere, Category = "Firearm")
 	TSubclassOf<class ASuraFirearmRifle> RifleClass;*/
+
+	void SpawnProjectile();
+
+	void SetProjectilScale(float scale);
 
 	virtual void Attack(ASuraPawnPlayer* Player) override;
 };
