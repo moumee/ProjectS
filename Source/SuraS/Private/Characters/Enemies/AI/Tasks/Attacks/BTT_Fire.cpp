@@ -11,6 +11,7 @@
 UBTT_Fire::UBTT_Fire(FObjectInitializer const& ObjectInitializer)
 {
 	NodeName = "Fire";
+	bNotifyTick = true;
 }
 
 EBTNodeResult::Type UBTT_Fire::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -19,12 +20,36 @@ EBTNodeResult::Type UBTT_Fire::ExecuteTask(UBehaviorTreeComponent& OwnerComp, ui
 	{
 		if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
 		{
-			Enemy->Attack(Player);
+			OnAttackMontageEnded.BindUObject(this, &UBTT_Fire::OnAttackEnded);
 
-			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-			return EBTNodeResult::Succeeded;
+			UAnimInstance* const EnemyAnimInstance = Enemy->GetMesh()->GetAnimInstance();
+			UAnimMontage* ChosenMontage = Enemy->ChooseRandomAttackMontage();
+
+			EnemyAnimInstance->Montage_Play(ChosenMontage);
+
+			IsAttacking = true;
+			// Enemy->Attack(Player);
+
+			EnemyAnimInstance->Montage_SetBlendingOutDelegate(OnAttackMontageEnded); // montage interrupted
+			EnemyAnimInstance->Montage_SetEndDelegate(OnAttackMontageEnded); // montage ended
 		}
 	}
 
-	return EBTNodeResult::Failed;
+	return EBTNodeResult::InProgress;
+}
+
+void UBTT_Fire::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
+{
+	Super::TickTask(OwnerComp, NodeMemory, DeltaSeconds);
+
+	if (!IsAttacking)
+	{
+		// Target->GetAttackTokensComponent()->ReturnAttackToken(1);
+		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+	}
+}
+
+void UBTT_Fire::OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted)
+{
+	IsAttacking = false;
 }

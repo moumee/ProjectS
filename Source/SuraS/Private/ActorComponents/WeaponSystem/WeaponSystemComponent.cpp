@@ -492,12 +492,17 @@ void UWeaponSystemComponent::SwitchToPreviousWeapon()
 {
 	if (WeaponInventory.Num() > 1)
 	{
+		const int32 PrevIndex = CurrentWeaponIndex;
+		
 		CurrentWeaponIndex--;
 		if (CurrentWeaponIndex < 0)
 		{
 			CurrentWeaponIndex = WeaponInventory.Num() + CurrentWeaponIndex;
 		}
 		ChangeWeapon(CurrentWeaponIndex);
+
+		UE_LOG(LogTemp, Warning, TEXT("Broadcasting weapon switch: %d -> %d"), PrevIndex, CurrentWeaponIndex);
+		OnWeaponSwitched.Broadcast(PrevIndex, CurrentWeaponIndex);
 	}
 }
 
@@ -505,8 +510,13 @@ void UWeaponSystemComponent::SwitchToNextWeapon()
 {
 	if (WeaponInventory.Num() > 1)
 	{
+		const int32 PrevIndex = CurrentWeaponIndex;
+		
 		CurrentWeaponIndex = (CurrentWeaponIndex + 1) % WeaponInventory.Num();
 		ChangeWeapon(CurrentWeaponIndex);
+
+		UE_LOG(LogTemp, Warning, TEXT("Broadcasting weapon switch: %d -> %d"), PrevIndex, CurrentWeaponIndex);
+		OnWeaponSwitched.Broadcast(PrevIndex, CurrentWeaponIndex);
 	}
 }
 
@@ -514,10 +524,11 @@ void UWeaponSystemComponent::SwitchToIndex1()
 {
 	if (WeaponInventory.IsValidIndex(0) && CurrentWeaponIndex != 0)
 	{
+		const int32 PrevIndex = CurrentWeaponIndex;
 		CurrentWeaponIndex = 0;
 		ChangeWeapon(CurrentWeaponIndex);
 
-		OnWeaponSwitched.Broadcast(CurrentWeaponIndex);
+		OnWeaponSwitched.Broadcast(PrevIndex, CurrentWeaponIndex);
 	}
 }
 
@@ -525,10 +536,11 @@ void UWeaponSystemComponent::SwitchToIndex2()
 {
 	if (WeaponInventory.IsValidIndex(1) && CurrentWeaponIndex != 1)
 	{
+		const int32 PrevIndex = CurrentWeaponIndex;
 		CurrentWeaponIndex = 1;
 		ChangeWeapon(CurrentWeaponIndex);
 
-		OnWeaponSwitched.Broadcast(CurrentWeaponIndex);
+		OnWeaponSwitched.Broadcast(PrevIndex,CurrentWeaponIndex);
 	}
 }
 
@@ -536,10 +548,11 @@ void UWeaponSystemComponent::SwitchToIndex3()
 {
 	if (WeaponInventory.IsValidIndex(2) && CurrentWeaponIndex != 2)
 	{
+		const int32 PrevIndex = CurrentWeaponIndex;
 		CurrentWeaponIndex = 2;
 		ChangeWeapon(CurrentWeaponIndex);
 
-		OnWeaponSwitched.Broadcast(CurrentWeaponIndex);
+		OnWeaponSwitched.Broadcast(PrevIndex, CurrentWeaponIndex);
 	}
 }
 

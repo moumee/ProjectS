@@ -27,11 +27,11 @@ void ASuraCharacterEnemyBombard::BeginPlay()
 	EnemyWeapon = Firearm;
 }
 
-void ASuraCharacterEnemyBombard::Attack(const ASuraPawnPlayer* Player)
+void ASuraCharacterEnemyBombard::Attack(ASuraPawnPlayer* Player)
 {
 	if (!AttackAnimations.IsEmpty())
 	{
-		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
+		UAnimInstance* EnemyAnimInstance = GetMesh()->GetAnimInstance();
 		EnemyAnimInstance->Montage_Play(GetRandomAnimationMontage(AttackAnimations));
 
 		Firearm->Fire(this, Player);

@@ -2,6 +2,9 @@
 
 
 #include "ActorComponents/UISystem/ACPlayerHudManager.h"
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
+#include "Characters/PawnBAsePlayer/SuraPawnPlayer.h"
+#include "UI/PlayerHUD.h"
 
 // Sets default values for this component's properties
 UACPlayerHUDManager::UACPlayerHUDManager()
@@ -20,7 +23,13 @@ void UACPlayerHUDManager::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-	
+	ASuraPawnPlayer* SuraPawnPlayer = Cast<ASuraPawnPlayer>(GetOwner());  // GetOwningPlayerPawn()은 ActorComponent에선 사용 불가
+	if (SuraPawnPlayer)
+	{
+		WeaponSystemComponent = SuraPawnPlayer->GetWeaponSystemComponent();
+	}
+
+	PlayerHUDWidget->InitializeHUD();
 }
 
 
@@ -41,4 +50,5 @@ void UACPlayerHUDManager::SetUIManager(UACUIMangerComponent* UIMangerComponent)
 {
 	UIManager = UIMangerComponent;
 }
+
 

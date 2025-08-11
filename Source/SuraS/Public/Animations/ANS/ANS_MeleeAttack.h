@@ -15,9 +15,10 @@ class SURAS_API UANS_MeleeAttack : public UAnimNotifyState
 {
 	GENERATED_BODY()
 
-	ASuraCharacterEnemyBase* Enemy;
+	UPROPERTY()
+	ASuraCharacterEnemyBase* CachedEnemy;
 
-	FORCEINLINE ASuraCharacterEnemyBase* GetEnemyChar() const { return Enemy; }
+	FORCEINLINE ASuraCharacterEnemyBase* GetEnemyChar() const { return CachedEnemy; }
 
 	bool bCanInflictDamage = true;
 

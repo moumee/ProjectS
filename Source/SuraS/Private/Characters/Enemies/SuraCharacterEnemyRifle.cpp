@@ -3,7 +3,9 @@
 
 #include "Characters/Enemies/SuraCharacterEnemyRifle.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "Weapons/Firearms/SuraFirearmRifle.h"
+#include "Weapons/Projectiles/SuraEnemyProjectile.h"
 
 ASuraCharacterEnemyRifle::ASuraCharacterEnemyRifle()
 {
@@ -14,7 +16,7 @@ void ASuraCharacterEnemyRifle::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Firearm = GetWorld()->SpawnActorDeferred<ASuraFirearmRifle>(RifleClass, GetActorTransform(), this);
+	/*Firearm = GetWorld()->SpawnActorDeferred<ASuraFirearmRifle>(RifleClass, GetActorTransform(), this);
 	Firearm->InitializeFirearem(this, 150, 30);
 	Firearm->FinishSpawning(GetActorTransform(), true);
 
@@ -24,21 +26,42 @@ void ASuraCharacterEnemyRifle::BeginPlay()
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 	Firearm->AttachToComponent(GetMesh(), AttachmentRules, FName(TEXT("Gun")));
 
-	EnemyWeapon = Firearm;
+	EnemyWeapon = Firearm;*/
 }
 
-void ASuraCharacterEnemyRifle::Attack(const ASuraPawnPlayer* Player)
+void ASuraCharacterEnemyRifle::Attack(ASuraPawnPlayer* Player)
 {
-	if (!AttackAnimations.IsEmpty())
+	if (ProjectileClass)
+	{
+		const FVector SpawnLocation = GetMesh()->GetSocketLocation(FName(TEXT("Hole")));
+		const FRotator SpawnRotation = (Player->GetActorLocation() - SpawnLocation).Rotation();
+
+		FActorSpawnParameters ActorSpawnParams;
+		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		ASuraEnemyProjectile* Projectile = GetWorld()->SpawnActor<ASuraEnemyProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+
+		Projectile->SetOwner(this);
+
+		UE_LOG(LogTemp, Error, TEXT("Player Velocity: %f, %f, %f"), Player->GetVelocity().X, Player->GetVelocity().Y, Player->GetVelocity().Z);
+		
+		FVector LaunchVelocity;
+		float TimeToTarget = FVector::Dist(GetActorLocation(), Player->GetActorLocation()) / Projectile->GetProjectileMovement()->InitialSpeed;
+		
+		UGameplayStatics::SuggestProjectileVelocity_MovingTarget(this, LaunchVelocity, SpawnLocation, Player, FVector(0.f, 0.f, 80.f), 0.f, TimeToTarget);
+		
+		Projectile->LaunchProjectileWithVelocity(LaunchVelocity);
+	}
+	
+	/*if (!AttackAnimations.IsEmpty())
 	{
 		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
 		EnemyAnimInstance->Montage_Play(GetRandomAnimationMontage(AttackAnimations));
 
-		Firearm->Fire(this, Player);
+		// Firearm->Fire(this, Player);
 	}
-	
 	else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("not found"));
-	}
+	}*/
 }

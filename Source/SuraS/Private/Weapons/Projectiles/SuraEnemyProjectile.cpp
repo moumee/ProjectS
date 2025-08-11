@@ -3,6 +3,7 @@
 
 #include "Weapons/Projectiles/SuraEnemyProjectile.h"
 
+#include "Characters/PawnBAsePlayer/SuraPawnPlayer.h"
 #include "Interfaces/Damageable.h"
 #include "Structures/DamageData.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
@@ -42,7 +43,6 @@ ASuraEnemyProjectile::ASuraEnemyProjectile()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->bAutoActivate = false;
-	ProjectileMovement->ProjectileGravityScale = 0.f;
 
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh"));
 	ProjectileMesh->SetupAttachment(RootComponent);
@@ -75,7 +75,8 @@ void ASuraEnemyProjectile::InitializeProjectile()
 	
 	CollisionComp->SetSphereRadius(M_InitialRadius);
 
-	CollisionComp->OnComponentHit.AddDynamic(this, &ASuraEnemyProjectile::OnHit);
+	// CollisionComp->OnComponentHit.AddDynamic(this, &ASuraEnemyProjectile::OnHit);
+	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraEnemyProjectile::OnBeginOverlap);
 }
 
 void ASuraEnemyProjectile::SetOwner(AActor* TheOwner)
@@ -85,9 +86,23 @@ void ASuraEnemyProjectile::SetOwner(AActor* TheOwner)
 
 void ASuraEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("hit"));
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("hit"));
 
-	if (OtherActor != nullptr && OtherActor != ProjectileOwner) 
+	// UE_LOG(LogTemp, Warning, TEXT("hit actor: %s"), *OtherActor->GetName());
+
+	if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OtherActor))
+	{
+		FDamageData DamageData;
+		DamageData.DamageAmount = M_DamageAmount;
+		DamageData.DamageType = EDamageType::Projectile;
+		DamageData.bCanForceDamage = false;
+		
+		Player->TakeDamage(DamageData, ProjectileOwner);
+
+		Destroy();
+	}
+
+	/*if (OtherActor != nullptr && OtherActor != ProjectileOwner) 
 	{
 		if (OtherActor != this && OtherComp != nullptr && OtherComp->IsSimulatingPhysics())
 			OtherComp->AddImpulseAtLocation(GetVelocity() * 100.f, GetActorLocation());
@@ -95,7 +110,7 @@ void ASuraEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 		ApplyDamage(OtherActor, M_DamageAmount, EDamageType::Projectile, false);
 
 		Destroy();
-	}
+	}*/
 	/*else if (OtherActor != this && OtherComp != nullptr && OtherComp->IsSimulatingPhysics()) 
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.f, GetActorLocation());
@@ -104,16 +119,33 @@ void ASuraEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 	}*/
 }
 
+void ASuraEnemyProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("overlap"));
+	
+	if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OtherActor))
+	{
+		FDamageData DamageData;
+		DamageData.DamageAmount = M_DamageAmount;
+		DamageData.DamageType = EDamageType::Projectile;
+		DamageData.bCanForceDamage = false;
+
+		OverlappedComp->AddImpulseAtLocation(GetVelocity() * 500.f, GetActorLocation());
+		Player->TakeDamage(DamageData, ProjectileOwner);
+
+		Destroy();
+	}
+}
+
 void ASuraEnemyProjectile::ApplyDamage(AActor* OtherActor, float TheDamageAmount, EDamageType DamageType, bool bCanForceDamage)
 {
-	FDamageData Damage;
-	Damage.DamageAmount = TheDamageAmount;
-	Damage.DamageType = DamageType;
-	Damage.bCanForceDamage = bCanForceDamage;
+	FDamageData DamageData;
+	DamageData.DamageAmount = TheDamageAmount;
+	DamageData.DamageType = DamageType;
+	DamageData.bCanForceDamage = bCanForceDamage;
 
-	if (OtherActor->GetClass()->ImplementsInterface(UDamageable::StaticClass()))
-		Cast<IDamageable>(OtherActor)->TakeDamage(Damage, this->ProjectileOwner);
-
+	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OtherActor))
+		Player->TakeDamage(DamageData, ProjectileOwner);
 }
 
 void ASuraEnemyProjectile::SetHomingTarget(const AActor* Target)
@@ -127,3 +159,10 @@ void ASuraEnemyProjectile::LaunchProjectile()
 {
 	ProjectileMovement->Activate();
 }
+
+void ASuraEnemyProjectile::LaunchProjectileWithVelocity(const FVector& Velocity)
+{
+	ProjectileMovement->Velocity = Velocity;
+	ProjectileMovement->Activate();
+}
+

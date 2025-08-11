@@ -106,15 +106,22 @@ private:
 	UWidgetAnimation* Slot2_BottomToTop;
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
 	UWidgetAnimation* Slot2_TopToCenter;
+
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* WeaponInventoryNum;
 	
 	// 배열로 정리
-	TArray<UOverlay*> WeaponSlots;
-	TArray<UImage*> WeaponImages;
+	// TArray<UOverlay*> WeaponSlots;
+	// TArray<UImage*> WeaponImages;
 	TArray<int32> WeaponIndices; // WeaponInventory에서 가져온 무기 인덱스
 
 	int32 CurrentWeaponIndex = 0; // 인벤토리 기준 현재 무기 인덱스
 
 	UWeaponSystemComponent* WeaponSystemComponent = nullptr;
+
+	// Animation 키 -> 애니메이션 포인터 매핑
+	UPROPERTY()
+	TMap<FString, UWidgetAnimation*> AnimationMap;
 
 
 
@@ -125,7 +132,18 @@ public:
 	// weaponslot의 위치를 바꾸는 함수.
 	// 애니메이션 함수.
 	UFUNCTION()
-	void OnWeaponSwitchAnim(int32 NewIndex);
+	void OnWeaponSwitchAnim(int32 PrevIndex, int32 NewIndex);
+
+	UFUNCTION()
+	void InitializeHUD() const;
+
+	UFUNCTION()
+	void UpdatePickup(FName WeaponName);
+
+	int32 GetWeaponCount() const;
+	void HandleWeaponSlotUIUpdate(int32 PrevIndex, int32 NewIndex);
+	void UpdateWeaponSlotUIByInventoryOrder();
+
 
 #pragma endregion
 };

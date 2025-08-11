@@ -15,8 +15,8 @@ class SURAS_API UACPlayerAttackTokens : public UActorComponent
 	int _EnemyAttackTokens = 8;
 	int _MaxEnemyAttackTokens = 8;
 
-	int _EnemyPursuitTokens = 6;
-	int _MaxEnemyPursuitTokens = 6;
+	int _EnemyPursuitTokens = 8;
+	int _MaxEnemyPursuitTokens = 8;
 
 public:
 	// Sets default values for this component's properties

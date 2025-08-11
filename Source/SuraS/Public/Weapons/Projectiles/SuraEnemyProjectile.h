@@ -48,13 +48,20 @@ public:
 	void InitializeProjectile();
 	
 	void SetOwner(AActor* TheOwner);
+	
+	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	UFUNCTION()
+	void OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	void ApplyDamage(AActor* OtherActor, float TheDamageAmount, EDamageType DamageType, bool bCanForceDamage);
 
 	void SetHomingTarget(const AActor* Target);
 
 	void LaunchProjectile();
+
+	void LaunchProjectileWithVelocity(const FVector& Velocity);
 };

@@ -79,8 +79,7 @@ void AEnemyBaseAIController::SetupPerceptionSystem()
 
 void AEnemyBaseAIController::OnTargetSighted(AActor* SeenTarget, FAIStimulus const Stimulus)
 {
-	if (GetCurrentState() != EEnemyStates::Pursue && GetCurrentState() != EEnemyStates::Attacking && GetCurrentState() != EEnemyStates::Climbing)
-		SetStateToChaseOrPursue(SeenTarget);
+	SetStateToChaseOrPursue(SeenTarget);
 }
 
 void AEnemyBaseAIController::UpdateCurrentState(EEnemyStates NewState)
@@ -91,22 +90,27 @@ void AEnemyBaseAIController::UpdateCurrentState(EEnemyStates NewState)
 
 void AEnemyBaseAIController::SetStateToChaseOrPursue(AActor* TargetActor)
 {
-	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(TargetActor))
+	
+	
+	if (GetCurrentState() != EEnemyStates::Pursue && GetCurrentState() != EEnemyStates::Attacking && GetCurrentState() != EEnemyStates::Climbing)
 	{
-		GetBlackboardComponent()->SetValueAsObject("AttackTarget", Player);
+		if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(TargetActor))
+		{
+			GetBlackboardComponent()->SetValueAsObject("AttackTarget", Player);
 
-		int PursuitIndex = Player->GetAttackTokensComponent()->ReservePursuitToken(1);
+			int PursuitIndex = Player->GetAttackTokensComponent()->ReservePursuitToken(1);
 		
-		if (PursuitIndex != -1)
-		{
-			PursuitIndex = Player->GetAttackTokensComponent()->GetMaxEnemyPursuitTokens() - PursuitIndex - 1;
+			if (PursuitIndex != -1)
+			{
+				PursuitIndex = Player->GetAttackTokensComponent()->GetMaxEnemyPursuitTokens() - PursuitIndex - 1;
 				
-			GetBlackboardComponent()->SetValueAsInt("PursuitIndex", PursuitIndex);
-			UpdateCurrentState(EEnemyStates::Pursue);
-		}
-		else
-		{
-			UpdateCurrentState(EEnemyStates::Chase);
+				GetBlackboardComponent()->SetValueAsInt("PursuitIndex", PursuitIndex);
+				UpdateCurrentState(EEnemyStates::Pursue);
+			}
+			else
+			{
+				UpdateCurrentState(EEnemyStates::Chase);
+			}
 		}
 	}
 }
