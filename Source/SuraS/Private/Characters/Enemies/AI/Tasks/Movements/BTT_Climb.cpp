@@ -198,9 +198,7 @@ void UBTT_Climb::Move(UBehaviorTreeComponent& OwnerComp) const
 	CachedEnemy->SetActorRotation(FMath::RInterpTo(CachedEnemy->GetActorRotation(), TargetRotation, GetWorld()->GetDeltaSeconds(), 15.f));
 	
 	if (FVector::Dist(TargetLocation, CachedEnemy->GetActorLocation()) > 2.f)
-	{
 		CachedEnemy->AddMovementInput((TargetLocation - CachedEnemy->GetActorLocation()).GetSafeNormal());
-	}
 }
 
 void UBTT_Climb::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
@@ -210,11 +208,11 @@ void UBTT_Climb::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, 
 	TraceGroundAndWall();
 	Move(OwnerComp);
 
-	UE_LOG(LogTemp, Error, TEXT("Climbing Destination Dist: %f"), FVector::Distance(CachedEnemy->GetActorLocation(), Destination));
+	// UE_LOG(LogTemp, Error, TEXT("Climbing Destination Dist: %f"), FVector::Distance(CachedEnemy->GetActorLocation(), Destination));
 
 	if (FVector::Distance(CachedEnemy->GetActorLocation(), Destination) < ArrivalAcceptance)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Climbing Destination"));
+		// UE_LOG(LogTemp, Error, TEXT("Climbing Destination"));
 		bDoneClimbing = true;
 	}
 
