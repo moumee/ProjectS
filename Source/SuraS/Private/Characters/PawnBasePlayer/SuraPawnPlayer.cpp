@@ -169,6 +169,7 @@ void ASuraPawnPlayer::CheckPlayerHealth()
 	// UE_LOG(LogTemp, Display, TEXT("Checked Player Health. Current Player Health : %f"), DamageSystemComponent->GetHealth());
 	if (DamageSystemComponent->GetHealth() <= ConditionalPlayerHP)
 	{
+		OnPlayerHealthHalved.Broadcast();
 		// Reduce the number of max tokens in the AttackTokensComponent
 		AttackTokensComponent->SetMaxEnemyAttackTokens(3); // TODO: make magic numbers into variables in a data table
 		AttackTokensComponent->SetMaxEnemyPursuitTokens(3);

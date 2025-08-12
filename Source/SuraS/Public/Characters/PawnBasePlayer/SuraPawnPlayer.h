@@ -27,6 +27,8 @@ class UACUIMangerComponent;
 
 class UPlayerHUD;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerHealthHalved);
+
 UCLASS()
 class SURAS_API ASuraPawnPlayer : public APawn, public IDamageable
 {
@@ -72,6 +74,8 @@ public:
 	// SuraPawnPlayer.h - suhyeon
 	UFUNCTION(BlueprintCallable)
 	UPlayerHitWidget* GetPlayerHitWidget() const {return HitEffectWidget;}
+
+	FOnPlayerHealthHalved OnPlayerHealthHalved;
 
 protected:
 
