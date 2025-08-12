@@ -20,7 +20,7 @@ void USuraWeaponUnequippedState::EnterState(AWeapon* Weapon)
 
 	//TODO: 관련함수들 묶어서 관리하는 함수 만들기
 	Weapon->ForceStopCamModification();
-	Weapon->ActivateCrosshairWidget(false);
+	Weapon->ActivateAimUIWidget(false);
 	Weapon->ActivateAmmoCounterWidget(false);
 	Weapon->ActivateTargetingSkillWidget(false);
 }

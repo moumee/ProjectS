@@ -390,8 +390,8 @@ bool AWeapon::AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter)
 	SetAimSocketTransform();
 
 	// Set Up Widget UI Class
-	// TODO: WidgetInstance 생성은 Weapon Initialize에서만 진행하고, 키고 끄는 기능만 ActivateCrosshairWidget에서 하기
-	ActivateCrosshairWidget(true);
+	if (bIsSkillWeapon) { ActivateAimUIWidget(false); }
+	else { ActivateAimUIWidget(true); }
 	ActivateAmmoCounterWidget(true);
 	ActivateTargetingSkillWidget(true);
 
@@ -811,7 +811,7 @@ void AWeapon::ZoomIn()
 		Character->GetWeaponSystemComponent()->ZoomIn(true);
 		StartCameraSettingChange(&CamSetting_ZoomIn);
 	}
-	ActivateCrosshairWidget(false);
+	ActivateAimUIWidget(false);
 }
 
 void AWeapon::ZoomOut()
@@ -823,7 +823,7 @@ void AWeapon::ZoomOut()
 		Character->GetWeaponSystemComponent()->ZoomIn(false);
 		StartCameraSettingChange(&CamSetting_Default);
 	}
-	ActivateCrosshairWidget(true);
+	ActivateAimUIWidget(true);
 }
 
 #pragma region WeaponState
@@ -1723,7 +1723,7 @@ void AWeapon::ReloadingEnd()
 #pragma endregion
 
 #pragma region UI
-void AWeapon::ActivateCrosshairWidget(bool bflag)
+void AWeapon::ActivateAimUIWidget(bool bflag)
 {
 	if (bflag)
 	{
