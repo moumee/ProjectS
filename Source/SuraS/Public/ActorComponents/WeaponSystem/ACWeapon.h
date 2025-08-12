@@ -421,7 +421,7 @@ protected:
 	UPROPERTY()
 	UTargetingSkillWidget* TargetingSkillWidget;
 public:
-	void ActivateCrosshairWidget(bool bflag);
+	void ActivateAimUIWidget(bool bflag);
 	void ActivateAmmoCounterWidget(bool bflag);
 	void ActivateTargetingSkillWidget(bool bflag);
 	UFUNCTION(BlueprintCallable)

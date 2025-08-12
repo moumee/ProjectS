@@ -6,6 +6,7 @@
 
 USuraWeaponWaitingState::USuraWeaponWaitingState()
 {
+	WeaponStateType = EWeaponStateType::WeaponStateType_Waiting;
 }
 
 USuraWeaponWaitingState::~USuraWeaponWaitingState()
@@ -15,7 +16,7 @@ USuraWeaponWaitingState::~USuraWeaponWaitingState()
 void USuraWeaponWaitingState::EnterState(AWeapon* Weapon)
 {
 	Super::EnterState(Weapon);
-	WeaponStateType = EWeaponStateType::WeaponStateType_Waiting;
+	Weapon->ActivateAimUIWidget(false);
 }
 
 void USuraWeaponWaitingState::UpdateState(AWeapon* Weapon, float DeltaTime)
@@ -26,4 +27,5 @@ void USuraWeaponWaitingState::UpdateState(AWeapon* Weapon, float DeltaTime)
 void USuraWeaponWaitingState::ExitState(AWeapon* Weapon)
 {
 	Super::ExitState(Weapon);
+	Weapon->ActivateAimUIWidget(true);
 }

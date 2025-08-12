@@ -190,12 +190,11 @@ public:
 	AWeapon* GetCurrentSkillWeapon() { return CurrentSkillWeapon; }
 	int32 GetWeaponNum() { return WeaponInventory.Num(); }
 	int32 GetSkillWeaponNum() { return SkillWeaponInventory.Num(); }
+	bool IsCurrentSkillWeaponTargeting();
 
 	void SwitchToPreviousWeapon();
 	void SwitchToNextWeapon();
-	void SwitchToIndex1();
-	void SwitchToIndex2();
-	void SwitchToIndex3();
+	void SwitchToIndex(int32 idx);
 
 	virtual void SwitchToOtherWeapon() override;
 
