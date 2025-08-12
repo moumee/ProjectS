@@ -1109,10 +1109,18 @@ FTransform AWeapon::GetAimSocketRelativeTransform()
 #pragma region Equip/Unequip
 void AWeapon::SwitchWeapon(ASuraPawnPlayer* TargetCharacter, bool bEquip)
 {
-	//TODO: Reloading 중이였다면, CancelReload 해줘야함
-	if (CurrentState == ReloadingState) //TODO: Targeting 중이라면 무기 교체 불가능 해야함
+	//TODO: Targeting 중이라면 무기 교체 불가능 해야함
+
+	if (CurrentState == ReloadingState || CurrentState == PumpActionReloadingState)
 	{
 		CancelReload();
+	}
+	else if (CurrentState == FiringState)
+	{
+		BurstShotFired = 0;
+		GetWorld()->GetTimerManager().ClearTimer(SingleShotTimer);
+		GetWorld()->GetTimerManager().ClearTimer(FullAutoShotTimer);
+		GetWorld()->GetTimerManager().ClearTimer(BurstShotTimer);
 	}
 
 	ChangeState(SwitchingState);
@@ -1532,7 +1540,6 @@ void AWeapon::StopPumpActionReload()
 	{
 		if (LeftAmmoInCurrentMag >= MaxAmmoPerMag)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Why1?"));
 			bFireInputDuringReload = false;
 			ChangeState(IdleState);
 		}
@@ -1559,12 +1566,10 @@ void AWeapon::StopPumpActionReload()
 	{
 		if (LeftAmmoInCurrentMag < MaxAmmoPerMag)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Why2?"));
 			StartPumpActionReload(true);
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("Why3?"));
 			ChangeState(IdleState);
 		}
 	}
@@ -1958,9 +1963,8 @@ void AWeapon::StopFullAutoShot()
 {
 	if (CurrentState == FiringState)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Ended!!!"));
+		//UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Ended!!!"));
 		GetWorld()->GetTimerManager().ClearTimer(FullAutoShotTimer);
-
 		ChangeState(IdleState);
 	}
 	else if (CurrentState == PumpActionReloadingState)
