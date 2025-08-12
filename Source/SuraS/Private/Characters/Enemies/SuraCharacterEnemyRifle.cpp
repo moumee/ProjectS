@@ -2,15 +2,18 @@
 
 
 #include "Characters/Enemies/SuraCharacterEnemyRifle.h"
-
-#include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "NiagaraComponent.h"
+#include "Structures/Enemies/EnemyAttributesData.h"
 #include "Weapons/Firearms/SuraFirearmRifle.h"
 #include "Weapons/Projectiles/EnemyProjectileRifleBullet.h"
 
 ASuraCharacterEnemyRifle::ASuraCharacterEnemyRifle()
 {
 	EnemyType = "Rifle";
+
+	
+	
 }
 
 void ASuraCharacterEnemyRifle::BeginPlay()
@@ -50,7 +53,7 @@ void ASuraCharacterEnemyRifle::SpawnProjectile()
 	}
 }
 
-void ASuraCharacterEnemyRifle::SetProjectilScale(float scale)
+void ASuraCharacterEnemyRifle::SetProjectileScale(float scale)
 {
 	if (Projectile)
 	{
@@ -70,7 +73,7 @@ void ASuraCharacterEnemyRifle::Attack(ASuraPawnPlayer* Player)
 		FVector LaunchVelocity;
 		float TimeToTarget = FVector::Dist(GetActorLocation(), Player->GetActorLocation()) / Projectile->GetProjectileMovement()->InitialSpeed;
 		
-		UGameplayStatics::SuggestProjectileVelocity_MovingTarget(this, LaunchVelocity, Projectile->GetActorLocation(), Player, FVector(0.f, 0.f, 80.f), 0.f, TimeToTarget);
+		UGameplayStatics::SuggestProjectileVelocity_MovingTarget(this, LaunchVelocity, Projectile->GetActorLocation(), Player, FVector(0.f, 0.f, 40.f), 0.f, TimeToTarget);
 		
 		Projectile->LaunchProjectileWithVelocity(LaunchVelocity);
 	}

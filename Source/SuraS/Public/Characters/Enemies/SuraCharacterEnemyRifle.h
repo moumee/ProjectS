@@ -36,7 +36,7 @@ public:
 
 	void SpawnProjectile();
 
-	void SetProjectilScale(float scale);
+	void SetProjectileScale(float scale);
 
 	virtual void Attack(ASuraPawnPlayer* Player) override;
 };
