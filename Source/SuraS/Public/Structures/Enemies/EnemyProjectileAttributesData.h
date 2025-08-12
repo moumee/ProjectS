@@ -36,4 +36,10 @@ struct SURAS_API FEnemyProjectileAttributesData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float HomingAccelerationMagnitude = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DestroyDurationAfterLaunch = 5.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DestroyDurationAfterHit = 0.1f;
 };

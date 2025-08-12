@@ -29,4 +29,8 @@ public:
 	void ReturnPursuitToken(int ReserveAmount);
 
 	FORCEINLINE int GetMaxEnemyPursuitTokens() const { return _MaxEnemyPursuitTokens; };
+
+	void SetMaxEnemyAttackTokens(int32 MaxTokens);
+
+	void SetMaxEnemyPursuitTokens(int32 MaxTokens);
 };

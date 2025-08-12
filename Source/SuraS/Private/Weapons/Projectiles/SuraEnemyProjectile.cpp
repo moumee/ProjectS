@@ -3,6 +3,7 @@
 
 #include "Weapons/Projectiles/SuraEnemyProjectile.h"
 
+#include "NiagaraComponent.h"
 #include "Characters/PawnBAsePlayer/SuraPawnPlayer.h"
 #include "Interfaces/Damageable.h"
 #include "Structures/DamageData.h"
@@ -14,13 +15,6 @@
 #define WEAPON_COLLISION ECC_EngineTraceChannel3
 #define PLAYER_COLLISION ECC_EngineTraceChannel4
 #define ENEMY_COLLISION ECC_GameTraceChannel5
-
-void ASuraEnemyProjectile::BeginPlay()
-{
-	Super::BeginPlay();
-
-	InitializeProjectile();
-}
 
 // Sets default values
 ASuraEnemyProjectile::ASuraEnemyProjectile()
@@ -50,7 +44,17 @@ ASuraEnemyProjectile::ASuraEnemyProjectile()
 	ProjectileMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 	ProjectileMesh->SetCastShadow(false);
 
+	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComp"));
+	NiagaraComponent->SetupAttachment(RootComponent);
+
 	ProjectileType = "Base";
+}
+
+void ASuraEnemyProjectile::BeginPlay()
+{
+	Super::BeginPlay();
+
+	InitializeProjectile();
 }
 
 void ASuraEnemyProjectile::InitializeProjectile()
@@ -71,6 +75,8 @@ void ASuraEnemyProjectile::InitializeProjectile()
 		M_InitialRadius = ProjectileAttributeData->InitialRadius;
 		M_ExplosionRadius = ProjectileAttributeData->ExplosionRadius;
 		M_HomingAccelerationMagnitude = ProjectileAttributeData->HomingAccelerationMagnitude;
+		M_DestroyDurationAfterLaunch = ProjectileAttributeData->DestroyDurationAfterLaunch;
+		M_DestroyDurationAfterHit = ProjectileAttributeData->DestroyDurationAfterHit;
 	}
 	
 	CollisionComp->SetSphereRadius(M_InitialRadius);
@@ -100,6 +106,22 @@ void ASuraEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 		Player->TakeDamage(DamageData, ProjectileOwner);
 
 		Destroy();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("hit with other"));
+
+		FTimerHandle DestroyHandle;
+	
+		GetWorldTimerManager().SetTimer(
+			DestroyHandle,
+			FTimerDelegate::CreateLambda([&]()
+			{
+				Destroy();
+			}),
+			0.1f,
+			false
+		);
 	}
 
 	/*if (OtherActor != nullptr && OtherActor != ProjectileOwner) 
@@ -135,6 +157,22 @@ void ASuraEnemyProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, A
 
 		Destroy();
 	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("overlapped with other"));
+
+		FTimerHandle DestroyHandle;
+	
+		GetWorldTimerManager().SetTimer(
+			DestroyHandle,
+			FTimerDelegate::CreateLambda([&]()
+			{
+				Destroy();
+			}),
+			M_DestroyDurationAfterHit,
+			false
+		);
+	}
 }
 
 void ASuraEnemyProjectile::ApplyDamage(AActor* OtherActor, float TheDamageAmount, EDamageType DamageType, bool bCanForceDamage)
@@ -164,5 +202,16 @@ void ASuraEnemyProjectile::LaunchProjectileWithVelocity(const FVector& Velocity)
 {
 	ProjectileMovement->Velocity = Velocity;
 	ProjectileMovement->Activate();
-}
 
+	FTimerHandle DestroyHandle;
+	
+	GetWorldTimerManager().SetTimer(
+		DestroyHandle,
+		FTimerDelegate::CreateLambda([&]()
+		{
+			Destroy();
+		}),
+		M_DestroyDurationAfterLaunch,
+		false
+	);
+}
