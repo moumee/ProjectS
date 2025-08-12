@@ -366,6 +366,11 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 			MeleeAttackRange = EnemyAttributesData->MeleeAttackRange;
 			MeleeAttackSphereRadius = EnemyAttributesData->MeleeAttackSphereRadius;
 
+			MinWalkSpeedVariation = EnemyAttributesData->MinWalkSpeedVariation;
+			MaxWalkSpeedVariation = EnemyAttributesData->MaxWalkSpeedVariation;
+			MinAttackRateVariation = EnemyAttributesData->MinAttackRateVariation;
+			MaxAttackRateVariation = EnemyAttributesData->MaxAttackRateVariation;
+
 			HitAnimations = EnemyAttributesData->HitAnimations;
 			DeathAnimations = EnemyAttributesData->DeathAnimations;
 			AttackAnimations = EnemyAttributesData->AttackAnimations;
