@@ -80,13 +80,17 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 		{
 			//SetAimSocket();
 			UpdateRightHandSocket(DeltaTime);
+			UpdateSkillWeaponSocket(DeltaTime);
 			SetAimPoint();
 			UpdateWeapon();
 
 			UpdateSpringDamper(DeltaTime);
 
-			UpdateArmRecoil(DeltaTime); //TODO: left right 다르게 설정해야함
+			UpdateArmRecoil(DeltaTime);
 			ConvertRecoilValueFrame();
+
+			UpdateSkillWeaponRecoil(DeltaTime);
+			ConvertSkillWeaponRecoilValueFrame();
 
 			LeftHandTransform = GetLeftHandTransform();
 			TargetLeftHandSocketTransform = GetTargetLeftHandTransfrom();
@@ -139,12 +143,21 @@ void USuraPlayerAnimInstance_Weapon::UpdateWeapon()
 				// <RightHandSocket>
 				RightHandSocketTransform = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetRightHandSocketTransform();
 				RightHandSocketTransform_Crouch = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetRightHandSocketTransform_Crouch();
+				RightHandSocketTransform_Targeting = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetRightHandSocketTransform_Targeting();
+				RightHandSocketTransform_Targeting_Crouch = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetRightHandSocketTransform_Targeting_Crouch();
 
 				// <Recoil>
 				ArmRecoil = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo(); //TODO: 이제 AddArmRecoil에서 struct 정보 가져오기 때문에 이 줄은 없어도 될듯
 				ArmRecoil_Hand = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo_Hand();
 				ArmRecoil_UpperArm = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo_UpperArm();
 				ArmRecoil_LowerArm = *SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon()->GetArmRecoilInfo_LowerArm();
+			}
+
+			if (CurrentSkillWeapon != SuraPlayer->GetWeaponSystemComponent()->GetCurrentSkillWeapon())
+			{
+				// <SkillWeaponSocket>
+				SkillWeaponSocketTransform_Active = SuraPlayer->GetWeaponSystemComponent()->GetCurrentSkillWeapon()->GetSkillWeaponSocketTransform_Active();
+				SkillWeaponSocketTransform_Inactive = SuraPlayer->GetWeaponSystemComponent()->GetCurrentSkillWeapon()->GetSkillWeaponSocketTransform_Inactive();
 			}
 		}
 
@@ -278,11 +291,12 @@ FTransform USuraPlayerAnimInstance_Weapon::GetLeftHandTransform()
 	return SuraPlayer->GetArmMesh()->GetSocketTransform(FName("hand_l"));
 }
 
-FTransform USuraPlayerAnimInstance_Weapon::GetTargetLeftHandTransfrom()
+FTransform USuraPlayerAnimInstance_Weapon::GetTargetLeftHandTransfrom() //TODO: 수정
 {
 	if (SuraPlayer)
 	{
 		CurrentWeapon = SuraPlayer->GetWeaponSystemComponent()->GetCurrentWeapon();
+		CurrentSkillWeapon = SuraPlayer->GetWeaponSystemComponent()->GetCurrentSkillWeapon();
 		if (CurrentWeapon)
 		{
 			return CurrentWeapon->GetWeaponMesh()->GetSocketTransform(FName("LeftHand"));
@@ -295,15 +309,31 @@ FTransform USuraPlayerAnimInstance_Weapon::GetTargetLeftHandTransfrom()
 #pragma region RightHandSocket
 void USuraPlayerAnimInstance_Weapon::UpdateRightHandSocket(float DeltaTime)
 {
-	if (bIsCrouching)
+	if (CurrentWeapon && CurrentWeapon->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Waiting)
 	{
-		CurrentRightHandSocketTransform.SetRotation((FMath::RInterpTo(CurrentRightHandSocketTransform.GetRotation().Rotator(), RightHandSocketTransform_Crouch.GetRotation().Rotator(), DeltaTime, 10.f)).Quaternion());
-		CurrentRightHandSocketTransform.SetTranslation(FMath::VInterpTo(CurrentRightHandSocketTransform.GetTranslation(), RightHandSocketTransform_Crouch.GetTranslation(), DeltaTime, 10.f));
+		if (bIsCrouching)
+		{
+			CurrentRightHandSocketTransform.SetRotation((FMath::RInterpTo(CurrentRightHandSocketTransform.GetRotation().Rotator(), RightHandSocketTransform_Targeting_Crouch.GetRotation().Rotator(), DeltaTime, 10.f)).Quaternion());
+			CurrentRightHandSocketTransform.SetTranslation(FMath::VInterpTo(CurrentRightHandSocketTransform.GetTranslation(), RightHandSocketTransform_Targeting_Crouch.GetTranslation(), DeltaTime, 10.f));
+		}
+		else
+		{
+			CurrentRightHandSocketTransform.SetRotation((FMath::RInterpTo(CurrentRightHandSocketTransform.GetRotation().Rotator(), RightHandSocketTransform_Targeting.GetRotation().Rotator(), DeltaTime, 10.f)).Quaternion());
+			CurrentRightHandSocketTransform.SetTranslation(FMath::VInterpTo(CurrentRightHandSocketTransform.GetTranslation(), RightHandSocketTransform_Targeting.GetTranslation(), DeltaTime, 10.f));
+		}
 	}
 	else
 	{
-		CurrentRightHandSocketTransform.SetRotation((FMath::RInterpTo(CurrentRightHandSocketTransform.GetRotation().Rotator(), RightHandSocketTransform.GetRotation().Rotator(), DeltaTime, 10.f)).Quaternion());
-		CurrentRightHandSocketTransform.SetTranslation(FMath::VInterpTo(CurrentRightHandSocketTransform.GetTranslation(), RightHandSocketTransform.GetTranslation(), DeltaTime, 10.f));
+		if (bIsCrouching)
+		{
+			CurrentRightHandSocketTransform.SetRotation((FMath::RInterpTo(CurrentRightHandSocketTransform.GetRotation().Rotator(), RightHandSocketTransform_Crouch.GetRotation().Rotator(), DeltaTime, 10.f)).Quaternion());
+			CurrentRightHandSocketTransform.SetTranslation(FMath::VInterpTo(CurrentRightHandSocketTransform.GetTranslation(), RightHandSocketTransform_Crouch.GetTranslation(), DeltaTime, 10.f));
+		}
+		else
+		{
+			CurrentRightHandSocketTransform.SetRotation((FMath::RInterpTo(CurrentRightHandSocketTransform.GetRotation().Rotator(), RightHandSocketTransform.GetRotation().Rotator(), DeltaTime, 10.f)).Quaternion());
+			CurrentRightHandSocketTransform.SetTranslation(FMath::VInterpTo(CurrentRightHandSocketTransform.GetTranslation(), RightHandSocketTransform.GetTranslation(), DeltaTime, 10.f));
+		}
 	}
 }
 #pragma endregion
@@ -383,6 +413,102 @@ void USuraPlayerAnimInstance_Weapon::ConvertRecoilValueFrame()
 {
 	ConvertedCurrentRecoil_Rot = (RightHandSocketSpringDamperTransform.GetRotation() * CurrentRecoil_Rot.Quaternion()).Rotator();
 	ConvertedCurrentRecoil_Vec = RightHandSocketSpringDamperTransform.GetRotation().RotateVector(CurrentRecoil_Vec) + RightHandSocketSpringDamperTransform.GetTranslation();
+}
+#pragma endregion
+
+#pragma region SkillWeaponRecoil
+void USuraPlayerAnimInstance_Weapon::UpdateSkillWeaponSocket(float DeltaTime)
+{
+	//UE_LOG(LogTemp, Error, TEXT("No SkillWeapon!!!"));
+	if (!CurrentSkillWeapon) { return; }
+
+	if (CurrentSkillWeapon->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Targeting || CurrentSkillWeapon->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Firing)
+	{
+		CurrentSkillWeaponSocketTransform.SetRotation((FMath::RInterpTo(CurrentSkillWeaponSocketTransform.GetRotation().Rotator(), SkillWeaponSocketTransform_Active.GetRotation().Rotator(), DeltaTime, 8.f)).Quaternion());
+		CurrentSkillWeaponSocketTransform.SetTranslation(FMath::VInterpTo(CurrentSkillWeaponSocketTransform.GetTranslation(), SkillWeaponSocketTransform_Active.GetTranslation(), DeltaTime, 5.f));
+	}
+	else
+	{
+		CurrentSkillWeaponSocketTransform.SetRotation((FMath::RInterpTo(CurrentSkillWeaponSocketTransform.GetRotation().Rotator(), SkillWeaponSocketTransform_Inactive.GetRotation().Rotator(), DeltaTime, 4.f)).Quaternion());
+		CurrentSkillWeaponSocketTransform.SetTranslation(FMath::VInterpTo(CurrentSkillWeaponSocketTransform.GetTranslation(), SkillWeaponSocketTransform_Inactive.GetTranslation(), DeltaTime, 5.f));
+	}
+}
+void USuraPlayerAnimInstance_Weapon::AddSkillWeaponRecoil(FArmRecoilStruct* armrecoil, float AdditionalRecoilAmountX, float AdditionalRecoilAmountY, float AdditionalRecoilAmountZ)
+{
+	if (armrecoil)
+	{
+		bIsSkillWeaponRecoiling = true;
+		SkillWeaponRecoil = *armrecoil;
+		//UE_LOG(LogTemp, Warning, TEXT("Arm Recoil Added!!!"));
+
+		FRotator RandRecoil_Rot;
+		FVector RandRecoil_Vec;
+
+		RandRecoil_Rot.Roll = FMath::RandRange((ArmRecoil.Recoil_Rot.Roll + AdditionalRecoilAmountX) * ArmRecoil.RecoilRangeMin_Rot.Roll, (ArmRecoil.Recoil_Rot.Roll + AdditionalRecoilAmountX) * ArmRecoil.RecoilRangeMax_Rot.Roll);
+		RandRecoil_Rot.Pitch = FMath::RandRange((ArmRecoil.Recoil_Rot.Pitch + AdditionalRecoilAmountY) * ArmRecoil.RecoilRangeMin_Rot.Pitch, (ArmRecoil.Recoil_Rot.Pitch + AdditionalRecoilAmountY) * ArmRecoil.RecoilRangeMax_Rot.Pitch);
+		RandRecoil_Rot.Yaw = FMath::RandRange((ArmRecoil.Recoil_Rot.Yaw + AdditionalRecoilAmountZ) * ArmRecoil.RecoilRangeMin_Rot.Yaw, (ArmRecoil.Recoil_Rot.Yaw + AdditionalRecoilAmountZ) * ArmRecoil.RecoilRangeMax_Rot.Yaw);
+
+		RandRecoil_Vec.X = FMath::RandRange((ArmRecoil.Recoil_Vec.X + AdditionalRecoilAmountX) * ArmRecoil.RecoilRangeMin_Vec.X, (ArmRecoil.Recoil_Vec.X + AdditionalRecoilAmountX) * ArmRecoil.RecoilRangeMax_Vec.X);
+		RandRecoil_Vec.Y = FMath::RandRange((ArmRecoil.Recoil_Vec.Y + AdditionalRecoilAmountY) * ArmRecoil.RecoilRangeMin_Vec.Y, (ArmRecoil.Recoil_Vec.Y + AdditionalRecoilAmountY) * ArmRecoil.RecoilRangeMax_Vec.Y);
+		RandRecoil_Vec.Z = FMath::RandRange((ArmRecoil.Recoil_Vec.Z + AdditionalRecoilAmountZ) * ArmRecoil.RecoilRangeMin_Vec.Z, (ArmRecoil.Recoil_Vec.Z + AdditionalRecoilAmountZ) * ArmRecoil.RecoilRangeMax_Vec.Z);
+
+		TotalTargetSkillWeaponRecoil_Rot += RandRecoil_Rot;
+		TotalTargetSkillWeaponRecoil_Vec += RandRecoil_Vec;
+	}
+}
+void USuraPlayerAnimInstance_Weapon::ApplySkillWeaponRecoil(float DeltaTime)
+{
+	if (&SkillWeaponRecoil)
+	{
+		FRotator InterpRecoilTarget_Rot = FMath::RInterpTo(CurrentSkillWeaponRecoil_Rot, TotalTargetSkillWeaponRecoil_Rot, DeltaTime, SkillWeaponRecoil.RecoilSpeed);
+		CurrentSkillWeaponRecoil_Rot = InterpRecoilTarget_Rot;
+
+		FVector InterpRecoilTarget_Vec = FMath::VInterpTo(CurrentSkillWeaponRecoil_Vec, TotalTargetSkillWeaponRecoil_Vec, DeltaTime, SkillWeaponRecoil.RecoilSpeed);
+		CurrentSkillWeaponRecoil_Vec = InterpRecoilTarget_Vec;
+	}
+}
+void USuraPlayerAnimInstance_Weapon::RecoverSkillWeaponRecoil(float DeltaTime)
+{
+	FRotator InterpRecoilRecoverTarget_Rot = FMath::RInterpTo(TotalTargetSkillWeaponRecoil_Rot, FRotator::ZeroRotator, DeltaTime, SkillWeaponRecoil.RecoilRecoverSpeed);
+	TotalTargetSkillWeaponRecoil_Rot = InterpRecoilRecoverTarget_Rot;
+
+	FVector InterpRecoilRecoverTarget_Vec = FMath::VInterpTo(TotalTargetSkillWeaponRecoil_Vec, FVector::ZeroVector, DeltaTime, SkillWeaponRecoil.RecoilRecoverSpeed);
+	TotalTargetSkillWeaponRecoil_Vec = InterpRecoilRecoverTarget_Vec;
+
+	if (CurrentSkillWeaponRecoil_Rot.IsNearlyZero()
+		&& CurrentSkillWeaponRecoil_Vec.IsNearlyZero())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SkillWeapon Recoil has been perfectly Recovered!!!"));
+
+		TotalTargetSkillWeaponRecoil_Rot = FRotator::ZeroRotator;
+		CurrentSkillWeaponRecoil_Rot = FRotator::ZeroRotator;
+
+		TotalTargetSkillWeaponRecoil_Vec = FVector::ZeroVector;
+		CurrentSkillWeaponRecoil_Vec = FVector::ZeroVector;
+
+		bIsSkillWeaponRecoiling = false;
+	}
+}
+void USuraPlayerAnimInstance_Weapon::UpdateSkillWeaponRecoil(float DeltaTime)
+{
+	if (bIsSkillWeaponRecoiling)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("Updating Arm Recoil"));
+		ApplySkillWeaponRecoil(DeltaTime);
+		RecoverSkillWeaponRecoil(DeltaTime);
+	}
+}
+void USuraPlayerAnimInstance_Weapon::ConvertSkillWeaponRecoilValueFrame()
+{
+	//TODO: 스피링 댐퍼 적용
+	ConvertedSkillWeaponCurrentRecoil_Rot = (CurrentSkillWeaponSocketTransform.GetRotation() * CurrentSkillWeaponRecoil_Rot.Quaternion()).Rotator();
+	ConvertedSkillWeaponCurrentRecoil_Vec = CurrentSkillWeaponSocketTransform.GetRotation().RotateVector(CurrentSkillWeaponRecoil_Vec) + CurrentSkillWeaponSocketTransform.GetTranslation();
+
+	if (CurrentSkillWeapon)
+	{
+		CurrentSkillWeapon->GetWeaponMesh()->SetRelativeRotation(ConvertedSkillWeaponCurrentRecoil_Rot);
+		CurrentSkillWeapon->GetWeaponMesh()->SetRelativeLocation(ConvertedSkillWeaponCurrentRecoil_Vec);
+	}
 }
 #pragma endregion
 

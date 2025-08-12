@@ -118,7 +118,6 @@ public:
 #pragma endregion
 
 #pragma region Interaction
-
 public:
 	void PickUpWeapon();
 	bool ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp);
@@ -174,17 +173,23 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapons")
 	TArray<AWeapon*> WeaponInventory;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	AWeapon* CurrentWeapon = nullptr;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	int32 CurrentWeaponIndex = 0;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SkillWeapons")
+	TArray<AWeapon*> SkillWeaponInventory;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SkillWeapon")
+	AWeapon* CurrentSkillWeapon = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SkillWeapon")
+	int32 CurrentSkillWeaponIndex = 0;
+
 public:
 	AWeapon* GetCurrentWeapon() { return CurrentWeapon; }
-
+	AWeapon* GetCurrentSkillWeapon() { return CurrentSkillWeapon; }
 	int32 GetWeaponNum() { return WeaponInventory.Num(); }
+	int32 GetSkillWeaponNum() { return SkillWeaponInventory.Num(); }
 
 	void SwitchToPreviousWeapon();
 	void SwitchToNextWeapon();
@@ -208,4 +213,12 @@ public:
 	/** suhyeon**/
 #pragma endregion
 	
+#pragma region Control
+protected:
+	AWeapon* ControllingWeapon;
+public:
+	bool TryTakeControl(AWeapon* NewWeapon);
+	void ReleaseControl();
+
+#pragma endregion
 };
