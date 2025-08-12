@@ -41,5 +41,5 @@ struct SURAS_API FEnemyProjectileAttributesData : public FTableRowBase
 	float DestroyDurationAfterLaunch = 5.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DestroyDurationAfterHit = 0.f;
+	float DestroyDurationAfterHit = 0.1f;
 };

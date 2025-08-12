@@ -16,13 +16,6 @@
 #define PLAYER_COLLISION ECC_EngineTraceChannel4
 #define ENEMY_COLLISION ECC_GameTraceChannel5
 
-void ASuraEnemyProjectile::BeginPlay()
-{
-	Super::BeginPlay();
-
-	InitializeProjectile();
-}
-
 // Sets default values
 ASuraEnemyProjectile::ASuraEnemyProjectile()
 {
@@ -55,6 +48,13 @@ ASuraEnemyProjectile::ASuraEnemyProjectile()
 	NiagaraComponent->SetupAttachment(RootComponent);
 
 	ProjectileType = "Base";
+}
+
+void ASuraEnemyProjectile::BeginPlay()
+{
+	Super::BeginPlay();
+
+	InitializeProjectile();
 }
 
 void ASuraEnemyProjectile::InitializeProjectile()
@@ -119,7 +119,7 @@ void ASuraEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 			{
 				Destroy();
 			}),
-			M_DestroyDurationAfterHit,
+			0.1f,
 			false
 		);
 	}
