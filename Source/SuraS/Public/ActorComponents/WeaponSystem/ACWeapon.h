@@ -582,7 +582,8 @@ protected:
 	void EnableTargetingSkill(bool bflag);
 	void UpdateTargetingSkillUI();
 	float TargetGlobalTimeScale = 1.f;
-	float TargetingGlobalTimeDilationSpeed = 1.f;
+	float TargetingGlobalTimeDilationSpeed_In = 1.f;
+	float TargetingGlobalTimeDilationSpeed_Out = 1.f;
 	bool bIsGlobalTimeScaleChanging = false;
 
 	bool TryTakeControl();

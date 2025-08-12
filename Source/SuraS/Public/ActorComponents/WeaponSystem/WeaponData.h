@@ -178,13 +178,13 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	FTransform RightHandSocketTransform_Crouch = FTransform();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	FTransform RightHandSocketTransform_Targeting = FTransform();
+	FTransform RightHandSocketTransform_Targeting = FTransform(FRotator(22, -8, -89), FVector(-17, 10, 120), FVector(1, 1, 1));
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	FTransform RightHandSocketTransform_Targeting_Crouch = FTransform();
+	FTransform RightHandSocketTransform_Targeting_Crouch = FTransform(FRotator(80, -5, -97), FVector(-14, 8, 130), FVector(1, 1, 1));
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	FTransform SkillWeaponSocketTransform_Active = FTransform();
+	FTransform SkillWeaponSocketTransform_Active = FTransform(FRotator(0, 0, 0), FVector(26, 8, 160), FVector(1, 1, 1));
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	FTransform SkillWeaponSocketTransform_Inactive = FTransform();
+	FTransform SkillWeaponSocketTransform_Inactive = FTransform(FRotator(-80, 0, 0), FVector(30, -8, 160), FVector(1, 1, 1));
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
 	TSubclassOf<UWeaponCameraShakeBase> DefaultCameraShakeClass_L;
@@ -212,7 +212,9 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
 	float TargetingGlobalTimeScale = 1.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
-	float TargetingGlobalTimeDilationSpeed = 1.f;
+	float TargetingGlobalTimeDilationSpeed_In = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
+	float TargetingGlobalTimeDilationSpeed_Out = 1.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
 	float TargetingSkillCoolDown = 3.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")

@@ -271,7 +271,8 @@ void AWeapon::LoadWeaponData()
 		MaxTargetDetectionTime = WeaponData->MaxTargetDetectionTime;
 		TimeToReachMaxTargetDetectionRange = WeaponData->TimeToReachMaxTargetDetectionRange;
 		TargetingGlobalTimeScale = WeaponData->TargetingGlobalTimeScale;
-		TargetingGlobalTimeDilationSpeed = WeaponData->TargetingGlobalTimeDilationSpeed;
+		TargetingGlobalTimeDilationSpeed_In = WeaponData->TargetingGlobalTimeDilationSpeed_In;
+		TargetingGlobalTimeDilationSpeed_Out = WeaponData->TargetingGlobalTimeDilationSpeed_Out;
 		TargetingSkillCoolDown = WeaponData->TargetingSkillCoolDown;
 		MaxTargetingTime = WeaponData->MaxTargetingTime;
 
@@ -2617,8 +2618,16 @@ void AWeapon::UpdateGlobalTimeDiation(float DeltaTime)
 	if (bIsGlobalTimeScaleChanging)
 	{
 		float Current = GetWorld()->GetWorldSettings()->GetEffectiveTimeDilation();
+		float New;
+		if (TargetGlobalTimeScale <= Current)
+		{
+			New = FMath::FInterpTo(Current, TargetGlobalTimeScale, DeltaTime, TargetingGlobalTimeDilationSpeed_In);
+		}
+		else
+		{
+			New = FMath::FInterpTo(Current, TargetGlobalTimeScale, DeltaTime, TargetingGlobalTimeDilationSpeed_Out);
+		}
 
-		float New = FMath::FInterpTo(Current, TargetGlobalTimeScale, DeltaTime, TargetingGlobalTimeDilationSpeed);
 		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), New);
 
 		if (FMath::IsNearlyEqual(New, TargetGlobalTimeScale, 0.1f))
