@@ -34,7 +34,7 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	EWeaponAction RightMouseAction = EWeaponAction::WeaponAction_SingleShot;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
-	EWeaponAction SkillAction = EWeaponAction::WeaponAction_SkillToggle;
+	EWeaponAction SkillAction = EWeaponAction::WeaponAction_None;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 	TSubclassOf<class ASuraProjectile> LeftProjectileClass;
