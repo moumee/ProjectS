@@ -77,6 +77,16 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* RightMouseButtonAction;
 
+#pragma region HUD
+protected:
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "HUD")
+	UUserWidget* FPHUD;
+
+	bool bUseSceneCapture = false;
+public:
+	bool IsSceneCaptureActive();
+#pragma endregion
+
 	//---------------------------------------------------
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon)

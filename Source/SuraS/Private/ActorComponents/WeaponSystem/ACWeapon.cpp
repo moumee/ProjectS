@@ -37,6 +37,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/WidgetComponent.h"
 #include "Components/AudioComponent.h"
+#include "Components/SceneCaptureComponent2D.h"
 
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
@@ -90,6 +91,22 @@ void AWeapon::InitializeWeapon(ASuraPawnPlayer* NewCharacter)
 		CharacterAnimInstance = Character->GetArmMesh()->GetAnimInstance();
 		//InitializeCamera(Character);
 		LoadWeaponData();
+	
+		if (Character->GetWeaponSystemComponent()->IsSceneCaptureActive())
+		{
+			TInlineComponentArray<USceneComponent*> MeshComponents;
+			GetComponents<USceneComponent>(MeshComponents);
+
+			for (USceneComponent* MeshComp : MeshComponents)
+			{
+				if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(MeshComp))
+				{
+					UE_LOG(LogTemp, Error, TEXT("Weapon Mesh"));
+					Character->GetSceneCaptureComponent()->ShowOnlyComponent(PrimComp);
+					PrimComp->SetVisibleInSceneCaptureOnly(true);
+				}
+			}
+		}
 	}
 	InitializeUI();
 

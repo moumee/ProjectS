@@ -23,6 +23,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Blueprint/UserWidget.h"
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -83,6 +85,10 @@ void UWeaponSystemComponent::InitializePlayerReference()
 		}
 	}
 }
+bool UWeaponSystemComponent::IsSceneCaptureActive()
+{
+	return bUseSceneCapture;
+}
 void UWeaponSystemComponent::LoadWSCData()
 {
 	WSCData = WSCDataTableHandle.GetRow<FWeaponSystemComponentData>("");
@@ -90,6 +96,22 @@ void UWeaponSystemComponent::LoadWSCData()
 	{
 		StartingWeaponName = WSCData->StartingWeaponName;
 		StartingWeaponClass = WSCData->StartingWeaponClass;
+		bUseSceneCapture = WSCData->bUseSceneCapture;
+	}
+
+	if (bUseSceneCapture)
+	{
+		if (!PlayerOwner) { return; }
+		USceneCaptureComponent2D* FPSceneCapture = PlayerOwner->GetSceneCaptureComponent();
+		if (!FPSceneCapture) { return; }
+		FPSceneCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+		FPSceneCapture->ShowOnlyComponent(PlayerOwner->GetArmMesh());
+		FPSceneCapture->ShowOnlyComponent(PlayerOwner->GetHandsMesh());
+
+		PlayerOwner->GetArmMesh()->SetVisibleInSceneCaptureOnly(true);
+		PlayerOwner->GetHandsMesh()->SetVisibleInSceneCaptureOnly(true);
+
+		if (FPHUD) { FPHUD->AddToViewport(); }
 	}
 }
 void UWeaponSystemComponent::InitializeStartingWeapon() //TODO: 뭔가 이상함

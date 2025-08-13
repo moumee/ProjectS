@@ -33,5 +33,5 @@ void USuraWeaponUnequippedState::UpdateState(AWeapon* Weapon, float DeltaTime)
 void USuraWeaponUnequippedState::ExitState(AWeapon* Weapon)
 {
 	Super::ExitState(Weapon);
-	//Weapon->StartCameraSettingChange(&Weapon->CamSetting_Default); //TODO: 이 처리가 꼭 필요한가? 고민해봐야함
+	//Weapon->StartCameraSettingChange(&Weapon->CamSetting_Default); //TODO:
 }
