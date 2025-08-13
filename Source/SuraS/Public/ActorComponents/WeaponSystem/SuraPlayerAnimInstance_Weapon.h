@@ -218,8 +218,17 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "SkillWeaponSocket")
 	FTransform SkillWeaponSocketTransform_Inactive;
 
-	UPROPERTY(BlueprintReadOnly, Category = "RightHandSocket")
+	UPROPERTY(BlueprintReadOnly, Category = "SkillWeaponSocket")
 	FTransform CurrentSkillWeaponSocketTransform;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SkillWeaponSocket")
+	float ActiveRotationInterpSpeed_SkillWeapon = 8.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SkillWeaponSocket")
+	float ActiveLocationInterpSpeed_SkillWeapon = 5.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SkillWeaponSocket")
+	float InctiveRotationInterpSpeed_SkillWeapon = 4.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SkillWeaponSocket")
+	float InctiveLocationInterpSpeed_SkillWeapon = 5.f;
 public:
 	void UpdateSkillWeaponSocket(float DeltaTime);
 public:
