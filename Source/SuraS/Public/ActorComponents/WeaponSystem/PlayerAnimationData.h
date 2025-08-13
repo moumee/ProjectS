@@ -30,4 +30,15 @@ struct SURAS_API FPlayerAnimationData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	FRotator RotationWhenCrouching_UpperArm_R = FRotator();
+
+	//--------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SkillWeaponSocket")
+	float ActiveRotationInterpSpeed_SkillWeapon = 8.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SkillWeaponSocket")
+	float ActiveLocationInterpSpeed_SkillWeapon = 5.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SkillWeaponSocket")
+	float InctiveRotationInterpSpeed_SkillWeapon = 4.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SkillWeaponSocket")
+	float InctiveLocationInterpSpeed_SkillWeapon = 5.f;
+
 };

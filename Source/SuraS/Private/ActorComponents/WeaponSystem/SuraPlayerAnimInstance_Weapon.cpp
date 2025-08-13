@@ -109,6 +109,11 @@ void USuraPlayerAnimInstance_Weapon::LoadAnimationData()
 		DamperScale = AnimationData->DamperScale;
 		Stiffness = AnimationData->Stiffness;
 		Damping = AnimationData->Damping;
+
+		ActiveRotationInterpSpeed_SkillWeapon = AnimationData->ActiveRotationInterpSpeed_SkillWeapon;
+		ActiveLocationInterpSpeed_SkillWeapon = AnimationData->ActiveLocationInterpSpeed_SkillWeapon;
+		InctiveRotationInterpSpeed_SkillWeapon = AnimationData->InctiveRotationInterpSpeed_SkillWeapon;
+		InctiveLocationInterpSpeed_SkillWeapon = AnimationData->InctiveLocationInterpSpeed_SkillWeapon;
 	}
 }
 
@@ -424,13 +429,13 @@ void USuraPlayerAnimInstance_Weapon::UpdateSkillWeaponSocket(float DeltaTime)
 
 	if (CurrentSkillWeapon->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Targeting || CurrentSkillWeapon->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Firing)
 	{
-		CurrentSkillWeaponSocketTransform.SetRotation((FMath::RInterpTo(CurrentSkillWeaponSocketTransform.GetRotation().Rotator(), SkillWeaponSocketTransform_Active.GetRotation().Rotator(), DeltaTime, 8.f)).Quaternion());
-		CurrentSkillWeaponSocketTransform.SetTranslation(FMath::VInterpTo(CurrentSkillWeaponSocketTransform.GetTranslation(), SkillWeaponSocketTransform_Active.GetTranslation(), DeltaTime, 5.f));
+		CurrentSkillWeaponSocketTransform.SetRotation((FMath::RInterpTo(CurrentSkillWeaponSocketTransform.GetRotation().Rotator(), SkillWeaponSocketTransform_Active.GetRotation().Rotator(), DeltaTime, ActiveRotationInterpSpeed_SkillWeapon)).Quaternion());
+		CurrentSkillWeaponSocketTransform.SetTranslation(FMath::VInterpTo(CurrentSkillWeaponSocketTransform.GetTranslation(), SkillWeaponSocketTransform_Active.GetTranslation(), DeltaTime, ActiveLocationInterpSpeed_SkillWeapon));
 	}
 	else
 	{
-		CurrentSkillWeaponSocketTransform.SetRotation((FMath::RInterpTo(CurrentSkillWeaponSocketTransform.GetRotation().Rotator(), SkillWeaponSocketTransform_Inactive.GetRotation().Rotator(), DeltaTime, 4.f)).Quaternion());
-		CurrentSkillWeaponSocketTransform.SetTranslation(FMath::VInterpTo(CurrentSkillWeaponSocketTransform.GetTranslation(), SkillWeaponSocketTransform_Inactive.GetTranslation(), DeltaTime, 5.f));
+		CurrentSkillWeaponSocketTransform.SetRotation((FMath::RInterpTo(CurrentSkillWeaponSocketTransform.GetRotation().Rotator(), SkillWeaponSocketTransform_Inactive.GetRotation().Rotator(), DeltaTime, InctiveRotationInterpSpeed_SkillWeapon)).Quaternion());
+		CurrentSkillWeaponSocketTransform.SetTranslation(FMath::VInterpTo(CurrentSkillWeaponSocketTransform.GetTranslation(), SkillWeaponSocketTransform_Inactive.GetTranslation(), DeltaTime, InctiveLocationInterpSpeed_SkillWeapon));
 	}
 }
 void USuraPlayerAnimInstance_Weapon::AddSkillWeaponRecoil(FArmRecoilStruct* armrecoil, float AdditionalRecoilAmountX, float AdditionalRecoilAmountY, float AdditionalRecoilAmountZ)
