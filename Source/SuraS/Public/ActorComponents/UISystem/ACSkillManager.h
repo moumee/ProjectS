@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "ACUIMangerComponent.h"
+#include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "Components/ActorComponent.h"
 #include "ACSkillManager.generated.h"
 
@@ -34,5 +35,6 @@ public:
 	void SetUIManager(UACUIMangerComponent* InManager);
 
 	// 무기 델리게이트에 함수를 바인딩하는 핵심 함수
-	void BindWeaponSkillDelegate();
+	UFUNCTION()
+	void BindWeaponSkillDelegate(AWeapon* NewWeapon);
 };

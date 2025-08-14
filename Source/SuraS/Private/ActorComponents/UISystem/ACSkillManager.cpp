@@ -5,7 +5,6 @@
 
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
-#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "UI/RocketLauncherSkillWidget.h"
 
 // Sets default values for this component's properties
@@ -27,9 +26,8 @@ void UACSkillManager::BeginPlay()
 	UWeaponSystemComponent* WeaponSystem = UIManager->GetWeaponSystemComponent();
 	if (WeaponSystem)
 	{
-		//  BeginPlay 시점에 처음 장착된 무기에 델리게이트 연결
-		//UE_LOG(LogTemp, Warning, TEXT("BindWeaponSKillDelegate 함수 호출됨"));
-		BindWeaponSkillDelegate();
+		// 스킬 무기 장착 델리게이트에 바인딩
+		WeaponSystem->OnSkillWeaponEquipped.AddDynamic(this, &UACSkillManager::BindWeaponSkillDelegate);
 	}
 	else if (!WeaponSystem)
 	{
@@ -57,32 +55,25 @@ void UACSkillManager::SetUIManager(UACUIMangerComponent* InManager)
 	UIManager = InManager;
 }
 
-void UACSkillManager::BindWeaponSkillDelegate()
+void UACSkillManager::BindWeaponSkillDelegate(AWeapon* NewWeapon)
 {
-	ASuraPawnPlayer* PlayerPawn = Cast<ASuraPawnPlayer>(GetOwner());
-	if (PlayerPawn && RocketLauncherSkillWidget)
+
+	if (NewWeapon && RocketLauncherSkillWidget)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("RocketLauncherSkillWidget: %s"), *GetNameSafe(RocketLauncherSkillWidget));
+		// 스킬 활성화 델리게이트에 함수 바인딩
+		NewWeapon->OnRocketLauncherSkillActivated.AddDynamic(
+		   RocketLauncherSkillWidget,
+		   &URocketLauncherSkillWidget::RocketLauncherZoomAnimation
+		);
+		//UE_LOG(LogTemp, Warning, TEXT("RocketLauncherZoomAnimation 델리게이트로서 등록"));
 
-		UWeaponSystemComponent* WeaponSystem = PlayerPawn->GetWeaponSystemComponent();
-		if (WeaponSystem)
-		{
-			AWeapon* CurrentWeapon = WeaponSystem->GetCurrentWeapon();
-			if (CurrentWeapon)
-			{
-				// 델리게이트에 함수 바인딩
-				// 이 코드를 통해 AWeapon의 OnRocketLauncherSkillActivated가 호출될 때마다 URocketLauncherSkillWidget의
-				// RocketLauncherZoomAnimation 함수가 실행됩니다.
-				CurrentWeapon->OnRocketLauncherSkillActivated.AddDynamic(
-				   RocketLauncherSkillWidget,
-				   &URocketLauncherSkillWidget::RocketLauncherZoomAnimation
-				);
-				//UE_LOG(LogTemp, Warning, TEXT("RocketLauncherZoomAnimation 델리게이트로서 등록"));
-
-				CurrentWeapon->OnRocketLauncherSkillOvered.AddDynamic(RocketLauncherSkillWidget, &URocketLauncherSkillWidget::RocketLauncherSkillFadeOut);
-				//UE_LOG(LogTemp, Warning, TEXT("RocketLauncherSkillCanceled 델리게이트로서 등록"));
-			}
-		}
+		// 스킬 종료 델리게이트에 함수 바인딩
+		NewWeapon->OnRocketLauncherSkillOvered.AddDynamic(
+		   RocketLauncherSkillWidget, 
+		   &URocketLauncherSkillWidget::RocketLauncherSkillFadeOut
+		);
+		//UE_LOG(LogTemp, Warning, TEXT("RocketLauncherSkillOvered 델리게이트로서 등록"));
 	}
+	
 }
 

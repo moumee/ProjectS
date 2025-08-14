@@ -58,6 +58,8 @@ void URocketLauncherSkillWidget::InitUIDataTable(UDataTable* InTable)
 
 void URocketLauncherSkillWidget::RocketLauncherZoomAnimation()
 {
+	//UE_LOG(LogTemp, Warning, TEXT("RocketLauncherZoomAnimation 함수 호출됨!!!"));
+	
     if (!IsInViewport())
     {
        AddToViewport();

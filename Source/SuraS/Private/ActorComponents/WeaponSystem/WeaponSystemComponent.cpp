@@ -372,6 +372,10 @@ bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 		SkillWeaponInventory.AddUnique(NewWeapon);
 		CurrentSkillWeapon = NewWeapon;
 		CurrentSkillWeapon->EquipWeapon(PlayerOwner, true);
+
+		//suhyeon 여기에 skillweapon획득 델리게이트 연결
+		// 스킬 무기 장착 후 델리게이트를 브로드캐스트
+		OnSkillWeaponEquipped.Broadcast(CurrentSkillWeapon);
 	}
 	else
 	{
