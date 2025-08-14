@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "ACUIMangerComponent.generated.h"
 
+class UACSkillManager;
 class UWeaponSystemComponent;
 class UPlayerHUD;
 class UACPlayerHUDManager;
@@ -16,6 +17,7 @@ class UACInventoryManager;
 class UACCrosshairManager;
 class UACKillLogManager;
 class UACPlayerHUDManager;
+class UACSkillManager;
 
 UENUM(BlueprintType)
 enum class EUIType : uint8
@@ -24,7 +26,8 @@ enum class EUIType : uint8
 	Inventory UMETA(DisplayName = "Inventory"),
 	Pause UMETA(DisplayName = "Pause"),
 	KillLog UMETA(DisplayName = "KillLog"),
-	PlayerHUD UMETA(DisplayName = "PlayerHUD")
+	PlayerHUD UMETA(DisplayName = "PlayerHUD"),
+	Skill UMETA(DisplayName = "Skill")
 };
 
 
@@ -42,6 +45,8 @@ protected:
 	virtual void BeginPlay() override;
 
 	void SetupInput();
+
+	
 
 public:	
 	// Called every frame
@@ -81,6 +86,10 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
 	UDataTable* DTWeapon;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Data")
+	UDataTable* DTUISetting;
+	
+
 	// UPROPERTY(EditDefaultsOnly, Category = "Data")
 	// UDataTable* DTProjectile;
 
@@ -100,6 +109,9 @@ private:
 
 	UPROPERTY()
 	UACPlayerHUDManager* PlayerHUDManager;
+
+	UPROPERTY()
+	UACSkillManager* SkillManager;
 
 	UWeaponSystemComponent* WeaponSystemComponent = nullptr;
 
