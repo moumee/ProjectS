@@ -3,9 +3,10 @@
 
 #include "Characters/Enemies/SuraCharacterEnemyRifle.h"
 
+#include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Weapons/Firearms/SuraFirearmRifle.h"
-#include "Weapons/Projectiles/SuraEnemyProjectile.h"
+#include "Weapons/Projectiles/EnemyProjectileRifleBullet.h"
 
 ASuraCharacterEnemyRifle::ASuraCharacterEnemyRifle()
 {
@@ -29,26 +30,47 @@ void ASuraCharacterEnemyRifle::BeginPlay()
 	EnemyWeapon = Firearm;*/
 }
 
-void ASuraCharacterEnemyRifle::Attack(ASuraPawnPlayer* Player)
+void ASuraCharacterEnemyRifle::SpawnProjectile()
 {
+	UE_LOG(LogTemp, Warning, TEXT("SpawnProjectile"));
+	
 	if (ProjectileClass)
 	{
 		const FVector SpawnLocation = GetMesh()->GetSocketLocation(FName(TEXT("Hole")));
-		const FRotator SpawnRotation = (Player->GetActorLocation() - SpawnLocation).Rotation();
 
 		FActorSpawnParameters ActorSpawnParams;
 		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		ASuraEnemyProjectile* Projectile = GetWorld()->SpawnActor<ASuraEnemyProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+		Projectile = GetWorld()->SpawnActor<AEnemyProjectileRifleBullet>(ProjectileClass, SpawnLocation, GetActorRotation(), ActorSpawnParams);
 
 		Projectile->SetOwner(this);
 
-		UE_LOG(LogTemp, Error, TEXT("Player Velocity: %f, %f, %f"), Player->GetVelocity().X, Player->GetVelocity().Y, Player->GetVelocity().Z);
+		FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
+		Projectile->AttachToComponent(GetMesh(), AttachmentRules, FName("Hole"));
+	}
+}
+
+void ASuraCharacterEnemyRifle::SetProjectilScale(float scale)
+{
+	if (Projectile)
+	{
+		Projectile->SetActorScale3D(Projectile->GetActorScale() * scale);
+	}
+}
+
+void ASuraCharacterEnemyRifle::Attack(ASuraPawnPlayer* Player)
+{
+	if (Projectile)
+	{
+		FDetachmentTransformRules DetachmentRules(EDetachmentRule::KeepWorld, true);
+		Projectile->DetachFromActor(DetachmentRules);
+		
+		Projectile->ActivateShootingEffect();
 		
 		FVector LaunchVelocity;
 		float TimeToTarget = FVector::Dist(GetActorLocation(), Player->GetActorLocation()) / Projectile->GetProjectileMovement()->InitialSpeed;
 		
-		UGameplayStatics::SuggestProjectileVelocity_MovingTarget(this, LaunchVelocity, SpawnLocation, Player, FVector(0.f, 0.f, 80.f), 0.f, TimeToTarget);
+		UGameplayStatics::SuggestProjectileVelocity_MovingTarget(this, LaunchVelocity, Projectile->GetActorLocation(), Player, FVector(0.f, 0.f, 80.f), 0.f, TimeToTarget);
 		
 		Projectile->LaunchProjectileWithVelocity(LaunchVelocity);
 	}

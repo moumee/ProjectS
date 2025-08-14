@@ -92,7 +92,7 @@ void AEnemyBaseAIController::SetStateToChaseOrPursue(AActor* TargetActor)
 {
 	
 	
-	if (GetCurrentState() != EEnemyStates::Pursue && GetCurrentState() != EEnemyStates::Attacking && GetCurrentState() != EEnemyStates::Climbing)
+	if (GetCurrentState() != EEnemyStates::Pursue && GetCurrentState() != EEnemyStates::Attacking)
 	{
 		if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(TargetActor))
 		{

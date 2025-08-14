@@ -77,6 +77,16 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* RightMouseButtonAction;
 
+#pragma region HUD
+protected:
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "HUD")
+	UUserWidget* FPHUD;
+
+	bool bUseSceneCapture = false;
+public:
+	bool IsSceneCaptureActive();
+#pragma endregion
+
 	//---------------------------------------------------
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon)
@@ -118,7 +128,6 @@ public:
 #pragma endregion
 
 #pragma region Interaction
-
 public:
 	void PickUpWeapon();
 	bool ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp);
@@ -174,23 +183,28 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapons")
 	TArray<AWeapon*> WeaponInventory;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	AWeapon* CurrentWeapon = nullptr;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	int32 CurrentWeaponIndex = 0;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SkillWeapons")
+	TArray<AWeapon*> SkillWeaponInventory;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SkillWeapon")
+	AWeapon* CurrentSkillWeapon = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SkillWeapon")
+	int32 CurrentSkillWeaponIndex = 0;
+
 public:
 	AWeapon* GetCurrentWeapon() { return CurrentWeapon; }
-
+	AWeapon* GetCurrentSkillWeapon() { return CurrentSkillWeapon; }
 	int32 GetWeaponNum() { return WeaponInventory.Num(); }
+	int32 GetSkillWeaponNum() { return SkillWeaponInventory.Num(); }
+	bool IsCurrentSkillWeaponTargeting();
 
 	void SwitchToPreviousWeapon();
 	void SwitchToNextWeapon();
-	void SwitchToIndex1();
-	void SwitchToIndex2();
-	void SwitchToIndex3();
+	void SwitchToIndex(int32 idx);
 
 	virtual void SwitchToOtherWeapon() override;
 
@@ -208,4 +222,12 @@ public:
 	/** suhyeon**/
 #pragma endregion
 	
+#pragma region Control
+protected:
+	AWeapon* ControllingWeapon;
+public:
+	bool TryTakeControl(AWeapon* NewWeapon);
+	void ReleaseControl();
+
+#pragma endregion
 };

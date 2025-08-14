@@ -13,6 +13,7 @@
 #include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SceneCaptureComponent2D.h" //<JaeHyeong>
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "UI/PlayerHUD.h"
@@ -58,6 +59,8 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
 	CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel7, ECR_Ignore);
 	ArmMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	FPSceneCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent")); //<JaeHyeong>
+	FPSceneCapture->SetupAttachment(Camera);
 
 	// for damage interactions with enemies
 	AttackTokensComponent = CreateDefaultSubobject<UACPlayerAttackTokens>(TEXT("Attack Tokens Component"));
@@ -169,8 +172,16 @@ void ASuraPawnPlayer::CheckPlayerHealth()
 	// UE_LOG(LogTemp, Display, TEXT("Checked Player Health. Current Player Health : %f"), DamageSystemComponent->GetHealth());
 	if (DamageSystemComponent->GetHealth() <= ConditionalPlayerHP)
 	{
+		OnPlayerHealthHalved.Broadcast();
 		// Reduce the number of max tokens in the AttackTokensComponent
-		// Change the AI variables according to game documents
+		AttackTokensComponent->SetMaxEnemyAttackTokens(3); // TODO: make magic numbers into variables in a data table
+		AttackTokensComponent->SetMaxEnemyPursuitTokens(3);
+	}
+	else
+	{
+		// Restore the number of max tokens
+		AttackTokensComponent->SetMaxEnemyAttackTokens(8);
+		AttackTokensComponent->SetMaxEnemyPursuitTokens(6);
 	}
 }
 

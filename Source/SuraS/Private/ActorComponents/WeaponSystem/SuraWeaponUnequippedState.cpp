@@ -20,7 +20,7 @@ void USuraWeaponUnequippedState::EnterState(AWeapon* Weapon)
 
 	//TODO: 관련함수들 묶어서 관리하는 함수 만들기
 	Weapon->ForceStopCamModification();
-	Weapon->ActivateCrosshairWidget(false);
+	Weapon->ActivateAimUIWidget(false);
 	Weapon->ActivateAmmoCounterWidget(false);
 	Weapon->ActivateTargetingSkillWidget(false);
 }
@@ -33,5 +33,5 @@ void USuraWeaponUnequippedState::UpdateState(AWeapon* Weapon, float DeltaTime)
 void USuraWeaponUnequippedState::ExitState(AWeapon* Weapon)
 {
 	Super::ExitState(Weapon);
-	//Weapon->StartCameraSettingChange(&Weapon->CamSetting_Default); //TODO: 이 처리가 꼭 필요한가? 고민해봐야함
+	//Weapon->StartCameraSettingChange(&Weapon->CamSetting_Default); //TODO:
 }

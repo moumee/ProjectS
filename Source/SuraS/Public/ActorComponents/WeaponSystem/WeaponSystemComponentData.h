@@ -16,5 +16,6 @@ struct SURAS_API FWeaponSystemComponentData : public FTableRowBase
 	EWeaponName StartingWeaponName = EWeaponName::WeaponName_Rifle;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TSubclassOf<class AWeapon> StartingWeaponClass;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rendering")
+	bool bUseSceneCapture = false;
 };

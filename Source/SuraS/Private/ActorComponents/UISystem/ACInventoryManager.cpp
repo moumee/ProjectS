@@ -116,15 +116,15 @@ void UACInventoryManager::OnConfirmWeaponEquip()
 	switch (PendingWeaponIndex)
 	{
 		case 0:
-			WeaponSystem->SwitchToIndex1();
+			WeaponSystem->SwitchToIndex(0);
 			//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("SwitchToIndex1 호출"));
 			break;
 		case 1:
-			WeaponSystem->SwitchToIndex2();
+			WeaponSystem->SwitchToIndex(1);
 			//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("SwitchToIndex2 호출"));
 			break;
 		case 2:
-			WeaponSystem->SwitchToIndex3();
+			WeaponSystem->SwitchToIndex(2);
 			//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("SwitchToIndex3 호출"));
 			break;
 		default:

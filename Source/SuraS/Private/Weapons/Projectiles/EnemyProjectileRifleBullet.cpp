@@ -3,7 +3,48 @@
 
 #include "Weapons/Projectiles/EnemyProjectileRifleBullet.h"
 
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+
 AEnemyProjectileRifleBullet::AEnemyProjectileRifleBullet()
 {
 	ProjectileType = "RifleBullet";
+}
+
+void AEnemyProjectileRifleBullet::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (SpawnEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAttached(
+			SpawnEffect,
+			ProjectileMesh,
+			NAME_None,
+			FVector::ZeroVector,
+			FRotator::ZeroRotator,
+			EAttachLocation::KeepRelativeOffset,
+			true);
+
+		GetNiagaraComponent()->Activate();
+	}
+}
+
+void AEnemyProjectileRifleBullet::ActivateShootingEffect()
+{
+	if (ShootingEffect)
+	{
+		GetNiagaraComponent()->Deactivate();
+		
+		UNiagaraFunctionLibrary::SpawnSystemAttached(
+			ShootingEffect,
+			ProjectileMesh,
+			NAME_None,
+			FVector::ZeroVector,
+			FRotator::ZeroRotator,
+			EAttachLocation::KeepRelativeOffset,
+			true);
+
+		GetNiagaraComponent()->Activate();
+	}
 }

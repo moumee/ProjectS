@@ -20,7 +20,8 @@ enum class EWeaponAction : uint8
 	WeaponAction_Hold UMETA(DisplayName = "Hold"),
 	WeaponAction_Zoom UMETA(DisplayName = "Zoom"),
 	WeaponAction_SkillToggle UMETA(DisplayName = "SkillToggle"),
-	WeaponAction_SkillFire UMETA(DisplayName = "SkillFire")
+	WeaponAction_SkillFire UMETA(DisplayName = "SkillFire"),
+	WeaponAction_None UMETA(DisplayName = "None")
 };
 
 UCLASS()

@@ -60,3 +60,13 @@ void UACPlayerAttackTokens::ReturnPursuitToken(int ReserveAmount)
 		_EnemyPursuitTokens = _MaxEnemyPursuitTokens;
 }
 
+void UACPlayerAttackTokens::SetMaxEnemyAttackTokens(int32 MaxTokens)
+{
+	_MaxEnemyAttackTokens = MaxTokens;
+}
+
+void UACPlayerAttackTokens::SetMaxEnemyPursuitTokens(int32 MaxTokens)
+{
+	_MaxEnemyPursuitTokens = MaxTokens;
+}
+
