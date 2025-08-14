@@ -13,6 +13,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponPickedUp, FName, WeaponName);
 // delegate about ammocounter widget (writted by suhyeon)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponSwitched, int32, PrevIndex, int32, NewIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillWeaponEquipped, class AWeapon*, NewSkillWeapon);
 
 class AWeapon;
 
@@ -30,6 +31,9 @@ public:
 	FOnWeaponPickedUp OnWeaponPickedUp;
 	UPROPERTY(BlueprintAssignable, Category = "Weapon")
 	FOnWeaponSwitched OnWeaponSwitched;
+	// 스킬 무기가 장착될 때 호출될 델리게이트
+	UPROPERTY(BlueprintAssignable, Category = "Weapon")
+	FOnSkillWeaponEquipped OnSkillWeaponEquipped;
 
 protected:
 	// Called when the game starts

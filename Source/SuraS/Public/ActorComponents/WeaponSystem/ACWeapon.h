@@ -23,6 +23,7 @@
 
 #include "ACWeapon.generated.h"
 
+class URocketLauncherSkillWidget;
 //class ASuraCharacterPlayerWeapon;
 class ASuraPawnPlayer;
 
@@ -46,6 +47,12 @@ class UTargetingSkillWidget;
 
 class UInputAction;
 struct FInputBindingHandle;
+
+//suhyeon
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRocketLauncherSkillActivated);
+// 스킬 취소 시 호출될 델리게이트 선언
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRocketLauncherSkillOvered);
+
 
 //UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 UCLASS()
@@ -420,6 +427,7 @@ protected:
 	TSubclassOf<UTargetingSkillWidget> TargetingSkillWidgetClass;
 	UPROPERTY()
 	UTargetingSkillWidget* TargetingSkillWidget;
+
 public:
 	void ActivateAimUIWidget(bool bflag);
 	void ActivateAmmoCounterWidget(bool bflag);
@@ -430,6 +438,14 @@ public:
 	UWeaponAimUIWidget* GetAimUIWidget() const { return AimUIWidget; } //suhyeon
 	UFUNCTION(BlueprintCallable)
 	UTargetingSkillWidget* GetTargetingSkillWidget() const { return TargetingSkillWidget; }
+
+	//suhyeon
+	UPROPERTY(BlueprintAssignable, Category = "Skill")
+	FOnRocketLauncherSkillActivated OnRocketLauncherSkillActivated;
+
+
+	UPROPERTY(BlueprintAssignable, Category = "Skills")
+	FOnRocketLauncherSkillOvered OnRocketLauncherSkillOvered;
 protected:
 	void SetUpAimUIDelegateBinding(ASuraProjectile* Projectile);
 #pragma endregion
