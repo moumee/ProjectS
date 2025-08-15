@@ -860,23 +860,22 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	FCollisionShape PlayerCapsule = SuraPawnPlayer->GetCapsuleComponent()->GetCollisionShape();
 	FCollisionQueryParams MantleParams;
 	MantleParams.AddIgnoredActor(SuraPawnPlayer);
-	FVector MantleSweepEnd = SuraPawnPlayer->GetActorLocation() + SuraPawnPlayer->GetActorForwardVector() * 75.f;
+	FVector MantleSweepEnd = SuraPawnPlayer->GetActorLocation() + SuraPawnPlayer->GetActorForwardVector() * PlayerCapsule.GetCapsuleRadius();
 	bool bMantleWallHit = GetWorld()->SweepSingleByChannel(MantleWallHit, SuraPawnPlayer->GetActorLocation(),
 		MantleSweepEnd, SuraPawnPlayer->GetActorQuat(), WALL_TRACE_CHANNEL, PlayerCapsule, MantleParams);
 
-	if (bMantleWallHit && MantleWallHit.bBlockingHit && MantleWallHit.ImpactNormal.Z < MinWalkableFloorZ)
+	if (bMantleWallHit && MantleWallHit.bBlockingHit && MantleWallHit.ImpactNormal.Z < MinWalkableFloorZ && MantleWallHit.ImpactPoint.Z > -0.3f)
 	{
 		if (MovementInputVector.Y > 0.f && !bCrouchPressed)
 		{
 			// TODO: Make Mantle Available Height as a variable 50.f
-			FVector FloorHitStart = SuraPawnPlayer->GetActorLocation() + SuraPawnPlayer->GetActorForwardVector() * 75.f +
-				FVector::UpVector * (PlayerCapsule.GetCapsuleHalfHeight() + 100.f);
-			FVector FloorHitEnd = FloorHitStart + FVector::DownVector * (2 * PlayerCapsule.GetCapsuleHalfHeight() + 100.f); 
+			FVector FloorHitStart = FVector(MantleWallHit.ImpactPoint.X, MantleWallHit.ImpactPoint.Y, SuraPawnPlayer->GetActorLocation().Z + 200.f);
+			FVector FloorHitEnd = FloorHitStart - FVector(0, 0, PlayerCapsule.GetCapsuleHalfHeight() + 210.f); 
 			bool bMantleFloorHit = GetWorld()->SweepSingleByChannel(MantleFloorHit, FloorHitStart, FloorHitEnd,
 				SuraPawnPlayer->GetActorQuat(), ECC_WorldStatic, PlayerCapsule, MantleParams);
 
-			// DrawDebugCapsuleTraceSingle(GetWorld(), FloorHitStart, FloorHitEnd, PlayerCapsule.GetCapsuleRadius(),
-			// 	PlayerCapsule.GetCapsuleHalfHeight(), EDrawDebugTrace::ForDuration, bMantleFloorHit && MantleFloorHit.IsValidBlockingHit(), MantleFloorHit, FLinearColor::Red, FLinearColor::Green, 1.f);
+			DrawDebugCapsuleTraceSingle(GetWorld(), FloorHitStart, FloorHitEnd, PlayerCapsule.GetCapsuleRadius(),
+			PlayerCapsule.GetCapsuleHalfHeight(), EDrawDebugTrace::ForDuration, bMantleFloorHit && MantleFloorHit.IsValidBlockingHit(), MantleFloorHit, FLinearColor::Red, FLinearColor::Green, 1.f);
 
 			if (bMantleFloorHit && MantleFloorHit.IsValidBlockingHit() && MantleFloorHit.ImpactNormal.Z >= MinWalkableFloorZ)
 			{
@@ -1370,16 +1369,37 @@ void USuraPlayerMovementComponent::TickMantle(float DeltaTime)
 	// 	return;
 	// }
 	
-	FVector TargetPos = MantleFloorHit.Location;
-	if (FVector::Distance(SuraPawnPlayer->GetActorLocation(), TargetPos) < 5.f)
+	// FVector TargetPos = MantleFloorHit.Location;
+	// if (FVector::Distance(SuraPawnPlayer->GetActorLocation(), TargetPos) < 5.f)
+	// {
+	// 	Velocity = FVector::ZeroVector;
+	// 	OnMove.Broadcast();
+	// 	SetMovementState(EMovementState::EMS_Move);
+	// 	return;
+	// }
+	//
+	// Velocity = FVector(TargetPos - SuraPawnPlayer->GetActorLocation()).GetSafeNormal() * 800.f;
+
+	FVector MantleFloorSlope = FVector::VectorPlaneProject(SuraPawnPlayer->GetActorForwardVector(),
+		MantleFloorHit.ImpactNormal).GetSafeNormal();
+
+	FHitResult Hit;
+	FCollisionShape PlayerCapsule = SuraPawnPlayer->GetCapsuleComponent()->GetCollisionShape();
+	FCollisionQueryParams MantleParams;
+	MantleParams.AddIgnoredActor(SuraPawnPlayer);
+	FVector MantleSweepEnd = SuraPawnPlayer->GetActorLocation() + MantleFloorSlope * PlayerCapsule.GetCapsuleRadius();
+	bool bMantleWallHit = GetWorld()->SweepSingleByChannel(Hit, SuraPawnPlayer->GetActorLocation(),
+		MantleSweepEnd, SuraPawnPlayer->GetActorQuat(), WALL_TRACE_CHANNEL, PlayerCapsule, MantleParams);
+
+	if (!bMantleWallHit)
 	{
-		Velocity = FVector::ZeroVector;
+		Velocity = MantleFloorSlope * (bIsRunning ? RunSpeed : WalkSpeed);
 		OnMove.Broadcast();
 		SetMovementState(EMovementState::EMS_Move);
 		return;
 	}
 	
-	Velocity = FVector(TargetPos - SuraPawnPlayer->GetActorLocation()).GetSafeNormal() * 800.f;
+	Velocity = FVector::VectorPlaneProject(FVector::UpVector, Hit.ImpactNormal).GetSafeNormal() * 800.f;
 
 	
 }
