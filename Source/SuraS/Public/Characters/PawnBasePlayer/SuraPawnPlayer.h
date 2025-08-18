@@ -13,6 +13,7 @@ class USuraPlayerCameraComponent;
 class USpringArmComponent;
 class USuraPlayerMovementComponent;
 class UWeaponSystemComponent;
+class USceneCaptureComponent2D; //<JaeHyeong>
 class UCameraComponent;
 class UCapsuleComponent;
 struct FInputActionValue;
@@ -26,6 +27,8 @@ class UPlayerHitWidget;
 class UACUIMangerComponent;
 
 class UPlayerHUD;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerHealthHalved);
 
 UCLASS()
 class SURAS_API ASuraPawnPlayer : public APawn, public IDamageable
@@ -53,9 +56,13 @@ public:
 
 	UCameraComponent* GetCameraComponent() const { return Camera; };
 
+	USceneCaptureComponent2D* GetSceneCaptureComponent() const { return FPSceneCapture;  } //<JaeHyeong>
+
 	UWeaponSystemComponent* GetWeaponSystemComponent() const { return WeaponSystem; }  // <WeaponSystem>
 
 	USkeletalMeshComponent* GetArmMesh() { return ArmMesh; }  // <WeaponSystem>
+
+	USkeletalMeshComponent* GetHandsMesh() { return HandsMesh; }   //<JaeHyeong>
 
 	bool HasWeapon() const;  // <WeaponSystem>s
 
@@ -72,6 +79,8 @@ public:
 	// SuraPawnPlayer.h - suhyeon
 	UFUNCTION(BlueprintCallable)
 	UPlayerHitWidget* GetPlayerHitWidget() const {return HitEffectWidget;}
+
+	FOnPlayerHealthHalved OnPlayerHealthHalved;
 
 protected:
 
@@ -93,7 +102,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "WeaponSystem")
 	TObjectPtr<UWeaponSystemComponent> WeaponSystem;  // <WeaponSystem>
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponSystem")
+	USceneCaptureComponent2D* FPSceneCapture; //<JaeHyeong>
+
 	// This actor component is for handling camera shakes and state-based movement
 	// IT IS NOT THE CAMERA!!
 	UPROPERTY(EditAnywhere)

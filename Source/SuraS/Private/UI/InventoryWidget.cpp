@@ -211,13 +211,13 @@ void UInventoryWidget::ShowTabContent() const
 void UInventoryWidget::OpenUI()
 {
     Super::OpenUI();
-    GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, "OpenInventory");
+   // GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, "OpenInventory");
 }
 
 void UInventoryWidget::CloseUI()
 {
     Super::CloseUI();
-    GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Orange, "CloseInventory");
+    //GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Orange, "CloseInventory");
 
     // invnetory를 닫을 때 gameinstance의 saveweapondata메서드를 호출
     // if (UCustomGameInstance* GameInstance = Cast<UCustomGameInstance>(GetWorld()->GetGameInstance()))

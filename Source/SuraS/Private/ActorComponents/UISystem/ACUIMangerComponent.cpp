@@ -6,9 +6,12 @@
 #include "ActorComponents/UISystem/ACInventoryManager.h"
 #include "ActorComponents/UISystem/ACKillLogManager.h"
 #include "ActorComponents/UISystem/ACPlayerHudManager.h"
+#include "ActorComponents/UISystem/ACSkillManager.h"
+#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "UI/InventoryWidget.h"
 #include "UI/KillLogWidget.h"
 #include "UI/PlayerHUD.h"
+#include "UI/RocketLauncherSkillWidget.h"
 
 
 // Sets default values for this component's properties
@@ -30,6 +33,12 @@ void UACUIMangerComponent::BeginPlay()
 	SetupInput();
 	
 	InitializeWidgets();
+	
+	ASuraPawnPlayer* SuraPawnPlayer = Cast<ASuraPawnPlayer>(GetOwner());  // GetOwningPlayerPawn()은 ActorComponent에선 사용 불가
+	if (SuraPawnPlayer)
+	{
+		WeaponSystemComponent = SuraPawnPlayer->GetWeaponSystemComponent();
+	}
 }
 
 void UACUIMangerComponent::SetupInput()
@@ -101,7 +110,7 @@ void UACUIMangerComponent::InitializeWidgets()
 					KLW->SetKillLogManager(KillLogManager);
 					KLW->AddToViewport(); // ✅ 반드시 필요
 
-					UE_LOG(LogTemp, Warning, TEXT("✔ KillLogWidget Viewport에 추가됨"));
+					//UE_LOG(LogTemp, Warning, TEXT("✔ KillLogWidget Viewport에 추가됨"));
 				}
 				break;
 			}
@@ -114,9 +123,24 @@ void UACUIMangerComponent::InitializeWidgets()
 					PW->SetPlayerHUDManager(PlayerHUDManager);
 					PW->AddToViewport(); // ✅ 반드시 필요
 
-					UE_LOG(LogTemp, Warning, TEXT("✔ KillLogWidget Viewport에 추가됨"));
+					//UE_LOG(LogTemp, Warning, TEXT("✔ KillLogWidget Viewport에 추가됨"));
 				}
 				break;
+			}
+			
+		case EUIType::Skill:
+			{
+				if (URocketLauncherSkillWidget* RLW = Cast<URocketLauncherSkillWidget>(NewWidget))
+				{
+					SkillManager->SetRocketLauncherSkillWidget(RLW);
+					RLW->SetSKillManager(SkillManager);
+					RLW->InitUIDataTable(DTUISetting);
+					//RLW->AddToViewport(); //스킬 사용 시점에 AddToViewport해야함.
+					
+
+					//UE_LOG(LogTemp, Warning, TEXT("✔ RocketLauncherWidget Viewport에 추가됨"));
+				}
+								
 
 				default:
 					break;
@@ -138,6 +162,10 @@ void UACUIMangerComponent::InitializeManagers()
 	// HUDManager, PauseMenuManager 등도 여기에 추가
 	PlayerHUDManager = CreateDefaultSubobject<UACPlayerHUDManager>(TEXT("PlayerHUD"));
 	PlayerHUDManager->SetUIManager(this);
+
+	SkillManager = CreateDefaultSubobject<UACSkillManager>(TEXT("Skill"));
+	SkillManager->SetUIManager(this);
+	
 }
 
 void UACUIMangerComponent::TestKillLog()

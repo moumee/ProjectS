@@ -9,6 +9,8 @@
 #include "Enumerations/EDamageType.h"
 #include "SuraEnemyProjectile.generated.h"
 
+class UNiagaraComponent;
+
 UCLASS()
 class SURAS_API ASuraEnemyProjectile : public AActor
 {
@@ -28,6 +30,9 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Projectile")
 	USphereComponent* CollisionComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Niagara")
+	UNiagaraComponent* NiagaraComponent;
+
 	UPROPERTY(VisibleAnywhere)
 	AActor* ProjectileOwner;
 	
@@ -37,6 +42,8 @@ protected:
 	float M_InitialRadius;
 	float M_ExplosionRadius;
 	float M_HomingAccelerationMagnitude;
+	float M_DestroyDurationAfterLaunch;
+	float M_DestroyDurationAfterHit;
 
 public:	
 	// Sets default values for this actor's properties
@@ -46,10 +53,12 @@ public:
 	FDataTableRowHandle EnemyProjectileAttributesDT;
 
 	void InitializeProjectile();
-	
-	void SetOwner(AActor* TheOwner);
+
+	virtual void SetOwner(AActor* TheOwner) override;
 	
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
+
+	UNiagaraComponent* GetNiagaraComponent() const { return NiagaraComponent; }
 
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
@@ -61,7 +70,7 @@ public:
 
 	void SetHomingTarget(const AActor* Target);
 
-	void LaunchProjectile();
+	virtual void LaunchProjectile();
 
-	void LaunchProjectileWithVelocity(const FVector& Velocity);
+	virtual void LaunchProjectileWithVelocity(const FVector& Velocity);
 };

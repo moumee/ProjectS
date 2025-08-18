@@ -138,7 +138,7 @@ void ASuraCharacterEnemyBase::OnHitEnded(UAnimMontage* AnimMontage, bool bInterr
 {
 	ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(GetPlayerController()->GetPawn());
 
-	if (Player && AIController->GetCurrentState() != EEnemyStates::Pursue && AIController->GetCurrentState() != EEnemyStates::Attacking)
+	if (Player && AIController->GetCurrentState() != EEnemyStates::Pursue && AIController->GetCurrentState() != EEnemyStates::Attacking && AIController->GetCurrentState() != EEnemyStates::Climbing)
 		GetAIController()->SetStateToChaseOrPursue(Player);
 }
 
@@ -156,21 +156,28 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 		DeathAnimDuration = DeathAnimation->GetPlayLength();
 	}
 
+	if (AIController->GetCurrentState() == EEnemyStates::Climbing)
+	{
+		// GetCharacterMovement()->StopMovementImmediately();
+		// GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+	}
+
 	if (AIController->GetCurrentState() == EEnemyStates::Pursue || AIController->GetCurrentState() == EEnemyStates::Attacking)
 	{
 		AIController->EndPursueState();
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Puruse Token Returned"));
+		// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Puruse Token Returned"));
 	}
 
 	AIController->ClearFocus(EAIFocusPriority::Gameplay);
 	AIController->GetBrainComponent()->StopLogic("Death");
 
 	// Disable all collisions on capsule
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
+	// GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	// GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionObjectType(ECC_GameTraceChannel1); // to disable collision with SuraProjectile object
 
-	GetCapsuleComponent()->SetSimulatePhysics(false);
+	// GetCapsuleComponent()->SetSimulatePhysics(false);
 
 	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), GetCapsuleComponent()->IsSimulatingPhysics() ? TEXT("true") : TEXT("false")));
 
@@ -358,6 +365,11 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 			AttackDamageAmount = EnemyAttributesData->AttackDamageAmount;
 			MeleeAttackRange = EnemyAttributesData->MeleeAttackRange;
 			MeleeAttackSphereRadius = EnemyAttributesData->MeleeAttackSphereRadius;
+
+			MinWalkSpeedVariation = EnemyAttributesData->MinWalkSpeedVariation;
+			MaxWalkSpeedVariation = EnemyAttributesData->MaxWalkSpeedVariation;
+			MinAttackRateVariation = EnemyAttributesData->MinAttackRateVariation;
+			MaxAttackRateVariation = EnemyAttributesData->MaxAttackRateVariation;
 
 			HitAnimations = EnemyAttributesData->HitAnimations;
 			DeathAnimations = EnemyAttributesData->DeathAnimations;

@@ -20,6 +20,12 @@ struct SURAS_API FEnemyAttributesData : public FTableRowBase
 	float MaxWalkSpeed = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MinWalkSpeedVariation = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxWalkSpeedVariation = 200.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxSightRadius = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -36,6 +42,12 @@ struct SURAS_API FEnemyAttributesData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float AttackRate = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MinAttackRateVariation = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxAttackRateVariation = 4.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MeleeAttackRange = 0.f;

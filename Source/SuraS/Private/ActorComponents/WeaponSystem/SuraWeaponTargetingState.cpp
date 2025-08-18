@@ -17,6 +17,7 @@ void USuraWeaponTargetingState::EnterState(AWeapon* Weapon)
 {
 	Super::EnterState(Weapon);
 	Weapon->SetGlobalTimeDilation(Weapon->TargetingGlobalTimeScale);
+	if (Weapon->IsSkillWeapon()) { Weapon->ActivateAimUIWidget(true); }
 }
 
 void USuraWeaponTargetingState::UpdateState(AWeapon* Weapon, float DeltaTime)
@@ -29,4 +30,5 @@ void USuraWeaponTargetingState::ExitState(AWeapon* Weapon)
 {
 	Super::ExitState(Weapon);
 	Weapon->SetGlobalTimeDilation(1.f);
+	if (Weapon->IsSkillWeapon()) { Weapon->ActivateAimUIWidget(false); }
 }

@@ -26,9 +26,9 @@ void USuraPawnPlayerAnimInstance::NativeInitializeAnimation()
 	
 }
 
-void USuraPawnPlayerAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
+void USuraPawnPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
-	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
+	Super::NativeUpdateAnimation(DeltaSeconds);
 
 	if (SuraPlayer)
 	{

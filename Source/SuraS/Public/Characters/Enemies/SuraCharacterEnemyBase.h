@@ -59,10 +59,13 @@ protected:
 	AEnemyPatrolRoute* PatrolRoute;
 
 	float AttackDamageAmount;
-
 	float MeleeAttackRange;
-
 	float MeleeAttackSphereRadius;
+	
+	float MinWalkSpeedVariation;
+	float MaxWalkSpeedVariation;
+	float MinAttackRateVariation;
+	float MaxAttackRateVariation;
 
 	// [protected functions]
 	// Called when the game starts or when spawned
@@ -104,6 +107,10 @@ public:
 	FORCEINLINE float GetAttackDamageAmount() const { return AttackDamageAmount; }
 	FORCEINLINE float GetMeleeAttackRange() const { return MeleeAttackRange; }
 	FORCEINLINE float GetMeleeAttackSphereRadius() const { return MeleeAttackSphereRadius; }
+	FORCEINLINE float GetMinWalkSpeedVariation() const { return MinWalkSpeedVariation; }
+	FORCEINLINE float GetMaxWalkSpeedVariation() const { return MaxWalkSpeedVariation; }
+	FORCEINLINE float GetMinAttackRateVariation() const { return MinAttackRateVariation; }
+	FORCEINLINE float GetMaxAttackRateVariation() const { return MaxAttackRateVariation; }
 
 	// behavior tree getter
 	FORCEINLINE UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }

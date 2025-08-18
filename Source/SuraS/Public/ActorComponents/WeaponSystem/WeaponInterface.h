@@ -34,4 +34,5 @@ public:
 
 	//<ArmRecoilAnimation>
 	virtual void AddArmRecoil(FArmRecoilStruct* armrecoil = nullptr, float AdditionalRecoilAmountX = 0.f, float AdditionalRecoilAmountY = 0.f, float AdditionalRecoilAmountZ = 0.f);
+	virtual void AddSkillWeaponRecoil(FArmRecoilStruct* armrecoil = nullptr, float AdditionalRecoilAmountX = 0.f, float AdditionalRecoilAmountY = 0.f, float AdditionalRecoilAmountZ = 0.f);
 };

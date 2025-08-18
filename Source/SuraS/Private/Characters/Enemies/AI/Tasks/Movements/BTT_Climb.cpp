@@ -123,7 +123,7 @@ void UBTT_Climb::TraceLedge(const float EnemyHalfHeight)
 	CollisionQueryParams.AddIgnoredActor(CachedEnemy);
 	
 	FVector MovementDirection = CachedEnemy->GetActorForwardVector().GetSafeNormal();
-	FVector LedgeStartGap = (MovementDirection * 500.f + CachedEnemy->GetActorUpVector() * -500.f).GetSafeNormal();
+	FVector LedgeStartGap = (MovementDirection * 1000.f + CachedEnemy->GetActorUpVector() * -500.f).GetSafeNormal();
 	FVector Start = CachedEnemy->GetActorLocation() + LedgeStartGap * 100.f;
 	FVector End = Start + LedgeStartGap.RotateAngleAxis(90.f, CachedEnemy->GetActorRightVector()) * 200.f;
 	
@@ -198,9 +198,7 @@ void UBTT_Climb::Move(UBehaviorTreeComponent& OwnerComp) const
 	CachedEnemy->SetActorRotation(FMath::RInterpTo(CachedEnemy->GetActorRotation(), TargetRotation, GetWorld()->GetDeltaSeconds(), 15.f));
 	
 	if (FVector::Dist(TargetLocation, CachedEnemy->GetActorLocation()) > 2.f)
-	{
 		CachedEnemy->AddMovementInput((TargetLocation - CachedEnemy->GetActorLocation()).GetSafeNormal());
-	}
 }
 
 void UBTT_Climb::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
@@ -210,11 +208,11 @@ void UBTT_Climb::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, 
 	TraceGroundAndWall();
 	Move(OwnerComp);
 
-	UE_LOG(LogTemp, Error, TEXT("Climbing Destination Dist: %f"), FVector::Distance(CachedEnemy->GetActorLocation(), Destination));
+	// UE_LOG(LogTemp, Error, TEXT("Climbing Destination Dist: %f"), FVector::Distance(CachedEnemy->GetActorLocation(), Destination));
 
-	if (FVector::Distance(CachedEnemy->GetActorLocation(), Destination) < ArrivalAcceptance)
+	/*if (FVector::Distance(CachedEnemy->GetActorLocation(), Destination) < ArrivalAcceptance)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Climbing Destination"));
+		// UE_LOG(LogTemp, Error, TEXT("Climbing Destination"));
 		bDoneClimbing = true;
 	}
 
@@ -232,5 +230,5 @@ void UBTT_Climb::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, 
 		CachedEnemy->GetAIController()->SetStateToChaseOrPursue(Player);
 		
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-	}
+	}*/
 }
