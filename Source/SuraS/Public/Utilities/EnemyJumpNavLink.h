@@ -4,19 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Navigation/NavLinkProxy.h"
-#include "EnemyClimbNavLink.generated.h"
-
-class ASuraCharacterEnemyBase;
+#include "EnemyJumpNavLink.generated.h"
 
 UCLASS()
-class SURAS_API AEnemyClimbNavLink : public ANavLinkProxy
+class SURAS_API AEnemyJumpNavLink : public ANavLinkProxy
 {
 	GENERATED_BODY()
-
-	UPROPERTY()
-	ASuraCharacterEnemyBase* CachedEnemy;
-
-	void OnCachedEnemyDeath();
 
 protected:
 	// Called when the game starts or when spawned
@@ -24,13 +17,8 @@ protected:
 
 	UFUNCTION()
 	void OnReceiveSmartLinkReached(AActor* Agent, const FVector& Destination);
-
+	
 public:
 	// Sets default values for this actor's properties
-	AEnemyClimbNavLink();
-
-	void SetLinkUsable(bool bIsUsable);
-
-	UFUNCTION()
-	ASuraCharacterEnemyBase* GetCachedEnemy() const { return CachedEnemy; };
+	AEnemyJumpNavLink();
 };

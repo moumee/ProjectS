@@ -127,6 +127,8 @@ public:
 
 	virtual void SetMovementSpeed(EEnemySpeed Speed) override;
 
+	virtual void JumpWall(const FVector& Destination) override;
+
 	virtual void Climb(const FVector& Destination);
 
 	virtual void OnClimbEnded(UAnimMontage* AnimMontage, bool bInterrupted);
