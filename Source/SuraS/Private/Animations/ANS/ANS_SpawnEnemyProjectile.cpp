@@ -29,5 +29,5 @@ void UANS_SpawnEnemyProjectile::NotifyTick(USkeletalMeshComponent* MeshComp, UAn
 	// UE_LOG(LogTemp, Error, TEXT("ANS Current Time / Full Duration: %ff"), CurrentDuration / ANSDuration);
 
 	if (CurrentDuration > ANSDuration && CachedEnemy	&& CachedEnemy->GetWorld() && CachedEnemy->GetWorld()->IsGameWorld())
-		CachedEnemy->SetProjectilScale(FMath::Clamp(CurrentDuration / ANSDuration, 0.f, 1.f));
+		CachedEnemy->SetProjectileScale(FMath::Clamp(CurrentDuration / ANSDuration, 0.f, 1.f));
 }
