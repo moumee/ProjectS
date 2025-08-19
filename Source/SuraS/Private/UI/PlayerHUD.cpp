@@ -206,8 +206,24 @@ void UPlayerHUD::InitializeHUD() const
 void UPlayerHUD::UpdatePickup(FName WeaponName)
 {
 	InitializeHUD();
+	
+	int32 WeaponCount = WeaponSystemComponent->GetWeaponInventory().Num();
+
+	static int32 PreviousWeaponCount = 0;
+
+	// 무기 개수가 3개 이상이고, 이전에도 3개 이상이면 업데이트하지 않음
+	if (WeaponCount >= 3 && PreviousWeaponCount >= 3)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("무기 이미 3개 이상 - UI 업데이트 생략"));
+		return;
+	}
+
+	// UI 업데이트 호출
 	UpdateWeaponSlotUIByInventoryOrder();
+
+	PreviousWeaponCount = WeaponCount;
 }
+
 
 int32 UPlayerHUD::GetWeaponCount() const
 {

@@ -109,11 +109,6 @@ private:
 
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* WeaponInventoryNum;
-	
-	// 배열로 정리
-	// TArray<UOverlay*> WeaponSlots;
-	// TArray<UImage*> WeaponImages;
-	TArray<int32> WeaponIndices; // WeaponInventory에서 가져온 무기 인덱스
 
 	int32 CurrentWeaponIndex = 0; // 인벤토리 기준 현재 무기 인덱스
 
@@ -136,7 +131,7 @@ public:
 
 	UFUNCTION()
 	void InitializeHUD() const;
-
+	
 	UFUNCTION()
 	void UpdatePickup(FName WeaponName);
 
