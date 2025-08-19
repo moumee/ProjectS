@@ -26,4 +26,5 @@ class SURAS_API IEnemyActions
 public:
 	virtual void Attack(ASuraPawnPlayer* Player) = 0;
 	virtual void SetMovementSpeed(EEnemySpeed Speed) = 0;
+	virtual void JumpWall(const FVector& Destination) = 0;
 };

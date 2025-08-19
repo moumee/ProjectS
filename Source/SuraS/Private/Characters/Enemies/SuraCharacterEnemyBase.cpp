@@ -14,6 +14,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "Widgets/Enemies/EnemyHealthBarWidget.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
@@ -297,6 +298,16 @@ void ASuraCharacterEnemyBase::SetMovementSpeed(EEnemySpeed Speed)
 		GetCharacterMovement()->MaxWalkSpeed = 300.f;
 		break;
 	}
+}
+
+void ASuraCharacterEnemyBase::JumpWall(const FVector& Destination)
+{
+	FVector LaunchVelocity = FVector::ZeroVector;
+	FVector FinalDestination = FVector(Destination.X, Destination.Y, Destination.Z + 250.f);
+	
+	UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, GetActorLocation(), FinalDestination);
+
+	LaunchCharacter(LaunchVelocity, true, true);
 }
 
 void ASuraCharacterEnemyBase::Climb(const FVector& Destination)
