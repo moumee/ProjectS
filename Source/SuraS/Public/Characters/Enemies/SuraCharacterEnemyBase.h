@@ -121,7 +121,7 @@ public:
 
 	void SetUpAIController(AEnemyBaseAIController* const NewAIController); // const ptr: the ptr address can't be changed
 
-	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
+	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser) override;
 
 	virtual void Attack(ASuraPawnPlayer* Player) override;
 

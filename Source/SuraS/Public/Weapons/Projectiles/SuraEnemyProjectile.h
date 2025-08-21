@@ -32,9 +32,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Niagara")
 	UNiagaraComponent* NiagaraComponent;
-
-	UPROPERTY(VisibleAnywhere)
-	AActor* ProjectileOwner;
 	
 	float M_DamageAmount;
 	float M_HeadshotAdditionalDamage;

@@ -103,7 +103,7 @@ void ASuraEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 		DamageData.DamageType = EDamageType::Projectile;
 		DamageData.bCanForceDamage = false;
 		
-		Player->TakeDamage(DamageData, ProjectileOwner);
+		Player->TakeDamage(DamageData, GetOwner());
 
 		Destroy();
 	}
@@ -153,7 +153,7 @@ void ASuraEnemyProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, A
 		DamageData.bCanForceDamage = false;
 
 		OverlappedComp->AddImpulseAtLocation(GetVelocity() * 500.f, GetActorLocation());
-		Player->TakeDamage(DamageData, ProjectileOwner);
+		Player->TakeDamage(DamageData, GetOwner());
 
 		Destroy();
 	}
@@ -183,7 +183,7 @@ void ASuraEnemyProjectile::ApplyDamage(AActor* OtherActor, float TheDamageAmount
 	DamageData.bCanForceDamage = bCanForceDamage;
 
 	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OtherActor))
-		Player->TakeDamage(DamageData, ProjectileOwner);
+		Player->TakeDamage(DamageData, GetOwner());
 }
 
 void ASuraEnemyProjectile::SetHomingTarget(const AActor* Target)

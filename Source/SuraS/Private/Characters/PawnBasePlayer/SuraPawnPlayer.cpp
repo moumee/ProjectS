@@ -16,6 +16,7 @@
 #include "Components/SceneCaptureComponent2D.h" //<JaeHyeong>
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
+#include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "UI/PlayerHUD.h"
 #include "Widgets/Player/PlayerHitWidget.h"
 
@@ -129,6 +130,8 @@ void ASuraPawnPlayer::SetLookInputVector2DZero()
 void ASuraPawnPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	LastHitRelativeDirection = (LastPlayerHitEnemyPosition - GetActorLocation()).GetSafeNormal2D();
 
 }
 
@@ -282,8 +285,31 @@ void ASuraPawnPlayer::StopCrouchInput()
 	MovementComponent->SetCrouchPressed(false);
 }
 
-bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
+bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCauser)
 {
+	if (const ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(DamageCauser))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Cast Success"));
+		FName EnemyType = Enemy->GetEnemyType();
+		if (EnemyType == "Rifle" || EnemyType == "Bombard")
+		{
+			LastPlayerHitEnemyRange = EEnemyRange::ER_Ranged;
+		}
+		else if (EnemyType == "Melee")
+		{
+			LastPlayerHitEnemyRange = EEnemyRange::ER_Melee;
+		}
+		
+
+		LastPlayerHitEnemyPosition = Enemy->GetActorLocation();
+		
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Cast Fail"));
+	}
+
+	
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }
 
