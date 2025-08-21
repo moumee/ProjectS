@@ -34,7 +34,7 @@ void UACDamageSystem::SetIsDead(bool val)
 	bIsDead = val;
 }
 
-bool UACDamageSystem::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
+bool UACDamageSystem::TakeDamage(const FDamageData& DamageData, AActor* DamageCauser)
 {
 	if (!bIsDead && (!bIsInvincible || DamageData.bCanForceDamage))
 	{

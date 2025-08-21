@@ -255,7 +255,7 @@ void ASuraCharacterEnemyBase::LungeToTarget(float LungeForce = 1000.f)
 	LaunchCharacter(Direction * Distance, true, true);*/
 }
 
-bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
+bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, AActor* DamageCauser)
 {
 	return GetDamageSystemComp()->TakeDamage(DamageData, DamageCauser);
 }
