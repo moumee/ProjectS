@@ -3,6 +3,8 @@
 
 #include "ActorComponents/DamageComponent/ACEnemyDamageSystem.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 
 TSet<FName> UACEnemyDamageSystem::HeadBoneNames = {FName(TEXT("head"))};
@@ -35,6 +37,8 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 		// Enemy->GetAIController()->AlertNearByEnemies();
 	}*/
 
+	
+
 	if (HeadBoneNames.Contains((DamageData.BoneName)))
 	{
 		HeadHealth -= DamageData.DamageAmount;
@@ -49,7 +53,6 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 		if (LArmHealth <= 0)
 		{
 			PartBroken(OwningEnemyActor, DamageData, MaxLArmHealth, "upperarm_l", LArm);
-			Cast<ASuraCharacterEnemyBase>(OwningEnemyActor)->SetCrippled();
 		}
 	}
 	if (RArmBoneNames.Contains((DamageData.BoneName)))
@@ -58,7 +61,6 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, const AActo
 		if (RArmHealth <= 0)
 		{
 			PartBroken(OwningEnemyActor, DamageData, MaxRArmHealth, "upperarm_r", RArm);
-			Cast<ASuraCharacterEnemyBase>(OwningEnemyActor)->SetCrippled();
 		}
 	}
 	if (LLegBoneNames.Contains((DamageData.BoneName)))
@@ -119,6 +121,17 @@ void UACEnemyDamageSystem::PartBroken(AActor* OwningEnemyActor, const FDamageDat
 	FVector SpawnLocation = OwningEnemyActor->FindComponentByClass<USkeletalMeshComponent>()
 		->GetSocketLocation(PartsParent);
 
+	if (BloodEffect)
+	{
+		UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),         // 월드 컨텍스트
+			BloodEffect,     // 나이아가라 시스템
+			SpawnLocation,      // 생성 위치
+			DamageData.ImpulseDirection.Rotation()  // 생성시 회전값
+		);
+		NiagaraComp->SetVectorParameter(FName("HitDirection"), DamageData.ImpulseDirection*500);
+	}
+	
 	if (SeparatedPart != nullptr)
 	{
 		AActor* bodyPart;
