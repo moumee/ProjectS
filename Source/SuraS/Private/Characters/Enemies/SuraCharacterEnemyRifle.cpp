@@ -11,9 +11,6 @@
 ASuraCharacterEnemyRifle::ASuraCharacterEnemyRifle()
 {
 	EnemyType = "Rifle";
-
-	
-	
 }
 
 void ASuraCharacterEnemyRifle::BeginPlay()
@@ -35,7 +32,7 @@ void ASuraCharacterEnemyRifle::BeginPlay()
 
 void ASuraCharacterEnemyRifle::SpawnProjectile()
 {
-	UE_LOG(LogTemp, Warning, TEXT("SpawnProjectile"));
+	// UE_LOG(LogTemp, Warning, TEXT("Spawn Enemy Projectile"));
 	
 	if (ProjectileClass)
 	{
@@ -89,4 +86,14 @@ void ASuraCharacterEnemyRifle::Attack(ASuraPawnPlayer* Player)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("not found"));
 	}*/
+}
+
+void ASuraCharacterEnemyRifle::OnDeathTriggered()
+{
+	Super::OnDeathTriggered();
+
+	if (Projectile)
+	{
+		Projectile->Destroy();
+	}
 }
