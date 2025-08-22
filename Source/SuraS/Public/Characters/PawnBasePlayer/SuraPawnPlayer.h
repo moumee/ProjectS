@@ -30,6 +30,14 @@ class UPlayerHUD;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerHealthHalved);
 
+UENUM()
+enum class EEnemyRange
+{
+	ER_Melee,
+	ER_Ranged
+};
+
+
 UCLASS()
 class SURAS_API ASuraPawnPlayer : public APawn, public IDamageable
 {
@@ -76,7 +84,7 @@ public:
 	// for damage system comp and interactions with enemies
 	UACDamageSystem* GetDamageSystemComponent() const { return DamageSystemComponent; }
 	UACPlayerAttackTokens* GetAttackTokensComponent() const { return AttackTokensComponent; }
-	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
+	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser) override;
 
 	// SuraPawnPlayer.h - suhyeon
 	UFUNCTION(BlueprintCallable)
@@ -84,11 +92,15 @@ public:
 
 	FOnPlayerHealthHalved OnPlayerHealthHalved;
 
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE FVector GetLastHitRelativeDirection() const { return LastHitRelativeDirection; }
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE EEnemyRange GetLastPlayerHitEnemyRange() const { return LastPlayerHitEnemyRange; }
+
 protected:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UCapsuleComponent> CapsuleComponent;
-	
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
 	TObjectPtr<USkeletalMeshComponent> ArmMesh;
@@ -146,6 +158,15 @@ protected:
 	void CheckPlayerHealth();
 
 	FVector2D PlayerLookInputVector2D; // <WeaponSystem>
+
+	UPROPERTY(VisibleAnywhere)
+	EEnemyRange LastPlayerHitEnemyRange;
+	UPROPERTY(VisibleAnywhere)
+	FVector LastPlayerHitEnemyPosition;
+	UPROPERTY(VisibleAnywhere)
+	FVector LastHitRelativeDirection;
+	
+	
 
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);

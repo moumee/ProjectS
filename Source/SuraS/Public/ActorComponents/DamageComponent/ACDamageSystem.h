@@ -44,5 +44,5 @@ public:
 	FOnDeath OnDeath;
 
 	UFUNCTION(BlueprintCallable)
-	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser);
+	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser);
 };

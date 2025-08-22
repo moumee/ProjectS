@@ -47,7 +47,7 @@ public:
 	// Sets default values for this component's properties
 	UACEnemyDamageSystem();
 	
-	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
+	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser) override;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> RArm;
