@@ -23,6 +23,7 @@
 
 #include "ACWeapon.generated.h"
 
+class UTargetMarkerWidget;
 class URocketLauncherSkillWidget;
 //class ASuraCharacterPlayerWeapon;
 class ASuraPawnPlayer;
@@ -422,7 +423,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AmmoCounterWidget")
 	UAmmoCounterWidget* AmmoCounterWidget;
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "TargetMarkerWidget")
-	TSubclassOf<UUserWidget> TargetMarkerWidgetClass;
+	TSubclassOf<UTargetMarkerWidget> TargetMarkerWidgetClass;
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "UTargetingSkillWidget")
 	TSubclassOf<UTargetingSkillWidget> TargetingSkillWidgetClass;
 	UPROPERTY()
@@ -515,11 +516,11 @@ protected:
 #pragma region FireMode/Targeting
 protected:
 	UPROPERTY()
-	TArray<UUserWidget*> TargetMarkerWidgets;
+	TArray<UTargetMarkerWidget*> TargetMarkerWidgets;
 	UPROPERTY()
 	TSet<AActor*> Targets;
 	UPROPERTY()
-	TMap<AActor*, UUserWidget*> MapTargetActorToWidget;
+	TMap<AActor*, UTargetMarkerWidget*> MapTargetActorToWidget;
 
 	FTimerHandle TargetDetectionTimer;
 	int32 MaxTargetNum = 10;
@@ -544,7 +545,7 @@ protected:
 	float GetUnsignedAngleBetweenVectors(const FVector& VectorA, const FVector& VectorB, const FVector& Axis);
 	bool CheckIfTargetIsBlockedByObstacle(AActor* target);
 
-	UUserWidget* CreateTargetMarkerWidget(AActor* TargetActor);
+	UTargetMarkerWidget* CreateTargetMarkerWidget(AActor* TargetActor);
 public:
 	void UpdateTargetMarkers();
 	void ResetTargetMarkers();

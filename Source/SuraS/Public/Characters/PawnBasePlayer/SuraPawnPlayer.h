@@ -64,6 +64,8 @@ public:
 
 	USkeletalMeshComponent* GetHandsMesh() { return HandsMesh; }   //<JaeHyeong>
 
+	UACUIMangerComponent* GetUIManager() const { return UIManager; } // <Suhyeon>
+
 	bool HasWeapon() const;  // <WeaponSystem>s
 
 	void UpdateLookInputVector2D(const FInputActionValue& InputValue);  // <WeaponSystem>
