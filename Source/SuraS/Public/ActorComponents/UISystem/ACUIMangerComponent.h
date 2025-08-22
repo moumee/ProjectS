@@ -72,6 +72,11 @@ public:
 		return DTWeapon;	
 	}
 
+	UDataTable* GetUIDataTable() const
+	{
+		return DTUISetting;
+	}
+	
 	UWeaponSystemComponent* GetWeaponSystemComponent() const {return WeaponSystemComponent;}
 
 	void TestKillLog();
