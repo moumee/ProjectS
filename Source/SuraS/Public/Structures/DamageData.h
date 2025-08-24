@@ -13,7 +13,7 @@ USTRUCT(BlueprintType)
 struct SURAS_API FDamageData : public FTableRowBase
 {
 	GENERATED_BODY()
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DamageAmount = 0.f;
 
@@ -28,4 +28,7 @@ struct SURAS_API FDamageData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector ImpulseDirection = FVector::ZeroVector;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TEnumAsByte<EPhysicalSurface> SurfaceType = SurfaceType1;
 };

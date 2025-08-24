@@ -60,8 +60,8 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
 	CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel7, ECR_Ignore);
 	ArmMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	FPSceneCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent")); //<JaeHyeong>
-	FPSceneCapture->SetupAttachment(Camera);
+	// FPSceneCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent")); //<JaeHyeong>
+	// FPSceneCapture->SetupAttachment(Camera);
 
 	// for damage interactions with enemies
 	AttackTokensComponent = CreateDefaultSubobject<UACPlayerAttackTokens>(TEXT("Attack Tokens Component"));
@@ -289,7 +289,6 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 {
 	if (const ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(DamageCauser))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Cast Success"));
 		FName EnemyType = Enemy->GetEnemyType();
 		if (EnemyType == "Rifle" || EnemyType == "Bombard")
 		{
@@ -303,10 +302,6 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 
 		LastPlayerHitEnemyPosition = Enemy->GetActorLocation();
 		
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Cast Fail"));
 	}
 
 	
