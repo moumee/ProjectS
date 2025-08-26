@@ -44,9 +44,12 @@
 #include "NiagaraFunctionLibrary.h"
 
 //----------------------------------
+#include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/CanvasRenderTarget2D.h"
+#include "UI/TargetMarkerWidget.h"
+#include "UI/UIData.h"
 
 // Sets default values for this component's properties
 AWeapon::AWeapon()
@@ -370,6 +373,23 @@ void AWeapon::Tick(float DeltaTime)
 	UpdateTargetingSkillUI(); //TODO: Should Update UI When even TargetingSkillTimer is not activated
 
 	UpdateOverheat(DeltaTime); //TODO: Overheat ����� �Ⱦ��Ŷ�� �ϴµ�, Ȥ�� mesh�� ���� ȿ�� ������ ���� �����ϱ� �ϴ��� ����
+
+	//Suhyeon
+	if (CurrentState == TargetingState)
+	{
+		// 모든 위젯의 수동 타이머를 업데이트
+		for (UUserWidget* Widget : TargetMarkerWidgets)
+		{
+			UTargetMarkerWidget* TargetMarker = Cast<UTargetMarkerWidget>(Widget);
+			if (TargetMarker)
+			{
+				float RealDelta = FApp::GetDeltaTime(); // 슬로우타임 무시
+				
+				// 위젯 자체의 타이머 업데이트 함수를 호출함
+				TargetMarker->UpdateLockOnTimer(RealDelta);
+			}
+		}
+	}
 }
 
 void AWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -384,6 +404,7 @@ bool AWeapon::AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter)
 
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
+	
 
 	if (WeaponSocketName.IsNone())
 	{
@@ -393,6 +414,19 @@ bool AWeapon::AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter)
 	{
 		AttachToComponent(Character->GetArmMesh(), AttachmentRules, WeaponSocketName);
 	}
+
+	// Seunghwan - use unreal first person rendering
+	WeaponMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
+	TArray<USceneComponent*> AttachedChildren;
+	WeaponMesh->GetChildrenComponents(true, AttachedChildren);
+	for (auto Child : AttachedChildren)
+	{
+		if (UPrimitiveComponent* PrimitiveChild = Cast<UPrimitiveComponent>(Child))
+		{
+			PrimitiveChild->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
+		}
+	}
+	
 
 	//---------------------------------------------
 	//TODO: �� ���� ����� ������ ������
@@ -424,6 +458,18 @@ void AWeapon::DetachWeaponFromPlayer()
 	}
 	else
 	{
+		// Seunghwan - disable first person rendering
+		WeaponMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::None;
+		TArray<USceneComponent*> AttachedChildren;
+		WeaponMesh->GetChildrenComponents(true, AttachedChildren);
+		for (auto Child : AttachedChildren)
+		{
+			if (UPrimitiveComponent* PrimitiveChild = Cast<UPrimitiveComponent>(Child))
+			{
+				PrimitiveChild->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::None;
+			}
+		}
+		
 		//ActivateCrosshairWidget(false);
 		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		//WeaponMesh->SetVisibility(false);
@@ -2023,7 +2069,7 @@ void AWeapon::UpdateTargetDetection(float DeltaTime) //TODO: �ش� Ÿ�� �
 		AActor* PreviousTarget = *It;
 		if (IsValid(PreviousTarget) && CheckIfTargetIsBlockedByObstacle(PreviousTarget))
 		{
-			UUserWidget** TargetMarkerPtr = MapTargetActorToWidget.Find(PreviousTarget);
+			UTargetMarkerWidget** TargetMarkerPtr = MapTargetActorToWidget.Find(PreviousTarget);
 			(*TargetMarkerPtr)->RemoveFromViewport();
 			(*TargetMarkerPtr)->RemoveFromParent();
 			TargetMarkerWidgets.Remove(*TargetMarkerPtr);
@@ -2048,7 +2094,7 @@ void AWeapon::UpdateTargetDetection(float DeltaTime) //TODO: �ش� Ÿ�� �
 					if (!CheckIfTargetIsBlockedByObstacle(NewOverlappedActor))
 					{
 						Targets.Add(NewOverlappedActor);
-						UUserWidget* NewTargetMarker = CreateTargetMarkerWidget(NewOverlappedActor);
+						UTargetMarkerWidget* NewTargetMarker = CreateTargetMarkerWidget(NewOverlappedActor);
 						if (NewTargetMarker)
 						{
 							TargetMarkerWidgets.Add(NewTargetMarker);
@@ -2253,12 +2299,14 @@ bool AWeapon::CheckIfTargetIsBlockedByObstacle(AActor* target)
 	);
 	return bHit;
 }
-UUserWidget* AWeapon::CreateTargetMarkerWidget(AActor* TargetActor)
+
+UTargetMarkerWidget* AWeapon::CreateTargetMarkerWidget(AActor* TargetActor)
 {
 	if (TargetMarkerWidgetClass)
 	{
-		UUserWidget* NewTargetMarkerWidget = CreateWidget<UUserWidget>(GetWorld(), TargetMarkerWidgetClass);
+		UTargetMarkerWidget* NewTargetMarkerWidget = CreateWidget<UTargetMarkerWidget>(GetWorld(), TargetMarkerWidgetClass);
 		MapTargetActorToWidget.Add(TargetActor, NewTargetMarkerWidget);
+		
 		return NewTargetMarkerWidget;
 	}
 	return nullptr;
@@ -2270,7 +2318,7 @@ void AWeapon::UpdateTargetMarkers()
 		FVector TargetLocation = Target->GetActorLocation();
 		//FVector TargetOffset(0.f, 0.f, 50.f);
 
-		UUserWidget** TargetMarkerPtr = MapTargetActorToWidget.Find(Target);
+		UTargetMarkerWidget** TargetMarkerPtr = MapTargetActorToWidget.Find(Target);
 
 		USkeletalMeshComponent* TargetSkeletalMesh = Target->GetComponentByClass<USkeletalMeshComponent>();
 		if (TargetSkeletalMesh && TargetSkeletalMesh->DoesSocketExist(FName(TEXT("spine_03"))))
@@ -2302,7 +2350,7 @@ void AWeapon::ResetTargetMarkers()
 {
 	for (AActor* Target : Targets)
 	{
-		UUserWidget** TargetMarkerPtr = MapTargetActorToWidget.Find(Target);
+		UTargetMarkerWidget** TargetMarkerPtr = MapTargetActorToWidget.Find(Target);
 
 		(*TargetMarkerPtr)->RemoveFromViewport();
 		(*TargetMarkerPtr)->RemoveFromParent();
@@ -2470,11 +2518,11 @@ void AWeapon::UpdateTargetDetectionSkill(float DeltaTime)
 		AActor* PreviousTarget = *It;
 		if (IsValid(PreviousTarget) && CheckIfTargetIsBlockedByObstacle(PreviousTarget))
 		{
-			UUserWidget** TargetMarkerPtr = MapTargetActorToWidget.Find(PreviousTarget);
+			UTargetMarkerWidget** TargetMarkerPtr = MapTargetActorToWidget.Find(PreviousTarget);
 			(*TargetMarkerPtr)->RemoveFromViewport();
 			(*TargetMarkerPtr)->RemoveFromParent();
 			TargetMarkerWidgets.Remove(*TargetMarkerPtr);
-
+			
 			It.RemoveCurrent();
 			MapTargetActorToWidget.Remove(PreviousTarget);
 		}
@@ -2495,9 +2543,34 @@ void AWeapon::UpdateTargetDetectionSkill(float DeltaTime)
 					if (!CheckIfTargetIsBlockedByObstacle(NewOverlappedActor))
 					{
 						Targets.Add(NewOverlappedActor);
-						UUserWidget* NewTargetMarker = CreateTargetMarkerWidget(NewOverlappedActor);
+						UTargetMarkerWidget* NewTargetMarker = Cast<UTargetMarkerWidget>(CreateTargetMarkerWidget(NewOverlappedActor));
 						if (NewTargetMarker)
 						{
+							float TargetingReadyDuration = 0.3f; // default
+							float TargetingSuccessDuration = 0.3f; // default
+							if (Character)
+							{
+								UACUIMangerComponent* UIManager = Character->GetUIManager();
+								if (UIManager)
+								{
+									UDataTable* UIDataTable = UIManager->GetUIDataTable();
+									if (UIDataTable)
+									{
+										if (const FUIData* Row = UIDataTable->FindRow<FUIData>(TEXT("TargetingReady"), TEXT("")))
+										{
+											TargetingReadyDuration = Row->AnimDuration;
+										}
+										
+										if (const FUIData* Row = UIDataTable->FindRow<FUIData>(TEXT("TargetingSuccess"), TEXT("")))
+										{
+											TargetingSuccessDuration = Row->AnimDuration;
+										}
+									}
+								}
+							}
+							NewTargetMarker->StartLockOnProcess(TargetingReadyDuration, TargetingSuccessDuration);
+							
+							MapTargetActorToWidget.Add(NewOverlappedActor, NewTargetMarker); //suhyeon
 							TargetMarkerWidgets.Add(NewTargetMarker);
 							NewTargetMarker->AddToViewport();
 							NewTargetMarker->SetAlignmentInViewport(FVector2D(0.5f, 0.5f));
@@ -2539,21 +2612,40 @@ void AWeapon::HandleTargetingSkillFire(bool bIsLeftInput, bool bSingleProjectile
 		CurrentTargetDetectionRadius = 0.f;
 		CurrentTargetDetectionAngle = 0.f;
 
-		ResetTargetMarkers();
+		//ResetTargetMarkers();
 		StopWeaponSound();
 
 		if (TargetingSkillWidget) { TargetingSkillWidget->SetDetectionTimeUIVisible(false); }
 
-		TArray<AActor*> TargetsArray = Targets.Array();
+		//TArray<AActor*> TargetsArray = Targets.Array();
+
+		// 락온이 완료된 타겟만 저장할 새로운 배열 선언
+		TArray<AActor*> LockedOnTargets;
+		
+		// 모든 타겟을 순회하면 락온된 타겟만 선별
+		for (AActor* Target : Targets)
+		{
+			UTargetMarkerWidget** TargetMarkerPtr = MapTargetActorToWidget.Find(Target);
+			if (TargetMarkerPtr && *TargetMarkerPtr)
+			{
+				UTargetMarkerWidget* TargetMarker = Cast<UTargetMarkerWidget>(*TargetMarkerPtr);
+
+				if (TargetMarker && TargetMarker->bIsLockedOn)
+				{
+					LockedOnTargets.Add(Target);
+				}
+			}
+		}
+		ResetTargetMarkers();
 		Targets.Empty();
 
 		bCanUseTargetingSkill = false;
 		bool bflag = true;
 		GetWorld()->GetTimerManager().SetTimer(TargetingSkillTimer, [this, bflag]() {EnableTargetingSkill(bflag); }, TargetingSkillCoolDown, false);
 		
-		if (TargetsArray.Num() == 0)
+		if (LockedOnTargets.Num() == 0)
 		{
-			StartMissileLaunch(TargetsArray, &FireData_Skill);
+			StartMissileLaunch(LockedOnTargets, &FireData_Skill);
 			if (CurrentState == IdleState)
 			{
 				ChangeState(FiringState);
@@ -2562,7 +2654,7 @@ void AWeapon::HandleTargetingSkillFire(bool bIsLeftInput, bool bSingleProjectile
 		}
 		else
 		{
-			StartMissileLaunch(TargetsArray, &FireData_Skill);
+			StartMissileLaunch(LockedOnTargets, &FireData_Skill);
 		}
 	}
 	else if (CurrentState == IdleState)

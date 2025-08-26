@@ -32,7 +32,7 @@ void  AEnemyClimbNavLink::OnReceiveSmartLinkReached(AActor* Agent, const FVector
 		return;
 
 	// have the enemy climb up the wall
-	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(Agent))
+	if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(Agent))
 	{
 		// Enemy->Climb(Destination);
 

@@ -44,7 +44,7 @@ struct FWallInfo
 	FHitResult Hit;
 	
 	UPROPERTY()
-	double TimeStamp;
+	double TimeStamp = 0;
 };
 
 DECLARE_MULTICAST_DELEGATE(FOnMove);

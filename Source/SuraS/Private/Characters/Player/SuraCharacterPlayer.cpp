@@ -561,7 +561,7 @@ void ASuraCharacterPlayer::InterpCapsuleHeight(float TargetScale, float DeltaTim
 
 }
 
-bool ASuraCharacterPlayer::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
+bool ASuraCharacterPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCauser)
 {
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }
