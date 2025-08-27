@@ -6,7 +6,6 @@
 #include "Components/ActorComponent.h"
 #include "ACUIMangerComponent.generated.h"
 
-class UACSkillManager;
 class UWeaponSystemComponent;
 class UPlayerHUD;
 class UACPlayerHUDManager;
@@ -16,18 +15,19 @@ class UBaseUIWidget;
 class UACInventoryManager;
 class UACCrosshairManager;
 class UACKillLogManager;
-class UACPlayerHUDManager;
 class UACSkillManager;
+class UACPlayerHUDManager;
+class UACDamageIndicatorManager;
 
 UENUM(BlueprintType)
 enum class EUIType : uint8
 {
 	None UMETA(DisplayName = "None"),
 	Inventory UMETA(DisplayName = "Inventory"),
-	Pause UMETA(DisplayName = "Pause"),
 	KillLog UMETA(DisplayName = "KillLog"),
 	PlayerHUD UMETA(DisplayName = "PlayerHUD"),
-	Skill UMETA(DisplayName = "Skill")
+	Skill UMETA(DisplayName = "Skill"),
+	DamageIndicator UMETA(DisplayName = "DamageIndicator")
 };
 
 
@@ -45,6 +45,22 @@ protected:
 	virtual void BeginPlay() override;
 
 	void SetupInput();
+
+	/** UI Manager들 **/
+	UPROPERTY()
+	UACInventoryManager* InventoryManager;
+
+	UPROPERTY()
+	UACKillLogManager* KillLogManager;
+
+	UPROPERTY()
+	UACPlayerHUDManager* PlayerHUDManager;
+
+	UPROPERTY()
+	UACSkillManager* SkillManager;
+	
+	UPROPERTY()
+	UWeaponSystemComponent* WeaponSystemComponent;
 
 	
 
@@ -79,7 +95,7 @@ public:
 	
 	UWeaponSystemComponent* GetWeaponSystemComponent() const {return WeaponSystemComponent;}
 
-	void TestKillLog();
+	
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -93,10 +109,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
 	UDataTable* DTUISetting;
-	
-
-	// UPROPERTY(EditDefaultsOnly, Category = "Data")
-	// UDataTable* DTProjectile;
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TMap<EUIType, TSubclassOf<UBaseUIWidget>> UIWidgetClasses; // 위젯 블루프린트 클래스
@@ -104,30 +116,4 @@ private:
 	/** 생성된 UI 위젯 관리 **/
 	UPROPERTY()
 	TMap<EUIType, UBaseUIWidget*> UIWidgets;
-
-	/** UI Manager들 **/
-	UPROPERTY()
-	UACInventoryManager* InventoryManager;
-
-	UPROPERTY()
-	UACKillLogManager* KillLogManager;
-
-	UPROPERTY()
-	UACPlayerHUDManager* PlayerHUDManager;
-
-	UPROPERTY()
-	UACSkillManager* SkillManager;
-
-	UWeaponSystemComponent* WeaponSystemComponent = nullptr;
-
-	
-
-	
-	// UPROPERTY()
-	// UACCrosshairManager* CrosshairManager;
-
-	
-
-public:
-		
 };
