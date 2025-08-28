@@ -463,14 +463,16 @@ void ASuraProjectile::SpawnImpactEffect(FVector SpawnLocation, FRotator SpawnRot
 {
 	if (ImpactEffect)
 	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactEffect, SpawnLocation, SpawnRotation, FVector(1.0f), true);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactEffect, SpawnLocation, SpawnRotation,
+			FVector(1.0f), true, true, ENCPoolMethod::AutoRelease);
 	}
 }
 void ASuraProjectile::SpawnExplosionEffect(FVector SpawnLocation)
 {
 	if (ExplosionEffect)
 	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionEffect, SpawnLocation, FRotator::ZeroRotator, FVector(1.0f), true);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionEffect, SpawnLocation,
+			FRotator::ZeroRotator, FVector(1.0f), true, true, ENCPoolMethod::AutoRelease);
 	}
 }
 void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Rocket Trail ����� �̻���. �պ�����
@@ -494,7 +496,7 @@ void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Roc
 				GetWorld(),
 				TrailEffect,
 				Weapon->GetWeaponMesh()->GetSocketLocation(FName(TEXT("Muzzle"))),
-				FRotator(0.f, 0.f, 0.f));
+				FRotator(0.f, 0.f, 0.f), FVector(1), true, true, ENCPoolMethod::AutoRelease);
 
 
 			//TODO: effect�� weapon muzzle�� ������ų��, �߻������� �������� Input���� ���������ϰ� �ϱ�
@@ -522,7 +524,7 @@ void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Roc
 				TrailLocationOffset,
 				FRotator(0, 0, 0),
 				EAttachLocation::KeepRelativeOffset,
-				true);
+				true, true, ENCPoolMethod::AutoRelease);
 		}
 	}
 }
