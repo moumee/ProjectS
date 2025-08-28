@@ -149,11 +149,11 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	GEngine->AddOnScreenDebugMessage(
-		0, 0.f, FColor::Cyan, FString::Printf(TEXT("Current State : %s"), *UEnum::GetValueAsString(CurrentMovementState)));
-
-	GEngine->AddOnScreenDebugMessage(
-		1, 0.f, FColor::Cyan, FString::Printf(TEXT("Velocity : (%f, %f, %f) / Size : %f / Size2D : %f "), Velocity.X, Velocity.Y, Velocity.Z, Velocity.Size(), Velocity.Size2D()));
+	// GEngine->AddOnScreenDebugMessage(
+	// 	0, 0.f, FColor::Cyan, FString::Printf(TEXT("Current State : %s"), *UEnum::GetValueAsString(CurrentMovementState)));
+	//
+	// GEngine->AddOnScreenDebugMessage(
+	// 	1, 0.f, FColor::Cyan, FString::Printf(TEXT("Velocity : (%f, %f, %f) / Size : %f / Size2D : %f "), Velocity.X, Velocity.Y, Velocity.Z, Velocity.Size(), Velocity.Size2D()));
 	
 	
 
@@ -1666,7 +1666,7 @@ bool USuraPlayerMovementComponent::FindGroundPoint(FVector& OutPoint)
 	if (bHit)
 	{
 		OutPoint = Hit.ImpactPoint;
-		DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 5.f, 10, FColor::Green, false);
+		// DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 5.f, 10, FColor::Green, false);
 	}
 
 	return bHit;
