@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "ACDamageSystem.h"
+#include "NiagaraSystem.h"
 #include "ACEnemyDamageSystem.generated.h"
 
 
@@ -63,6 +64,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> RLeg;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX")
+	UNiagaraSystem* BloodEffect;
 
 	FORCEINLINE void SetImpulsePower(float weak, float normal, float hard);
 	FORCEINLINE void SetPartsHealth(float head, float body, float rArm, float lArm, float lLeg, float rLeg);

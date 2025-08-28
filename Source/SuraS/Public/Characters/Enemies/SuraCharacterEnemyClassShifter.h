@@ -37,6 +37,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shape")
 	TSubclassOf<UAnimInstance> ChangedAnimBP;
+
+	UPROPERTY(EditAnywhere, Category = "Projectile")
+	TSubclassOf<class ASuraEnemyProjectile> ProjectileClass;
 	
 	void ClassShiftingInitializeEnemy();
 
