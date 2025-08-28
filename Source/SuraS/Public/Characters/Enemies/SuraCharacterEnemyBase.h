@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Characters/SuraCharacterBase.h"
+#include "Components/TimelineComponent.h"
 
 #include "Interfaces/Damageable.h"
 #include "Structures/DamageData.h"
@@ -58,6 +59,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Patrol Route", meta = (AllowPrivateAccess = "true"))
 	AEnemyPatrolRoute* PatrolRoute;
 
+	UPROPERTY(VisibleDefaultsOnly)
+	TObjectPtr<UTimelineComponent> HitColorTimeline;
+
+	FOnTimelineFloat OnHitColorTimelineFloat;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UCurveFloat> HitColorCurve;
+
 	float AttackDamageAmount;
 	float MeleeAttackRange;
 	float MeleeAttackSphereRadius;
@@ -84,6 +93,9 @@ protected:
 	virtual void UpdateHealthBarValue();
 
 	virtual UAnimMontage* GetRandomAnimationMontage(TArray<UAnimMontage*> AnimMontages);
+
+	UFUNCTION()
+	void UpdateHitColor(float Alpha);
 
 public:
 	ASuraCharacterEnemyBase();

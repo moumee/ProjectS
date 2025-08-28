@@ -50,6 +50,8 @@ ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 	EnemyType = "Base";
 
 	GetCapsuleComponent()->SetCollisionProfileName("EnemyPawnOverlap");
+
+	HitColorTimeline = CreateDefaultSubobject<UTimelineComponent>("HitColorTimeline");
 }
 
 void ASuraCharacterEnemyBase::BeginPlay()
@@ -57,6 +59,13 @@ void ASuraCharacterEnemyBase::BeginPlay()
 	Super::BeginPlay();
 
 	InitializeEnemy();
+
+	// Initialize hit color timeline component.
+	if (HitColorCurve)
+	{
+		OnHitColorTimelineFloat.BindUFunction(this, FName("UpdateHitColor"));
+		HitColorTimeline->AddInterpFloat(HitColorCurve, OnHitColorTimelineFloat);
+	}
 	
 	BindKillLogOnDeath();
 }
@@ -223,6 +232,12 @@ UAnimMontage* ASuraCharacterEnemyBase::GetRandomAnimationMontage(TArray<UAnimMon
 	return AnimMontages[selection];
 }
 
+void ASuraCharacterEnemyBase::UpdateHitColor(float Alpha)
+{
+	
+	GetMesh()->SetScalarParameterValueOnMaterials("HitColorAlpha", Alpha);
+}
+
 void ASuraCharacterEnemyBase::LungeToTarget(float LungeForce = 1000.f)
 {
 	if (!GetAIController())
@@ -258,6 +273,11 @@ void ASuraCharacterEnemyBase::LungeToTarget(float LungeForce = 1000.f)
 
 bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, AActor* DamageCauser)
 {
+	if (GetDamageSystemComp()->GetHealth() > 0)
+	{
+		HitColorTimeline->PlayFromStart();
+	}
+	
 	return GetDamageSystemComp()->TakeDamage(DamageData, DamageCauser);
 }
 
