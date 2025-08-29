@@ -39,6 +39,7 @@ public:
 	// Getters
 	float GetHealth() const { return Health; }
 	float GetMaxHealth() const { return MaxHealth; }
+	bool GetIsInterruptible() const { return bIsInterruptible; }
 
 	FOnDamaged OnDamaged;
 	FOnDeath OnDeath;

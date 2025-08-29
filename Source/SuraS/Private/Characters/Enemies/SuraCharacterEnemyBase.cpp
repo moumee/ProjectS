@@ -132,7 +132,7 @@ void ASuraCharacterEnemyBase::OnDamagedTriggered()
 
 	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *(HitAnimation->GetFName()).ToString()));
 
-	if (!HitAnimations.IsEmpty())
+	if (!HitAnimations.IsEmpty() && GetDamageSystemComp()->GetIsInterruptible())
 	{
 		OnHitMontageEnded.BindUObject(this, &ASuraCharacterEnemyBase::OnHitEnded);
 		
