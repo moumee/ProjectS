@@ -3,11 +3,10 @@
 
 #include "UI/DamageIndicatorWidget.h"
 
-#include "VectorTypes.h"
+#include "Animation/WidgetAnimation.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Components/Image.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
-#include "Kismet/GameplayStatics.h"
 
 void UDamageIndicatorWidget::NativeConstruct()
 {
@@ -38,66 +37,9 @@ void UDamageIndicatorWidget::NativeConstruct()
     }
 }
 
-void UDamageIndicatorWidget::HandleDamageTaken(AActor* DamageCauser)
+void UDamageIndicatorWidget::OnFadeOutAnimationFinished()
 {
-    // 피격 유발자가 유효한지 확인합니다.
-    if (!IsValid(DamageCauser))
-    {
-       return;
-    }
-
-    // 플레이어 폰(Pawn)이 유효한지 확인합니다.
-    if (!IsValid(PlayerPawn))
-    {
-       return;
-    }
-   
-    SetVisibility(ESlateVisibility::Visible);
-
-    // 피격 당시 적의 위치를 저장합니다.
-    LastPlayerHitEnemyPosition = DamageCauser->GetActorLocation();
-
-    // 적의 유형을 확인하여 근거리/원거리 정보를 결정합니다.
-    LastPlayerHitEnemyRange = EEnemyRange::ER_None;
-    const ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(DamageCauser);
-    if (IsValid(Enemy))
-    {
-       FName EnemyType = Enemy->GetEnemyType();
-       if (EnemyType == "Rifle" || EnemyType == "Bombard")
-       {
-          LastPlayerHitEnemyRange = EEnemyRange::ER_Ranged;
-       }
-       else if (EnemyType == "Melee")
-       {
-          LastPlayerHitEnemyRange = EEnemyRange::ER_Melee;
-       }
-    }
-
-    // 적 유형에 따라 위젯의 UI를 업데이트하고, 보이게 합니다.
-    UpdateEnemyRangeType(LastPlayerHitEnemyRange);
-
-   UpdateIndicatorDirection();
-   
-    
-    // 기존에 실행 중인 타이머들이 있다면 모두 취소
-    GetWorld()->GetTimerManager().ClearTimer(IndicatorUpdateTimerHandle);
-    GetWorld()->GetTimerManager().ClearTimer(HideTimerHandle);
-
-    // UpdateIndicatorDirection 함수를 0.01초마다 반복 호출하는 타이머를 시작
-    GetWorld()->GetTimerManager().SetTimer(
-       IndicatorUpdateTimerHandle,
-       this,
-       &UDamageIndicatorWidget::UpdateIndicatorDirection,
-       0.01f,
-       true);
-
-    // 2초 후 UI를 숨기는 타이머를 시작
-    GetWorld()->GetTimerManager().SetTimer(
-       HideTimerHandle,
-       this,
-       &UDamageIndicatorWidget::HideIndicator,
-       2.0f,
-       false);
+   SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UDamageIndicatorWidget::UpdateEnemyRangeType(EEnemyRange EnemyRangeType)
@@ -142,28 +84,27 @@ void UDamageIndicatorWidget::UpdateIndicatorDirection()
       return;
    }
 
-   // 1. 플레이어 위치를 기준으로 피격 방향 벡터를 계산합니다.
+   //플레이어 위치를 기준으로 피격 방향 벡터를 계산
    const FVector CurrentPlayerLocation = PlayerPawn->GetActorLocation();
    const FVector RelativeDirection = (LastPlayerHitEnemyPosition - CurrentPlayerLocation).GetSafeNormal2D();
 
-   // 2. 플레이어가 바라보는 전방 방향 벡터를 가져옵니다.
+   // 플레이어가 바라보는 전방 방향 벡터를 가져옴
    const FVector PlayerForwardVector = PlayerPawn->GetActorForwardVector().GetSafeNormal2D();
     
-   // 3. 두 벡터 사이의 각도를 FMath::Atan2 함수를 사용해 계산합니다.
-   //    플레이어의 시야를 기준으로 피격 방향의 각도를 얻습니다.
+   // 두 벡터 사이의 각도를 FMath::Atan2 함수를 사용해 계산
+   // 플레이어의 시야를 기준으로 피격 방향의 각도 획득
    const float Angle = FMath::Atan2(RelativeDirection.Y, RelativeDirection.X) - FMath::Atan2(PlayerForwardVector.Y, PlayerForwardVector.X);
    
-   // 4. 계산된 각도를 이용해 UI가 위치할 새로운 좌표를 계산합니다.
-   //    Unreal의 UI는 Y축이 아래쪽으로 증가하므로, FMath::Cos에 마이너스를 붙여야
-   //    0도가 화면의 위쪽(북쪽)을 가리키게 됩니다.
+   // 계산된 각도를 이용해 UI가 위치할 새로운 좌표를 계산
+   //  Unreal의 UI는 Y축이 아래쪽으로 증가하므로, FMath::Cos에 마이너스를 붙임
+   //  0도가 화면의 위쪽(북쪽)을 가리킴
    const float NewX = IndicatorRadius * FMath::Sin(Angle);
    const float NewY = -IndicatorRadius * FMath::Cos(Angle);
    
    const FVector2D Translation = FVector2D(NewX, NewY);
-   const float AngleInDegrees = FMath::RadiansToDegrees(Angle); // 회전 각도도 필요하니 변환해둡니다.
+   const float AngleInDegrees = FMath::RadiansToDegrees(Angle); 
 
-   // 5. 계산된 위치와 각도를 위젯의 렌더 트랜스폼에 적용합니다.
-   //    두 화살표 모두 같은 트랜스폼을 적용합니다.
+   // 계산된 위치와 각도를 위젯의 렌더 트랜스폼에 적용
    if (IsValid(MeleeIndicatorArrow))
    {
       MeleeIndicatorArrow->SetRenderTranslation(Translation);
@@ -179,9 +120,113 @@ void UDamageIndicatorWidget::UpdateIndicatorDirection()
 
 void UDamageIndicatorWidget::HideIndicator()
 {
-   SetVisibility(ESlateVisibility::Hidden);
+   if (IsValid(FadeOut))
+   {
+      //  애니메이션이 끝났을 때 호출될 델리게이트를 바인딩
+      FWidgetAnimationDynamicEvent AnimationDelegate;
+      AnimationDelegate.BindDynamic(this, &UDamageIndicatorWidget::OnFadeOutAnimationFinished);
+        
+      BindToAnimationFinished(FadeOut, AnimationDelegate);
 
-   // 두 타이머를 모두 정리하여 깔끔하게 마무리
+      // 페이드아웃 애니메이션을 재생
+      PlayAnimation(FadeOut);
+   }
+   
    GetWorld()->GetTimerManager().ClearTimer(IndicatorUpdateTimerHandle);
    GetWorld()->GetTimerManager().ClearTimer(HideTimerHandle);
+}
+
+void UDamageIndicatorWidget::InitializeIndicator(AActor* DamageCauser)
+{
+   //  동일한 몬스터 피격인지 확인
+    if (LastDamageCauser.IsValid() && LastDamageCauser.Get() == DamageCauser)
+    {
+        // 타이머만 재설정하고 애니메이션을 다시 시작
+        GetWorld()->GetTimerManager().ClearTimer(IndicatorUpdateTimerHandle);
+        GetWorld()->GetTimerManager().ClearTimer(HideTimerHandle);
+        
+        GetWorld()->GetTimerManager().SetTimer(
+           IndicatorUpdateTimerHandle,
+           this,
+           &UDamageIndicatorWidget::UpdateIndicatorDirection,
+           0.01f,
+           true);
+
+        GetWorld()->GetTimerManager().SetTimer(
+           HideTimerHandle,
+           this,
+           &UDamageIndicatorWidget::HideIndicator,
+           IndicatorDuration,
+           false);
+
+        SetVisibility(ESlateVisibility::Visible);
+        PlayAnimation(FadeIn);
+       
+        return;
+    }
+   
+    if (!IsValid(DamageCauser))
+    {
+       return;
+    }
+
+    if (!IsValid(PlayerPawn))
+    {
+       APawn* OwningPawn = GetOwningPlayerPawn();
+       if (OwningPawn)
+       {
+          PlayerPawn = Cast<ASuraPawnPlayer>(OwningPawn);
+       }
+       if (!IsValid(PlayerPawn))
+       {
+          return;
+       }
+    }
+    
+    //  애니메이션을 재생하기 전에 위젯을 보이게 함
+    SetVisibility(ESlateVisibility::Visible);
+
+    // 피격 당시 적의 위치를 저장하고 적 유형을 결정
+    LastPlayerHitEnemyPosition = DamageCauser->GetActorLocation();
+    LastPlayerHitEnemyRange = EEnemyRange::ER_None;
+    const ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(DamageCauser);
+    if (IsValid(Enemy))
+    {
+       FName EnemyType = Enemy->GetEnemyType();
+       if (EnemyType == "Rifle" || EnemyType == "Bombard")
+       {
+          LastPlayerHitEnemyRange = EEnemyRange::ER_Ranged;
+       }
+       else if (EnemyType == "Melee")
+       {
+          LastPlayerHitEnemyRange = EEnemyRange::ER_Melee;
+       }
+    }
+    
+    // UI 업데이트 및 초기 위치 설정
+    UpdateEnemyRangeType(LastPlayerHitEnemyRange);
+    UpdateIndicatorDirection();
+    
+    // 타이머를 새로 설정
+    GetWorld()->GetTimerManager().ClearTimer(IndicatorUpdateTimerHandle);
+    GetWorld()->GetTimerManager().ClearTimer(HideTimerHandle);
+    
+    GetWorld()->GetTimerManager().SetTimer(
+       IndicatorUpdateTimerHandle,
+       this,
+       &UDamageIndicatorWidget::UpdateIndicatorDirection,
+       0.01f,
+       true);
+
+    GetWorld()->GetTimerManager().SetTimer(
+       HideTimerHandle,
+       this,
+       &UDamageIndicatorWidget::HideIndicator,
+       IndicatorDuration,
+       false);
+
+    //  LastDamageCauser를 업데이트
+    LastDamageCauser = DamageCauser;
+   
+    PlayAnimation(FadeIn);
 }

@@ -44,8 +44,8 @@ protected:
 	float AnimationDuration; // 애니메이션 총 지속 시간
 
 
-	// 에디터에서 설정 가능하도록 UPROPERTY 매크로를 추가합니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Color")
+	// 에디터에서 설정 가능하도록 UPROPERTY 매크로를 추가
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UISetting")
 	FLinearColor DamageColor = FColor(255, 136, 0).ReinterpretAsLinear(); // #FF8800
 public:
 	bool bIsLockedOn = false; // 락온 완료 상태를 나타내는 플래그

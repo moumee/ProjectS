@@ -47,6 +47,18 @@ void UACUIMangerComponent::BeginPlay()
 		WeaponSystemComponent = SuraPawnPlayer->GetWeaponSystemComponent();
 	}
 
+	// create damage indicator widget pool
+	for (int32 i = 0; i < PoolSize; i++)
+	{
+		UDamageIndicatorWidget* NewIndicator = CreateWidget<UDamageIndicatorWidget>(GetWorld(), DamageIndicatorWidgetClass);
+		if (NewIndicator)
+		{
+			DamageIndicatorPool.Add(NewIndicator);
+			NewIndicator->AddToViewport(); //  풀 생성 시 한 번만 추가
+			NewIndicator->SetVisibility(ESlateVisibility::Hidden); // 초기 상태를 Hidden으로 설정
+		}
+	}
+
 }
 
 void UACUIMangerComponent::SetupInput()
@@ -162,16 +174,6 @@ void UACUIMangerComponent::InitializeWidgets()
 				break;
 			}
 			
-		case EUIType::DamageIndicator:
-			{
-				// DamageIndicatorManager가 없으므로 위젯만 생성하고 뷰포트에 추가
-				if (UDamageIndicatorWidget* DIW = Cast<UDamageIndicatorWidget>(NewWidget))
-				{
-					DIW->AddToViewport(); // 뷰포트에 즉시 추가
-				}
-				break;
-			}
-
 		default:
 			break;
 		}
@@ -184,5 +186,27 @@ void UACUIMangerComponent::InitializeManagers()
 	KillLogManager->SetUIManager(this);
 	PlayerHUDManager->SetUIManager(this);
 	SkillManager->SetUIManager(this);
+}
+
+void UACUIMangerComponent::ShowDamageIndicator(AActor* DamageCauser)
+{
+	UDamageIndicatorWidget* Indicator = GetAvailableDamageIndicatorFromPool();
+	if (Indicator)
+	{
+		Indicator->InitializeIndicator(DamageCauser);
+	}
+}
+
+UDamageIndicatorWidget* UACUIMangerComponent::GetAvailableDamageIndicatorFromPool()
+{
+	for (UDamageIndicatorWidget* Indicator : DamageIndicatorPool)
+	{
+		// return invisible widget
+		if (Indicator && !Indicator->IsVisible())
+		{
+			return Indicator;
+		}
+	}
+	return nullptr;
 }
 

@@ -288,14 +288,8 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 	// UIManager 컴포넌트에서 DamageIndicator 위젯을 가져옵니다.
 	if (UIManager)
 	{
-		// UIManager의 GetWidget 함수를 사용하여 DamageIndicator 위젯을 가져옵니다.
-		if (UDamageIndicatorWidget* DamageWidget = Cast<UDamageIndicatorWidget>(UIManager->GetWidget(EUIType::DamageIndicator)))
-		{
-			// 위젯의 HandleDamageTaken 함수를 직접 호출합니다.
-			DamageWidget->HandleDamageTaken(DamageCauser);
-		}
+		UIManager->ShowDamageIndicator(DamageCauser);
 	}
-
 	
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }

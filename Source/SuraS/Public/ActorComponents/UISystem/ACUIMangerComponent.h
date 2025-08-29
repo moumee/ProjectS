@@ -17,7 +17,7 @@ class UACCrosshairManager;
 class UACKillLogManager;
 class UACSkillManager;
 class UACPlayerHUDManager;
-class UACDamageIndicatorManager;
+class UDamageIndicatorWidget;
 
 UENUM(BlueprintType)
 enum class EUIType : uint8
@@ -27,7 +27,6 @@ enum class EUIType : uint8
 	KillLog UMETA(DisplayName = "KillLog"),
 	PlayerHUD UMETA(DisplayName = "PlayerHUD"),
 	Skill UMETA(DisplayName = "Skill"),
-	DamageIndicator UMETA(DisplayName = "DamageIndicator")
 };
 
 
@@ -95,7 +94,8 @@ public:
 	
 	UWeaponSystemComponent* GetWeaponSystemComponent() const {return WeaponSystemComponent;}
 
-	
+	UFUNCTION(BlueprintCallable)
+	void ShowDamageIndicator(AActor* DamageCauser);
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -116,4 +116,18 @@ private:
 	/** 생성된 UI 위젯 관리 **/
 	UPROPERTY()
 	TMap<EUIType, UBaseUIWidget*> UIWidgets;
+
+	// damage indicator widget pool
+	UPROPERTY()
+	TArray<UDamageIndicatorWidget*> DamageIndicatorPool;
+
+	UPROPERTY(EditAnywhere, Category = "UI Settings")
+	int32 PoolSize = 5; // default
+
+	// damage indicator widget class
+	UPROPERTY(EditDefaultsOnly, Category = "UI Widget Classes")
+	TSubclassOf<UDamageIndicatorWidget> DamageIndicatorWidgetClass;
+
+	// get available widget from pool
+	UDamageIndicatorWidget* GetAvailableDamageIndicatorFromPool();
 };
