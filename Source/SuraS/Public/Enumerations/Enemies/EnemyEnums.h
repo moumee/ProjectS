@@ -11,6 +11,7 @@ enum class EEnemyStates : uint8
 	Pursue UMETA(DisplayName = "Pursue"),
 	Attacking UMETA(DisplayName = "Attacking"),
 	Climbing UMETA(DisplayName = "Climbing"),
+	CoopThrowAttacking UMETA(DisplayName = "Coop Throw Attacking"),
 	Dead UMETA(DisplayName = "Dead")
 };
 

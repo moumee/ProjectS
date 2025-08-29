@@ -6,6 +6,8 @@
 #include "SuraCharacterEnemyBase.h"
 #include "SuraCharacterEnemyCharger.generated.h"
 
+class UBoxComponent;
+
 UCLASS()
 class SURAS_API ASuraCharacterEnemyCharger : public ASuraCharacterEnemyBase
 {
@@ -14,11 +16,17 @@ class SURAS_API ASuraCharacterEnemyCharger : public ASuraCharacterEnemyBase
 public:
 	ASuraCharacterEnemyCharger();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	UAnimMontage* ChargeReadyAnimation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	UAnimMontage* StunAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
+	TArray<UAnimMontage*> RoarAnimations;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OverlapEnemies")
+	UBoxComponent* OverlapBox;
 
 protected:
 	// Called when the game starts or when spawned
@@ -29,4 +37,5 @@ public:
 
 	UAnimMontage* GetChargeReadyAnimation() const { return ChargeReadyAnimation; };
 	UAnimMontage* GetStunAnimation() const { return StunAnimation; };
+	UAnimMontage* ChooseRandomRoarMontage();
 };
