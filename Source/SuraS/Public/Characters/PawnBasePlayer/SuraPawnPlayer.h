@@ -30,14 +30,6 @@ class UPlayerHUD;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerHealthHalved);
 
-UENUM()
-enum class EEnemyRange
-{
-	ER_Melee,
-	ER_Ranged
-};
-
-
 UCLASS()
 class SURAS_API ASuraPawnPlayer : public APawn, public IDamageable
 {
@@ -91,11 +83,6 @@ public:
 	UPlayerHitWidget* GetPlayerHitWidget() const {return HitEffectWidget;}
 
 	FOnPlayerHealthHalved OnPlayerHealthHalved;
-
-	UFUNCTION(BlueprintCallable)
-	FORCEINLINE FVector GetLastHitRelativeDirection() const { return LastHitRelativeDirection; }
-	UFUNCTION(BlueprintCallable)
-	FORCEINLINE EEnemyRange GetLastPlayerHitEnemyRange() const { return LastPlayerHitEnemyRange; }
 
 protected:
 
@@ -158,15 +145,6 @@ protected:
 	void CheckPlayerHealth();
 
 	FVector2D PlayerLookInputVector2D; // <WeaponSystem>
-
-	UPROPERTY(VisibleAnywhere)
-	EEnemyRange LastPlayerHitEnemyRange;
-	UPROPERTY(VisibleAnywhere)
-	FVector LastPlayerHitEnemyPosition;
-	UPROPERTY(VisibleAnywhere)
-	FVector LastHitRelativeDirection;
-	
-	
 
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);

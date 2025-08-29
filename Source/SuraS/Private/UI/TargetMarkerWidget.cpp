@@ -41,7 +41,7 @@ void UTargetMarkerWidget::UpdateLockOnTimer(float RealTimeDeltaSeconds)
        // 애니메이션 경과 시간 업데이트
        AnimationElapsedTime += RealTimeDeltaSeconds;
 
-       // ✅ 현재 상태에 맞는 애니메이션 지속 시간으로 Alpha 값 계산
+       //  현재 상태에 맞는 애니메이션 지속 시간으로 Alpha 값 계산
        float CurrentAnimationDuration = (CurrentLockOnState == ETargetLockOnState::TargetingReady) ? TargetingReadyDuration : TargetingSuccessDuration;
        float Alpha = FMath::Clamp(AnimationElapsedTime / CurrentAnimationDuration, 0.f, 1.f);
        
@@ -63,11 +63,11 @@ void UTargetMarkerWidget::UpdateLockOnTimer(float RealTimeDeltaSeconds)
           }
           else if (CurrentLockOnState == ETargetLockOnState::TargetingSuccess)
           {
-             // ✅ 타겟팅 성공 상태: 크기, 회전 애니메이션 제거
-             // ✅ 색상만 흰색 -> 주황색으로 보간
+             //  타겟팅 성공 상태: 크기, 회전 애니메이션 제거
+             //  색상만 흰색 -> 주황색으로 보간
              NewTransform.Scale = FVector2D(0.75f, 0.75f); // 75% 크기 고정
              NewTransform.Angle = 45.0f; // 45도 회전 고정
-             InterpColor = FMath::Lerp(FLinearColor::White, FLinearColor(1.0f, 0.5f, 0.0f), Alpha); // 주황색으로 보간
+             InterpColor = FMath::Lerp(FLinearColor::White, DamageColor, Alpha);
           }
             
           MarkerImage->SetRenderTransform(NewTransform);
@@ -95,7 +95,7 @@ void UTargetMarkerWidget::UpdateLockOnTimer(float RealTimeDeltaSeconds)
              FinalTransform.Scale = FVector2D(0.75f, 0.75f);
              FinalTransform.Angle = 45.0f;
              MarkerImage->SetRenderTransform(FinalTransform);
-             MarkerImage->SetColorAndOpacity(FLinearColor(1.0f, 0.5f, 0.0f));
+             MarkerImage->SetColorAndOpacity(DamageColor);
           }
        }
     }

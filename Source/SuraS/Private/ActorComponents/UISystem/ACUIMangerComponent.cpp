@@ -8,6 +8,8 @@
 #include "ActorComponents/UISystem/ACPlayerHudManager.h"
 #include "ActorComponents/UISystem/ACSkillManager.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
+#include "Kismet/GameplayStatics.h"
+#include "UI/DamageIndicatorWidget.h"
 #include "UI/InventoryWidget.h"
 #include "UI/KillLogWidget.h"
 #include "UI/PlayerHUD.h"
@@ -22,7 +24,11 @@ UACUIMangerComponent::UACUIMangerComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	
-	InitializeManagers();
+	// 매니저 생성 및 등록
+	InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("InventoryManager"));
+	KillLogManager = CreateDefaultSubobject<UACKillLogManager>(TEXT("KillLog"));
+	PlayerHUDManager = CreateDefaultSubobject<UACPlayerHUDManager>(TEXT("PlayerHUD"));
+	SkillManager = CreateDefaultSubobject<UACSkillManager>(TEXT("Skill"));
 }
 
 
@@ -30,15 +36,29 @@ UACUIMangerComponent::UACUIMangerComponent()
 void UACUIMangerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	SetupInput();
-	
+
+	InitializeManagers();
 	InitializeWidgets();
+	SetupInput();
 	
 	ASuraPawnPlayer* SuraPawnPlayer = Cast<ASuraPawnPlayer>(GetOwner());  // GetOwningPlayerPawn()은 ActorComponent에선 사용 불가
 	if (SuraPawnPlayer)
 	{
 		WeaponSystemComponent = SuraPawnPlayer->GetWeaponSystemComponent();
 	}
+
+	// create damage indicator widget pool
+	for (int32 i = 0; i < PoolSize; i++)
+	{
+		UDamageIndicatorWidget* NewIndicator = CreateWidget<UDamageIndicatorWidget>(GetWorld(), DamageIndicatorWidgetClass);
+		if (NewIndicator)
+		{
+			DamageIndicatorPool.Add(NewIndicator);
+			NewIndicator->AddToViewport(); //  풀 생성 시 한 번만 추가
+			NewIndicator->SetVisibility(ESlateVisibility::Hidden); // 초기 상태를 Hidden으로 설정
+		}
+	}
+
 }
 
 void UACUIMangerComponent::SetupInput()
@@ -77,6 +97,13 @@ UBaseUIWidget* UACUIMangerComponent::GetWidget(EUIType UIType)
 
 void UACUIMangerComponent::InitializeWidgets()
 {
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (!PC)
+	{
+		UE_LOG(LogTemp, Error, TEXT("PlayerController not valid in InitializeWidgets."));
+		return;
+	}
+	
 	for (const auto& Elem : UIWidgetClasses)
 	{
 		EUIType UIType = Elem.Key;
@@ -86,6 +113,12 @@ void UACUIMangerComponent::InitializeWidgets()
 
 		UBaseUIWidget* NewWidget = CreateWidget<UBaseUIWidget>(GetWorld(), WidgetClass);
 		if (!NewWidget) continue;
+		if (!IsValid(NewWidget)) //  생성 실패 여부 확인
+		{
+			UE_LOG(LogTemp, Error, TEXT("InitializeWidgets: NewWidget 생성 실패! UIType: %s"), *UEnum::GetValueAsString(UIType));
+			continue;
+		}
+
 
 		UIWidgets.Add(UIType, NewWidget);
 
@@ -108,7 +141,7 @@ void UACUIMangerComponent::InitializeWidgets()
 				{
 					KillLogManager->SetKillLogWidget(KLW);
 					KLW->SetKillLogManager(KillLogManager);
-					KLW->AddToViewport(); // ✅ 반드시 필요
+					KLW->AddToViewport(); 
 
 					//UE_LOG(LogTemp, Warning, TEXT("✔ KillLogWidget Viewport에 추가됨"));
 				}
@@ -121,7 +154,7 @@ void UACUIMangerComponent::InitializeWidgets()
 				{
 					PlayerHUDManager->SetPlayerHUDWidget(PW);
 					PW->SetPlayerHUDManager(PlayerHUDManager);
-					PW->AddToViewport(); // ✅ 반드시 필요
+					PW->AddToViewport(); 
 
 					//UE_LOG(LogTemp, Warning, TEXT("✔ KillLogWidget Viewport에 추가됨"));
 				}
@@ -134,45 +167,46 @@ void UACUIMangerComponent::InitializeWidgets()
 				{
 					SkillManager->SetRocketLauncherSkillWidget(RLW);
 					RLW->SetSKillManager(SkillManager);
-					RLW->InitUIDataTable(DTUISetting);
-					//RLW->AddToViewport(); //스킬 사용 시점에 AddToViewport해야함.
-					
+					//RLW->AddToViewport(); //스킬 사용 시점에 AddToViewport해야함;
 
 					//UE_LOG(LogTemp, Warning, TEXT("✔ RocketLauncherWidget Viewport에 추가됨"));
 				}
-								
-
-				default:
-					break;
+				break;
 			}
+			
+		default:
+			break;
 		}
 	}
 }
 
 void UACUIMangerComponent::InitializeManagers()
 {
-	// 인벤토리 매니저 생성 및 등록 (생성자에서 호출되므로 문제 없음)
-	InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("InventoryManager"));
-	// UIComponentManager에 접근하기 위해 this를 파라미터로 전달
 	InventoryManager->SetUIManager(this);
-
-	KillLogManager = CreateDefaultSubobject<UACKillLogManager>(TEXT("KillLog"));
 	KillLogManager->SetUIManager(this);
-	
-	// HUDManager, PauseMenuManager 등도 여기에 추가
-	PlayerHUDManager = CreateDefaultSubobject<UACPlayerHUDManager>(TEXT("PlayerHUD"));
 	PlayerHUDManager->SetUIManager(this);
-
-	SkillManager = CreateDefaultSubobject<UACSkillManager>(TEXT("Skill"));
 	SkillManager->SetUIManager(this);
-	
 }
 
-void UACUIMangerComponent::TestKillLog()
+void UACUIMangerComponent::ShowDamageIndicator(AActor* DamageCauser)
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("🔹 IA_KILLLOG 입력 감지됨!"));
-	
-	if (!KillLogManager) return;
-
-	KillLogManager->AddKillLog(TEXT("Player"), TEXT("Enemy"));
+	UDamageIndicatorWidget* Indicator = GetAvailableDamageIndicatorFromPool();
+	if (Indicator)
+	{
+		Indicator->InitializeIndicator(DamageCauser);
+	}
 }
+
+UDamageIndicatorWidget* UACUIMangerComponent::GetAvailableDamageIndicatorFromPool()
+{
+	for (UDamageIndicatorWidget* Indicator : DamageIndicatorPool)
+	{
+		// return invisible widget
+		if (Indicator && !Indicator->IsVisible())
+		{
+			return Indicator;
+		}
+	}
+	return nullptr;
+}
+
