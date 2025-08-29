@@ -61,8 +61,8 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
 	CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel7, ECR_Ignore);
 	ArmMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	FPSceneCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent")); //<JaeHyeong>
-	FPSceneCapture->SetupAttachment(Camera);
+	// FPSceneCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent")); //<JaeHyeong>
+	// FPSceneCapture->SetupAttachment(Camera);
 
 	// for damage interactions with enemies
 	AttackTokensComponent = CreateDefaultSubobject<UACPlayerAttackTokens>(TEXT("Attack Tokens Component"));
@@ -295,6 +295,7 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 			DamageWidget->HandleDamageTaken(DamageCauser);
 		}
 	}
+
 	
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }

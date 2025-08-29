@@ -21,6 +21,10 @@
 #define SURFACE_GLASS SurfaceType3
 #define SURFACE_ENEMY SurfaceType4
 #define SURFACE_ENERGY SurfaceType5
+#define SURFACE_HEAD SurfaceType6
+#define SURFACE_BODY SurfaceType7
+#define SURFACE_LEFT_ARM SurfaceType8
+#define SURFACE_RIGHT_ARM SurfaceType9
 
 // Sets default values
 ASuraProjectile::ASuraProjectile()
@@ -256,7 +260,7 @@ void ASuraProjectile::ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector Cen
 	}
 }
 void ASuraProjectile::ApplyDamage(AActor* OtherActor, float DamageAmount, EDamageType DamageType, bool bCanForceDamage,
-	const FName BoneName, const FVector ImpulseDirection)
+	const FName BoneName, TEnumAsByte<EPhysicalSurface> SurfaceType, const FVector ImpulseDirection)
 {
 	FDamageData Damage;
 	Damage.DamageAmount = DamageAmount;
@@ -264,6 +268,7 @@ void ASuraProjectile::ApplyDamage(AActor* OtherActor, float DamageAmount, EDamag
 	Damage.bCanForceDamage = bCanForceDamage;
 	Damage.BoneName = BoneName;
 	Damage.ImpulseDirection = ImpulseDirection;
+	Damage.SurfaceType = SurfaceType;
 
 	if (OtherActor->GetClass()->ImplementsInterface(UDamageable::StaticClass()))
 	{
@@ -321,7 +326,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 				if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(Hit))
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, Hit.BoneName, Hit.ImpactNormal);
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, Hit.BoneName, UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()), Hit.ImpactNormal);
 
 					if (OnHeadShot.IsBound())
 					{
@@ -330,8 +335,8 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 				}
 				else
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, Hit.BoneName, Hit.ImpactNormal);
-					UE_LOG(LogTemp, Error, TEXT("bone11: %s"), *Hit.BoneName.ToString());
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, Hit.BoneName,UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()), Hit.ImpactNormal);
+					UE_LOG(LogTemp, Error, TEXT("bone11-1: %s"), *Hit.BoneName.ToString());
 					if (Cast<ACharacter>(OtherActor))
 					{
 						if (OnBodyShot.IsBound())
@@ -405,7 +410,7 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 				
 				if (HeadShotAdditionalDamage > 0.f && CheckHeadOvelap(OtherActor, SweepResult))
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName);
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(SweepResult.PhysMaterial.Get()));
 
 					if (OnHeadShot.IsBound())
 					{
@@ -414,7 +419,7 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 				}
 				else
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName);
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(SweepResult.PhysMaterial.Get()));
 
 					UE_LOG(LogTemp, Error, TEXT("Projectile Overlapped!!!"));
 
@@ -458,14 +463,16 @@ void ASuraProjectile::SpawnImpactEffect(FVector SpawnLocation, FRotator SpawnRot
 {
 	if (ImpactEffect)
 	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactEffect, SpawnLocation, SpawnRotation, FVector(1.0f), true);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactEffect, SpawnLocation, SpawnRotation,
+			FVector(1.0f), true, true, ENCPoolMethod::AutoRelease);
 	}
 }
 void ASuraProjectile::SpawnExplosionEffect(FVector SpawnLocation)
 {
 	if (ExplosionEffect)
 	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionEffect, SpawnLocation, FRotator::ZeroRotator, FVector(1.0f), true);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionEffect, SpawnLocation,
+			FRotator::ZeroRotator, FVector(1.0f), true, true, ENCPoolMethod::AutoRelease);
 	}
 }
 void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Rocket Trail ����� �̻���. �պ�����
@@ -489,7 +496,7 @@ void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Roc
 				GetWorld(),
 				TrailEffect,
 				Weapon->GetWeaponMesh()->GetSocketLocation(FName(TEXT("Muzzle"))),
-				FRotator(0.f, 0.f, 0.f));
+				FRotator(0.f, 0.f, 0.f), FVector(1), true, true, ENCPoolMethod::AutoRelease);
 
 
 			//TODO: effect�� weapon muzzle�� ������ų��, �߻������� �������� Input���� ���������ϰ� �ϱ�
@@ -517,7 +524,7 @@ void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Roc
 				TrailLocationOffset,
 				FRotator(0, 0, 0),
 				EAttachLocation::KeepRelativeOffset,
-				true);
+				true, true, ENCPoolMethod::AutoRelease);
 		}
 	}
 }
@@ -576,7 +583,13 @@ void ASuraProjectile::PlaySoundAtLocationByMaterial(EPhysicalSurface SurfaceType
 	case SURFACE_DEFAULT: SoundToPlay = HitSound_Default; break;
 	case SURFACE_METAL:   SoundToPlay = HitSound_Metal;  break;
 	case SURFACE_GLASS:   SoundToPlay = HitSound_Glass;  break;
-	case SURFACE_ENEMY:   SoundToPlay = HitSound_Enemy;  break;
+	case SURFACE_ENEMY:
+	case SURFACE_HEAD:
+	case SURFACE_BODY:
+	case SURFACE_LEFT_ARM:
+	case SURFACE_RIGHT_ARM:	
+		SoundToPlay = HitSound_Enemy;
+		break;
 	case SURFACE_ENERGY:  SoundToPlay = HitSound_Energy; break;
 	default:              break;
 	}
@@ -618,6 +631,7 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 	Params.AddIgnoredComponent(Weapon->GetWeaponMesh());
 	Params.AddIgnoredComponent(ProjectileMesh);
 	Params.AddIgnoredActor(this);
+	Params.bReturnPhysicalMaterial = true;
 
 	for (int32 RicochetCount = 0; RicochetCount <= MaxRicochetCount; RicochetCount++)
 	{
@@ -651,7 +665,8 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 
 						if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(HitResult))
 						{
-							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, TraceDirection);
+							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
+								EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
 
 							if (OnHeadShot.IsBound())
 							{
@@ -660,8 +675,8 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 						}
 						else
 						{
-							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, TraceDirection);
-							UE_LOG(LogTemp, Error, TEXT("bone11: %s"), *HitResult.BoneName.ToString());
+							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
+							UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
 							if (OnBodyShot.IsBound())
 							{
 								OnBodyShot.Execute();

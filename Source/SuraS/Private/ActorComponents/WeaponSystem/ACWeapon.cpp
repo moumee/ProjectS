@@ -404,6 +404,7 @@ bool AWeapon::AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter)
 
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
+	
 
 	if (WeaponSocketName.IsNone())
 	{
@@ -413,6 +414,19 @@ bool AWeapon::AttachWeaponToPlayer(ASuraPawnPlayer* TargetCharacter)
 	{
 		AttachToComponent(Character->GetArmMesh(), AttachmentRules, WeaponSocketName);
 	}
+
+	// Seunghwan - use unreal first person rendering
+	WeaponMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
+	TArray<USceneComponent*> AttachedChildren;
+	WeaponMesh->GetChildrenComponents(true, AttachedChildren);
+	for (auto Child : AttachedChildren)
+	{
+		if (UPrimitiveComponent* PrimitiveChild = Cast<UPrimitiveComponent>(Child))
+		{
+			PrimitiveChild->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
+		}
+	}
+	
 
 	//---------------------------------------------
 	//TODO: �� ���� ����� ������ ������
@@ -444,6 +458,18 @@ void AWeapon::DetachWeaponFromPlayer()
 	}
 	else
 	{
+		// Seunghwan - disable first person rendering
+		WeaponMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::None;
+		TArray<USceneComponent*> AttachedChildren;
+		WeaponMesh->GetChildrenComponents(true, AttachedChildren);
+		for (auto Child : AttachedChildren)
+		{
+			if (UPrimitiveComponent* PrimitiveChild = Cast<UPrimitiveComponent>(Child))
+			{
+				PrimitiveChild->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::None;
+			}
+		}
+		
 		//ActivateCrosshairWidget(false);
 		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		//WeaponMesh->SetVisibility(false);

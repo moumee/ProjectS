@@ -5,6 +5,8 @@
 #include "Structures/Enemies/EnemyAttributesData.h"
 #include "ActorComponents/DamageComponent/ACEnemyDamageSystem.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Weapons/Firearms/SuraFirearmRifle.h"
+#include "Weapons/Projectiles/SuraEnemyProjectile.h"
 #include "Kismet/KismetMathLibrary.h"
 
 ASuraCharacterEnemyClassShifter::ASuraCharacterEnemyClassShifter()
@@ -28,21 +30,40 @@ void ASuraCharacterEnemyClassShifter::Attack(ASuraPawnPlayer* AttackTarget)
 {
 	Player = AttackTarget;
 
-	// Rotate to face the player for attacks
-	GetWorldTimerManager().SetTimer(
-		RotationHandle,
-		this, &ASuraCharacterEnemyClassShifter::RotateTowardPlayer,
-		0.01f,
-		true
-	);
-	FTimerHandle ClearTimerHandle;
+	if (!IsCrippled)
+	{
+		// Rotate to face the player for attacks
+		GetWorldTimerManager().SetTimer(
+			RotationHandle,
+			this, &ASuraCharacterEnemyClassShifter::RotateTowardPlayer,
+			0.01f,
+			true
+		);
+		FTimerHandle ClearTimerHandle;
 
-	GetWorldTimerManager().SetTimer(
-		ClearTimerHandle,
-		FTimerDelegate::CreateLambda([&]() { GetWorldTimerManager().ClearTimer(RotationHandle); }),
-		1.f,
-		false
-	);
+		GetWorldTimerManager().SetTimer(
+			ClearTimerHandle,
+			FTimerDelegate::CreateLambda([&]() { GetWorldTimerManager().ClearTimer(RotationHandle); }),
+			1.f,
+			false
+		);
+	}
+	else
+	{
+		if (ProjectileClass)
+		{
+			const FVector SpawnLocation = GetMesh()->GetSocketLocation(FName(TEXT("Hole")));
+			const FRotator SpawnRotation = (Player->GetActorLocation() - SpawnLocation).Rotation();
+
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+			ASuraEnemyProjectile* Projectile = GetWorld()->SpawnActor<ASuraEnemyProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+
+			Projectile->SetOwner(this);
+			Projectile->LaunchProjectile();
+		}
+	}
 }
 
 void ASuraCharacterEnemyClassShifter::ClassShiftingInitializeEnemy()
