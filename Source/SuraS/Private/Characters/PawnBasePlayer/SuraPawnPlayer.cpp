@@ -17,6 +17,7 @@
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
+#include "UI/DamageIndicatorWidget.h"
 #include "UI/PlayerHUD.h"
 #include "Widgets/Player/PlayerHitWidget.h"
 
@@ -130,9 +131,6 @@ void ASuraPawnPlayer::SetLookInputVector2DZero()
 void ASuraPawnPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
-	LastHitRelativeDirection = (LastPlayerHitEnemyPosition - GetActorLocation()).GetSafeNormal2D();
-
 }
 
 void ASuraPawnPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -287,23 +285,11 @@ void ASuraPawnPlayer::StopCrouchInput()
 
 bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCauser)
 {
-	if (const ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(DamageCauser))
+	// UIManager 컴포넌트에서 DamageIndicator 위젯을 가져옵니다.
+	if (UIManager)
 	{
-		FName EnemyType = Enemy->GetEnemyType();
-		if (EnemyType == "Rifle" || EnemyType == "Bombard")
-		{
-			LastPlayerHitEnemyRange = EEnemyRange::ER_Ranged;
-		}
-		else if (EnemyType == "Melee")
-		{
-			LastPlayerHitEnemyRange = EEnemyRange::ER_Melee;
-		}
-		
-
-		LastPlayerHitEnemyPosition = Enemy->GetActorLocation();
-		
+		UIManager->ShowDamageIndicator(DamageCauser);
 	}
-
 	
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }

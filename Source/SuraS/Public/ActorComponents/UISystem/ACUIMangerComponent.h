@@ -6,7 +6,6 @@
 #include "Components/ActorComponent.h"
 #include "ACUIMangerComponent.generated.h"
 
-class UACSkillManager;
 class UWeaponSystemComponent;
 class UPlayerHUD;
 class UACPlayerHUDManager;
@@ -16,18 +15,18 @@ class UBaseUIWidget;
 class UACInventoryManager;
 class UACCrosshairManager;
 class UACKillLogManager;
-class UACPlayerHUDManager;
 class UACSkillManager;
+class UACPlayerHUDManager;
+class UDamageIndicatorWidget;
 
 UENUM(BlueprintType)
 enum class EUIType : uint8
 {
 	None UMETA(DisplayName = "None"),
 	Inventory UMETA(DisplayName = "Inventory"),
-	Pause UMETA(DisplayName = "Pause"),
 	KillLog UMETA(DisplayName = "KillLog"),
 	PlayerHUD UMETA(DisplayName = "PlayerHUD"),
-	Skill UMETA(DisplayName = "Skill")
+	Skill UMETA(DisplayName = "Skill"),
 };
 
 
@@ -45,6 +44,22 @@ protected:
 	virtual void BeginPlay() override;
 
 	void SetupInput();
+
+	/** UI Manager들 **/
+	UPROPERTY()
+	UACInventoryManager* InventoryManager;
+
+	UPROPERTY()
+	UACKillLogManager* KillLogManager;
+
+	UPROPERTY()
+	UACPlayerHUDManager* PlayerHUDManager;
+
+	UPROPERTY()
+	UACSkillManager* SkillManager;
+	
+	UPROPERTY()
+	UWeaponSystemComponent* WeaponSystemComponent;
 
 	
 
@@ -79,7 +94,8 @@ public:
 	
 	UWeaponSystemComponent* GetWeaponSystemComponent() const {return WeaponSystemComponent;}
 
-	void TestKillLog();
+	UFUNCTION(BlueprintCallable)
+	void ShowDamageIndicator(AActor* DamageCauser);
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -93,10 +109,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
 	UDataTable* DTUISetting;
-	
-
-	// UPROPERTY(EditDefaultsOnly, Category = "Data")
-	// UDataTable* DTProjectile;
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TMap<EUIType, TSubclassOf<UBaseUIWidget>> UIWidgetClasses; // 위젯 블루프린트 클래스
@@ -105,29 +117,17 @@ private:
 	UPROPERTY()
 	TMap<EUIType, UBaseUIWidget*> UIWidgets;
 
-	/** UI Manager들 **/
+	// damage indicator widget pool
 	UPROPERTY()
-	UACInventoryManager* InventoryManager;
+	TArray<UDamageIndicatorWidget*> DamageIndicatorPool;
 
-	UPROPERTY()
-	UACKillLogManager* KillLogManager;
+	UPROPERTY(EditAnywhere, Category = "UI Settings")
+	int32 PoolSize = 5; // default
 
-	UPROPERTY()
-	UACPlayerHUDManager* PlayerHUDManager;
+	// damage indicator widget class
+	UPROPERTY(EditDefaultsOnly, Category = "UI Widget Classes")
+	TSubclassOf<UDamageIndicatorWidget> DamageIndicatorWidgetClass;
 
-	UPROPERTY()
-	UACSkillManager* SkillManager;
-
-	UWeaponSystemComponent* WeaponSystemComponent = nullptr;
-
-	
-
-	
-	// UPROPERTY()
-	// UACCrosshairManager* CrosshairManager;
-
-	
-
-public:
-		
+	// get available widget from pool
+	UDamageIndicatorWidget* GetAvailableDamageIndicatorFromPool();
 };
