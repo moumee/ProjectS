@@ -2,3 +2,29 @@
 
 
 #include "Characters/Enemies/AI/Tasks/Movements/BTT_MoveToTarget.h"
+
+#include "AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
+
+UBTT_MoveToTarget::UBTT_MoveToTarget()
+{
+	NodeName = "Move To Target";
+	TargetLocationKey.AddVectorFilter(this, "TargetLocation");
+}
+
+EBTNodeResult::Type UBTT_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+{
+	AAIController* AIController = OwnerComp.GetAIOwner();
+	if (!AIController)
+		return EBTNodeResult::Failed;
+
+	UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent();
+	if (!BlackboardComp)
+		return EBTNodeResult::Failed;
+
+	FVector TargetLocation = BlackboardComp->GetValueAsVector(TargetLocationKey.SelectedKeyName);
+
+	FAIRequestID RequestID = AIController->MoveToLocation(TargetLocation);
+
+	return EBTNodeResult::Succeeded;
+}

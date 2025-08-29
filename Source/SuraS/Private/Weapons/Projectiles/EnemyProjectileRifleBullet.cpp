@@ -24,7 +24,7 @@ void AEnemyProjectileRifleBullet::BeginPlay()
 			FVector::ZeroVector,
 			FRotator::ZeroRotator,
 			EAttachLocation::KeepRelativeOffset,
-			true);
+			true, false, ENCPoolMethod::AutoRelease);
 
 		GetNiagaraComponent()->Activate();
 	}
@@ -43,7 +43,7 @@ void AEnemyProjectileRifleBullet::ActivateShootingEffect()
 			FVector::ZeroVector,
 			FRotator::ZeroRotator,
 			EAttachLocation::KeepRelativeOffset,
-			true);
+			true, false, ENCPoolMethod::AutoRelease);
 
 		GetNiagaraComponent()->Activate();
 	}
