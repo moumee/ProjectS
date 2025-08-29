@@ -6,6 +6,8 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "SuraPlayerMovementComponent.generated.h"
 
+class UCurveVector;
+enum class EDamageTypeTest;
 class ASuraPlayerController;
 class ASuraPawnPlayer;
 
@@ -24,7 +26,9 @@ enum class EMovementState : uint8
 	EMS_Slide,
 	EMS_Airborne,
 	EMS_WallRun,
-	EMS_Mantle
+	EMS_Mantle,
+	EMS_Downed,
+	EMS_Dead,
 };
 
 UENUM(Blueprintable)
@@ -58,6 +62,7 @@ DECLARE_MULTICAST_DELEGATE(FOnDoubleJump);
 DECLARE_MULTICAST_DELEGATE(FOnWallJump);
 DECLARE_MULTICAST_DELEGATE(FOnMantle);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnDash, FVector2D);
+DECLARE_MULTICAST_DELEGATE(FOnDowned);
 
 
 
@@ -114,6 +119,8 @@ public:
 
 	EMovementState GetMovementState() const { return CurrentMovementState; }
 
+	void NotifyDamageData(EDamageTypeTest DamageType);
+
 	FOnMove	OnMove;
 	FOnWallRun OnWallRun;
 	FOnAirborne OnAirborne;
@@ -125,8 +132,12 @@ public:
 	FOnWallJump OnWallJump;
 	FOnMantle OnMantle;
 	FOnDash OnDash;
+	FOnDowned OnDowned;
 
 protected:
+
+	UPROPERTY(EditAnywhere)
+	bool bPrintMovementDebug = false;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	TObjectPtr<UDataTable> MovementDataTable;
@@ -361,6 +372,36 @@ protected:
 	
 #pragma endregion Mantle
 
+#pragma region Damage
+	
+	UPROPERTY(EditAnywhere, Category = "Movement|Damage")
+	EDamageTypeTest ReceivedDamageType;
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Damage")
+	bool bDamagedRequested = false;
+	bool bIsDamaged = false;
+
+	float LastDamagedWorldTime = 0.f;
+
+	float DamageSlowDebuffDuration = 1.f;
+
+	float DamageSlowDebuffMultiplier = 0.3f;
+#pragma endregion Damage
+
+#pragma region Downed
+	
+	FRotator DownedStartControlRotation;
+	
+	float DownedDuration = 2.f;
+
+	float DownedStartTime = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Editor Assign")
+	TObjectPtr<UCurveVector> DownedPositionCurve;
+	UPROPERTY(EditDefaultsOnly, Category="Editor Assign")
+	TObjectPtr<UCurveVector> DownedRotationCurve;
+#pragma endregion Downed
+	
+
 	UPROPERTY()
 	TObjectPtr<ASuraPawnPlayer> SuraPawnPlayer = nullptr;
 
@@ -420,6 +461,10 @@ protected:
 	void TickWallRun(float DeltaTime);
 
 	void TickMantle(float DeltaTime);
+
+	void TickDowned(float DeltaTime);
+
+	void TickDead(float DeltaTime);
 
 	void UpdateDashGauge(float DeltaTime);
 

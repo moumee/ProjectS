@@ -5,6 +5,8 @@
 #include "Engine/DataTable.h"
 #include "PlayerCameraMovementRow.generated.h"
 
+class UCameraAnimationSequence;
+
 USTRUCT(BlueprintType)
 struct FMovementCameraData
 {

@@ -11,12 +11,15 @@
 #include "ActorComponents/WeaponSystem/SuraWeaponBaseState.h"
 #include "ActorComponents/WeaponSystem/WeaponAimUIWidget.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/PawnPlayerMovmentRow.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Characters/PawnBasePlayer/SuraPlayerController.h"
 #include "Components/CapsuleComponent.h"
+#include "Curves/CurveVector.h"
 
 #define WALL_TRACE_CHANNEL ECC_GameTraceChannel2
+#define ENEMY_TRACE_CHANNEL ECC_GameTraceChannel6
 
 USuraPlayerMovementComponent::USuraPlayerMovementComponent()
 {
@@ -91,6 +94,8 @@ void USuraPlayerMovementComponent::InitMovementData()
 	SlideAdditionalSpeed = Row->SlideAdditionalSpeed;
 	GroundPointDetectionLength = Row->GroundPointDetectionLength;
 	CoyoteTime = Row->CoyoteTime;
+	DamageSlowDebuffMultiplier = Row->DamageSlowDebuffMultiplier;
+	DamageSlowDebuffDuration = Row->DamageSlowDebuffDuration;
 }
 
 void USuraPlayerMovementComponent::AddControllerRoll(float DeltaTime, const FVector& WallRunDirection, EWallRunSide WallRunSide)
@@ -124,23 +129,6 @@ void USuraPlayerMovementComponent::AddControllerRoll(float DeltaTime, const FVec
 	FRotator NewControlRotation = CurrentControlRotation;
 	NewControlRotation.Roll = NewRoll;
 	SuraPlayerController->SetControlRotation(NewControlRotation);
-	
-	// float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(SuraPawnPlayer->GetActorForwardVector(), WallRunDirection)));
-	// float Alpha = FMath::Abs(Angle / 180.f);
-	// float TargetRoll = 0.f;
-	//
-	// if (WallRunSide == EWallRunSide::EWRS_Left)
-	// {
-	// 	TargetRoll = FMath::Lerp(WallRunCameraTiltAngle, -WallRunCameraTiltAngle, Alpha);
-	// }
-	// else if (WallRunSide == EWallRunSide::EWRS_Right)
-	// {
-	// 	TargetRoll = FMath::Lerp(-WallRunCameraTiltAngle, WallRunCameraTiltAngle, Alpha);
-	// }
-	//
-	// FRotator CurrentControlRotation = SuraPawnPlayer->GetControlRotation();
-	// FRotator NewRotation = FMath::RInterpTo(CurrentControlRotation, FRotator(CurrentControlRotation.Pitch, CurrentControlRotation.Yaw, TargetRoll), DeltaTime, WallRunCameraTiltInterpSpeed);
-	// SuraPlayerController->SetControlRotation(NewRotation);
 }
 
 
@@ -149,13 +137,14 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// GEngine->AddOnScreenDebugMessage(
-	// 	0, 0.f, FColor::Cyan, FString::Printf(TEXT("Current State : %s"), *UEnum::GetValueAsString(CurrentMovementState)));
-	//
-	// GEngine->AddOnScreenDebugMessage(
-	// 	1, 0.f, FColor::Cyan, FString::Printf(TEXT("Velocity : (%f, %f, %f) / Size : %f / Size2D : %f "), Velocity.X, Velocity.Y, Velocity.Z, Velocity.Size(), Velocity.Size2D()));
-	
-	
+	if (bPrintMovementDebug)
+	{
+		
+		GEngine->AddOnScreenDebugMessage(
+			0, 0.f, FColor::Cyan, FString::Printf(TEXT("Current State : %s"), *UEnum::GetValueAsString(CurrentMovementState)));
+		GEngine->AddOnScreenDebugMessage(
+			1, 0.f, FColor::Cyan, FString::Printf(TEXT("Velocity : (%f, %f, %f) / Size : %f / Size2D : %f "), Velocity.X, Velocity.Y, Velocity.Z, Velocity.Size(), Velocity.Size2D()));
+	}
 
 	if (!PawnOwner || !UpdatedComponent)
 	{
@@ -176,7 +165,14 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 		}
 	}
 
-	
+	if (bIsDamaged)
+	{
+		float ElapsedTimeFromLastDamage = GetWorld()->GetTimeSeconds() - LastDamagedWorldTime;
+		if (ElapsedTimeFromLastDamage > DamageSlowDebuffDuration)
+		{
+			bIsDamaged = false;
+		}
+	}
 	
 	TickState(DeltaTime);
 
@@ -224,6 +220,12 @@ void USuraPlayerMovementComponent::TickState(float DeltaTime)
 		case EMovementState::EMS_Mantle:
 			TickMantle(DeltaTime);
 			break;
+		case EMovementState::EMS_Downed:
+			TickDowned(DeltaTime);
+			break;
+		case EMovementState::EMS_Dead:
+			TickDead(DeltaTime);
+			break;
 		default:
 			UE_LOG(LogTemp, Error, TEXT("CurrentMovementState not valid"));
 			break;
@@ -264,6 +266,19 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 	const bool bCachedShiftPressed = bShiftPressed;
 	bShiftPressed = false;
+
+	if (bDamagedRequested)
+	{
+		bIsDamaged = true;
+	}
+	bDamagedRequested = false;
+
+	if (bIsDamaged && ReceivedDamageType == EDamageTypeTest::Special)
+	{
+		OnDowned.Broadcast();
+		SetMovementState(EMovementState::EMS_Downed);
+		return;
+	}
 	
 	if (bIsStepping)
 	{
@@ -279,6 +294,15 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 			ECC_WorldStatic, SuraPawnPlayer->GetCapsuleComponent()->GetCollisionShape(), SteppingFrontParams);
 
 		Velocity = StepUpDir * (bIsRunning ? RunSpeed : WalkSpeed);
+		if (bIsRunning)
+		{
+			Velocity = StepUpDir * (bIsDamaged ? RunSpeed * DamageSlowDebuffMultiplier : RunSpeed);
+		}
+		else
+		{
+			Velocity = StepUpDir * (bIsDamaged ? WalkSpeed * DamageSlowDebuffMultiplier : WalkSpeed);
+		}
+		
 
 		if (!bSteppingFrontHit || FVector::DotProduct(InputDirection, StepWallHit.ImpactNormal) >= 0.f)
 		{
@@ -406,7 +430,8 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 				}
 			}
 			
-			float WishSpeed = bIsCrouching ? CrouchSpeed : (bIsRunning ? RunSpeed : WalkSpeed);
+			float WishSpeed = bIsCrouching ? (bIsDamaged ? CrouchSpeed * DamageSlowDebuffMultiplier : CrouchSpeed) :
+			(bIsRunning ? (bIsDamaged ? RunSpeed * DamageSlowDebuffMultiplier : RunSpeed) : (bIsDamaged ? WalkSpeed * DamageSlowDebuffMultiplier : WalkSpeed));
 			
 			FVector AcceleratedVelocity = Velocity + InputDirection * Acceleration * DeltaTime;
 			Velocity = AcceleratedVelocity.Size() > WishSpeed ? AcceleratedVelocity.GetSafeNormal() * WishSpeed : AcceleratedVelocity;
@@ -556,6 +581,9 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 	const FVector InputDirection = ConsumeInputVector().GetSafeNormal();
 	const bool bCachedShiftPressed = bShiftPressed;
 	bShiftPressed = false;
+
+	// Consume and ignore damage request boolean
+	bDamagedRequested = false;
 	
 	if (!IsGrounded() || GroundHit.ImpactNormal.Z < MinWalkableFloorZ)
 	{
@@ -699,6 +727,19 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 
 	const bool bCachedShiftPressed = bShiftPressed;
 	bShiftPressed = false;
+
+	if (bDamagedRequested)
+	{
+		bIsDamaged = true;
+	}
+	bDamagedRequested = false;
+
+	if (bIsDamaged && ReceivedDamageType == EDamageTypeTest::Special)
+	{
+		OnDowned.Broadcast();
+		SetMovementState(EMovementState::EMS_Downed);
+		return;
+	}
 
 	if (bCrouchPressed)
 	{
@@ -926,16 +967,11 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 				Velocity.X = NewDirection.X * MaxHorizontalSpeed;
 				Velocity.Y = NewDirection.Y * MaxHorizontalSpeed;
 			}
-			
-			// FVector VelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
-			// FVector NewVelocityXY = VelocityXY - VelocityXY.GetSafeNormal() * AirDeceleration * DeltaTime;
-			// if (NewVelocityXY.Size() < MaxHorizontalSpeed)
-			// {
-			// 	NewVelocityXY = NewVelocityXY.GetSafeNormal() * MaxHorizontalSpeed;
-			// }
-			//
-			// Velocity.X = NewVelocityXY.X;
-			// Velocity.Y = NewVelocityXY.Y;
+			else
+			{
+				Velocity.X = Velocity.GetSafeNormal2D().X * MaxHorizontalSpeed;
+				Velocity.Y = Velocity.GetSafeNormal2D().Y * MaxHorizontalSpeed;
+			}
 		}
 		else
 		{
@@ -1044,6 +1080,9 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 {
 
+	// Consume and ignore damage request boolean
+	bDamagedRequested = false;
+
 	FVector WallRunDir;
 	if (CurrentWallRunSide == EWallRunSide::EWRS_Left)
 	{
@@ -1056,7 +1095,6 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 
 	bControllerTilting = true;
 	
-	// UE_LOG(LogTemp, Log, TEXT("Current Controller Roll : %f"), SuraPawnPlayer->GetControlRotation().Roll);
 
 	if (WallRunElapsedTime < (WallRunMaxDuration - 1.f))
 	{
@@ -1348,6 +1386,15 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 
 void USuraPlayerMovementComponent::TickMantle(float DeltaTime)
 {
+	// Consume and damage request boolean
+	if (bDamagedRequested && ReceivedDamageType == EDamageTypeTest::Special)
+	{
+		bDamagedRequested = false;
+		OnDowned.Broadcast();
+		SetMovementState(EMovementState::EMS_Downed);
+		return;
+	}
+	
 	// FVector WallRight = FVector::CrossProduct(MantleWallHit.ImpactNormal, FVector::UpVector).GetSafeNormal();
 	// FVector WallUpDir = FVector::CrossProduct(WallRight, MantleWallHit.ImpactNormal).GetSafeNormal();
 	// Velocity = WallUpDir * (bIsRunning ? RunSpeed : WalkSpeed);
@@ -1402,6 +1449,71 @@ void USuraPlayerMovementComponent::TickMantle(float DeltaTime)
 	Velocity = FVector::VectorPlaneProject(FVector::UpVector, Hit.ImpactNormal).GetSafeNormal() * 800.f;
 
 	
+}
+
+void USuraPlayerMovementComponent::TickDowned(float DeltaTime)
+{
+	const float ElapsedTime = GetWorld()->GetTimeSeconds() - DownedStartTime;
+	
+	if (ElapsedTime > DownedDuration)
+	{
+		OnMove.Broadcast();
+		SetMovementState(EMovementState::EMS_Move);
+		return;
+	}
+
+	FVector DefaultCameraRelativeLocation = SuraPawnPlayer->GetDefaultCameraRelativeLocation();
+	FVector TargetCameraLocation = DefaultCameraRelativeLocation + DownedPositionCurve->GetVectorValue(ElapsedTime);
+	SuraPawnPlayer->GetCameraComponent()->SetRelativeLocation(TargetCameraLocation);
+
+	FVector DownedRotationVector = DownedRotationCurve->GetVectorValue(ElapsedTime);
+	FRotator TargetControlRotation = DownedStartControlRotation + FRotator(DownedRotationVector.Y, DownedRotationVector.Z, DownedRotationVector.X);
+	GetController()->SetControlRotation(TargetControlRotation);
+
+	if (!IsGrounded())
+	{
+		float MaxHorizontalSpeed = bIsRunning ? RunSpeed : WalkSpeed;
+		if (bWallJumpAirBoost)
+		{
+			MaxHorizontalSpeed = WallRunJumpAirSpeed2D;
+		}
+		else
+		{
+			if (bHasDashedInAir && bShouldKeepSlideSpeed)
+			{
+				MaxHorizontalSpeed = FMath::Max(DashEndSpeed, LastSlideSpeedBeforeAirborne.Size2D());
+			}
+			else if (bHasDashedInAir && !bShouldKeepSlideSpeed)
+			{
+				MaxHorizontalSpeed = DashEndSpeed;
+			}
+			else if (!bHasDashedInAir && bShouldKeepSlideSpeed)
+			{
+				MaxHorizontalSpeed = LastSlideSpeedBeforeAirborne.Size2D();
+			}
+			
+		}
+		
+		
+		if (Velocity.Size2D() > MaxHorizontalSpeed)
+		{
+			Velocity.X = Velocity.GetSafeNormal2D().X * MaxHorizontalSpeed;
+			Velocity.Y = Velocity.GetSafeNormal2D().Y * MaxHorizontalSpeed;
+		}
+		
+		Velocity.Z = FMath::Max(Velocity.Z - GravityScale * DeltaTime, -MaxFallVerticalSpeed);
+	}
+	else
+	{
+		Velocity = FVector::ZeroVector;
+	}
+
+	
+	
+}
+
+void USuraPlayerMovementComponent::TickDead(float DeltaTime)
+{
 }
 
 bool USuraPlayerMovementComponent::CanWallRun()
@@ -1509,87 +1621,118 @@ void USuraPlayerMovementComponent::UpdateWallCooldowns()
 
 void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldState, EMovementState NewState)
 {
-	if (OldState == EMovementState::EMS_Slide)
+	switch (OldState)
 	{
-		// This is for slide direction.
-		SlideStateElapsedTime = 0.f;
+		case EMovementState::EMS_Move:
+			{
+				SlideResetTimer = 0.f;
+			}
+			break;
+		case EMovementState::EMS_Airborne:
+			{
+				bHasDashedInAir = false;
+				bWallJumpAirBoost = false;
+				bShouldKeepSlideSpeed = false;
+				ElapsedTimeFromSurface = 0.f;
+				CurrentJumpCount = 0;
+
+				bCoyoteTimeActivated = false;
+			}
+			break;
+		case EMovementState::EMS_WallRun:
+			{
+				WallRunElapsedTime = 0.f;
+				bIsDeceleratingZ = false;
+				bTiltRecovering = false;
+
+				CooldownWalls.Add({CurrentWallHit, GetWorld()->GetTimeSeconds()});
+
+				if (NewState == EMovementState::EMS_Airborne)
+				{
+					bWallJumpAirBoost = true;
+				}
+				else
+				{
+					bControllerTilting = false;
+				}
+			}
+			break;
+		case EMovementState::EMS_Mantle:
+			break;
+		case EMovementState::EMS_Slide:
+			{
+				// This is for slide direction.
+				SlideStateElapsedTime = 0.f;
+			}
+			break;
+		case EMovementState::EMS_Downed:
+			break;
+		case EMovementState::EMS_Dead:
+			break;
+		default:
+			break;
 	}
 
-	if (NewState == EMovementState::EMS_Slide)
+	switch (NewState)
 	{
-		bHasRecentlySlid = true;
-		SlideDecelerationAmount = (Velocity.Size() - CrouchSpeed) / FMath::Max(SlideMaxDuration - SlideElapsedTime, 0.1f);
-	}
-
-	if (OldState == EMovementState::EMS_Move)
-	{
-		SlideResetTimer = 0.f;
+		case EMovementState::EMS_Move:
+			{
+				break;
+			}
+		case EMovementState::EMS_Airborne:
+			break;
+		case EMovementState::EMS_WallRun:
+			{
+				bHasRecentlySlid = false;
+				SlideElapsedTime = 0.f; 
 		
+				Velocity.X = Velocity.GetSafeNormal2D().X * WallRunEnterSpeed2D;
+				Velocity.Y = Velocity.GetSafeNormal2D().Y * WallRunEnterSpeed2D;
+
+				if (WallRunEnterMode == EWallRunEnter::EWRE_Upward)
+				{
+					bIsDeceleratingZ = true;
+					Velocity.Z = 700.f;
+				}
+				else if (WallRunEnterMode == EWallRunEnter::EWRE_Downward)
+				{
+					bIsDeceleratingZ = true;
+					Velocity.Z = -700.f;
+				}
+				else if (WallRunEnterMode == EWallRunEnter::EWRE_Neutral)
+				{
+					bIsDeceleratingZ = false;
+					Velocity.Z = 0.f;
+				}
+			}
+			break;
+		case EMovementState::EMS_Mantle:
+			{
+				bHasRecentlySlid = false;
+				SlideElapsedTime = 0.f;
+			}
+			break;
+		case EMovementState::EMS_Slide:
+			{
+				bHasRecentlySlid = true;
+				SlideDecelerationAmount = (Velocity.Size() - CrouchSpeed) / FMath::Max(SlideMaxDuration - SlideElapsedTime, 0.1f);
+			}
+			break;
+		case EMovementState::EMS_Downed:
+			{
+				DownedStartControlRotation = SuraPawnPlayer->GetControlRotation();
+				DownedStartTime = GetWorld()->GetTimeSeconds();
+				if (OldState == EMovementState::EMS_Move)
+				{
+					Velocity = FVector::ZeroVector;
+				}
+			}
+			break;
+		case EMovementState::EMS_Dead:
+			break;
+		default:
+			break;
 	}
-
-	
-	if (OldState == EMovementState::EMS_Airborne)
-	{
-		bHasDashedInAir = false;
-		bWallJumpAirBoost = false;
-		bShouldKeepSlideSpeed = false;
-		ElapsedTimeFromSurface = 0.f;
-		CurrentJumpCount = 0;
-
-		bCoyoteTimeActivated = false;
-	}
-
-	if (NewState == EMovementState::EMS_Mantle)
-	{
-		bHasRecentlySlid = false;
-		SlideElapsedTime = 0.f;
-	}
-	
-
-	if (NewState == EMovementState::EMS_WallRun)
-	{
-		bHasRecentlySlid = false;
-		SlideElapsedTime = 0.f; 
-		
-		Velocity.X = Velocity.GetSafeNormal2D().X * WallRunEnterSpeed2D;
-		Velocity.Y = Velocity.GetSafeNormal2D().Y * WallRunEnterSpeed2D;
-
-		if (WallRunEnterMode == EWallRunEnter::EWRE_Upward)
-		{
-			bIsDeceleratingZ = true;
-			Velocity.Z = 700.f;
-		}
-		else if (WallRunEnterMode == EWallRunEnter::EWRE_Downward)
-		{
-			bIsDeceleratingZ = true;
-			Velocity.Z = -700.f;
-		}
-		else if (WallRunEnterMode == EWallRunEnter::EWRE_Neutral)
-		{
-			bIsDeceleratingZ = false;
-			Velocity.Z = 0.f;
-		}
-	}
-
-	if (OldState == EMovementState::EMS_WallRun)
-	{
-		WallRunElapsedTime = 0.f;
-		bIsDeceleratingZ = false;
-		bTiltRecovering = false;
-
-		CooldownWalls.Add({CurrentWallHit, GetWorld()->GetTimeSeconds()});
-
-		if (NewState == EMovementState::EMS_Airborne)
-		{
-			bWallJumpAirBoost = true;
-		}
-		else
-		{
-			bControllerTilting = false;
-		}
-	}
-	
-	
 }
 
 
@@ -1620,6 +1763,13 @@ bool USuraPlayerMovementComponent::IsGrounded()
 	}
 
 	return true;
+}
+
+void USuraPlayerMovementComponent::NotifyDamageData(EDamageTypeTest DamageType)
+{
+	ReceivedDamageType = DamageType;
+	bDamagedRequested = true;
+	LastDamagedWorldTime = GetWorld()->GetTimeSeconds();
 }
 
 
@@ -1676,7 +1826,8 @@ void USuraPlayerMovementComponent::UpdateDashGauge(float DeltaTime)
 {
 	if (DashGauge < 2.f)
 	{
-		/* Gauge max value is 2. and the dash cooldown is 5 seconds, and dash cooldown is accounted for a single dash, So
+		/*
+		 * Gauge max value is 2. and the dash cooldown is 5 seconds, and dash cooldown is accounted for a single dash, So
 		 * the increment factor becomes 1 second divided by dash cooldown.
 		 */
 		

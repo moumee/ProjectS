@@ -8,6 +8,7 @@
 #include "Interfaces/Damageable.h"
 #include "SuraPawnPlayer.generated.h"
 
+class USphereComponent;
 class UAmmoCounterWidget;
 class USuraPlayerCameraComponent;
 class USpringArmComponent;
@@ -29,6 +30,13 @@ class UACUIMangerComponent;
 class UPlayerHUD;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerHealthHalved);
+
+UENUM()
+enum class EDamageTypeTest
+{
+	Normal,
+	Special
+};
 
 UENUM()
 enum class EEnemyRange
@@ -64,6 +72,8 @@ public:
 
 	UCameraComponent* GetCameraComponent() const { return Camera; };
 
+	FVector GetDefaultCameraRelativeLocation() const { return DefaultCameraRelativeLocation; };
+
 	USceneCaptureComponent2D* GetSceneCaptureComponent() const { return FPSceneCapture;  } //<JaeHyeong>
 
 	UWeaponSystemComponent* GetWeaponSystemComponent() const { return WeaponSystem; }  // <WeaponSystem>
@@ -97,15 +107,18 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE EEnemyRange GetLastPlayerHitEnemyRange() const { return LastPlayerHitEnemyRange; }
 
+	UPROPERTY(EditAnywhere)
+	EDamageTypeTest DamageTypeTest = EDamageTypeTest::Normal;
+
 protected:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UCapsuleComponent> CapsuleComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<USkeletalMeshComponent> ArmMesh;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<USkeletalMeshComponent> HandsMesh;
 
 	UPROPERTY(EditAnywhere)
@@ -134,23 +147,24 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
 	UACUIMangerComponent* UIManager;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> MoveAction;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> LookAction;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> JumpAction;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> ShiftAction;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> CrouchAction;
+	
 
 	FTimerHandle PlayerHealthCheckTimer;
 	float ConditionalPlayerHP = 50.f;
@@ -165,9 +179,10 @@ protected:
 	FVector LastPlayerHitEnemyPosition;
 	UPROPERTY(VisibleAnywhere)
 	FVector LastHitRelativeDirection;
-	
-	
 
+	FVector DefaultCameraRelativeLocation;
+	
+	
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);
 	void StartJumpInput();

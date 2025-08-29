@@ -81,6 +81,8 @@ void ASuraPawnPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
+	DefaultCameraRelativeLocation = Camera->GetRelativeLocation();
+
 	GetDamageSystemComponent()->OnDamaged.AddUObject(this, &ASuraPawnPlayer::OnDamaged);
 	GetDamageSystemComponent()->OnDeath.AddUObject(this, &ASuraPawnPlayer::OnDeath);
 
@@ -210,6 +212,12 @@ void ASuraPawnPlayer::HandleMoveInput(const FInputActionValue& Value)
 
 void ASuraPawnPlayer::HandleLookInput(const FInputActionValue& Value)
 {
+	if (MovementComponent->GetMovementState() == EMovementState::EMS_Downed ||
+		MovementComponent->GetMovementState() == EMovementState::EMS_Dead)
+	{
+		return;
+	}
+	
 	FVector2D InputVector = Value.Get<FVector2D>();
 
 	AddControllerYawInput(InputVector.X);
@@ -287,6 +295,7 @@ void ASuraPawnPlayer::StopCrouchInput()
 
 bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCauser)
 {
+	
 	if (const ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(DamageCauser))
 	{
 		FName EnemyType = Enemy->GetEnemyType();
@@ -302,6 +311,15 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 
 		LastPlayerHitEnemyPosition = Enemy->GetActorLocation();
 		
+	}
+
+	if (DamageTypeTest == EDamageTypeTest::Normal)
+	{
+		GetPlayerMovementComponent()->NotifyDamageData(EDamageTypeTest::Normal);
+	}
+	else if (DamageTypeTest == EDamageTypeTest::Special)
+	{
+		GetPlayerMovementComponent()->NotifyDamageData(EDamageTypeTest::Special);
 	}
 
 	
