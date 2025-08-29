@@ -34,8 +34,19 @@ void AEnemyCoopAttackTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedC
 {
 	if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(OtherActor))
 	{
+		Enemy->GetAIController()->EndPursueState();
 		Enemy->GetAIController()->GetBrainComponent()->StopLogic("CoopAttack");
 		EnemiesForCoopAttack.Add(Enemy);
+
+		if (EnemiesForCoopAttack.Num() >= 2)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Enough for coop attack"));
+
+			for (auto EnemyForCoopAttack : EnemiesForCoopAttack)
+			{
+				EnemyForCoopAttack->GetAIController()->Set
+			}
+		}
 
 		// 1. Find another enemy in a radius
 		// 1-1. if the found enemy is pursuing, stop that enemy on contact with the thrower enemy
