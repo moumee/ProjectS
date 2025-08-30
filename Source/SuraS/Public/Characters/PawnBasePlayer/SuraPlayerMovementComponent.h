@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Enumerations/EDamageType.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "SuraPlayerMovementComponent.generated.h"
 
@@ -132,7 +133,7 @@ public:
 
 	bool GetIsInvincible() const { return bIsInvincible; }
 
-	void NotifyDamageData(EDamageTypeTest DamageType);
+	void NotifyDamageData(EDamageType DamageType);
 
 	FOnMove	OnMove;
 	FOnWallRun OnWallRun;
@@ -390,7 +391,7 @@ protected:
 #pragma region Damage
 	
 	UPROPERTY(EditAnywhere, Category = "Movement|Damage")
-	EDamageTypeTest ReceivedDamageType;
+	EDamageType ReceivedDamageType;
 
 	bool bDamageSlowDebuff = false;
 

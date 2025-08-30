@@ -1639,17 +1639,14 @@ bool USuraPlayerMovementComponent::IsGrounded()
 	return true;
 }
 
-void USuraPlayerMovementComponent::NotifyDamageData(EDamageTypeTest DamageType)
+void USuraPlayerMovementComponent::NotifyDamageData(EDamageType DamageType)
 {
 	ReceivedDamageType = DamageType;
 	LastDamagedWorldTime = GetWorld()->GetTimeSeconds();
 
 	switch (DamageType)
 	{
-		case EDamageTypeTest::Normal:
-			bDamageSlowDebuff = true;
-			break;
-		case EDamageTypeTest::Special:
+		case EDamageType::Charge:
 			if (CurrentMovementState == EMovementState::EMS_Move ||
 				CurrentMovementState == EMovementState::EMS_Airborne)
 			{
@@ -1658,6 +1655,7 @@ void USuraPlayerMovementComponent::NotifyDamageData(EDamageTypeTest DamageType)
 			}
 			break;
 		default:
+			bDamageSlowDebuff = true;
 			break;
 	}
 }

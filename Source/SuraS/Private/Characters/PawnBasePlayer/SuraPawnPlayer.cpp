@@ -101,6 +101,8 @@ void ASuraPawnPlayer::BeginPlay()
 	PlayerHealthCheckTimerDelegate.BindUObject(this, &ASuraPawnPlayer::CheckPlayerHealth);
 	GetWorld()->GetTimerManager().SetTimer(PlayerHealthCheckTimer, PlayerHealthCheckTimerDelegate,
 		CorrectionSystemCheckTime, true);
+
+	DefaultCameraRelativeLocation = Camera->GetRelativeLocation();
 }
 
 UCapsuleComponent* ASuraPawnPlayer::GetCapsuleComponent()
@@ -131,8 +133,6 @@ void ASuraPawnPlayer::SetLookInputVector2DZero()
 void ASuraPawnPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
-	LastHitRelativeDirection = (LastPlayerHitEnemyPosition - GetActorLocation()).GetSafeNormal2D();
 
 }
 
@@ -281,14 +281,7 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 		UIManager->ShowDamageIndicator(DamageCauser);
 	}
 
-	if (DamageTypeTest == EDamageTypeTest::Normal)
-	{
-		GetPlayerMovementComponent()->NotifyDamageData(EDamageTypeTest::Normal);
-	}
-	else if (DamageTypeTest == EDamageTypeTest::Special)
-	{
-		GetPlayerMovementComponent()->NotifyDamageData(EDamageTypeTest::Special);
-	}
+	GetPlayerMovementComponent()->NotifyDamageData(DamageData.DamageType);
 	
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }

@@ -44,7 +44,7 @@ void AEnemyCoopAttackTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedC
 
 			for (auto EnemyForCoopAttack : EnemiesForCoopAttack)
 			{
-				EnemyForCoopAttack->GetAIController()->Set
+				// EnemyForCoopAttack->GetAIController()->Set
 			}
 		}
 
