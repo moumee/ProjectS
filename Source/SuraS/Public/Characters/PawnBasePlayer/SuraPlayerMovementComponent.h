@@ -6,8 +6,20 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "SuraPlayerMovementComponent.generated.h"
 
+class UCurveVector;
+enum class EDamageTypeTest;
 class ASuraPlayerController;
 class ASuraPawnPlayer;
+
+
+struct FCachedInput
+{
+	FVector WorldInputDir = FVector::ZeroVector;
+	FVector2D MovementInput2D = FVector2D::ZeroVector;
+	bool bJumpPressed = false;
+	bool bShiftPressed = false;
+	bool bCrouchHeld = false;
+};
 
 UENUM(Blueprintable)
 enum class EWallRunEnter : uint8
@@ -24,7 +36,9 @@ enum class EMovementState : uint8
 	EMS_Slide,
 	EMS_Airborne,
 	EMS_WallRun,
-	EMS_Mantle
+	EMS_Mantle,
+	EMS_Downed,
+	EMS_Dead,
 };
 
 UENUM(Blueprintable)
@@ -58,6 +72,7 @@ DECLARE_MULTICAST_DELEGATE(FOnDoubleJump);
 DECLARE_MULTICAST_DELEGATE(FOnWallJump);
 DECLARE_MULTICAST_DELEGATE(FOnMantle);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnDash, FVector2D);
+DECLARE_MULTICAST_DELEGATE(FOnDowned);
 
 
 
@@ -112,7 +127,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetWalkSpeed() const { return WalkSpeed; }
 
+	UFUNCTION(BlueprintCallable)
 	EMovementState GetMovementState() const { return CurrentMovementState; }
+
+	bool GetIsInvincible() const { return bIsInvincible; }
+
+	void NotifyDamageData(EDamageTypeTest DamageType);
 
 	FOnMove	OnMove;
 	FOnWallRun OnWallRun;
@@ -125,8 +145,12 @@ public:
 	FOnWallJump OnWallJump;
 	FOnMantle OnMantle;
 	FOnDash OnDash;
+	FOnDowned OnDowned;
 
 protected:
+
+	UPROPERTY(EditAnywhere)
+	bool bPrintMovementDebug = false;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	TObjectPtr<UDataTable> MovementDataTable;
@@ -229,6 +253,8 @@ protected:
 	float SlideMaxDuration = 1.f;
 
 protected:
+
+	FCachedInput Input;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float GroundPointDetectionLength = 1000.f;
@@ -361,6 +387,43 @@ protected:
 	
 #pragma endregion Mantle
 
+#pragma region Damage
+	
+	UPROPERTY(EditAnywhere, Category = "Movement|Damage")
+	EDamageTypeTest ReceivedDamageType;
+
+	bool bDamageSlowDebuff = false;
+
+	float LastDamagedWorldTime = 0.f;
+
+	float DamageSlowDebuffDuration = 1.f;
+
+	float DamageSlowDebuffMultiplier = 0.3f;
+
+	bool bIsInvincible = false;
+	
+#pragma endregion Damage
+
+#pragma region Downed
+
+	bool bDownedDamage = false;
+	
+	FRotator DownedStartControlRotation;
+	
+	float DownedDuration = 2.f;
+
+	float DownedStartTime = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Editor Assign")
+	TObjectPtr<UCurveVector> DownedPositionCurve;
+	UPROPERTY(EditDefaultsOnly, Category="Editor Assign")
+	TObjectPtr<UCurveVector> DownedRotationCurve;
+	
+	float DownedInvincibleDuration = 1.f;
+	
+#pragma endregion Downed
+	
+
 	UPROPERTY()
 	TObjectPtr<ASuraPawnPlayer> SuraPawnPlayer = nullptr;
 
@@ -421,6 +484,13 @@ protected:
 
 	void TickMantle(float DeltaTime);
 
+	void TickDowned(float DeltaTime);
+
+	void TickDead(float DeltaTime);
+
 	void UpdateDashGauge(float DeltaTime);
 
+	void CacheInput();
+
+	void UpdateDamageFlags();
 };

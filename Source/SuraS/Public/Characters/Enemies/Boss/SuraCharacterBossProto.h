@@ -24,7 +24,6 @@ public:
 	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser) override;
 	
 protected:
-	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<USkeletalMeshComponent> HeadMesh;
