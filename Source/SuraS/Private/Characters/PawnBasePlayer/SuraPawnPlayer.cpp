@@ -147,9 +147,7 @@ void ASuraPawnPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::HandleMoveInput);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::HandleLookInput);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartJumpInput);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopJumpInput);
 		EnhancedInputComponent->BindAction(ShiftAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartShiftInput);
-		EnhancedInputComponent->BindAction(ShiftAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopShiftInput);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartCrouchInput);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopCrouchInput);
 
@@ -236,16 +234,6 @@ void ASuraPawnPlayer::StartJumpInput()
 	MovementComponent->SetJumpPressed(true);
 }
 
-void ASuraPawnPlayer::StopJumpInput()
-{
-	if (!MovementComponent)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Player movement component is not valid!"));
-		return;
-	}
-	
-	MovementComponent->SetJumpPressed(false);
-}
 
 void ASuraPawnPlayer::StartShiftInput()
 {
@@ -257,18 +245,6 @@ void ASuraPawnPlayer::StartShiftInput()
 	
 	MovementComponent->SetShiftPressed(true);
 }
-
-void ASuraPawnPlayer::StopShiftInput()
-{
-	if (!MovementComponent)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Player movement component is not valid!"));
-		return;
-	}
-	
-	MovementComponent->SetShiftPressed(false);
-}
-
 
 
 void ASuraPawnPlayer::StartCrouchInput()
@@ -295,6 +271,10 @@ void ASuraPawnPlayer::StopCrouchInput()
 
 bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCauser)
 {
+	if (MovementComponent->GetIsInvincible())
+	{
+		return false;
+	}
 	
 	if (const ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(DamageCauser))
 	{
@@ -307,10 +287,7 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 		{
 			LastPlayerHitEnemyRange = EEnemyRange::ER_Melee;
 		}
-		
-
 		LastPlayerHitEnemyPosition = Enemy->GetActorLocation();
-		
 	}
 
 	if (DamageTypeTest == EDamageTypeTest::Normal)

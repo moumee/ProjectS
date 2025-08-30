@@ -11,6 +11,16 @@ enum class EDamageTypeTest;
 class ASuraPlayerController;
 class ASuraPawnPlayer;
 
+
+struct FCachedInput
+{
+	FVector WorldInputDir = FVector::ZeroVector;
+	FVector2D MovementInput2D = FVector2D::ZeroVector;
+	bool bJumpPressed = false;
+	bool bShiftPressed = false;
+	bool bCrouchHeld = false;
+};
+
 UENUM(Blueprintable)
 enum class EWallRunEnter : uint8
 {
@@ -117,7 +127,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetWalkSpeed() const { return WalkSpeed; }
 
+	UFUNCTION(BlueprintCallable)
 	EMovementState GetMovementState() const { return CurrentMovementState; }
+
+	bool GetIsInvincible() const { return bIsInvincible; }
 
 	void NotifyDamageData(EDamageTypeTest DamageType);
 
@@ -240,6 +253,8 @@ protected:
 	float SlideMaxDuration = 1.f;
 
 protected:
+
+	FCachedInput Input;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float GroundPointDetectionLength = 1000.f;
@@ -376,18 +391,22 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Movement|Damage")
 	EDamageTypeTest ReceivedDamageType;
-	UPROPERTY(VisibleAnywhere, Category = "Movement|Damage")
-	bool bDamagedRequested = false;
-	bool bIsDamaged = false;
+
+	bool bDamageSlowDebuff = false;
 
 	float LastDamagedWorldTime = 0.f;
 
 	float DamageSlowDebuffDuration = 1.f;
 
 	float DamageSlowDebuffMultiplier = 0.3f;
+
+	bool bIsInvincible = false;
+	
 #pragma endregion Damage
 
 #pragma region Downed
+
+	bool bDownedDamage = false;
 	
 	FRotator DownedStartControlRotation;
 	
@@ -399,6 +418,9 @@ protected:
 	TObjectPtr<UCurveVector> DownedPositionCurve;
 	UPROPERTY(EditDefaultsOnly, Category="Editor Assign")
 	TObjectPtr<UCurveVector> DownedRotationCurve;
+	
+	float DownedInvincibleDuration = 1.f;
+	
 #pragma endregion Downed
 	
 
@@ -468,4 +490,7 @@ protected:
 
 	void UpdateDashGauge(float DeltaTime);
 
+	void CacheInput();
+
+	void UpdateDamageFlags();
 };
