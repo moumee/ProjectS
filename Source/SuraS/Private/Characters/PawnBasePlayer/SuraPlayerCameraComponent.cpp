@@ -3,6 +3,9 @@
 
 #include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
 
+#include "CameraAnimationSequence.h"
+#include "Camera/PlayerCameraManager.h"
+#include "Camera/CameraModifier.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/PlayerCameraMovementRow.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
@@ -30,6 +33,8 @@ void USuraPlayerCameraComponent::BeginPlay()
 	PlayerCamera = Player->GetCameraComponent();
 	PlayerController = Player->GetController<APlayerController>();
 
+	
+
 	InitCameraShakes();
 
 	MovementComponent->OnMove.AddUObject(this, &USuraPlayerCameraComponent::OnMove);
@@ -43,9 +48,18 @@ void USuraPlayerCameraComponent::BeginPlay()
 	MovementComponent->OnWallJump.AddUObject(this, &USuraPlayerCameraComponent::OnWallJump);
 	MovementComponent->OnMantle.AddUObject(this, &USuraPlayerCameraComponent::OnMantle);
 	MovementComponent->OnDash.AddUObject(this, &USuraPlayerCameraComponent::OnDash);
+	MovementComponent->OnDowned.AddUObject(this, &USuraPlayerCameraComponent::OnDowned);
 	
+	DownedFloorImpactDelegate.BindWeakLambda(this, [&]
+	{
+		PlayOneShotCameraShake(DownedFloorImpactShake);
+		PlayOneShotCameraShake(DownedFloorIdleShake);
+	});
 
-	
+	DownedGoingUpShakeDelegate.BindWeakLambda(this, [&]
+	{
+		PlayOneShotCameraShake(DownedGoingUpShake);
+	});
 	
 }
 
@@ -289,6 +303,15 @@ void USuraPlayerCameraComponent::OnDash(FVector2D MovementInput)
 			PlayOneShotCameraShake(ForwardDashCameraShake);
 		}
 	}
+	
+}
+
+void USuraPlayerCameraComponent::OnDowned()
+{
+	PlayOneShotCameraShake(DownedImpactShake);
+
+	GetWorld()->GetTimerManager().SetTimer(DownFloorImpactTimerHandle, DownedFloorImpactDelegate, 0.4f, false);
+	GetWorld()->GetTimerManager().SetTimer(DownGoingUpTimerHandle, DownedGoingUpShakeDelegate, 1.2f, false);
 	
 }
 

@@ -16,7 +16,7 @@ class SURAS_API UBTT_MeleeAttack : public UBTTask_BlackboardBase
 
 	FOnMontageEnded OnAttackMontageEnded;
 
-	bool IsAttacking = false;
+	bool bIsAttacking = false;
 
 	void OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted);
 	

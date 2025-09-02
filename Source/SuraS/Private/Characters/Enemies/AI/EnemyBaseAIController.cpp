@@ -90,8 +90,6 @@ void AEnemyBaseAIController::UpdateCurrentState(EEnemyStates NewState)
 
 void AEnemyBaseAIController::SetStateToChaseOrPursue(AActor* TargetActor)
 {
-	
-	
 	if (GetCurrentState() != EEnemyStates::Pursue && GetCurrentState() != EEnemyStates::Attacking)
 	{
 		if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(TargetActor))
@@ -115,11 +113,21 @@ void AEnemyBaseAIController::SetStateToChaseOrPursue(AActor* TargetActor)
 	}
 }
 
+void AEnemyBaseAIController::SetStateToCoopAttack(AActor* Ally, bool bIsThrowing)
+{
+	UpdateCurrentState(EEnemyStates::CoopThrowAttacking);
+	GetBlackboardComponent()->SetValueAsObject("CoopAlly", Ally);
+	GetBlackboardComponent()->SetValueAsBool("IsCoopThrower", bIsThrowing);
+}
+
 void AEnemyBaseAIController::EndPursueState()
 {
-	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
+	if (GetCurrentState() == EEnemyStates::Pursue || GetCurrentState() == EEnemyStates::Attacking)
 	{
-		Player->GetAttackTokensComponent()->ReturnPursuitToken(1);
+		if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
+		{
+			Player->GetAttackTokensComponent()->ReturnPursuitToken(1);
+		}
 	}
 }
 

@@ -101,6 +101,8 @@ void ASuraPawnPlayer::BeginPlay()
 	PlayerHealthCheckTimerDelegate.BindUObject(this, &ASuraPawnPlayer::CheckPlayerHealth);
 	GetWorld()->GetTimerManager().SetTimer(PlayerHealthCheckTimer, PlayerHealthCheckTimerDelegate,
 		CorrectionSystemCheckTime, true);
+
+	DefaultCameraRelativeLocation = Camera->GetRelativeLocation();
 }
 
 UCapsuleComponent* ASuraPawnPlayer::GetCapsuleComponent()
@@ -131,6 +133,7 @@ void ASuraPawnPlayer::SetLookInputVector2DZero()
 void ASuraPawnPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
 }
 
 void ASuraPawnPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -143,9 +146,7 @@ void ASuraPawnPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::HandleMoveInput);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::HandleLookInput);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartJumpInput);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopJumpInput);
 		EnhancedInputComponent->BindAction(ShiftAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartShiftInput);
-		EnhancedInputComponent->BindAction(ShiftAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopShiftInput);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartCrouchInput);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopCrouchInput);
 
@@ -208,6 +209,12 @@ void ASuraPawnPlayer::HandleMoveInput(const FInputActionValue& Value)
 
 void ASuraPawnPlayer::HandleLookInput(const FInputActionValue& Value)
 {
+	if (MovementComponent->GetMovementState() == EMovementState::EMS_Downed ||
+		MovementComponent->GetMovementState() == EMovementState::EMS_Dead)
+	{
+		return;
+	}
+	
 	FVector2D InputVector = Value.Get<FVector2D>();
 
 	AddControllerYawInput(InputVector.X);
@@ -226,16 +233,6 @@ void ASuraPawnPlayer::StartJumpInput()
 	MovementComponent->SetJumpPressed(true);
 }
 
-void ASuraPawnPlayer::StopJumpInput()
-{
-	if (!MovementComponent)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Player movement component is not valid!"));
-		return;
-	}
-	
-	MovementComponent->SetJumpPressed(false);
-}
 
 void ASuraPawnPlayer::StartShiftInput()
 {
@@ -247,18 +244,6 @@ void ASuraPawnPlayer::StartShiftInput()
 	
 	MovementComponent->SetShiftPressed(true);
 }
-
-void ASuraPawnPlayer::StopShiftInput()
-{
-	if (!MovementComponent)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Player movement component is not valid!"));
-		return;
-	}
-	
-	MovementComponent->SetShiftPressed(false);
-}
-
 
 
 void ASuraPawnPlayer::StartCrouchInput()
@@ -285,11 +270,18 @@ void ASuraPawnPlayer::StopCrouchInput()
 
 bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCauser)
 {
+	if (MovementComponent->GetIsInvincible())
+	{
+		return false;
+	}
+	
 	// UIManager 컴포넌트에서 DamageIndicator 위젯을 가져옵니다.
 	if (UIManager)
 	{
 		UIManager->ShowDamageIndicator(DamageCauser);
 	}
+
+	GetPlayerMovementComponent()->NotifyDamageData(DamageData.DamageType);
 	
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }

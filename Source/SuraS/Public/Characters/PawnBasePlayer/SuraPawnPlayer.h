@@ -30,6 +30,7 @@ class UPlayerHUD;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerHealthHalved);
 
+
 UCLASS()
 class SURAS_API ASuraPawnPlayer : public APawn, public IDamageable
 {
@@ -55,6 +56,8 @@ public:
 	UCapsuleComponent* GetCapsuleComponent();
 
 	UCameraComponent* GetCameraComponent() const { return Camera; };
+
+	FVector GetDefaultCameraRelativeLocation() const { return DefaultCameraRelativeLocation; };
 
 	USceneCaptureComponent2D* GetSceneCaptureComponent() const { return FPSceneCapture;  } //<JaeHyeong>
 
@@ -84,12 +87,13 @@ public:
 
 	FOnPlayerHealthHalved OnPlayerHealthHalved;
 
+
 protected:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UCapsuleComponent> CapsuleComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<USkeletalMeshComponent> ArmMesh;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
@@ -121,23 +125,24 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
 	UACUIMangerComponent* UIManager;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> MoveAction;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> LookAction;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> JumpAction;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> ShiftAction;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> CrouchAction;
+	
 
 	FTimerHandle PlayerHealthCheckTimer;
 	float ConditionalPlayerHP = 50.f;
@@ -146,12 +151,13 @@ protected:
 
 	FVector2D PlayerLookInputVector2D; // <WeaponSystem>
 
+	FVector DefaultCameraRelativeLocation;
+	
+	
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);
 	void StartJumpInput();
-	void StopJumpInput();
 	void StartShiftInput();
-	void StopShiftInput();
 	void StartCrouchInput();
 	void StopCrouchInput();
 	
