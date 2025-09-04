@@ -17,6 +17,8 @@
 #include "Characters/PawnBasePlayer/SuraPlayerController.h"
 #include "Components/CapsuleComponent.h"
 #include "Curves/CurveVector.h"
+#include "Engine/AssetManager.h"
+#include "Engine/StreamableManager.h"
 
 #define WALL_TRACE_CHANNEL ECC_GameTraceChannel2
 #define ENEMY_TRACE_CHANNEL ECC_GameTraceChannel6
@@ -1794,7 +1796,10 @@ void USuraPlayerMovementComponent::AddControllerRoll(float DeltaTime, const FVec
 void USuraPlayerMovementComponent::InitMovementData()
 {
 	checkf(MovementDataTable, TEXT("MovementDataTable is not assigned in SuraPawnPlayer blueprint!!!!!!!!"));
-	FPawnPlayerMovementRow* Row = MovementDataTable->FindRow<FPawnPlayerMovementRow>("Player", "");
+
+
+	if (!MovementDataTable) return;
+	const FPawnPlayerMovementRow* Row = MovementDataTable->FindRow<FPawnPlayerMovementRow>("Player", "");
 	if (!Row) return;
 	GravityScale = Row->GravityScale;
 	WalkSpeed = Row->WalkSpeed;

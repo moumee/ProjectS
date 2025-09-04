@@ -154,7 +154,7 @@ protected:
 	bool bPrintMovementDebug = false;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	TObjectPtr<UDataTable> MovementDataTable;
+	TSoftObjectPtr<UDataTable> MovementDataTable;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Capsule")
 	float DefaultCapsuleRadius;
