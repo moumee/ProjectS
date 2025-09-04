@@ -24,7 +24,6 @@ ASuraEnemyProjectile::ASuraEnemyProjectile()
 
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
-	CollisionComp->OnComponentHit.AddDynamic(this, &ASuraEnemyProjectile::OnHit);
 
 	// Prevent the player walking on the bullet
 	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
@@ -81,8 +80,8 @@ void ASuraEnemyProjectile::InitializeProjectile()
 	
 	CollisionComp->SetSphereRadius(M_InitialRadius);
 
-	// CollisionComp->OnComponentHit.AddDynamic(this, &ASuraEnemyProjectile::OnHit);
-	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraEnemyProjectile::OnBeginOverlap);
+	CollisionComp->OnComponentHit.AddDynamic(this, &ASuraEnemyProjectile::OnHit);
+	// CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraEnemyProjectile::OnBeginOverlap);
 }
 
 void ASuraEnemyProjectile::SetOwner(AActor* TheOwner)
@@ -104,25 +103,29 @@ void ASuraEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 		DamageData.bCanForceDamage = false;
 		
 		Player->TakeDamage(DamageData, GetOwner());
+	}
 
+	if (IsValid(this)) 
+	{
 		Destroy();
 	}
-	else
+	
+	/*else
 	{
 		UE_LOG(LogTemp, Error, TEXT("hit with other"));
 
-		FTimerHandle DestroyHandle;
+		/*FTimerHandle DestroyHandle;
 	
 		GetWorldTimerManager().SetTimer(
 			DestroyHandle,
-			FTimerDelegate::CreateLambda([&]()
+			FTimerDelegate::CreateWeakLambda(this, [this]()
 			{
 				Destroy();
 			}),
 			0.1f,
 			false
-		);
-	}
+		);#1#
+	}*/
 
 	/*if (OtherActor != nullptr && OtherActor != ProjectileOwner) 
 	{
@@ -152,12 +155,13 @@ void ASuraEnemyProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, A
 		DamageData.DamageType = EDamageType::Projectile;
 		DamageData.bCanForceDamage = false;
 
-		OverlappedComp->AddImpulseAtLocation(GetVelocity() * 500.f, GetActorLocation());
+		// OverlappedComp->AddImpulseAtLocation(GetVelocity() * 500.f, GetActorLocation());
 		Player->TakeDamage(DamageData, GetOwner());
-
-		Destroy();
 	}
-	else
+
+	Destroy();
+	
+	/*else
 	{
 		UE_LOG(LogTemp, Error, TEXT("overlapped with other"));
 
@@ -172,7 +176,7 @@ void ASuraEnemyProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, A
 			M_DestroyDurationAfterHit,
 			false
 		);
-	}
+	}*/
 }
 
 void ASuraEnemyProjectile::ApplyDamage(AActor* OtherActor, float TheDamageAmount, EDamageType DamageType, bool bCanForceDamage)

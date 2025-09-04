@@ -3,7 +3,9 @@
 
 #include "Characters/Enemies/SuraCharacterEnemyCharger.h"
 
+#include "Characters/Enemies/AI/Tasks/Attacks/BTT_ChargeAttack.h"
 #include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 
 
 // Sets default values

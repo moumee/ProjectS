@@ -27,17 +27,15 @@ EBTNodeResult::Type UBTT_ChargeAttack::ExecuteTask(UBehaviorTreeComponent& Owner
 
 		CachedCharger->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &UBTT_ChargeAttack::OnHit);
 		CachedCharger->OverlapBox->OnComponentBeginOverlap.AddDynamic(this, &UBTT_ChargeAttack::OnOverlapBegin);
-		OnAttackReadyMontageEnded.BindUObject(this, &UBTT_ChargeAttack::OnAttackReadyEnded);
-		OnRoarMontageEnded.BindUObject(this, &UBTT_ChargeAttack::OnRoarEnded);
-		OnStunMontageEnded.BindUObject(this, &UBTT_ChargeAttack::OnStunEnded);
-
-		UAnimInstance* const EnemyAnimInstance = CachedCharger->GetMesh()->GetAnimInstance();
+		
 		UAnimMontage* AttackReadyAnimation = CachedCharger->GetChargeReadyAnimation();
+		float AttackReadyAnimDuration = CachedCharger->PlayAnimMontage(AttackReadyAnimation);
 
-		EnemyAnimInstance->Montage_Play(AttackReadyAnimation);
-
-		// EnemyAnimInstance->Montage_SetBlendingOutDelegate(OnAttackReadyMontageEnded); // montage interrupted
-		EnemyAnimInstance->Montage_SetEndDelegate(OnAttackReadyMontageEnded);
+		FTimerHandle AnimCompleteHandle;
+		GetWorld()->GetTimerManager().SetTimer(AnimCompleteHandle, [this]()
+		{
+			OnAttackReadyEnded();
+		}, AttackReadyAnimDuration,false);
 
 		return EBTNodeResult::InProgress;
 	}
@@ -64,18 +62,17 @@ void UBTT_ChargeAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeM
 	}
 }
 
-void UBTT_ChargeAttack::OnAttackReadyEnded(UAnimMontage* AnimMontage, bool bInterrupted)
+void UBTT_ChargeAttack::OnAttackReadyEnded()
 {
 	bIsAttacking = true;
 	OriginalMaxWalkSpeed = CachedCharger->GetCharacterMovement()->MaxWalkSpeed;
 	CachedCharger->GetCharacterMovement()->MaxWalkSpeed = ChargeMaxWalkSpeed;
 
 	CachedCharger->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay); // to face only the front
-
-	UAnimInstance* const EnemyAnimInstance = CachedCharger->GetMesh()->GetAnimInstance();
+	
 	UAnimMontage* AttackAnimation = CachedCharger->ChooseRandomAttackMontage();
 
-	EnemyAnimInstance->Montage_Play(AttackAnimation, 1.f);
+	CachedCharger->PlayAnimMontage(AttackAnimation);
 }
 
 void UBTT_ChargeAttack::EndTask()
@@ -92,23 +89,27 @@ void UBTT_ChargeAttack::EndTask()
 	}
 
 	// end the task
-	UAnimInstance* const EnemyAnimInstance = CachedCharger->GetMesh()->GetAnimInstance();
-	EnemyAnimInstance->Montage_Stop(0.2f);
+	/*UAnimInstance* const EnemyAnimInstance = CachedCharger->GetMesh()->GetAnimInstance();
+	EnemyAnimInstance->Montage_Stop(0.2f);*/
+	CachedCharger->StopAnimMontage();
 
 	UAnimMontage* RoarAnimation = CachedCharger->ChooseRandomRoarMontage();
-	EnemyAnimInstance->Montage_Play(RoarAnimation);
+	float RoarAnimDuration = CachedCharger->PlayAnimMontage(RoarAnimation);
 	
-	EnemyAnimInstance->Montage_SetEndDelegate(OnRoarMontageEnded);
+	FTimerHandle AnimCompleteHandle;
+	GetWorld()->GetTimerManager().SetTimer(AnimCompleteHandle, [this]()
+	{
+		OnRoarEnded();
+	}, RoarAnimDuration,false);
 }
 
-void UBTT_ChargeAttack::OnRoarEnded(UAnimMontage* AnimMontage, bool bInterrupted) const
+// Always the last function to be called before the task ends
+void UBTT_ChargeAttack::OnRoarEnded() const
 {
+	CachedCharger->GetCapsuleComponent()->OnComponentHit.RemoveDynamic(this, &UBTT_ChargeAttack::OnHit);
+	CachedCharger->OverlapBox->OnComponentBeginOverlap.RemoveDynamic(this, &UBTT_ChargeAttack::OnOverlapBegin);
+	
 	FinishLatentTask(*CachedOwnerComp.Get(), EBTNodeResult::Succeeded);
-}
-
-void UBTT_ChargeAttack::OnStunEnded(UAnimMontage* AnimMontage, bool bInterrupted)
-{
-	EndTask();
 }
 
 void UBTT_ChargeAttack::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -127,6 +128,8 @@ void UBTT_ChargeAttack::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 				FDamageData DamageData;
 				DamageData.DamageAmount = CachedCharger->GetAttackDamageAmount();
 				DamageData.DamageType = EDamageType::Charge;
+				DamageData.ImpulseDirection = (OtherActor->GetActorLocation() - CachedCharger->GetActorLocation()).GetSafeNormal2D();
+				DamageData.ImpulseMagnitude = 1000.f;
 			
 				Player->TakeDamage(DamageData, CachedCharger);
 
@@ -139,11 +142,15 @@ void UBTT_ChargeAttack::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 			
 			bIsAttacking = false;
 			
-			UAnimInstance* const EnemyAnimInstance = CachedCharger->GetMesh()->GetAnimInstance();
 			UAnimMontage* StunAnimation = CachedCharger->GetStunAnimation();
-			EnemyAnimInstance->Montage_Play(StunAnimation);
 
-			EnemyAnimInstance->Montage_SetEndDelegate(OnStunMontageEnded);
+			float StunAnimDuration = CachedCharger->PlayAnimMontage(StunAnimation);
+
+			FTimerHandle AnimCompleteHandle;
+			GetWorld()->GetTimerManager().SetTimer(AnimCompleteHandle, [this]()
+			{
+				EndTask();
+			}, StunAnimDuration,false);
 		}
 		/*else
 		{

@@ -18,7 +18,7 @@ void AEnemyProjectileRifleBullet::BeginPlay()
 	if (SpawnEffect)
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAttached(
-			SpawnEffect,
+			SpawnEffect.Get(),
 			ProjectileMesh,
 			NAME_None,
 			FVector::ZeroVector,
@@ -37,7 +37,7 @@ void AEnemyProjectileRifleBullet::ActivateShootingEffect()
 		GetNiagaraComponent()->Deactivate();
 		
 		UNiagaraFunctionLibrary::SpawnSystemAttached(
-			ShootingEffect,
+			ShootingEffect.Get(),
 			ProjectileMesh,
 			NAME_None,
 			FVector::ZeroVector,

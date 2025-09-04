@@ -201,7 +201,7 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 	
 	GetWorldTimerManager().SetTimer(
 		DeathHandle,
-		FTimerDelegate::CreateLambda([&]()
+		FTimerDelegate::CreateWeakLambda(this, [this]()
 		{
 			/*GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
 			GetMesh()->Stop();*/
@@ -394,9 +394,11 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 			GetCharacterMovement()->MaxWalkSpeed = EnemyAttributesData->MaxWalkSpeed;
 
 			AttackDamageAmount = EnemyAttributesData->AttackDamageAmount;
+			AttackRate = EnemyAttributesData->AttackRate;
 			MeleeAttackRange = EnemyAttributesData->MeleeAttackRange;
 			MeleeAttackSphereRadius = EnemyAttributesData->MeleeAttackSphereRadius;
 
+			MaxWalkSpeed = EnemyAttributesData->MaxWalkSpeed;
 			MinWalkSpeedVariation = EnemyAttributesData->MinWalkSpeedVariation;
 			MaxWalkSpeedVariation = EnemyAttributesData->MaxWalkSpeedVariation;
 			MinAttackRateVariation = EnemyAttributesData->MinAttackRateVariation;
