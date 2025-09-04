@@ -92,7 +92,7 @@ void ASuraCharacterEnemyRifle::OnDeathTriggered()
 {
 	Super::OnDeathTriggered();
 
-	if (Projectile)
+	if (IsValid(Projectile))
 	{
 		Projectile->Destroy();
 	}

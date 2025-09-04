@@ -29,12 +29,12 @@ EBTNodeResult::Type UBTT_CheckPlayerHealthCondition::ExecuteTask(UBehaviorTreeCo
 			{
 				if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(OwnerComp.GetAIOwner()->GetCharacter()))
 				{
-					float OriginalAttackRate = EnemyController->GetBlackboardComponent()->GetValueAsFloat("AttackRate");
+					float OriginalAttackRate = Enemy->GetAttackRate();
 					float NewAttackRate = FMath::RandRange(OriginalAttackRate + Enemy->GetMinAttackRateVariation(), OriginalAttackRate + Enemy->GetMaxAttackRateVariation());
 
 					EnemyController->GetBlackboardComponent()->SetValueAsFloat("AttackRate", NewAttackRate);
 
-					float OriginalWalkSpeed = Enemy->GetCharacterMovement()->MaxWalkSpeed;
+					float OriginalWalkSpeed = Enemy->GetMaxWalkSpeed();
 					Enemy->GetCharacterMovement()->MaxWalkSpeed = FMath::RandRange(OriginalWalkSpeed - Enemy->GetMaxWalkSpeedVariation(), OriginalWalkSpeed - Enemy->GetMinWalkSpeedVariation());
 				}
 			}
