@@ -151,7 +151,7 @@ public:
 
 	FOnDashEnd OnDashEnd;
 protected:
-
+	
 	UPROPERTY(EditAnywhere)
 	bool bPrintMovementDebug = false;
 
