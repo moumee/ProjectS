@@ -27,13 +27,12 @@ void USuraPlayerCameraComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ASuraPawnPlayer* Player = GetOwner<ASuraPawnPlayer>();
-	check(Player);
-	MovementComponent = Player->GetPlayerMovementComponent();
-	PlayerCamera = Player->GetCameraComponent();
-	PlayerController = Player->GetController<APlayerController>();
-
-	
+	if (ASuraPawnPlayer* Player = GetOwner<ASuraPawnPlayer>())
+	{
+		MovementComponent = Player->GetPlayerMovementComponent();
+		PlayerCamera = Player->GetCameraComponent();
+		PlayerController = Player->GetController<APlayerController>();
+	}
 
 	InitCameraShakes();
 

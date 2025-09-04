@@ -8,6 +8,7 @@
 #include "Interfaces/Damageable.h"
 #include "SuraPawnPlayer.generated.h"
 
+class UNiagaraComponent;
 class UAmmoCounterWidget;
 class USuraPlayerCameraComponent;
 class USpringArmComponent;
@@ -125,6 +126,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
 	UACUIMangerComponent* UIManager;
 
+	UPROPERTY(EditDefaultsOnly, Category="Editor Assign")
+	TObjectPtr<UNiagaraComponent> DashEffectComponent;
+
 	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
@@ -165,6 +169,9 @@ protected:
 	// Damage Comp Event Delegate Functions
 	void OnDamaged();
 	void OnDeath();
+
+	void OnDash(FVector2D MovementInput);
+	void OnDashEnd();
 };
 
 
