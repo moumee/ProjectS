@@ -15,10 +15,6 @@ class SURAS_API UBTT_ChargeAttack : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
 
-	FOnMontageEnded OnAttackReadyMontageEnded;
-	FOnMontageEnded OnRoarMontageEnded;
-	FOnMontageEnded OnStunMontageEnded;
-
 	bool bIsAttacking = false;
 	bool bWasAttackSuccessful = false;
 
@@ -32,10 +28,9 @@ class SURAS_API UBTT_ChargeAttack : public UBTTask_BlackboardBase
 	UPROPERTY()
 	TObjectPtr<UBehaviorTreeComponent> CachedOwnerComp;
 
-	void OnAttackReadyEnded(UAnimMontage* AnimMontage, bool bInterrupted);
-	void OnRoarEnded(UAnimMontage* AnimMontage, bool bInterrupted) const;
-	void OnStunEnded(UAnimMontage* AnimMontage, bool bInterrupted);
-
+	void OnAttackReadyEnded();
+	void OnRoarEnded() const;
+	
 	void EndTask();
 
 	UFUNCTION()

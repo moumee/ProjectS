@@ -68,9 +68,11 @@ protected:
 	TObjectPtr<UCurveFloat> HitColorCurve;
 
 	float AttackDamageAmount;
+	float AttackRate;
 	float MeleeAttackRange;
 	float MeleeAttackSphereRadius;
-	
+
+	float MaxWalkSpeed;
 	float MinWalkSpeedVariation;
 	float MaxWalkSpeedVariation;
 	float MinAttackRateVariation;
@@ -119,8 +121,10 @@ public:
 	FORCEINLINE float GetAttackDamageAmount() const { return AttackDamageAmount; }
 	FORCEINLINE float GetMeleeAttackRange() const { return MeleeAttackRange; }
 	FORCEINLINE float GetMeleeAttackSphereRadius() const { return MeleeAttackSphereRadius; }
+	FORCEINLINE float GetMaxWalkSpeed() const { return MaxWalkSpeed; }
 	FORCEINLINE float GetMinWalkSpeedVariation() const { return MinWalkSpeedVariation; }
 	FORCEINLINE float GetMaxWalkSpeedVariation() const { return MaxWalkSpeedVariation; }
+	FORCEINLINE float GetAttackRate() const { return AttackRate; }
 	FORCEINLINE float GetMinAttackRateVariation() const { return MinAttackRateVariation; }
 	FORCEINLINE float GetMaxAttackRateVariation() const { return MaxAttackRateVariation; }
 
