@@ -74,6 +74,7 @@ DECLARE_MULTICAST_DELEGATE(FOnWallJump);
 DECLARE_MULTICAST_DELEGATE(FOnMantle);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnDash, FVector2D);
 DECLARE_MULTICAST_DELEGATE(FOnDowned);
+DECLARE_MULTICAST_DELEGATE(FOnDashEnd);
 
 
 
@@ -148,6 +149,7 @@ public:
 	FOnDash OnDash;
 	FOnDowned OnDowned;
 
+	FOnDashEnd OnDashEnd;
 protected:
 
 	UPROPERTY(EditAnywhere)

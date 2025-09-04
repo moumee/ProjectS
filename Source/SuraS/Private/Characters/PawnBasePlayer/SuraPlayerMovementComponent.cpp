@@ -144,7 +144,7 @@ void USuraPlayerMovementComponent::TickState(float DeltaTime)
 			TickDead(DeltaTime);
 			break;
 		default:
-			UE_LOG(LogTemp, Error, TEXT("CurrentMovementState not valid"));
+			// UE_LOG(LogTemp, Error, TEXT("CurrentMovementState not valid"));
 			break;
 	}
 }
@@ -241,6 +241,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 			SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
 			Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + SlideAdditionalSpeed);
 			bIsDashing = false;
+			OnDashEnd.Broadcast();
 			ElapsedTimeFromDash = 0.f;
 			SlideResetTimer = 0.f;
 			
@@ -356,6 +357,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 			if (FVector::DotProduct(Input.WorldInputDir, Velocity.GetSafeNormal2D()) < 0.f)
 			{
 				bIsDashing = false;
+				OnDashEnd.Broadcast();
 				ElapsedTimeFromDash = 0.f;
 				Velocity = FVector::ZeroVector;
 			}
@@ -363,6 +365,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		else
 		{
 			bIsDashing = false;
+			OnDashEnd.Broadcast();
 			ElapsedTimeFromDash = 0.f;
 			Velocity = Velocity.GetSafeNormal() * DashEndSpeed;
 		}
@@ -691,6 +694,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 					// TODO: Slide Additional Speed to Variable and Data Table 
 					Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + SlideAdditionalSpeed);
 					bIsDashing = false;
+					OnDashEnd.Broadcast();
 					ElapsedTimeFromDash = 0.f;
 					SlideResetTimer = 0.f;
 			
@@ -768,6 +772,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		if (PreviousMovementState != EMovementState::EMS_WallRun)
 		{
 			bIsDashing = false;
+			OnDashEnd.Broadcast();
 			ElapsedTimeFromDash = 0.f;
 			OnWallRun.Broadcast();
 			SetMovementState(EMovementState::EMS_WallRun);
@@ -778,6 +783,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			if (ElapsedTimeFromSurface > WallJumpBuffer)
 			{
 				bIsDashing = false;
+				OnDashEnd.Broadcast();
 				ElapsedTimeFromDash = 0.f;
 				OnWallRun.Broadcast();
 				SetMovementState(EMovementState::EMS_WallRun);
@@ -810,6 +816,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			if (bMantleFloorHit && MantleFloorHit.IsValidBlockingHit() && MantleFloorHit.ImpactNormal.Z >= MinWalkableFloorZ)
 			{
 				bIsDashing = false;
+				OnDashEnd.Broadcast();
 				ElapsedTimeFromDash = 0.f;
 				OnMantle.Broadcast();
 				SetMovementState(EMovementState::EMS_Mantle);
@@ -887,6 +894,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		else
 		{
 			bIsDashing = false;
+			OnDashEnd.Broadcast();
 			ElapsedTimeFromDash = 0.f;
 			FVector HorizontalVelocity = Velocity.GetSafeNormal2D() * DashEndSpeed;
 			Velocity = FVector(HorizontalVelocity.X, HorizontalVelocity.Y, Velocity.Z);
