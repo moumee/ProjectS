@@ -289,7 +289,7 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 		UIManager->ShowDamageIndicator(DamageCauser);
 	}
 
-	GetPlayerMovementComponent()->NotifyDamageData(DamageData.DamageType);
+	GetPlayerMovementComponent()->NotifyDamageData(DamageData.DamageType, DamageData.ImpulseDirection, DamageData.ImpulseMagnitude);
 	
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }

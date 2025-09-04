@@ -134,7 +134,7 @@ public:
 
 	bool GetIsInvincible() const { return bIsInvincible; }
 
-	void NotifyDamageData(EDamageType DamageType);
+	void NotifyDamageData(EDamageType DamageType, const FVector& DamageDirection, float DamageForce);
 
 	FOnMove	OnMove;
 	FOnWallRun OnWallRun;
@@ -156,7 +156,7 @@ protected:
 	bool bPrintMovementDebug = false;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	TSoftObjectPtr<UDataTable> MovementDataTable;
+	TObjectPtr<UDataTable> MovementDataTable;
 
 	UPROPERTY(EditAnywhere, Category = "Movement|Capsule")
 	float DefaultCapsuleRadius;
@@ -423,9 +423,13 @@ protected:
 	TObjectPtr<UCurveVector> DownedRotationCurve;
 	
 	float DownedInvincibleDuration = 1.f;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Downed")
+	FVector ReceivedDamageDirection = FVector::ZeroVector;
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Downed")
+	float ReceivedDamageForce = 0;
 	
 #pragma endregion Downed
-	
 
 	UPROPERTY()
 	TObjectPtr<ASuraPawnPlayer> SuraPawnPlayer = nullptr;

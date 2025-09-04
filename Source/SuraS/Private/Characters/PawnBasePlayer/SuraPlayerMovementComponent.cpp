@@ -1389,7 +1389,7 @@ void USuraPlayerMovementComponent::TickDowned(float DeltaTime)
 	}
 	else
 	{
-		Velocity = FVector::ZeroVector;
+		Velocity = FMath::VInterpTo(Velocity, FVector::ZeroVector, DeltaTime, 3.f);
 	}
 
 	
@@ -1606,10 +1606,12 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 			{
 				DownedStartControlRotation = SuraPawnPlayer->GetControlRotation();
 				DownedStartTime = GetWorld()->GetTimeSeconds();
-				if (OldState == EMovementState::EMS_Move)
-				{
-					Velocity = FVector::ZeroVector;
-				}
+				// if (OldState == EMovementState::EMS_Move)
+				// {
+				// 	Velocity = FVector::ZeroVector;
+				// }
+				
+				Velocity += ReceivedDamageDirection * ReceivedDamageForce;
 			}
 			break;
 		case EMovementState::EMS_Dead:
@@ -1649,10 +1651,13 @@ bool USuraPlayerMovementComponent::IsGrounded()
 	return true;
 }
 
-void USuraPlayerMovementComponent::NotifyDamageData(EDamageType DamageType)
+void USuraPlayerMovementComponent::NotifyDamageData(EDamageType DamageType, const FVector& DamageDirection, float DamageForce)
 {
 	ReceivedDamageType = DamageType;
 	LastDamagedWorldTime = GetWorld()->GetTimeSeconds();
+	ReceivedDamageDirection = DamageDirection;
+	ReceivedDamageForce = DamageForce;
+	
 
 	switch (DamageType)
 	{
