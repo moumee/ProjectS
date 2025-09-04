@@ -13,6 +13,7 @@
 
 #include "SuraCharacterEnemyBase.generated.h"
 
+class UNiagaraComponent;
 class UACEnemyDamageSystem;
 class UWidgetComponent;
 class AEnemyBaseAIController;
@@ -53,8 +54,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
 	UBehaviorTree* BehaviorTree;
 
-	UPROPERTY()
-	ASuraEnemyWeapon* EnemyWeapon;
+	/*UPROPERTY()
+	ASuraEnemyWeapon* EnemyWeapon;*/
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Niagara")
+	UNiagaraComponent* NiagaraComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Patrol Route", meta = (AllowPrivateAccess = "true"))
 	AEnemyPatrolRoute* PatrolRoute;
@@ -116,6 +120,9 @@ public:
 
 	// damage system comp getter
 	FORCEINLINE UACEnemyDamageSystem* GetDamageSystemComp() const { return DamageSystemComp; }
+
+	// niagara comp
+	UNiagaraComponent* GetNiagaraComponent() const { return NiagaraComponent; }
 
 	// other getters
 	FORCEINLINE float GetAttackDamageAmount() const { return AttackDamageAmount; }

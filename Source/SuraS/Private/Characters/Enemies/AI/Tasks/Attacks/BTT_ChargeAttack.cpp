@@ -69,6 +69,7 @@ void UBTT_ChargeAttack::OnAttackReadyEnded()
 	CachedCharger->GetCharacterMovement()->MaxWalkSpeed = ChargeMaxWalkSpeed;
 
 	CachedCharger->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay); // to face only the front
+	CachedCharger->ActivateDashEffect();
 	
 	UAnimMontage* AttackAnimation = CachedCharger->ChooseRandomAttackMontage();
 
@@ -125,10 +126,17 @@ void UBTT_ChargeAttack::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 
 			if (!bWasAttackSuccessful)
 			{
+				FVector DirectionToOther = (OtherActor->GetActorLocation() - CachedCharger->GetActorLocation()).GetSafeNormal2D();
+				FVector ChargerRightVector = CachedCharger->GetActorRightVector().GetSafeNormal2D();
+
+				float SideSign = FMath::Sign(FVector::DotProduct(ChargerRightVector, DirectionToOther));
+
+				FVector PerpendicularDirection = ChargerRightVector * SideSign;
+				
 				FDamageData DamageData;
 				DamageData.DamageAmount = CachedCharger->GetAttackDamageAmount();
 				DamageData.DamageType = EDamageType::Charge;
-				DamageData.ImpulseDirection = (OtherActor->GetActorLocation() - CachedCharger->GetActorLocation()).GetSafeNormal2D();
+				DamageData.ImpulseDirection = PerpendicularDirection;
 				DamageData.ImpulseMagnitude = 1000.f;
 			
 				Player->TakeDamage(DamageData, CachedCharger);
@@ -167,5 +175,9 @@ void UBTT_ChargeAttack::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 void UBTT_ChargeAttack::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Error, TEXT("Charger Overlapped with %s"), *OtherActor->GetName())
+	if (ASuraCharacterEnemyBase* OtherEnemy = Cast<ASuraCharacterEnemyBase>(OtherActor))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Charger Overlapped with OtherEnemy"))
+		OtherEnemy->LaunchCharacter(OtherEnemy->GetActorUpVector() * 1000.f, true, true);
+	}
 }
