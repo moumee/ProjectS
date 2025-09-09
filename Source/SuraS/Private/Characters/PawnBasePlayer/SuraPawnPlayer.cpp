@@ -78,9 +78,17 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	// if (WidgetClass.Succeeded())
 	// 	HitEffectWidgetClass = WidgetClass.Class;
 
-	DashEffectComponent = CreateDefaultSubobject<UNiagaraComponent>("Dash Effect Component");
-	DashEffectComponent->SetupAttachment(Camera);
-	DashEffectComponent->SetAutoActivate(false);
+	ForwardAxisDashEffectComponent = CreateDefaultSubobject<UNiagaraComponent>("Forward Axis Dash Effect Component");
+	ForwardAxisDashEffectComponent->SetupAttachment(Camera);
+	ForwardAxisDashEffectComponent->SetRelativeRotation(FRotator(-90, 0, 0));
+	ForwardAxisDashEffectComponent->SetRelativeLocation(FVector(25, 0, 0));
+	ForwardAxisDashEffectComponent->SetAutoActivate(false);
+
+	RightAxisDashEffectComponent = CreateDefaultSubobject<UNiagaraComponent>("Right Axis Dash Effect Component");
+	RightAxisDashEffectComponent->SetupAttachment(Camera);
+	RightAxisDashEffectComponent->SetRelativeRotation(FRotator(-90, 0, 0));
+	RightAxisDashEffectComponent->SetRelativeLocation(FVector(25, 0, 0));
+	RightAxisDashEffectComponent->SetAutoActivate(false);
 }
 
 void ASuraPawnPlayer::BeginPlay()
@@ -315,17 +323,26 @@ void ASuraPawnPlayer::OnDeath()
 
 void ASuraPawnPlayer::OnDash(FVector2D MovementInput)
 {
-	if (DashEffectComponent->GetAsset())
+	if (MovementInput.Y != 0 || MovementInput.IsZero())
 	{
-		DashEffectComponent->Activate();
+		ForwardAxisDashEffectComponent->Activate();
+	}
+	else
+	{
+		RightAxisDashEffectComponent->Activate();
 	}
 }
 
 void ASuraPawnPlayer::OnDashEnd()
 {
-	if (DashEffectComponent->IsActive())
+	if (ForwardAxisDashEffectComponent->IsActive())
 	{
-		DashEffectComponent->Deactivate();	
+		ForwardAxisDashEffectComponent->Deactivate();
+	}
+
+	if (RightAxisDashEffectComponent->IsActive())
+	{
+		RightAxisDashEffectComponent->Deactivate();
 	}
 }
 

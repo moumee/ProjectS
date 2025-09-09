@@ -440,7 +440,9 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 	{
 		bJumpPadForceRequested = false;
 		
-		Velocity += JumpPadForceDir * JumpPadForceAmount;
+		Velocity.X += JumpPadForceDir.X * JumpPadForceAmount;
+		Velocity.Y += JumpPadForceDir.Y * JumpPadForceAmount;
+		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
 		CurrentJumpCount++;
 
 		SetMovementState(EMovementState::EMS_Airborne);
@@ -579,7 +581,9 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 	{
 		bJumpPadForceRequested = false;
 		
-		Velocity += JumpPadForceDir * JumpPadForceAmount;
+		Velocity.X += JumpPadForceDir.X * JumpPadForceAmount;
+		Velocity.Y += JumpPadForceDir.Y * JumpPadForceAmount;
+		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
 		CurrentJumpCount++;
 
 		SetMovementState(EMovementState::EMS_Airborne);
@@ -936,7 +940,9 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	{
 		bJumpPadForceRequested = false;
 		
-		Velocity += JumpPadForceDir * JumpPadForceAmount;
+		Velocity.X += JumpPadForceDir.X * JumpPadForceAmount;
+		Velocity.Y += JumpPadForceDir.Y * JumpPadForceAmount;
+		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
 	}
 
 	if (Input.bJumpPressed && CurrentJumpCount < MaxJumpCount)
@@ -1280,7 +1286,9 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	{
 		bJumpPadForceRequested = false;
 		
-		Velocity += JumpPadForceDir * JumpPadForceAmount;
+		Velocity.X += JumpPadForceDir.X * JumpPadForceAmount;
+		Velocity.Y += JumpPadForceDir.Y * JumpPadForceAmount;
+		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
 		CurrentJumpCount++;
 
 		SetMovementState(EMovementState::EMS_Airborne);
