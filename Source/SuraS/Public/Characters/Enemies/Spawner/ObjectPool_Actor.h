@@ -34,6 +34,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY()
 	TArray<ASuraCharacterEnemyBase*> ObjectPool;
 
 private:

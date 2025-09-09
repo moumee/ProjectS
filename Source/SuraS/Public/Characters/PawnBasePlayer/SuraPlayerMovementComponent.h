@@ -74,6 +74,7 @@ DECLARE_MULTICAST_DELEGATE(FOnWallJump);
 DECLARE_MULTICAST_DELEGATE(FOnMantle);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnDash, FVector2D);
 DECLARE_MULTICAST_DELEGATE(FOnDowned);
+DECLARE_MULTICAST_DELEGATE(FOnDashEnd);
 
 
 
@@ -133,7 +134,9 @@ public:
 
 	bool GetIsInvincible() const { return bIsInvincible; }
 
-	void NotifyDamageData(EDamageType DamageType);
+	void NotifyDamageData(EDamageType DamageType, const FVector& DamageDirection, float DamageForce);
+
+	void NotifyJumpPadForce(const FVector& Direction, float ForceAmount);
 
 	FOnMove	OnMove;
 	FOnWallRun OnWallRun;
@@ -148,8 +151,9 @@ public:
 	FOnDash OnDash;
 	FOnDowned OnDowned;
 
+	FOnDashEnd OnDashEnd;
 protected:
-
+	
 	UPROPERTY(EditAnywhere)
 	bool bPrintMovementDebug = false;
 
@@ -421,9 +425,21 @@ protected:
 	TObjectPtr<UCurveVector> DownedRotationCurve;
 	
 	float DownedInvincibleDuration = 1.f;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Downed")
+	FVector ReceivedDamageDirection = FVector::ZeroVector;
+	UPROPERTY(VisibleAnywhere, Category = "Movement|Downed")
+	float ReceivedDamageForce = 0;
 	
 #pragma endregion Downed
+
+#pragma region JumpPad
+
+	bool bJumpPadForceRequested = false;
+	FVector JumpPadForceDir = FVector::ZeroVector;
+	float JumpPadForceAmount = 0.f;
 	
+#pragma endregion JumpPad
 
 	UPROPERTY()
 	TObjectPtr<ASuraPawnPlayer> SuraPawnPlayer = nullptr;
