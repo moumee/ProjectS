@@ -436,8 +436,10 @@ protected:
 #pragma region JumpPad
 
 	bool bJumpPadForceRequested = false;
+	bool bAirborneFromJumpPad = false;
 	FVector JumpPadForceDir = FVector::ZeroVector;
 	float JumpPadForceAmount = 0.f;
+	FVector JumpPadInitialVelocityXY = FVector::ZeroVector;
 	
 #pragma endregion JumpPad
 

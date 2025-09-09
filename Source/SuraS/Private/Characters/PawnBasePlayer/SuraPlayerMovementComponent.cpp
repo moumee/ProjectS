@@ -440,11 +440,11 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 	{
 		bJumpPadForceRequested = false;
 		
-		Velocity.X += JumpPadForceDir.X * JumpPadForceAmount;
-		Velocity.Y += JumpPadForceDir.Y * JumpPadForceAmount;
+		Velocity.X = JumpPadForceDir.X * JumpPadForceAmount;
+		Velocity.Y = JumpPadForceDir.Y * JumpPadForceAmount;
 		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
 		CurrentJumpCount++;
-
+		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -581,11 +581,11 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 	{
 		bJumpPadForceRequested = false;
 		
-		Velocity.X += JumpPadForceDir.X * JumpPadForceAmount;
-		Velocity.Y += JumpPadForceDir.Y * JumpPadForceAmount;
+		Velocity.X = JumpPadForceDir.X * JumpPadForceAmount;
+		Velocity.Y = JumpPadForceDir.Y * JumpPadForceAmount;
 		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
 		CurrentJumpCount++;
-
+		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -715,7 +715,6 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 				if (bCrouchPressed && Velocity.Size2D() >= RunSpeed)
 				{
 					SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
-					// TODO: Slide Additional Speed to Variable and Data Table 
 					Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + SlideAdditionalSpeed);
 					bIsDashing = false;
 					OnDashEnd.Broadcast();
@@ -870,7 +869,11 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			{
 				MaxHorizontalSpeed = LastSlideSpeedBeforeAirborne.Size2D();
 			}
-			
+		}
+
+		if (bAirborneFromJumpPad)
+		{
+			MaxHorizontalSpeed = FMath::Max(MaxHorizontalSpeed, JumpPadInitialVelocityXY.Size2D());
 		}
 		
 		
@@ -940,9 +943,11 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	{
 		bJumpPadForceRequested = false;
 		
-		Velocity.X += JumpPadForceDir.X * JumpPadForceAmount;
-		Velocity.Y += JumpPadForceDir.Y * JumpPadForceAmount;
+		Velocity.X = JumpPadForceDir.X * JumpPadForceAmount;
+		Velocity.Y = JumpPadForceDir.Y * JumpPadForceAmount;
 		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
+
+		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
 	}
 
 	if (Input.bJumpPressed && CurrentJumpCount < MaxJumpCount)
@@ -1286,11 +1291,11 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	{
 		bJumpPadForceRequested = false;
 		
-		Velocity.X += JumpPadForceDir.X * JumpPadForceAmount;
-		Velocity.Y += JumpPadForceDir.Y * JumpPadForceAmount;
+		Velocity.X = JumpPadForceDir.X * JumpPadForceAmount;
+		Velocity.Y = JumpPadForceDir.Y * JumpPadForceAmount;
 		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
 		CurrentJumpCount++;
-
+		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -1563,6 +1568,7 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 				bHasDashedInAir = false;
 				bWallJumpAirBoost = false;
 				bShouldKeepSlideSpeed = false;
+				bAirborneFromJumpPad = false;
 				ElapsedTimeFromSurface = 0.f;
 				CurrentJumpCount = 0;
 
@@ -1729,6 +1735,7 @@ void USuraPlayerMovementComponent::NotifyJumpPadForce(const FVector& Direction, 
 		CurrentMovementState == EMovementState::EMS_WallRun)
 	{
 		bJumpPadForceRequested = true;
+		bAirborneFromJumpPad = true;
 		JumpPadForceDir = Direction;
 		JumpPadForceAmount = ForceAmount;
 	}
