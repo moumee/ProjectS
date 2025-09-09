@@ -7,6 +7,7 @@
 #include "Components/TimelineComponent.h"
 #include "SuraCharacterBossProto.generated.h"
 
+class ASuraBossAttackArea;
 class UTimelineComponent;
 /**
  * 
@@ -22,6 +23,11 @@ public:
 	virtual void BeginPlay() override;
 
 	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser) override;
+
+	UPROPERTY(EditInstanceOnly, Category="Attack")
+	TObjectPtr<ASuraBossAttackArea> NormalAttackArea;
+	UPROPERTY(EditInstanceOnly, Category="Attack")
+	TObjectPtr<ASuraBossAttackArea> SpecialAttackArea;
 	
 protected:
 
@@ -63,5 +69,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UCurveFloat> HitColorCurve;
+
+
 	
 };

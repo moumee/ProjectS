@@ -5,6 +5,7 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "NiagaraComponent.h"
 #include "ActorComponents/AttackComponents/ACPlayerAttackTokens.h"
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "ActorComponents/UISystem/ACPlayerHudManager.h"
@@ -32,7 +33,7 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule Component"));
 	RootComponent = CapsuleComponent;
 	CapsuleComponent->SetSimulatePhysics(false);
-	CapsuleComponent->SetCapsuleSize(40.f, 90.f);
+	CapsuleComponent->InitCapsuleSize(40.f, 90.f);
 	CapsuleComponent->SetCollisionProfileName(TEXT("Pawn"));
 	CapsuleComponent->SetNotifyRigidBodyCollision(true);
 
@@ -76,6 +77,18 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 
 	// if (WidgetClass.Succeeded())
 	// 	HitEffectWidgetClass = WidgetClass.Class;
+
+	ForwardAxisDashEffectComponent = CreateDefaultSubobject<UNiagaraComponent>("Forward Axis Dash Effect Component");
+	ForwardAxisDashEffectComponent->SetupAttachment(Camera);
+	ForwardAxisDashEffectComponent->SetRelativeRotation(FRotator(-90, 0, 0));
+	ForwardAxisDashEffectComponent->SetRelativeLocation(FVector(25, 0, 0));
+	ForwardAxisDashEffectComponent->SetAutoActivate(false);
+
+	RightAxisDashEffectComponent = CreateDefaultSubobject<UNiagaraComponent>("Right Axis Dash Effect Component");
+	RightAxisDashEffectComponent->SetupAttachment(Camera);
+	RightAxisDashEffectComponent->SetRelativeRotation(FRotator(-90, 0, 0));
+	RightAxisDashEffectComponent->SetRelativeLocation(FVector(25, 0, 0));
+	RightAxisDashEffectComponent->SetAutoActivate(false);
 }
 
 void ASuraPawnPlayer::BeginPlay()
@@ -84,6 +97,9 @@ void ASuraPawnPlayer::BeginPlay()
 
 	GetDamageSystemComponent()->OnDamaged.AddUObject(this, &ASuraPawnPlayer::OnDamaged);
 	GetDamageSystemComponent()->OnDeath.AddUObject(this, &ASuraPawnPlayer::OnDeath);
+
+	GetPlayerMovementComponent()->OnDash.AddUObject(this, &ASuraPawnPlayer::OnDash);
+	GetPlayerMovementComponent()->OnDashEnd.AddUObject(this, &ASuraPawnPlayer::OnDashEnd);
 
 	// Hit Effect Widget Init - by Yoony
 	if (IsValid(HitEffectWidgetClass))
@@ -281,9 +297,14 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 		UIManager->ShowDamageIndicator(DamageCauser);
 	}
 
-	GetPlayerMovementComponent()->NotifyDamageData(DamageData.DamageType);
+	GetPlayerMovementComponent()->NotifyDamageData(DamageData.DamageType, DamageData.ImpulseDirection, DamageData.ImpulseMagnitude);
 	
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
+}
+
+void ASuraPawnPlayer::JumpPadLaunchPlayer(const FVector& Direction, float ForceAmount)
+{
+	GetPlayerMovementComponent()->NotifyJumpPadForce(Direction, ForceAmount);
 }
 
 void ASuraPawnPlayer::OnDamaged()
@@ -298,6 +319,31 @@ void ASuraPawnPlayer::OnDamaged()
 void ASuraPawnPlayer::OnDeath()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Player Dead"));
+}
+
+void ASuraPawnPlayer::OnDash(FVector2D MovementInput)
+{
+	if (MovementInput.Y != 0 || MovementInput.IsZero())
+	{
+		ForwardAxisDashEffectComponent->Activate();
+	}
+	else
+	{
+		RightAxisDashEffectComponent->Activate();
+	}
+}
+
+void ASuraPawnPlayer::OnDashEnd()
+{
+	if (ForwardAxisDashEffectComponent->IsActive())
+	{
+		ForwardAxisDashEffectComponent->Deactivate();
+	}
+
+	if (RightAxisDashEffectComponent->IsActive())
+	{
+		RightAxisDashEffectComponent->Deactivate();
+	}
 }
 
 

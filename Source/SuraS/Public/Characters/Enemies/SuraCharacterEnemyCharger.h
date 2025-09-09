@@ -6,6 +6,7 @@
 #include "SuraCharacterEnemyBase.h"
 #include "SuraCharacterEnemyCharger.generated.h"
 
+class UNiagaraSystem;
 class UBoxComponent;
 
 UCLASS()
@@ -28,12 +29,17 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OverlapEnemies")
 	UBoxComponent* OverlapBox;
 
+	UPROPERTY(EditAnywhere, Category = "NiagaraEffects")
+	TSoftObjectPtr<UNiagaraSystem> DashEffect;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
 	virtual void Attack(ASuraPawnPlayer* Player) override;
+
+	void ActivateDashEffect() const;
 
 	UAnimMontage* GetChargeReadyAnimation() const { return ChargeReadyAnimation; };
 	UAnimMontage* GetStunAnimation() const { return StunAnimation; };

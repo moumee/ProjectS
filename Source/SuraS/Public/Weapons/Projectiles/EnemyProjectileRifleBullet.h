@@ -17,10 +17,10 @@ class SURAS_API AEnemyProjectileRifleBullet : public ASuraEnemyProjectile
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "NiagaraEffects")
-	UNiagaraSystem* SpawnEffect;
+	TSoftObjectPtr<UNiagaraSystem> SpawnEffect;
 
 	UPROPERTY(EditAnywhere, Category = "NiagaraEffects")
-	UNiagaraSystem* ShootingEffect;
+	TSoftObjectPtr<UNiagaraSystem> ShootingEffect;
 
 	virtual void BeginPlay() override;
 

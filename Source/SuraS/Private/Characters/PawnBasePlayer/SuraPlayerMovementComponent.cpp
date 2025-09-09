@@ -17,6 +17,8 @@
 #include "Characters/PawnBasePlayer/SuraPlayerController.h"
 #include "Components/CapsuleComponent.h"
 #include "Curves/CurveVector.h"
+#include "Engine/AssetManager.h"
+#include "Engine/StreamableManager.h"
 
 #define WALL_TRACE_CHANNEL ECC_GameTraceChannel2
 #define ENEMY_TRACE_CHANNEL ECC_GameTraceChannel6
@@ -142,7 +144,7 @@ void USuraPlayerMovementComponent::TickState(float DeltaTime)
 			TickDead(DeltaTime);
 			break;
 		default:
-			UE_LOG(LogTemp, Error, TEXT("CurrentMovementState not valid"));
+			// UE_LOG(LogTemp, Error, TEXT("CurrentMovementState not valid"));
 			break;
 	}
 }
@@ -239,6 +241,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 			SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
 			Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + SlideAdditionalSpeed);
 			bIsDashing = false;
+			OnDashEnd.Broadcast();
 			ElapsedTimeFromDash = 0.f;
 			SlideResetTimer = 0.f;
 			
@@ -354,6 +357,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 			if (FVector::DotProduct(Input.WorldInputDir, Velocity.GetSafeNormal2D()) < 0.f)
 			{
 				bIsDashing = false;
+				OnDashEnd.Broadcast();
 				ElapsedTimeFromDash = 0.f;
 				Velocity = FVector::ZeroVector;
 			}
@@ -361,6 +365,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		else
 		{
 			bIsDashing = false;
+			OnDashEnd.Broadcast();
 			ElapsedTimeFromDash = 0.f;
 			Velocity = Velocity.GetSafeNormal() * DashEndSpeed;
 		}
@@ -431,7 +436,18 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		}
 	}
 
-	
+	if (bJumpPadForceRequested)
+	{
+		bJumpPadForceRequested = false;
+		
+		Velocity.X += JumpPadForceDir.X * JumpPadForceAmount;
+		Velocity.Y += JumpPadForceDir.Y * JumpPadForceAmount;
+		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
+		CurrentJumpCount++;
+
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
+	}
 
 	if (Input.bJumpPressed && CurrentJumpCount < MaxJumpCount)
 	{
@@ -559,6 +575,19 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		}
 
 		Velocity = NewSpeed * SlideDirection; 
+	}
+
+	if (bJumpPadForceRequested)
+	{
+		bJumpPadForceRequested = false;
+		
+		Velocity.X += JumpPadForceDir.X * JumpPadForceAmount;
+		Velocity.Y += JumpPadForceDir.Y * JumpPadForceAmount;
+		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
+		CurrentJumpCount++;
+
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
 	}
 
 	if (Input.bJumpPressed && CurrentJumpCount < MaxJumpCount)
@@ -689,6 +718,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 					// TODO: Slide Additional Speed to Variable and Data Table 
 					Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + SlideAdditionalSpeed);
 					bIsDashing = false;
+					OnDashEnd.Broadcast();
 					ElapsedTimeFromDash = 0.f;
 					SlideResetTimer = 0.f;
 			
@@ -766,6 +796,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		if (PreviousMovementState != EMovementState::EMS_WallRun)
 		{
 			bIsDashing = false;
+			OnDashEnd.Broadcast();
 			ElapsedTimeFromDash = 0.f;
 			OnWallRun.Broadcast();
 			SetMovementState(EMovementState::EMS_WallRun);
@@ -776,6 +807,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			if (ElapsedTimeFromSurface > WallJumpBuffer)
 			{
 				bIsDashing = false;
+				OnDashEnd.Broadcast();
 				ElapsedTimeFromDash = 0.f;
 				OnWallRun.Broadcast();
 				SetMovementState(EMovementState::EMS_WallRun);
@@ -808,6 +840,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			if (bMantleFloorHit && MantleFloorHit.IsValidBlockingHit() && MantleFloorHit.ImpactNormal.Z >= MinWalkableFloorZ)
 			{
 				bIsDashing = false;
+				OnDashEnd.Broadcast();
 				ElapsedTimeFromDash = 0.f;
 				OnMantle.Broadcast();
 				SetMovementState(EMovementState::EMS_Mantle);
@@ -885,6 +918,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		else
 		{
 			bIsDashing = false;
+			OnDashEnd.Broadcast();
 			ElapsedTimeFromDash = 0.f;
 			FVector HorizontalVelocity = Velocity.GetSafeNormal2D() * DashEndSpeed;
 			Velocity = FVector(HorizontalVelocity.X, HorizontalVelocity.Y, Velocity.Z);
@@ -900,6 +934,15 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			bCoyoteTimeActivated = false;
 			CurrentJumpCount++; // Prevent performing two jumps in air when player fell off
 		}
+	}
+
+	if (bJumpPadForceRequested)
+	{
+		bJumpPadForceRequested = false;
+		
+		Velocity.X += JumpPadForceDir.X * JumpPadForceAmount;
+		Velocity.Y += JumpPadForceDir.Y * JumpPadForceAmount;
+		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
 	}
 
 	if (Input.bJumpPressed && CurrentJumpCount < MaxJumpCount)
@@ -1239,6 +1282,19 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		Velocity.Z = 0.f;
 	}
 
+	if (bJumpPadForceRequested)
+	{
+		bJumpPadForceRequested = false;
+		
+		Velocity.X += JumpPadForceDir.X * JumpPadForceAmount;
+		Velocity.Y += JumpPadForceDir.Y * JumpPadForceAmount;
+		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
+		CurrentJumpCount++;
+
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
+	}
+
 	if (Input.bJumpPressed && CurrentJumpCount < MaxJumpCount)
 	{
 		CurrentJumpCount++;
@@ -1379,7 +1435,7 @@ void USuraPlayerMovementComponent::TickDowned(float DeltaTime)
 	}
 	else
 	{
-		Velocity = FVector::ZeroVector;
+		Velocity = FMath::VInterpTo(Velocity, FVector::ZeroVector, DeltaTime, 3.f);
 	}
 
 	
@@ -1596,10 +1652,12 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 			{
 				DownedStartControlRotation = SuraPawnPlayer->GetControlRotation();
 				DownedStartTime = GetWorld()->GetTimeSeconds();
-				if (OldState == EMovementState::EMS_Move)
-				{
-					Velocity = FVector::ZeroVector;
-				}
+				// if (OldState == EMovementState::EMS_Move)
+				// {
+				// 	Velocity = FVector::ZeroVector;
+				// }
+				
+				Velocity += ReceivedDamageDirection * ReceivedDamageForce;
 			}
 			break;
 		case EMovementState::EMS_Dead:
@@ -1639,10 +1697,13 @@ bool USuraPlayerMovementComponent::IsGrounded()
 	return true;
 }
 
-void USuraPlayerMovementComponent::NotifyDamageData(EDamageType DamageType)
+void USuraPlayerMovementComponent::NotifyDamageData(EDamageType DamageType, const FVector& DamageDirection, float DamageForce)
 {
 	ReceivedDamageType = DamageType;
 	LastDamagedWorldTime = GetWorld()->GetTimeSeconds();
+	ReceivedDamageDirection = DamageDirection;
+	ReceivedDamageForce = DamageForce;
+	
 
 	switch (DamageType)
 	{
@@ -1657,6 +1718,19 @@ void USuraPlayerMovementComponent::NotifyDamageData(EDamageType DamageType)
 		default:
 			bDamageSlowDebuff = true;
 			break;
+	}
+}
+
+void USuraPlayerMovementComponent::NotifyJumpPadForce(const FVector& Direction, float ForceAmount)
+{
+	if (CurrentMovementState == EMovementState::EMS_Airborne ||
+		CurrentMovementState == EMovementState::EMS_Move ||
+		CurrentMovementState == EMovementState::EMS_Slide ||
+		CurrentMovementState == EMovementState::EMS_WallRun)
+	{
+		bJumpPadForceRequested = true;
+		JumpPadForceDir = Direction;
+		JumpPadForceAmount = ForceAmount;
 	}
 }
 
@@ -1794,7 +1868,10 @@ void USuraPlayerMovementComponent::AddControllerRoll(float DeltaTime, const FVec
 void USuraPlayerMovementComponent::InitMovementData()
 {
 	checkf(MovementDataTable, TEXT("MovementDataTable is not assigned in SuraPawnPlayer blueprint!!!!!!!!"));
-	FPawnPlayerMovementRow* Row = MovementDataTable->FindRow<FPawnPlayerMovementRow>("Player", "");
+
+
+	if (!MovementDataTable) return;
+	const FPawnPlayerMovementRow* Row = MovementDataTable->FindRow<FPawnPlayerMovementRow>("Player", "");
 	if (!Row) return;
 	GravityScale = Row->GravityScale;
 	WalkSpeed = Row->WalkSpeed;

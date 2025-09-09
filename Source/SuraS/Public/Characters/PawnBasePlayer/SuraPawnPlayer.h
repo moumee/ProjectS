@@ -8,6 +8,7 @@
 #include "Interfaces/Damageable.h"
 #include "SuraPawnPlayer.generated.h"
 
+class UNiagaraComponent;
 class UAmmoCounterWidget;
 class USuraPlayerCameraComponent;
 class USpringArmComponent;
@@ -87,6 +88,8 @@ public:
 
 	FOnPlayerHealthHalved OnPlayerHealthHalved;
 
+	void JumpPadLaunchPlayer(const FVector& Direction, float ForceAmount);
+
 
 protected:
 
@@ -124,6 +127,12 @@ protected:
 	// UI component - suhyeon
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
 	UACUIMangerComponent* UIManager;
+
+	UPROPERTY(EditDefaultsOnly, Category="Editor Assign")
+	TObjectPtr<UNiagaraComponent> ForwardAxisDashEffectComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category="Editor Assign")
+	TObjectPtr<UNiagaraComponent> RightAxisDashEffectComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
@@ -165,6 +174,9 @@ protected:
 	// Damage Comp Event Delegate Functions
 	void OnDamaged();
 	void OnDeath();
+
+	void OnDash(FVector2D MovementInput);
+	void OnDashEnd();
 };
 
 

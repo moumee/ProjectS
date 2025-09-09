@@ -3,7 +3,11 @@
 
 #include "Characters/Enemies/SuraCharacterEnemyCharger.h"
 
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Characters/Enemies/AI/Tasks/Attacks/BTT_ChargeAttack.h"
 #include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 
 
 // Sets default values
@@ -28,6 +32,25 @@ void ASuraCharacterEnemyCharger::BeginPlay()
 void ASuraCharacterEnemyCharger::Attack(ASuraPawnPlayer* Player)
 {
 	Super::Attack(Player);
+}
+
+void ASuraCharacterEnemyCharger::ActivateDashEffect() const
+{
+	if (DashEffect)
+	{
+		GetNiagaraComponent()->Deactivate();
+		
+		UNiagaraFunctionLibrary::SpawnSystemAttached(
+			DashEffect.Get(),
+			GetMesh(),
+			NAME_None,
+			FVector::ZeroVector,
+			FRotator::ZeroRotator,
+			EAttachLocation::KeepRelativeOffset,
+			true, false, ENCPoolMethod::AutoRelease);
+
+		GetNiagaraComponent()->Activate();
+	}
 }
 
 UAnimMontage* ASuraCharacterEnemyCharger::ChooseRandomRoarMontage()

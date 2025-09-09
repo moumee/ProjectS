@@ -3,6 +3,7 @@
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 
 #include "BrainComponent.h"
+#include "NiagaraComponent.h"
 #include "SuraSProjectile.h"
 #include "ActorComponents/DamageComponent/ACEnemyDamageSystem.h"
 #include "ActorComponents/UISystem/ACKillLogManager.h"
@@ -46,6 +47,10 @@ ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 	
 	bUseControllerRotationYaw = true; // for controller controlled rotation
 	GetCharacterMovement()->bUseRVOAvoidance = true;
+	GetCharacterMovement()->GravityScale = 2.f;
+
+	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComp"));
+	NiagaraComponent->SetupAttachment(RootComponent);
 
 	EnemyType = "Base";
 
@@ -201,13 +206,13 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 	
 	GetWorldTimerManager().SetTimer(
 		DeathHandle,
-		FTimerDelegate::CreateLambda([&]()
+		FTimerDelegate::CreateWeakLambda(this, [this]()
 		{
 			/*GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
 			GetMesh()->Stop();*/
 			
-			if (EnemyWeapon)
-				EnemyWeapon->Destroy();
+			/*if (EnemyWeapon)
+				EnemyWeapon->Destroy();*/
 
 			Destroy();
 		}),
@@ -394,9 +399,11 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 			GetCharacterMovement()->MaxWalkSpeed = EnemyAttributesData->MaxWalkSpeed;
 
 			AttackDamageAmount = EnemyAttributesData->AttackDamageAmount;
+			AttackRate = EnemyAttributesData->AttackRate;
 			MeleeAttackRange = EnemyAttributesData->MeleeAttackRange;
 			MeleeAttackSphereRadius = EnemyAttributesData->MeleeAttackSphereRadius;
 
+			MaxWalkSpeed = EnemyAttributesData->MaxWalkSpeed;
 			MinWalkSpeedVariation = EnemyAttributesData->MinWalkSpeedVariation;
 			MaxWalkSpeedVariation = EnemyAttributesData->MaxWalkSpeedVariation;
 			MinAttackRateVariation = EnemyAttributesData->MinAttackRateVariation;

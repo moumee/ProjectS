@@ -24,7 +24,7 @@ void ASuraCharacterEnemyBombard::BeginPlay()
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 	Firearm->AttachToComponent(GetMesh(), AttachmentRules, FName(TEXT("Gun")));
 
-	EnemyWeapon = Firearm;
+	// EnemyWeapon = Firearm;
 }
 
 void ASuraCharacterEnemyBombard::Attack(ASuraPawnPlayer* Player)
