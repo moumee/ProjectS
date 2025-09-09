@@ -129,7 +129,10 @@ protected:
 	UACUIMangerComponent* UIManager;
 
 	UPROPERTY(EditDefaultsOnly, Category="Editor Assign")
-	TObjectPtr<UNiagaraComponent> DashEffectComponent;
+	TObjectPtr<UNiagaraComponent> ForwardAxisDashEffectComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category="Editor Assign")
+	TObjectPtr<UNiagaraComponent> RightAxisDashEffectComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
