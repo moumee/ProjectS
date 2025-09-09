@@ -136,6 +136,8 @@ public:
 
 	void NotifyDamageData(EDamageType DamageType, const FVector& DamageDirection, float DamageForce);
 
+	void NotifyJumpPadForce(const FVector& Direction, float ForceAmount);
+
 	FOnMove	OnMove;
 	FOnWallRun OnWallRun;
 	FOnAirborne OnAirborne;
@@ -430,6 +432,14 @@ protected:
 	float ReceivedDamageForce = 0;
 	
 #pragma endregion Downed
+
+#pragma region JumpPad
+
+	bool bJumpPadForceRequested = false;
+	FVector JumpPadForceDir = FVector::ZeroVector;
+	float JumpPadForceAmount = 0.f;
+	
+#pragma endregion JumpPad
 
 	UPROPERTY()
 	TObjectPtr<ASuraPawnPlayer> SuraPawnPlayer = nullptr;

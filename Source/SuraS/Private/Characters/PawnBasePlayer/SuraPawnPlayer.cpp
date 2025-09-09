@@ -294,6 +294,11 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }
 
+void ASuraPawnPlayer::JumpPadLaunchPlayer(const FVector& Direction, float ForceAmount)
+{
+	GetPlayerMovementComponent()->NotifyJumpPadForce(Direction, ForceAmount);
+}
+
 void ASuraPawnPlayer::OnDamaged()
 {
 	// HitEffectWidget->SetVisibility(ESlateVisibility::Visible);

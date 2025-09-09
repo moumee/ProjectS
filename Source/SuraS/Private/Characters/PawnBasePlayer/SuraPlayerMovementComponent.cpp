@@ -436,7 +436,16 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		}
 	}
 
-	
+	if (bJumpPadForceRequested)
+	{
+		bJumpPadForceRequested = false;
+		
+		Velocity += JumpPadForceDir * JumpPadForceAmount;
+		CurrentJumpCount++;
+
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
+	}
 
 	if (Input.bJumpPressed && CurrentJumpCount < MaxJumpCount)
 	{
@@ -564,6 +573,17 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		}
 
 		Velocity = NewSpeed * SlideDirection; 
+	}
+
+	if (bJumpPadForceRequested)
+	{
+		bJumpPadForceRequested = false;
+		
+		Velocity += JumpPadForceDir * JumpPadForceAmount;
+		CurrentJumpCount++;
+
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
 	}
 
 	if (Input.bJumpPressed && CurrentJumpCount < MaxJumpCount)
@@ -912,6 +932,13 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		}
 	}
 
+	if (bJumpPadForceRequested)
+	{
+		bJumpPadForceRequested = false;
+		
+		Velocity += JumpPadForceDir * JumpPadForceAmount;
+	}
+
 	if (Input.bJumpPressed && CurrentJumpCount < MaxJumpCount)
 	{
 		CurrentJumpCount++;
@@ -1247,6 +1274,17 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 	if (!bIsDeceleratingZ && MovementInputVector.Y != 0.f)
 	{
 		Velocity.Z = 0.f;
+	}
+
+	if (bJumpPadForceRequested)
+	{
+		bJumpPadForceRequested = false;
+		
+		Velocity += JumpPadForceDir * JumpPadForceAmount;
+		CurrentJumpCount++;
+
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
 	}
 
 	if (Input.bJumpPressed && CurrentJumpCount < MaxJumpCount)
@@ -1672,6 +1710,19 @@ void USuraPlayerMovementComponent::NotifyDamageData(EDamageType DamageType, cons
 		default:
 			bDamageSlowDebuff = true;
 			break;
+	}
+}
+
+void USuraPlayerMovementComponent::NotifyJumpPadForce(const FVector& Direction, float ForceAmount)
+{
+	if (CurrentMovementState == EMovementState::EMS_Airborne ||
+		CurrentMovementState == EMovementState::EMS_Move ||
+		CurrentMovementState == EMovementState::EMS_Slide ||
+		CurrentMovementState == EMovementState::EMS_WallRun)
+	{
+		bJumpPadForceRequested = true;
+		JumpPadForceDir = Direction;
+		JumpPadForceAmount = ForceAmount;
 	}
 }
 
