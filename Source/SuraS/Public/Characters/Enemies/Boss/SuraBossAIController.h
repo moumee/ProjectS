@@ -13,5 +13,12 @@ UCLASS()
 class SURAS_API ASuraBossAIController : public AAIController
 {
 	GENERATED_BODY()
+
+protected:
+
+	UPROPERTY(EditDefaultsOnly, Category="AI")
+	TObjectPtr<UBehaviorTree> BehaviorTree;
+	
+	virtual void BeginPlay() override;
 	
 };

@@ -3,3 +3,10 @@
 
 #include "Characters/Enemies/Boss/SuraBossAIController.h"
 
+void ASuraBossAIController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	RunBehaviorTree(BehaviorTree);
+	
+}
