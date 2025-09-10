@@ -3,19 +3,14 @@
 
 #include "Characters/Enemies/Boss/SuraCharacterBossProto.h"
 
+#include "Characters/Enemies/Boss/SuraBossAttackArea.h"
 
 
 ASuraCharacterBossProto::ASuraCharacterBossProto()
 {
-	GetMesh()->SetVisibility(false);
-	
 	HeadMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HeadMesh"));
 	HeadMesh->SetupAttachment(GetMesh());
 	HeadMesh->SetLeaderPoseComponent(GetMesh());
-	
-	BodyMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BodyMesh"));
-	BodyMesh->SetupAttachment(GetMesh());
-	BodyMesh->SetLeaderPoseComponent(GetMesh());
 	
 	LeftArmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LeftArmMesh"));
 	LeftArmMesh->SetupAttachment(GetMesh());
@@ -74,7 +69,7 @@ void ASuraCharacterBossProto::UpdateHeadHitColor(float Alpha)
 
 void ASuraCharacterBossProto::UpdateBodyHitColor(float Alpha)
 {
-	if (BodyMesh)
+	if (USkeletalMeshComponent* BodyMesh = GetMesh())
 	{
 		BodyMesh->SetScalarParameterValueOnMaterials("HitColorAlpha", Alpha);
 	}

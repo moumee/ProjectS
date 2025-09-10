@@ -7,6 +7,7 @@
 #include "Components/TimelineComponent.h"
 #include "SuraCharacterBossProto.generated.h"
 
+enum class EBossState : uint8;
 class ASuraBossAttackArea;
 class UTimelineComponent;
 /**
@@ -25,16 +26,16 @@ public:
 	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser) override;
 
 	UPROPERTY(EditInstanceOnly, Category="Attack")
-	TObjectPtr<ASuraBossAttackArea> NormalAttackArea;
-	UPROPERTY(EditInstanceOnly, Category="Attack")
-	TObjectPtr<ASuraBossAttackArea> SpecialAttackArea;
+	TObjectPtr<ASuraBossAttackArea> AttackArea;
+
 	
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<USkeletalMeshComponent> HeadMesh;
+	EBossState CurrentState;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<USkeletalMeshComponent> BodyMesh;
+	TObjectPtr<USkeletalMeshComponent> HeadMesh;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<USkeletalMeshComponent> LeftArmMesh;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
