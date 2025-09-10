@@ -436,15 +436,24 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		}
 	}
 
+	if (bGravityLaunchForceRequested)
+	{
+		bGravityLaunchForceRequested = false;
+		
+		Velocity.X = GravityLaunchForceDir.X * GravityLaunchForceAmount;
+		Velocity.Y = GravityLaunchForceDir.Y * GravityLaunchForceAmount;
+		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
+		CurrentJumpCount++;
+		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
+	}
+
 	if (bJumpPadForceRequested)
 	{
 		bJumpPadForceRequested = false;
-		
-		Velocity.X = JumpPadForceDir.X * JumpPadForceAmount;
-		Velocity.Y = JumpPadForceDir.Y * JumpPadForceAmount;
-		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
+		Velocity.Z = JumpPadForceAmount;
 		CurrentJumpCount++;
-		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -577,15 +586,24 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		Velocity = NewSpeed * SlideDirection; 
 	}
 
+	if (bGravityLaunchForceRequested)
+	{
+		bGravityLaunchForceRequested = false;
+		
+		Velocity.X = GravityLaunchForceDir.X * GravityLaunchForceAmount;
+		Velocity.Y = GravityLaunchForceDir.Y * GravityLaunchForceAmount;
+		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
+		CurrentJumpCount++;
+		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
+	}
+
 	if (bJumpPadForceRequested)
 	{
 		bJumpPadForceRequested = false;
-		
-		Velocity.X = JumpPadForceDir.X * JumpPadForceAmount;
-		Velocity.Y = JumpPadForceDir.Y * JumpPadForceAmount;
-		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
+		Velocity.Z = JumpPadForceAmount;
 		CurrentJumpCount++;
-		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -871,7 +889,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			}
 		}
 
-		if (bAirborneFromJumpPad)
+		if (bAirborneFromGravityLauncher)
 		{
 			MaxHorizontalSpeed = FMath::Max(MaxHorizontalSpeed, JumpPadInitialVelocityXY.Size2D());
 		}
@@ -939,15 +957,21 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		}
 	}
 
+	if (bGravityLaunchForceRequested)
+	{
+		bGravityLaunchForceRequested = false;
+		
+		Velocity.X = GravityLaunchForceDir.X * GravityLaunchForceAmount;
+		Velocity.Y = GravityLaunchForceDir.Y * GravityLaunchForceAmount;
+		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
+
+		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+	}
+
 	if (bJumpPadForceRequested)
 	{
 		bJumpPadForceRequested = false;
-		
-		Velocity.X = JumpPadForceDir.X * JumpPadForceAmount;
-		Velocity.Y = JumpPadForceDir.Y * JumpPadForceAmount;
-		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
-
-		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+		Velocity.Z = JumpPadForceAmount;
 	}
 
 	if (Input.bJumpPressed && CurrentJumpCount < MaxJumpCount)
@@ -1287,15 +1311,24 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		Velocity.Z = 0.f;
 	}
 
+	if (bGravityLaunchForceRequested)
+	{
+		bGravityLaunchForceRequested = false;
+		
+		Velocity.X = GravityLaunchForceDir.X * GravityLaunchForceAmount;
+		Velocity.Y = GravityLaunchForceDir.Y * GravityLaunchForceAmount;
+		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
+		CurrentJumpCount++;
+		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+		SetMovementState(EMovementState::EMS_Airborne);
+		return;
+	}
+
 	if (bJumpPadForceRequested)
 	{
 		bJumpPadForceRequested = false;
-		
-		Velocity.X = JumpPadForceDir.X * JumpPadForceAmount;
-		Velocity.Y = JumpPadForceDir.Y * JumpPadForceAmount;
-		Velocity.Z = JumpPadForceDir.Z * JumpPadForceAmount;
+		Velocity.Z = JumpPadForceAmount;
 		CurrentJumpCount++;
-		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -1568,7 +1601,7 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 				bHasDashedInAir = false;
 				bWallJumpAirBoost = false;
 				bShouldKeepSlideSpeed = false;
-				bAirborneFromJumpPad = false;
+				bAirborneFromGravityLauncher = false;
 				ElapsedTimeFromSurface = 0.f;
 				CurrentJumpCount = 0;
 
@@ -1727,7 +1760,21 @@ void USuraPlayerMovementComponent::NotifyDamageData(EDamageType DamageType, cons
 	}
 }
 
-void USuraPlayerMovementComponent::NotifyJumpPadForce(const FVector& Direction, float ForceAmount)
+void USuraPlayerMovementComponent::NotifyGravityLaunchForce(const FVector& Direction, float ForceAmount)
+{
+	if (CurrentMovementState == EMovementState::EMS_Airborne ||
+		CurrentMovementState == EMovementState::EMS_Move ||
+		CurrentMovementState == EMovementState::EMS_Slide ||
+		CurrentMovementState == EMovementState::EMS_WallRun)
+	{
+		bGravityLaunchForceRequested = true;
+		bAirborneFromGravityLauncher = true;
+		GravityLaunchForceDir = Direction;
+		GravityLaunchForceAmount = ForceAmount;
+	}
+}
+
+void USuraPlayerMovementComponent::NotifyJumpPadLaunchForce(float ForceAmount)
 {
 	if (CurrentMovementState == EMovementState::EMS_Airborne ||
 		CurrentMovementState == EMovementState::EMS_Move ||
@@ -1735,8 +1782,6 @@ void USuraPlayerMovementComponent::NotifyJumpPadForce(const FVector& Direction, 
 		CurrentMovementState == EMovementState::EMS_WallRun)
 	{
 		bJumpPadForceRequested = true;
-		bAirborneFromJumpPad = true;
-		JumpPadForceDir = Direction;
 		JumpPadForceAmount = ForceAmount;
 	}
 }

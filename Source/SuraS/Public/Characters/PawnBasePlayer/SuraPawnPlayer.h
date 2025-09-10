@@ -88,7 +88,9 @@ public:
 
 	FOnPlayerHealthHalved OnPlayerHealthHalved;
 
-	void JumpPadLaunchPlayer(const FVector& Direction, float ForceAmount);
+	void GravityLaunchPlayer(const FVector& Direction, float ForceAmount);
+
+	void JumpPadLaunchPlayer(float ForceAmount);
 
 
 protected:

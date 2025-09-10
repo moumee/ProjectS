@@ -4,22 +4,22 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "SuraJumpPad.generated.h"
+#include "SuraGravityLauncher.generated.h"
 
 class UArrowComponent;
 class UBoxComponent;
 
 UCLASS()
-class SURAS_API ASuraJumpPad : public AActor
+class SURAS_API ASuraGravityLauncher : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ASuraJumpPad();
+	ASuraGravityLauncher();
 
 	UPROPERTY(EditAnywhere)
-	float ForceAmount = 2500.f;
+	float ForceAmount = 2500;
 
 protected:
 	// Called when the game starts or when spawned
@@ -31,7 +31,11 @@ protected:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UBoxComponent> CollisionBox;
 
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UArrowComponent> ForceDirectionArrow;
+
 	UFUNCTION()
-	void OnJumpPadOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnGravityLauncherOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 };

@@ -306,9 +306,14 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }
 
-void ASuraPawnPlayer::JumpPadLaunchPlayer(const FVector& Direction, float ForceAmount)
+void ASuraPawnPlayer::GravityLaunchPlayer(const FVector& Direction, float ForceAmount)
 {
-	GetPlayerMovementComponent()->NotifyJumpPadForce(Direction, ForceAmount);
+	GetPlayerMovementComponent()->NotifyGravityLaunchForce(Direction, ForceAmount);
+}
+
+void ASuraPawnPlayer::JumpPadLaunchPlayer(float ForceAmount)
+{
+	GetPlayerMovementComponent()->NotifyJumpPadLaunchForce(ForceAmount);
 }
 
 void ASuraPawnPlayer::OnDamaged()

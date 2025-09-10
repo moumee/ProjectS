@@ -136,7 +136,9 @@ public:
 
 	void NotifyDamageData(EDamageType DamageType, const FVector& DamageDirection, float DamageForce);
 
-	void NotifyJumpPadForce(const FVector& Direction, float ForceAmount);
+	void NotifyGravityLaunchForce(const FVector& Direction, float ForceAmount);
+
+	void NotifyJumpPadLaunchForce(float ForceAmount);
 
 	FOnMove	OnMove;
 	FOnWallRun OnWallRun;
@@ -433,13 +435,20 @@ protected:
 	
 #pragma endregion Downed
 
+#pragma region GravityLaunch
+
+	bool bGravityLaunchForceRequested = false;
+	bool bAirborneFromGravityLauncher = false;
+	FVector GravityLaunchForceDir = FVector::ZeroVector;
+	float GravityLaunchForceAmount = 0.f;
+	FVector JumpPadInitialVelocityXY = FVector::ZeroVector;
+	
+#pragma endregion GRavityLaunch
+
 #pragma region JumpPad
 
 	bool bJumpPadForceRequested = false;
-	bool bAirborneFromJumpPad = false;
-	FVector JumpPadForceDir = FVector::ZeroVector;
 	float JumpPadForceAmount = 0.f;
-	FVector JumpPadInitialVelocityXY = FVector::ZeroVector;
 	
 #pragma endregion JumpPad
 
