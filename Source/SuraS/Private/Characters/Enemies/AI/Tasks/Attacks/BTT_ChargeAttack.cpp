@@ -57,6 +57,7 @@ void UBTT_ChargeAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeM
 		}
 		else
 		{
+			UE_LOG(LogTemp, Log, TEXT("Charger max speed %f"), CachedCharger->GetCharacterMovement()->MaxWalkSpeed);
 			CachedCharger->AddMovementInput(CachedCharger->GetActorForwardVector());
 		}
 	}
