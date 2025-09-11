@@ -327,12 +327,23 @@ void ASuraCharacterEnemyBase::SetMovementSpeed(EEnemySpeed Speed)
 
 void ASuraCharacterEnemyBase::JumpWall(const FVector& Destination)
 {
+	GetCharacterMovement()->GravityScale = 1.f;
+	
 	FVector LaunchVelocity = FVector::ZeroVector;
 	FVector FinalDestination = FVector(Destination.X, Destination.Y, Destination.Z + 250.f);
 	
 	UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, GetActorLocation(), FinalDestination);
 
 	LaunchCharacter(LaunchVelocity, true, true);
+
+	FTimerHandle GravityScaleHandle;
+	
+	GetWorldTimerManager().SetTimer(
+		GravityScaleHandle,
+		FTimerDelegate::CreateLambda([&]() { GetCharacterMovement()->GravityScale = 2.f; }),
+		2.f,
+		false
+	);
 }
 
 void ASuraCharacterEnemyBase::Climb(const FVector& Destination)

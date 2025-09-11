@@ -113,11 +113,11 @@ void AEnemyBaseAIController::SetStateToChaseOrPursue(AActor* TargetActor)
 	}
 }
 
-void AEnemyBaseAIController::SetStateToCoopAttack(AActor* Ally, bool bIsThrowing)
+void AEnemyBaseAIController::SetStateToCoopAttack(AActor* Ally, bool bIsPitcher)
 {
-	UpdateCurrentState(EEnemyStates::CoopThrowAttacking);
+	UpdateCurrentState(EEnemyStates::CoopAttacking);
 	GetBlackboardComponent()->SetValueAsObject("CoopAlly", Ally);
-	GetBlackboardComponent()->SetValueAsBool("IsCoopThrower", bIsThrowing);
+	GetBlackboardComponent()->SetValueAsBool("IsCoopThrower", bIsPitcher);
 }
 
 void AEnemyBaseAIController::EndPursueState()
