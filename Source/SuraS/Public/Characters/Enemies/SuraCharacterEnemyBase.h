@@ -16,6 +16,7 @@
 class UNiagaraComponent;
 class UACEnemyDamageSystem;
 class UWidgetComponent;
+class UMotionWarpingComponent;
 class AEnemyBaseAIController;
 class UBehaviorTree;
 class ASuraEnemyWeapon;
@@ -59,6 +60,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Niagara")
 	UNiagaraComponent* NiagaraComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MotionWarping", meta = (AllowPrivateAccess = "true"))
+	UMotionWarpingComponent* MotionWarpingComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Patrol Route", meta = (AllowPrivateAccess = "true"))
 	AEnemyPatrolRoute* PatrolRoute;
@@ -124,6 +128,9 @@ public:
 	// niagara comp
 	UNiagaraComponent* GetNiagaraComponent() const { return NiagaraComponent; }
 
+	// motion warp comp
+	UMotionWarpingComponent* GetMotionWarpingComponent() const { return MotionWarpingComponent; }
+
 	// other getters
 	FORCEINLINE float GetAttackDamageAmount() const { return AttackDamageAmount; }
 	FORCEINLINE float GetMeleeAttackRange() const { return MeleeAttackRange; }
@@ -160,7 +167,9 @@ public:
 
 	UAnimMontage* ChooseRandomAttackMontage();
 
-	UAnimMontage* GetCoopAttackMontage() const { return ThrowMontage; };
+	UAnimMontage* GetCoopAttackMontage() const { return ThrowAnimation; };
+
+	UAnimMontage* GetFallingMontage() const { return FallingAnimation; };
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	TArray<UAnimMontage*> HitAnimations;
@@ -175,7 +184,10 @@ public:
 	UAnimMontage* ClimbAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
-	UAnimMontage* ThrowMontage;
+	UAnimMontage* ThrowAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
+	UAnimMontage* FallingAnimation;
 
 	//poolsystem
 	bool isInitialized = false;

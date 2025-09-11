@@ -23,6 +23,7 @@ void AEnemyJumpNavLink::BeginPlay()
 
 void AEnemyJumpNavLink::OnReceiveSmartLinkReached(AActor* Agent, const FVector& Destination)
 {
+	
 	if (Destination.Z < Agent->GetActorLocation().Z)
 		return;
 
