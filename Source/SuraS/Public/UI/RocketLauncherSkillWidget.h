@@ -20,21 +20,23 @@ class SURAS_API URocketLauncherSkillWidget : public UBaseUIWidget
 	GENERATED_BODY()
 
 	float ZoomDuration = 0.0f;
-
+	
+	// widget binding
 	UPROPERTY(meta = (BindWidget))
 	UImage* SlowScreen;
+	UPROPERTY(meta = (BindWidgetAnim),Transient)
+	UWidgetAnimation* FadeInAnimation;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* FadeOutAnimation;
 	
 	// 플레이어에서 넘겨줄 데이터테이블
 	UPROPERTY()
 	UDataTable* DT_UI;
 	
-	bool bIsZooming = false;
-	FTimerHandle ZoomTimerHandle;
 	float ElapsedTime = 0.0f;
 	FVector2D StartScale;
 	FVector2D TargetScale;
-
-	bool bIsFadingOut = false;
+	
 	float FadeElapsedTime = 0.0f;
 	float FadeDuration = 0.5f; // 애니메이션 지속 시간 (초)
 	FVector2D FadeStartScale;
@@ -42,10 +44,8 @@ class SURAS_API URocketLauncherSkillWidget : public UBaseUIWidget
 
 	UACSkillManager* SkillManager;
 
-
 public:
 	virtual void NativeConstruct() override;
-	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime);
 	
 	// 플레이어 쪽에서 데이터테이블 할당할 때 호출
 	void InitUIDataTable(UDataTable* InTable);
