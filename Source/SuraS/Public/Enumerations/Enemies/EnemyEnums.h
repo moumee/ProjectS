@@ -12,6 +12,7 @@ enum class EEnemyStates : uint8
 	Attacking UMETA(DisplayName = "Attacking"),
 	Climbing UMETA(DisplayName = "Climbing"),
 	CoopAttacking UMETA(DisplayName = "CoopAttacking"),
+	Traverse UMETA(DisplayName = "Traverse"),
 	Dead UMETA(DisplayName = "Dead")
 };
 
