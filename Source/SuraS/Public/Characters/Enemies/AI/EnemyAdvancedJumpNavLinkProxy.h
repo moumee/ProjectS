@@ -20,6 +20,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Navigation", Meta = (MakeEditWidget = true))
 	TArray<FVector> PathPoints;
 
+	//UPROPERTY()
+	//ASuraCharacterEnemyBase* CachedEnemy;
+	
 protected:
 	// 에디터에서 값이 변경될 때 또는 레벨에 처음 배치될 때 호출됩니다.
 	virtual void OnConstruction(const FTransform& Transform) override;
@@ -32,4 +35,7 @@ protected:
 private:
 	// 기본 NavLinkProxy의 시작점/끝점을 우리 경로의 첫/마지막 지점과 동기화하는 함수
 	void UpdateAndSynchronizeLinks();
+	UFUNCTION()
+	void OnReceiveSmartLinkReached(AActor* Agent, const FVector& Destination);
+	virtual void BeginPlay() override;
 };

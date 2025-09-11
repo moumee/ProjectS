@@ -3,17 +3,32 @@
 
 #include "Characters/Enemies/AI/EnemyAdvancedJumpNavLinkProxy.h"
 #include "NavigationSystem.h"
+#include "Characters/Enemies/SuraCharacterEnemyBase.h"
+#include "Characters/Enemies/AI/EnemyBaseAIController.h"
+#include "Characters/Enemies/AI/EnemySequentialJumpComponent.h"
+
+class ASuraCharacterEnemyBase;
 
 AEnemyAdvancedJumpNavLinkProxy::AEnemyAdvancedJumpNavLinkProxy()
 {
-	// 생성자에서는 PointLinks를 비워둡니다.
+	SetSmartLinkEnabled(true);
+	bSmartLinkIsRelevant = true;
 	PointLinks.Empty();
 }
 
 void AEnemyAdvancedJumpNavLinkProxy::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
+	//OnSmartLinkReached.AddDynamic(this, &AEnemyAdvancedJumpNavLinkProxy::OnReceiveSmartLinkReached);
+	
 	UpdateAndSynchronizeLinks(); // 함수 이름 변경
+}
+
+void AEnemyAdvancedJumpNavLinkProxy::BeginPlay()
+{
+	Super::BeginPlay();
+
+	OnSmartLinkReached.AddDynamic(this, &AEnemyAdvancedJumpNavLinkProxy::OnReceiveSmartLinkReached);
 }
 
 #if WITH_EDITOR
@@ -28,7 +43,7 @@ void AEnemyAdvancedJumpNavLinkProxy::UpdateAndSynchronizeLinks() // 함수 내�
 {
 	// 기존의 모든 링크를 지웁니다.
 	PointLinks.Empty();
-
+	
 	// 경로점이 2개 이상일 때만 링크를 생성합니다.
 	if (PathPoints.Num() >= 2)
 	{
@@ -51,4 +66,27 @@ void AEnemyAdvancedJumpNavLinkProxy::UpdateAndSynchronizeLinks() // 함수 내�
 	{
 		NavSys->UpdateActorInNavOctree(*this);
 	}
+}
+
+void AEnemyAdvancedJumpNavLinkProxy::OnReceiveSmartLinkReached(AActor* Agent, const FVector& Destination)
+{
+	UE_LOG(LogTemp, Error, TEXT("Traverse LINK REACHED"));
+	if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(Agent))
+	{
+		//Enemy->FindComponentByClass<UEnemySequentialJumpComponent>()->PathPoints = PathPoints;
+		Enemy->GetAIController()->UpdateCurrentState(EEnemyStates::Traverse);
+		
+	}
+	
+	
+	// UE_LOG(LogTemp, Error, TEXT("JUMP LINK REACHED"));
+	// if (Destination.Z < Agent->GetActorLocation().Z)
+	// 	return;
+	//
+	// if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(Agent))
+	// {
+	// 	UE_LOG(LogTemp, Warning, TEXT("JUMP LINK REACHED"));
+	// 	
+	// 	//Enemy->JumpWall(Destination);
+	// }
 }
