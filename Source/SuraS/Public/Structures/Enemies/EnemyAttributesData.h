@@ -70,6 +70,12 @@ struct SURAS_API FEnemyAttributesData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UAnimMontage* ClimbAnimation = nullptr;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UAnimMontage* ThrowAnimation = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UAnimMontage* FallingAnimation = nullptr;
+
 	UPROPERTY(editAnywhere, BlueprintReadWrite)
 	float HeadHealth = 300.f;
 

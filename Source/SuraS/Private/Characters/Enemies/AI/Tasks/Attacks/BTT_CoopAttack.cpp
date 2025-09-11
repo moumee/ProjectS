@@ -12,6 +12,7 @@
 
 UBTT_CoopAttack::UBTT_CoopAttack(FObjectInitializer const& ObjectInitializer)
 {
+	NodeName = "Coop Attack";
 	bNotifyTick = true;
 	
 	bCreateNodeInstance = true;

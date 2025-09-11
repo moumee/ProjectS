@@ -40,7 +40,7 @@ void AEnemyCoopAttackTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedC
 
 		if (EnemiesForCoopAttack.Num() >= 2)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Enough for coop attack"));
+			// UE_LOG(LogTemp, Error, TEXT("Enough for coop attack"));
 
 			EnemiesForCoopAttack[0]->GetAIController()->GetBrainComponent()->RestartLogic();
 			EnemiesForCoopAttack[1]->GetAIController()->GetBrainComponent()->RestartLogic();
@@ -50,7 +50,7 @@ void AEnemyCoopAttackTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedC
 
 			EnemiesForCoopAttack.Empty();
 
-			UE_LOG(LogTemp, Log, TEXT("EnemiesForCoopAttack length %d"), EnemiesForCoopAttack.Num());
+			// UE_LOG(LogTemp, Log, TEXT("EnemiesForCoopAttack length %d"), EnemiesForCoopAttack.Num());
 		}
 
 		// 1. Find another enemy in a radius

@@ -424,6 +424,8 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 			DeathAnimations = EnemyAttributesData->DeathAnimations;
 			AttackAnimations = EnemyAttributesData->AttackAnimations;
 			ClimbAnimation = EnemyAttributesData->ClimbAnimation;
+			ThrowAnimation = EnemyAttributesData->ThrowAnimation;
+			FallingAnimation = EnemyAttributesData->FallingAnimation;
 		}
 
 		PlayerController = GetWorld()->GetFirstPlayerController();
