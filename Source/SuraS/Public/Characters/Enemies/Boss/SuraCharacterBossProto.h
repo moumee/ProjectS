@@ -29,11 +29,13 @@ public:
 
 	void SetCurrentState(EBossState NewState);
 
-	UPROPERTY(EditInstanceOnly, Category="Attack")
-	TObjectPtr<ASuraBossAttackArea> AttackArea;
+	ASuraBossAttackArea* GetAttackAreaByTag(FName Tag);
 
 	
 protected:
+
+	UPROPERTY(VisibleAnywhere, Category="Attack")
+	TArray<AActor*> AttackAreas;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UAnimMontage> HitMontage;

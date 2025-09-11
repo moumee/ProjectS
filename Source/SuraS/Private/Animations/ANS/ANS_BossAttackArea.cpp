@@ -21,7 +21,9 @@ void UANS_BossAttackArea::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeq
 	bHasHit = false;
 	BossRef = Cast<ASuraCharacterBossProto>(MeshComp->GetOwner());
 	if (!BossRef) return;
- 	BossRef->AttackArea->SetAttackBoxCollision(ECollisionEnabled::Type::QueryOnly);
+	AttackArea = BossRef->GetAttackAreaByTag(AttackAreaTag);
+	if (!AttackArea) return;
+ 	AttackArea->SetAttackBoxCollision(ECollisionEnabled::Type::QueryOnly);
 }
 
 void UANS_BossAttackArea::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
@@ -30,11 +32,11 @@ void UANS_BossAttackArea::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequ
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 
 	if (!BossRef) return;
-	if (!BossRef->AttackArea) return;
+	if (!AttackArea) return;
 	if (bHasHit) return;
 	
 	TArray<AActor*> OverlappingActors;
-	BossRef->AttackArea->GetAttackBox()->GetOverlappingActors(OverlappingActors, ASuraPawnPlayer::StaticClass());
+	AttackArea->GetAttackBox()->GetOverlappingActors(OverlappingActors, ASuraPawnPlayer::StaticClass());
 
 	for (const auto& OverlappingActor : OverlappingActors)
 	{
@@ -69,9 +71,9 @@ void UANS_BossAttackArea::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSeque
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
 
-	if (!BossRef || !BossRef->AttackArea) return;
+	if (!BossRef || !AttackArea) return;
 	
-	BossRef->AttackArea->SetAttackBoxCollision(ECollisionEnabled::Type::NoCollision);
+	AttackArea->SetAttackBoxCollision(ECollisionEnabled::Type::NoCollision);
 }
 
 

@@ -7,6 +7,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/Boss/SuraBossAttackArea.h"
 #include "Characters/Enemies/Boss/SuraBossStates.h"
+#include "Kismet/GameplayStatics.h"
 
 
 ASuraCharacterBossProto::ASuraCharacterBossProto()
@@ -37,6 +38,9 @@ void ASuraCharacterBossProto::BeginPlay()
 	InitializeHitColorTimelines();
 
 	BlackboardComp = GetController<AAIController>()->GetBlackboardComponent();
+
+	
+	UGameplayStatics::GetAllActorsOfClass(this, ASuraBossAttackArea::StaticClass(), AttackAreas);
 	
 }
 
@@ -80,6 +84,22 @@ void ASuraCharacterBossProto::SetCurrentState(EBossState NewState)
 {
 	CurrentState = NewState;
 	BlackboardComp->SetValueAsEnum("CurrentState",static_cast<uint8>(NewState));
+}
+
+ASuraBossAttackArea* ASuraCharacterBossProto::GetAttackAreaByTag(FName Tag)
+{
+	for (AActor* AttackArea : AttackAreas)
+	{
+		if (AttackArea->ActorHasTag(Tag))
+		{
+			if (ASuraBossAttackArea* CastedAttackArea = Cast<ASuraBossAttackArea>(AttackArea))
+			{
+				return CastedAttackArea;
+			}
+			return nullptr;
+		}
+	}
+	return nullptr;
 }
 
 void ASuraCharacterBossProto::PlayHitMontage(FName SectionName)
