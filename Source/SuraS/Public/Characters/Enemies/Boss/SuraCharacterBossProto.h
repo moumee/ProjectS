@@ -3,10 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BehaviorTree/BehaviorTreeTypes.h"
 #include "Characters/Enemies/Boss/SuraCharacterBossBase.h"
 #include "Components/TimelineComponent.h"
 #include "SuraCharacterBossProto.generated.h"
 
+class UBlackboardComponent;
+enum class EBossState : uint8;
 class ASuraBossAttackArea;
 class UTimelineComponent;
 /**
@@ -24,17 +27,28 @@ public:
 
 	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser) override;
 
+	void SetCurrentState(EBossState NewState);
+
 	UPROPERTY(EditInstanceOnly, Category="Attack")
-	TObjectPtr<ASuraBossAttackArea> NormalAttackArea;
-	UPROPERTY(EditInstanceOnly, Category="Attack")
-	TObjectPtr<ASuraBossAttackArea> SpecialAttackArea;
+	TObjectPtr<ASuraBossAttackArea> AttackArea;
+
 	
 protected:
 
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UAnimMontage> HitMontage;
+
+	
+	void PlayHitMontage(FName SectionName);
+	
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UBlackboardComponent> BlackboardComp;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EBossState CurrentState;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<USkeletalMeshComponent> HeadMesh;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<USkeletalMeshComponent> BodyMesh;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<USkeletalMeshComponent> LeftArmMesh;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

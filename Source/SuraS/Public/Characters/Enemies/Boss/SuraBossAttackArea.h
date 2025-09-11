@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "SuraBossAttackArea.generated.h"
 
+class ASuraCharacterBossBase;
+enum class EDamageType : uint8;
 class UBoxComponent;
 
 UCLASS()
@@ -17,16 +19,22 @@ public:
 	// Sets default values for this actor's properties
 	ASuraBossAttackArea();
 
-	void SetAttackAreaCollision(ECollisionEnabled::Type CollisionEnabled);
+	UBoxComponent* GetAttackBox() const { return AttackBox; }
+
+	void SetAttackBoxCollision(ECollisionEnabled::Type CollisionEnabled);
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	
+	
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UBoxComponent> AttackBox;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UBillboardComponent> IconBillboard;
+
+
 
 };

@@ -167,6 +167,7 @@ void UACUIMangerComponent::InitializeWidgets()
 				{
 					SkillManager->SetRocketLauncherSkillWidget(RLW);
 					RLW->SetSKillManager(SkillManager);
+					RLW->InitUIDataTable(DTUISetting);
 					//RLW->AddToViewport(); //스킬 사용 시점에 AddToViewport해야함;
 
 					//UE_LOG(LogTemp, Warning, TEXT("✔ RocketLauncherWidget Viewport에 추가됨"));

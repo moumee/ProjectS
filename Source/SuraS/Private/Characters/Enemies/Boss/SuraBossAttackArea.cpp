@@ -6,6 +6,8 @@
 #include "Components/BillboardComponent.h"
 #include "Components/BoxComponent.h"
 
+#define PLAYER_TRACE_CHANNEL ECC_GameTraceChannel4
+
 
 // Sets default values
 ASuraBossAttackArea::ASuraBossAttackArea()
@@ -15,14 +17,17 @@ ASuraBossAttackArea::ASuraBossAttackArea()
 
 	AttackBox = CreateDefaultSubobject<UBoxComponent>("AttackBox");
 	RootComponent = AttackBox;
-	AttackBox->SetCollisionProfileName("BossAttack");
+	AttackBox->SetCollisionResponseToAllChannels(ECR_Ignore);
+	AttackBox->SetCollisionResponseToChannel(PLAYER_TRACE_CHANNEL, ECR_Overlap);
+	AttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
 
 	IconBillboard = CreateDefaultSubobject<UBillboardComponent>("IconBillboard");
 	IconBillboard->SetupAttachment(GetRootComponent());
 	IconBillboard->SetHiddenInGame(true);
 }
 
-void ASuraBossAttackArea::SetAttackAreaCollision(ECollisionEnabled::Type CollisionEnabled)
+void ASuraBossAttackArea::SetAttackBoxCollision(ECollisionEnabled::Type CollisionEnabled)
 {
 	AttackBox->SetCollisionEnabled(CollisionEnabled);
 }
@@ -33,6 +38,7 @@ void ASuraBossAttackArea::BeginPlay()
 	Super::BeginPlay();
 	
 }
+
 
 
 
