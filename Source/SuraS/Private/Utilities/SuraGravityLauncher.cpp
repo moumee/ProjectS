@@ -6,6 +6,7 @@
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/ArrowComponent.h"
 #include "Components/BoxComponent.h"
+#include "Slate/SGameLayerManager.h"
 
 // Sets default values
 ASuraGravityLauncher::ASuraGravityLauncher()
@@ -37,9 +38,9 @@ void ASuraGravityLauncher::BeginPlay()
 void ASuraGravityLauncher::OnGravityLauncherOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OtherActor))
+	if (IPlayerInterface* PlayerInterface = Cast<IPlayerInterface>(OtherActor))
 	{
-		Player->GravityLaunchPlayer(ForceDirectionArrow->GetForwardVector(), ForceAmount);
+		PlayerInterface->GravityLaunchPlayer(ForceDirectionArrow->GetForwardVector(), ForceAmount);
 	}
 }
 

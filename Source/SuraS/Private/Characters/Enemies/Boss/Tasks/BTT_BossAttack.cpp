@@ -4,6 +4,8 @@
 #include "Characters/Enemies/Boss/Tasks/BTT_BossAttack.h"
 
 #include "AIController.h"
+#include "Characters/Enemies/Boss/SuraBossStates.h"
+#include "Characters/Enemies/Boss/SuraCharacterBossProto.h"
 #include "GameFramework/Character.h"
 
 
@@ -16,6 +18,13 @@ EBTNodeResult::Type UBTT_BossAttack::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 	if (!BossCharacter) return EBTNodeResult::Failed;
 	UAnimInstance* AnimInstance = BossCharacter->GetMesh()->GetAnimInstance();
 	if (!AnimInstance) return EBTNodeResult::Failed;
+
+	if (!BossRef) BossRef = Cast<ASuraCharacterBossProto>(BossCharacter);
+
+	if (BossRef)
+	{
+		BossRef->SetCurrentState(EBossState::Attack);
+	}
 	
 	OnMontageEndedDelegate.BindUObject(this, &ThisClass::OnMontageEnded, &OwnerComp);
 	AnimInstance->Montage_Play(AttackMontage);
@@ -26,5 +35,9 @@ EBTNodeResult::Type UBTT_BossAttack::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 
 void UBTT_BossAttack::OnMontageEnded(UAnimMontage* AnimMontage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp)
 {
+	if (BossRef)
+	{
+		BossRef->SetCurrentState(EBossState::Idle);
+	}
 	FinishLatentTask(*OwnerComp, EBTNodeResult::Succeeded);
 }

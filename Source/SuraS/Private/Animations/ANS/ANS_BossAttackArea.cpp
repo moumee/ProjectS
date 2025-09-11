@@ -9,6 +9,7 @@
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/BoxComponent.h"
 #include "Engine/OverlapResult.h"
+#include "Slate/SGameLayerManager.h"
 
 #define PLAYER_TRACE_CHANNEL ECollisionChannel::ECC_GameTraceChannel4
 
@@ -37,7 +38,7 @@ void UANS_BossAttackArea::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequ
 
 	for (const auto& OverlappingActor : OverlappingActors)
 	{
-		if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OverlappingActor))
+		if (IPlayerInterface* PlayerInterface = Cast<IPlayerInterface>(OverlappingActor))
 		{
 			bHasHit = true;
 			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Hit"));
@@ -49,9 +50,14 @@ void UANS_BossAttackArea::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequ
 			{
 				GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Charge Hit"));
 				DamageData.ImpulseMagnitude = 1000.f;
-				DamageData.ImpulseDirection = (Player->GetActorLocation() - MeshComp->GetOwner()->GetActorLocation()).GetSafeNormal2D();
+				DamageData.ImpulseDirection = (OverlappingActor->GetActorLocation() - MeshComp->GetOwner()->GetActorLocation()).GetSafeNormal2D();
 			}
-			Player->TakeDamage(DamageData, MeshComp->GetOwner());
+
+			if (IDamageable* Damageable = Cast<IDamageable>(OverlappingActor))
+			{
+				Damageable->TakeDamage(DamageData, MeshComp->GetOwner());
+			}
+			
 		}
 	}
 
