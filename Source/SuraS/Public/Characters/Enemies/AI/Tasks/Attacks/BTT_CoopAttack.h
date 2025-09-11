@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
-#include "BTT_MeleeAttack.generated.h"
+#include "BTT_CoopAttack.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SURAS_API UBTT_MeleeAttack : public UBTTask_BlackboardBase
+class SURAS_API UBTT_CoopAttack : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
 
@@ -19,6 +19,6 @@ class SURAS_API UBTT_MeleeAttack : public UBTTask_BlackboardBase
 	void OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp);
 	
 public:
-	explicit UBTT_MeleeAttack(FObjectInitializer const& ObjectInitializer);
+	explicit UBTT_CoopAttack(FObjectInitializer const& ObjectInitializer);
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };

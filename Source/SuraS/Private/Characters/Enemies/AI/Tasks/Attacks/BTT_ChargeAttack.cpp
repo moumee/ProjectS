@@ -57,7 +57,6 @@ void UBTT_ChargeAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeM
 		}
 		else
 		{
-			UE_LOG(LogTemp, Log, TEXT("Charger max speed %f"), CachedCharger->GetCharacterMovement()->MaxWalkSpeed);
 			CachedCharger->AddMovementInput(CachedCharger->GetActorForwardVector());
 		}
 	}
@@ -178,7 +177,7 @@ void UBTT_ChargeAttack::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AAct
 {
 	if (ASuraCharacterEnemyBase* OtherEnemy = Cast<ASuraCharacterEnemyBase>(OtherActor))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Charger Overlapped with OtherEnemy"))
+		// UE_LOG(LogTemp, Error, TEXT("Charger Overlapped with OtherEnemy"))
 		OtherEnemy->LaunchCharacter(OtherEnemy->GetActorUpVector() * 1000.f, true, true);
 	}
 }

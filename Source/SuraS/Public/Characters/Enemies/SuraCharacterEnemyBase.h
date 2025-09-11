@@ -160,6 +160,8 @@ public:
 
 	UAnimMontage* ChooseRandomAttackMontage();
 
+	UAnimMontage* GetCoopAttackMontage() const { return ThrowMontage; };
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	TArray<UAnimMontage*> HitAnimations;
 
@@ -171,6 +173,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	UAnimMontage* ClimbAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
+	UAnimMontage* ThrowMontage;
 
 	//poolsystem
 	bool isInitialized = false;
