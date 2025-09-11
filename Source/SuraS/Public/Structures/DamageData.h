@@ -30,5 +30,8 @@ struct SURAS_API FDamageData : public FTableRowBase
 	FVector ImpulseDirection = FVector::ZeroVector;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ImpulseMagnitude = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TEnumAsByte<EPhysicalSurface> SurfaceType = SurfaceType1;
 };

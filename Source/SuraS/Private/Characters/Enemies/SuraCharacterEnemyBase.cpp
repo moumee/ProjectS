@@ -3,6 +3,7 @@
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 
 #include "BrainComponent.h"
+#include "NiagaraComponent.h"
 #include "SuraSProjectile.h"
 #include "ActorComponents/DamageComponent/ACEnemyDamageSystem.h"
 #include "ActorComponents/UISystem/ACKillLogManager.h"
@@ -46,6 +47,10 @@ ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 	
 	bUseControllerRotationYaw = true; // for controller controlled rotation
 	GetCharacterMovement()->bUseRVOAvoidance = true;
+	GetCharacterMovement()->GravityScale = 2.f;
+
+	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComp"));
+	NiagaraComponent->SetupAttachment(RootComponent);
 
 	EnemyType = "Base";
 
@@ -132,7 +137,7 @@ void ASuraCharacterEnemyBase::OnDamagedTriggered()
 
 	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *(HitAnimation->GetFName()).ToString()));
 
-	if (!HitAnimations.IsEmpty())
+	if (!HitAnimations.IsEmpty() && GetDamageSystemComp()->GetIsInterruptible())
 	{
 		OnHitMontageEnded.BindUObject(this, &ASuraCharacterEnemyBase::OnHitEnded);
 		
@@ -201,13 +206,13 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 	
 	GetWorldTimerManager().SetTimer(
 		DeathHandle,
-		FTimerDelegate::CreateLambda([&]()
+		FTimerDelegate::CreateWeakLambda(this, [this]()
 		{
 			/*GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
 			GetMesh()->Stop();*/
 			
-			if (EnemyWeapon)
-				EnemyWeapon->Destroy();
+			/*if (EnemyWeapon)
+				EnemyWeapon->Destroy();*/
 
 			Destroy();
 		}),
@@ -322,12 +327,23 @@ void ASuraCharacterEnemyBase::SetMovementSpeed(EEnemySpeed Speed)
 
 void ASuraCharacterEnemyBase::JumpWall(const FVector& Destination)
 {
+	GetCharacterMovement()->GravityScale = 1.f;
+	
 	FVector LaunchVelocity = FVector::ZeroVector;
 	FVector FinalDestination = FVector(Destination.X, Destination.Y, Destination.Z + 250.f);
 	
 	UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, GetActorLocation(), FinalDestination);
 
 	LaunchCharacter(LaunchVelocity, true, true);
+
+	FTimerHandle GravityScaleHandle;
+	
+	GetWorldTimerManager().SetTimer(
+		GravityScaleHandle,
+		FTimerDelegate::CreateLambda([&]() { GetCharacterMovement()->GravityScale = 2.f; }),
+		2.f,
+		false
+	);
 }
 
 void ASuraCharacterEnemyBase::Climb(const FVector& Destination)
@@ -394,9 +410,11 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 			GetCharacterMovement()->MaxWalkSpeed = EnemyAttributesData->MaxWalkSpeed;
 
 			AttackDamageAmount = EnemyAttributesData->AttackDamageAmount;
+			AttackRate = EnemyAttributesData->AttackRate;
 			MeleeAttackRange = EnemyAttributesData->MeleeAttackRange;
 			MeleeAttackSphereRadius = EnemyAttributesData->MeleeAttackSphereRadius;
 
+			MaxWalkSpeed = EnemyAttributesData->MaxWalkSpeed;
 			MinWalkSpeedVariation = EnemyAttributesData->MinWalkSpeedVariation;
 			MaxWalkSpeedVariation = EnemyAttributesData->MaxWalkSpeedVariation;
 			MinAttackRateVariation = EnemyAttributesData->MinAttackRateVariation;

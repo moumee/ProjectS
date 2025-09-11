@@ -18,13 +18,13 @@ void AEnemyProjectileRifleBullet::BeginPlay()
 	if (SpawnEffect)
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAttached(
-			SpawnEffect,
+			SpawnEffect.Get(),
 			ProjectileMesh,
 			NAME_None,
 			FVector::ZeroVector,
 			FRotator::ZeroRotator,
 			EAttachLocation::KeepRelativeOffset,
-			true);
+			true, false, ENCPoolMethod::AutoRelease);
 
 		GetNiagaraComponent()->Activate();
 	}
@@ -37,13 +37,13 @@ void AEnemyProjectileRifleBullet::ActivateShootingEffect()
 		GetNiagaraComponent()->Deactivate();
 		
 		UNiagaraFunctionLibrary::SpawnSystemAttached(
-			ShootingEffect,
+			ShootingEffect.Get(),
 			ProjectileMesh,
 			NAME_None,
 			FVector::ZeroVector,
 			FRotator::ZeroRotator,
 			EAttachLocation::KeepRelativeOffset,
-			true);
+			true, false, ENCPoolMethod::AutoRelease);
 
 		GetNiagaraComponent()->Activate();
 	}

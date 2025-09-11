@@ -111,10 +111,25 @@ struct SURAS_API FPawnPlayerMovementRow : public FTableRowBase
 	UPROPERTY(EditAnywhere, Category = "Movement|Slide")
 	float SlideAdditionalSpeed = 700.f;
 	
-	UPROPERTY(EditAnywhere, Category = "Movement")
+	UPROPERTY(EditAnywhere, Category = "Movement", meta=(ClampMin=0))
     float GroundPointDetectionLength = 1000.f;
 
-	UPROPERTY(EditAnywhere, Category = "Movement")
+	UPROPERTY(EditAnywhere, Category = "Movement", meta=(ClampMin=0))
 	float CoyoteTime = 0.2f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement", meta=(ClampMin=0, ClampMax=1))
+	float DamageSlowDebuffMultiplier = 0.3f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement", meta=(ClampMin=0))
+	float DamageSlowDebuffDuration = 1.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement", meta=(ClampMin=0))
+	float DownedDuration = 2.f;
+	
+	UPROPERTY(EditAnywhere, Category = "Movement", meta=(ClampMin=0))
+	float DownedInvincibleDuration = 1.f;
+
+	
+	
 	
 };

@@ -39,4 +39,6 @@ public:
 	void SetProjectileScale(float scale);
 
 	virtual void Attack(ASuraPawnPlayer* Player) override;
+
+	virtual void OnDeathTriggered() override;
 };

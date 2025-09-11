@@ -42,6 +42,8 @@ public:
 
 	void SetStateToChaseOrPursue(AActor* TargetActor);
 
+	void SetStateToCoopAttack(AActor* Ally, bool bIsThrowing);
+
 	void EndPursueState();
 
 	UFUNCTION(BlueprintCallable)

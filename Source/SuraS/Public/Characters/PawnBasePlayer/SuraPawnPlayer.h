@@ -6,8 +6,10 @@
 #include "InputActionValue.h"
 #include "GameFramework/Pawn.h"
 #include "Interfaces/Damageable.h"
+#include "Interfaces/PlayerInterface.h"
 #include "SuraPawnPlayer.generated.h"
 
+class UNiagaraComponent;
 class UAmmoCounterWidget;
 class USuraPlayerCameraComponent;
 class USpringArmComponent;
@@ -30,8 +32,9 @@ class UPlayerHUD;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerHealthHalved);
 
+
 UCLASS()
-class SURAS_API ASuraPawnPlayer : public APawn, public IDamageable
+class SURAS_API ASuraPawnPlayer : public APawn, public IDamageable, public IPlayerInterface
 {
 	GENERATED_BODY()
 
@@ -55,6 +58,8 @@ public:
 	UCapsuleComponent* GetCapsuleComponent();
 
 	UCameraComponent* GetCameraComponent() const { return Camera; };
+
+	FVector GetDefaultCameraRelativeLocation() const { return DefaultCameraRelativeLocation; };
 
 	USceneCaptureComponent2D* GetSceneCaptureComponent() const { return FPSceneCapture;  } //<JaeHyeong>
 
@@ -84,12 +89,17 @@ public:
 
 	FOnPlayerHealthHalved OnPlayerHealthHalved;
 
+	virtual void GravityLaunchPlayer(const FVector& Direction, float ForceAmount) override;
+
+	virtual void JumpPadLaunchPlayer(float ForceAmount) override;
+
+
 protected:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UCapsuleComponent> CapsuleComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<USkeletalMeshComponent> ArmMesh;
 
 	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
@@ -121,23 +131,34 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
 	UACUIMangerComponent* UIManager;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditDefaultsOnly, Category="Editor Assign")
+	TObjectPtr<UNiagaraComponent> ForwardDashEffectComponent;
+	UPROPERTY(EditDefaultsOnly, Category="Editor Assign")
+	TObjectPtr<UNiagaraComponent> BackwardDashEffectComponent;
+	UPROPERTY(EditDefaultsOnly, Category="Editor Assign")
+	TObjectPtr<UNiagaraComponent> LeftDashEffectComponent;
+	UPROPERTY(EditDefaultsOnly, Category="Editor Assign")
+	TObjectPtr<UNiagaraComponent> RightDashEffectComponent;
+	
+
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> MoveAction;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> LookAction;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> JumpAction;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> ShiftAction;
 
-	UPROPERTY(EditAnywhere, Category = "Blueprint Assign")
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> CrouchAction;
+	
 
 	FTimerHandle PlayerHealthCheckTimer;
 	float ConditionalPlayerHP = 50.f;
@@ -146,12 +167,13 @@ protected:
 
 	FVector2D PlayerLookInputVector2D; // <WeaponSystem>
 
+	FVector DefaultCameraRelativeLocation;
+	
+	
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);
 	void StartJumpInput();
-	void StopJumpInput();
 	void StartShiftInput();
-	void StopShiftInput();
 	void StartCrouchInput();
 	void StopCrouchInput();
 	
@@ -159,6 +181,9 @@ protected:
 	// Damage Comp Event Delegate Functions
 	void OnDamaged();
 	void OnDeath();
+
+	void OnDash(FVector2D MovementInput);
+	void OnDashEnd();
 };
 
 

@@ -4,10 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "PlayerCameraMovementRow.h"
+#include "Animations/CameraAnimationCameraModifier.h"
 #include "Components/ActorComponent.h"
 #include "SuraPlayerCameraComponent.generated.h"
 
 
+class UTimelineComponent;
 class UCameraComponent;
 class USuraPlayerMovementComponent;
 
@@ -19,6 +21,7 @@ class SURAS_API USuraPlayerCameraComponent : public UActorComponent
 public:	
 	USuraPlayerCameraComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void OnDowned();
 
 protected:
 	virtual void BeginPlay() override;
@@ -107,10 +110,27 @@ protected:
 	TSubclassOf<UCameraShakeBase> BackwardRightDashCameraShake;
 	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|One Shot")
 	TSubclassOf<UCameraShakeBase> BackwardLeftDashCameraShake;
+	
 
 	UPROPERTY(VisibleAnywhere, Category="Camera Shake")
 	TSubclassOf<UCameraShakeBase> CurrentLoopShake;
 	
+	UPROPERTY(EditDefaultsOnly, Category="Downed")
+	TSubclassOf<UCameraShakeBase> DownedImpactShake;
+	UPROPERTY(EditDefaultsOnly, Category="Downed")
+	TSubclassOf<UCameraShakeBase> DownedFallShake;
+	UPROPERTY(EditDefaultsOnly, Category="Downed")
+	TSubclassOf<UCameraShakeBase> DownedFloorImpactShake;
+	UPROPERTY(EditDefaultsOnly, Category="Downed")
+	TSubclassOf<UCameraShakeBase> DownedFloorIdleShake;
+	UPROPERTY(EditDefaultsOnly, Category="Downed")
+	TSubclassOf<UCameraShakeBase> DownedGoingUpShake;
+	
+	FTimerHandle DownFloorImpactTimerHandle;
+	FTimerHandle DownGoingUpTimerHandle;
+	
+	FTimerDelegate DownedFloorImpactDelegate;
+	FTimerDelegate DownedGoingUpShakeDelegate;
 
 	void ChangeCameraLoopShake(const TSubclassOf<UCameraShakeBase>& InShake);
 	void PlayOneShotCameraShake(const TSubclassOf<UCameraShakeBase>& InShake);
@@ -133,8 +153,10 @@ protected:
 	void OnWallJump();
 	void OnMantle();
 	void OnDash(FVector2D MovementInput);
+	
 
 	void InitCameraShakes();
+	
 };
 
 
