@@ -2,6 +2,8 @@
 
 
 #include "Characters/Enemies/AI/EnemySequentialJumpComponent.h"
+
+#include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Kismet/GameplayStatics.h" 
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -34,77 +36,82 @@ void UEnemySequentialJumpComponent::SetPathPoints(const TArray<FVector>& InPathP
 void UEnemySequentialJumpComponent::BeginPlay()
 {
     Super::BeginPlay();
-    OwnerCharacter = Cast<ACharacter>(GetOwner());
+    OwnerCharacter = Cast<ASuraCharacterEnemyBase>(GetOwner());
     SetComponentTickEnabled(false);
+    EnemyAnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
 }
 
-void UEnemySequentialJumpComponent::StartJumpSequence(float InJumpSpeed)
+void UEnemySequentialJumpComponent::StartJumpSequence()
 {
     // 이미 진행 중이거나 경로가 없으면 시작하지 않음
     if (bIsSequenceActive || PathPoints.IsEmpty() || !OwnerCharacter)
     {
         return;
     }
-    
-    JumpSpeed = InJumpSpeed;
+
+    bIsMoving = true;
     CurrentTargetIndex = 0;
     bIsSequenceActive = true;
-
-    // 첫 번째 점프 시작
-    //JumpToNextPoint();
+    JumpInitialize();
+    SetComponentTickEnabled(true);
 }
 
-void UEnemySequentialJumpComponent::JumpToNextPoint()
+void UEnemySequentialJumpComponent::JumpAnimationSet(UAnimMontage* Montage)
 {
-    // 유효한 다음 목표 지점이 있는지 확인
-    if (!PathPoints.IsValidIndex(CurrentTargetIndex))
+    if (Montage == JumpStartMontage)
     {
-        // 모든 경로를 완료했으므로 시퀀스 종료
-        FinishSequence();
-        return;
+        // '시작' 몽타주가 끝났으므로, '루프' 몽타주를 재생합니다.
+        EnemyAnimInstance->Montage_Play(JumpLoopMontage);
     }
+    else if (Montage == JumpLoopMontage)
+    {
+        // '루프' 몽타주가 한 번 끝났습니다.
+        // 타이머에 남은 시간을 확인합니다.
+        //float TimeRemaining = GetWorld()->GetTimerManager().GetTimerRemaining(AttackTimerHandle);
 
-    const FVector StartLocation = OwnerCharacter->GetActorLocation();
-    const FVector EndLocation = PathPoints[CurrentTargetIndex];
-    FVector TossVelocity;
+        if (TotalDuration > ElapsedTime)
+        {
+            // 남은 시간이 충분하면, '루프' 몽타주를 다시 재생합니다.
+            EnemyAnimInstance->Montage_Play(JumpLoopMontage);
+        }
+        else
+        {
+            // 남은 시간이 부족하면, '마무리' 몽타주를 재생합니다.
+            EnemyAnimInstance->Montage_Play(JumpEndMontage);
+        }
+    }
+    else if (Montage == JumpEndMontage)
+    {
+        if (EnemyAnimInstance)
+        {
+            // 현재 재생 중인 몽타주를 모두 중지합니다.
+            EnemyAnimInstance->Montage_Stop(0.1f);
+            // 매우 중요: 다른 몽타주에 영향을 주지 않도록 바인딩했던 델리게이트를 반드시 해제합니다.
+            //EnemyAnimInstance->OnMontageEnded.RemoveDynamic(this, &AMyCharacter::OnAttackMontageEnded);
+        }
     
-    // 다음 지점까지의 발사 속도 계산
-    if (UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, TossVelocity, StartLocation, EndLocation))
-    {
-        // 점프 실행
-        OwnerCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Flying );
-        FVector tempVector = EndLocation - StartLocation;
-        //OwnerCharacter->GetCharacterMovement()->Velocity = tempVector.GetSafeNormal() * JumpSpeed;
-        OwnerCharacter->GetCharacterMovement()->Velocity = TossVelocity;
-        
-        // 도착 감지를 위해 Tick 활성화
-        SetComponentTickEnabled(true);
+        // 타이머를 확실히 정리합니다.
+        //GetWorld()->GetTimerManager().ClearTimer(AttackTimerHandle);
     }
-    else
-    {
-        // 계산 실패 시 시퀀스 바로 종료
-        UE_LOG(LogTemp, Warning, TEXT("경로 계산 실패: 인덱스 %d (%s) -> 인덱스 %d (%s)"),
-        CurrentTargetIndex - 1, // 이전 지점 (만약 있다면)
-        *StartLocation.ToString(),
-        CurrentTargetIndex,
-        *EndLocation.ToString());
-        FinishSequence();
-    }
+    
 }
 
-void UEnemySequentialJumpComponent::FinishSequence()
+
+
+void UEnemySequentialJumpComponent::JumpInitialize()
 {
-    bIsSequenceActive = false;
-    PathPoints.Empty();
+    StartPosition = OwnerCharacter->GetActorLocation();
+    EndPosition = PathPoints[CurrentTargetIndex];
+    TotalDuration = 0.5f;
+    ArcHeight = 100;
+    ElapsedTime = 0.f;
+
     
-    if (OwnerCharacter)
-    {
-        OwnerCharacter->GetCharacterMovement()->Velocity = FVector::ZeroVector;
-        OwnerCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-    }
-    
-    OnSequenceCompleted.Broadcast();
-    UE_LOG(LogTemp, Log, TEXT("점프 시퀀스 완료."));
+    //EnemyAnimInstance->OnMontageEnded.AddDynamic(this, &AMyCharacter::OnAttackMontageEnded);
+
+    // 2. 전체 공격 시간을 관리할 타이머를 설정합니다. (시간이 다 되면 공격 강제 종료)
+    //GetWorld()->GetTimerManager().SetTimer(AttackTimerHandle, this, &AMyCharacter::StopAttackSequence, TotalDuration, false);
+    EnemyAnimInstance->Montage_Play(JumpStartMontage);
 }
 
 void UEnemySequentialJumpComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -119,6 +126,8 @@ void UEnemySequentialJumpComponent::TickComponent(float DeltaTime, ELevelTick Ti
 
     // 1. 경과 시간을 업데이트하고, 이동 진행률(0.0 ~ 1.0)을 계산합니다.
     ElapsedTime += DeltaTime;
+
+    
     float Alpha = FMath::Clamp(ElapsedTime / TotalDuration, 0.f, 1.f);
 
     // 2. 시작점과 도착점 사이의 직선 위치를 계산합니다 (선형 보간).
@@ -135,11 +144,33 @@ void UEnemySequentialJumpComponent::TickComponent(float DeltaTime, ELevelTick Ti
     // 5. 이동이 완료되었는지 확인합니다.
     if (Alpha >= 1.f)
     {
-        bIsMoving = false;
-        SetComponentTickEnabled(false); // Tick 비활성화
-        OwnerCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Walking); // 원래 상태로 복귀
+        UE_LOG(LogTemp, Log, TEXT("점프 서브시퀀스 완료."));
+        CurrentTargetIndex++;
+        if (PathPoints.IsValidIndex(CurrentTargetIndex))
+        {
+            JumpInitialize();
+        }
+        else
+        {
+            FinishSequence();
+        }
+        
     }
 }
 
-
+void UEnemySequentialJumpComponent::FinishSequence()
+{
+    bIsSequenceActive = false;
+    bIsMoving = false;
+    PathPoints.Empty();
+    
+    if (OwnerCharacter)
+    {
+        OwnerCharacter->GetCharacterMovement()->Velocity = FVector::ZeroVector;
+        OwnerCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+    }
+    
+    OnSequenceCompleted.Broadcast();
+    UE_LOG(LogTemp, Log, TEXT("점프 시퀀스 완료."));
+}
 

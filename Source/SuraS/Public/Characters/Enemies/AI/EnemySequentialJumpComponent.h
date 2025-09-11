@@ -14,7 +14,7 @@ class SURAS_API UEnemySequentialJumpComponent : public UActorComponent
 public:
 	UEnemySequentialJumpComponent();
 	
-	void StartJumpSequence(float InJumpSpeed);
+	void StartJumpSequence();
 
 	// 시퀀스 완료 시 방송할 델리게이트
 	UPROPERTY(BlueprintAssignable)
@@ -22,15 +22,24 @@ public:
 
 	void SetPathPoints(const TArray<FVector>& InPathPoints);
 
+	UPROPERTY(EditAnywhere, Category = "Jump Settings")
+	UAnimMontage* JumpStartMontage;
+	UPROPERTY(EditAnywhere, Category = "Jump Settings")
+	UAnimMontage* JumpLoopMontage;
+	UPROPERTY(EditAnywhere, Category = "Jump Settings")
+	UAnimMontage* JumpEndMontage;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
 	// 점프 로직
-	void JumpToNextPoint();
+	void JumpAnimationSet(UAnimMontage* Montage);
 	// 시퀀스 종료 로직
 	void FinishSequence();
+
+	void JumpInitialize();
 
 	// -- 설정 변수 --
 	UPROPERTY(EditAnywhere, Category = "Jump Settings")
@@ -60,5 +69,7 @@ private:
 	float ArcHeight;        // 포물선 최고 높이
 	FVector StartPosition;    // 시작 월드 좌표
 	FVector EndPosition;      // 도착 월드 좌표
-	
+	float jumpdage;
+	UPROPERTY()
+	UAnimInstance*  EnemyAnimInstance;
 };

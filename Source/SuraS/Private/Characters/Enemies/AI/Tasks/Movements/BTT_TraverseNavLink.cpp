@@ -49,7 +49,7 @@ EBTNodeResult::Type UBTT_TraverseNavLink::ExecuteTask(UBehaviorTreeComponent& Ow
 
     
         // 이동을 시작시킵니다.
-        MovementComp->StartJumpSequence( 1500.f);
+        MovementComp->StartJumpSequence();
             
         // 즉시 종료되지 않고, 이동이 완료될 때까지 태스크를 '진행 중' 상태로 유지합니다.
         return EBTNodeResult::InProgress;

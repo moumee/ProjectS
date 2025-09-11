@@ -25,7 +25,7 @@ void AEnemyTraverseLink::OnReceiveSmartLinkReached(AActor* Agent, const FVector&
 	if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(Agent))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Traverse LINK REACHED"));
-		PathPoints.Add(Destination);
+		//PathPoints.Add(Destination);
 		WorldPathPoints.Empty();
 		for (const FVector& LocalPoint : PathPoints)
 		{
@@ -35,6 +35,7 @@ void AEnemyTraverseLink::OnReceiveSmartLinkReached(AActor* Agent, const FVector&
 			// 4. 변환된 월드 좌표를 새 배열에 추가합니다.
 			WorldPathPoints.Add(WorldPoint);
 		}
+		WorldPathPoints.Add(Destination);
 		Enemy->FindComponentByClass<UEnemySequentialJumpComponent>()->SetPathPoints(WorldPathPoints);
 		Enemy->GetAIController()->UpdateCurrentState(EEnemyStates::Traverse);
 		
