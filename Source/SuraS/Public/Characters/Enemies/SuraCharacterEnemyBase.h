@@ -16,6 +16,7 @@
 class UNiagaraComponent;
 class UACEnemyDamageSystem;
 class UWidgetComponent;
+class UMotionWarpingComponent;
 class AEnemyBaseAIController;
 class UBehaviorTree;
 class ASuraEnemyWeapon;
@@ -59,6 +60,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Niagara")
 	UNiagaraComponent* NiagaraComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MotionWarping", meta = (AllowPrivateAccess = "true"))
+	UMotionWarpingComponent* MotionWarpingComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Patrol Route", meta = (AllowPrivateAccess = "true"))
 	AEnemyPatrolRoute* PatrolRoute;
@@ -123,6 +127,9 @@ public:
 
 	// niagara comp
 	UNiagaraComponent* GetNiagaraComponent() const { return NiagaraComponent; }
+
+	// motion warp comp
+	UMotionWarpingComponent* GetMotionWarpingComponent() const { return MotionWarpingComponent; }
 
 	// other getters
 	FORCEINLINE float GetAttackDamageAmount() const { return AttackDamageAmount; }

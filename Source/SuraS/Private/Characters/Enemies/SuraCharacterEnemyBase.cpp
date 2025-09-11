@@ -4,10 +4,9 @@
 
 #include "BrainComponent.h"
 #include "NiagaraComponent.h"
-#include "SuraSProjectile.h"
+#include "MotionWarpingComponent.h"
 #include "ActorComponents/DamageComponent/ACEnemyDamageSystem.h"
 #include "ActorComponents/UISystem/ACKillLogManager.h"
-#include "ActorComponents/WeaponSystem/ProjectileType.h"
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
@@ -19,7 +18,6 @@
 
 #include "Widgets/Enemies/EnemyHealthBarWidget.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
-#include "Weapons/SuraEnemyWeapon.h"
 
 #define ECC_ENEMY ECC_GameTraceChannel5
 
@@ -51,6 +49,8 @@ ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 
 	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComp"));
 	NiagaraComponent->SetupAttachment(RootComponent);
+
+	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarping"));
 
 	EnemyType = "Base";
 
