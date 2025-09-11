@@ -6,6 +6,7 @@
 #include "InputActionValue.h"
 #include "GameFramework/Pawn.h"
 #include "Interfaces/Damageable.h"
+#include "Interfaces/PlayerInterface.h"
 #include "SuraPawnPlayer.generated.h"
 
 class UNiagaraComponent;
@@ -33,7 +34,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerHealthHalved);
 
 
 UCLASS()
-class SURAS_API ASuraPawnPlayer : public APawn, public IDamageable
+class SURAS_API ASuraPawnPlayer : public APawn, public IDamageable, public IPlayerInterface
 {
 	GENERATED_BODY()
 
@@ -88,9 +89,9 @@ public:
 
 	FOnPlayerHealthHalved OnPlayerHealthHalved;
 
-	void GravityLaunchPlayer(const FVector& Direction, float ForceAmount);
+	virtual void GravityLaunchPlayer(const FVector& Direction, float ForceAmount) override;
 
-	void JumpPadLaunchPlayer(float ForceAmount);
+	virtual void JumpPadLaunchPlayer(float ForceAmount) override;
 
 
 protected:

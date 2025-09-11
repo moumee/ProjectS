@@ -3,7 +3,10 @@
 
 #include "Characters/Enemies/Boss/SuraCharacterBossProto.h"
 
+#include "AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/Boss/SuraBossAttackArea.h"
+#include "Characters/Enemies/Boss/SuraBossStates.h"
 
 
 ASuraCharacterBossProto::ASuraCharacterBossProto()
@@ -32,6 +35,8 @@ void ASuraCharacterBossProto::BeginPlay()
 	Super::BeginPlay();
 
 	InitializeHitColorTimelines();
+
+	BlackboardComp = GetController<AAIController>()->GetBlackboardComponent();
 	
 }
 
@@ -40,16 +45,28 @@ bool ASuraCharacterBossProto::TakeDamage(const FDamageData& DamageData, AActor* 
 	switch (DamageData.SurfaceType)
 	{
 	case SURFACE_HEAD:
-		HeadHitColorTimeline->PlayFromStart();
+		{
+			HeadHitColorTimeline->PlayFromStart();
+			PlayHitMontage("Head");	
+		}
 		break;
 	case SURFACE_BODY:
-		BodyHitColorTimeline->PlayFromStart();
+		{
+			BodyHitColorTimeline->PlayFromStart();
+			PlayHitMontage("Head");	
+		}
 		break;
 	case SURFACE_LEFT_ARM:
-		LeftArmHitColorTimeline->PlayFromStart();
+		{
+			LeftArmHitColorTimeline->PlayFromStart();
+			PlayHitMontage("LeftArm");
+		}
 		break;
 	case SURFACE_RIGHT_ARM:
-		RightArmHitColorTimeline->PlayFromStart();
+		{
+			RightArmHitColorTimeline->PlayFromStart();
+			PlayHitMontage("RightArm");
+		}
 		break;
 	default:
 		break;
@@ -57,6 +74,25 @@ bool ASuraCharacterBossProto::TakeDamage(const FDamageData& DamageData, AActor* 
 	
 	
 	return Super::TakeDamage(DamageData, DamageCauser);
+}
+
+void ASuraCharacterBossProto::SetCurrentState(EBossState NewState)
+{
+	CurrentState = NewState;
+	BlackboardComp->SetValueAsEnum("CurrentState",static_cast<uint8>(NewState));
+}
+
+void ASuraCharacterBossProto::PlayHitMontage(FName SectionName)
+{
+	if (CurrentState == EBossState::Attack) return;
+	
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		if (!HitMontage) return;
+		if (AnimInstance->Montage_IsPlaying(HitMontage)) return;
+		AnimInstance->Montage_Play(HitMontage);
+		AnimInstance->Montage_JumpToSection(SectionName, HitMontage);
+	}
 }
 
 void ASuraCharacterBossProto::UpdateHeadHitColor(float Alpha)

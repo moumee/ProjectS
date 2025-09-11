@@ -6,6 +6,7 @@
 #include "BehaviorTree/BTTaskNode.h"
 #include "BTT_BossAttack.generated.h"
 
+class ASuraCharacterBossProto;
 /**
  * 
  */
@@ -16,6 +17,9 @@ class SURAS_API UBTT_BossAttack : public UBTTaskNode
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UAnimMontage> AttackMontage;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<ASuraCharacterBossProto> BossRef;
 
 	FOnMontageEnded OnMontageEndedDelegate;
 
