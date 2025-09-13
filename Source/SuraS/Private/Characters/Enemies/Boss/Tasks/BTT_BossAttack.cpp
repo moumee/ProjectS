@@ -35,7 +35,7 @@ EBTNodeResult::Type UBTT_BossAttack::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 
 void UBTT_BossAttack::OnMontageEnded(UAnimMontage* AnimMontage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp)
 {
-	if (BossRef)
+	if (BossRef && !bInterrupted && BossRef->GetCurrentState() != EBossState::Dead)
 	{
 		BossRef->SetCurrentState(EBossState::Idle);
 	}

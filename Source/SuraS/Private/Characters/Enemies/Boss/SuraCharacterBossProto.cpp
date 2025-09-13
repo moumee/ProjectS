@@ -4,10 +4,18 @@
 #include "Characters/Enemies/Boss/SuraCharacterBossProto.h"
 
 #include "AIController.h"
+#include "ActorComponents/DamageComponent/ACBossDamageSystem.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Characters/Enemies/Animations/SuraBossAnimInstanceProto.h"
+#include "Characters/Enemies/Animations/SuraBossPartAnimInstance.h"
 #include "Characters/Enemies/Boss/SuraBossAttackArea.h"
 #include "Characters/Enemies/Boss/SuraBossStates.h"
+#include "Kismet/GameplayStatics.h"
 
+#define SURFACE_HEAD SurfaceType6
+#define SURFACE_BODY SurfaceType7
+#define SURFACE_LEFT_ARM SurfaceType8
+#define SURFACE_RIGHT_ARM SurfaceType9
 
 ASuraCharacterBossProto::ASuraCharacterBossProto()
 {
@@ -17,11 +25,9 @@ ASuraCharacterBossProto::ASuraCharacterBossProto()
 	
 	LeftArmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LeftArmMesh"));
 	LeftArmMesh->SetupAttachment(GetMesh());
-	LeftArmMesh->SetLeaderPoseComponent(GetMesh());
 	
 	RightArmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RightArmMesh"));
 	RightArmMesh->SetupAttachment(GetMesh());
-	RightArmMesh->SetLeaderPoseComponent(GetMesh());
 
 	HeadHitColorTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("HeadHitColorTimeline"));
 	BodyHitColorTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("BodyHitColorTimeline"));
@@ -34,44 +40,58 @@ void ASuraCharacterBossProto::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GetDamageSystemComp()->OnBodyPartDestroyed.AddUniqueDynamic(this, &ThisClass::OnBossPartDestroyed);
+
+	GetDamageSystemComp()->OnDeath.AddUObject(this, &ThisClass::OnBossDeath);
+
 	InitializeHitColorTimelines();
 
 	BlackboardComp = GetController<AAIController>()->GetBlackboardComponent();
+
+	
+	UGameplayStatics::GetAllActorsOfClass(this, ASuraBossAttackArea::StaticClass(), AttackAreas);
 	
 }
 
 bool ASuraCharacterBossProto::TakeDamage(const FDamageData& DamageData, AActor* DamageCauser)
 {
+	if (CurrentState == EBossState::Dead) return false;
+	
 	switch (DamageData.SurfaceType)
 	{
-	case SURFACE_HEAD:
-		{
-			HeadHitColorTimeline->PlayFromStart();
-			PlayHitMontage("Head");	
-		}
-		break;
-	case SURFACE_BODY:
-		{
-			BodyHitColorTimeline->PlayFromStart();
-			PlayHitMontage("Head");	
-		}
-		break;
-	case SURFACE_LEFT_ARM:
-		{
-			LeftArmHitColorTimeline->PlayFromStart();
-			PlayHitMontage("LeftArm");
-		}
-		break;
-	case SURFACE_RIGHT_ARM:
-		{
-			RightArmHitColorTimeline->PlayFromStart();
-			PlayHitMontage("RightArm");
-		}
-		break;
-	default:
-		break;
-	} 
-	
+		case SURFACE_HEAD:
+			{
+				HeadHitColorTimeline->PlayFromStart();
+				PlayHitMontage("Head");	
+			}
+			break;
+		case SURFACE_BODY:
+			{
+				BodyHitColorTimeline->PlayFromStart();
+				PlayHitMontage("Body"); 
+			}
+			break;
+		case SURFACE_LEFT_ARM:
+			{
+				if (GetDamageSystemComp()->GetLeftArmHealth() > 0)
+				{
+					LeftArmHitColorTimeline->PlayFromStart();
+					PlayHitMontage("LeftArm");
+				}
+			}
+			break;
+		case SURFACE_RIGHT_ARM:
+			{
+				if (GetDamageSystemComp()->GetRightArmHealth() > 0)
+				{
+					RightArmHitColorTimeline->PlayFromStart();
+					PlayHitMontage("RightArm");
+				}
+			}
+			break;
+		default:
+			break;
+	}
 	
 	return Super::TakeDamage(DamageData, DamageCauser);
 }
@@ -79,12 +99,39 @@ bool ASuraCharacterBossProto::TakeDamage(const FDamageData& DamageData, AActor* 
 void ASuraCharacterBossProto::SetCurrentState(EBossState NewState)
 {
 	CurrentState = NewState;
-	BlackboardComp->SetValueAsEnum("CurrentState",static_cast<uint8>(NewState));
+	BlackboardComp->SetValueAsEnum("CurrentState", static_cast<uint8>(NewState));
+}
+
+ASuraBossAttackArea* ASuraCharacterBossProto::GetAttackAreaByTag(FName Tag)
+{
+	for (AActor* AttackArea : AttackAreas)
+	{
+		if (AttackArea->ActorHasTag(Tag))
+		{
+			if (ASuraBossAttackArea* CastedAttackArea = Cast<ASuraBossAttackArea>(AttackArea))
+			{
+				return CastedAttackArea;
+			}
+			return nullptr;
+		}
+	}
+	return nullptr;
+}
+
+void ASuraCharacterBossProto::OnArmDismemberMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (!bInterrupted && CurrentState != EBossState::Dead)
+	{
+		SetCurrentState(EBossState::Idle);
+	}
 }
 
 void ASuraCharacterBossProto::PlayHitMontage(FName SectionName)
 {
-	if (CurrentState == EBossState::Attack) return;
+	if (CurrentState == EBossState::Attack || CurrentState == EBossState::ArmDismember)
+	{
+		return;
+	}
 	
 	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 	{
@@ -93,6 +140,70 @@ void ASuraCharacterBossProto::PlayHitMontage(FName SectionName)
 		AnimInstance->Montage_Play(HitMontage);
 		AnimInstance->Montage_JumpToSection(SectionName, HitMontage);
 	}
+}
+
+void ASuraCharacterBossProto::PlayArmDismemberMontage(FName SectionName)
+{
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		if (!ArmDismemberMontage) return;
+		if (AnimInstance->Montage_IsPlaying(ArmDismemberMontage)) return;
+		AnimInstance->Montage_Play(ArmDismemberMontage);
+		AnimInstance->Montage_JumpToSection(SectionName, ArmDismemberMontage);
+		FOnMontageEnded OnMontageEnded;
+		OnMontageEnded.BindUObject(this, &ThisClass::OnArmDismemberMontageEnded);
+		AnimInstance->Montage_SetEndDelegate(OnMontageEnded, ArmDismemberMontage);
+	}
+}
+
+void ASuraCharacterBossProto::DismemberArm(USkeletalMeshComponent* PartMesh, USkeletalMeshComponent* LeaderMesh,
+                                           FName HideBoneName)
+{
+	if (!PartMesh || !LeaderMesh) return;
+	
+	if (USuraBossPartAnimInstance* PartAnimInstance = Cast<USuraBossPartAnimInstance>(PartMesh->GetAnimInstance()))
+	{
+		FPoseSnapshot LeaderPoseSnapshot;
+		LeaderMesh->SnapshotPose(LeaderPoseSnapshot);
+		PartAnimInstance->LeaderPoseSnapshot = LeaderPoseSnapshot;
+		PartAnimInstance->bIsDead = true;
+	}
+	
+	LeaderMesh->HideBoneByName(HideBoneName, PBO_Term);
+	
+	PartMesh->SetSimulatePhysics(true);
+	PartMesh->WakeAllRigidBodies();
+}
+
+void ASuraCharacterBossProto::OnBossPartDestroyed(TEnumAsByte<EPhysicalSurface> PhysicalSurface)
+{
+	switch (PhysicalSurface)
+	{
+		case SURFACE_LEFT_ARM:
+			SetCurrentState(EBossState::ArmDismember);
+			PlayArmDismemberMontage("LeftArm");
+			DismemberArm(LeftArmMesh, GetMesh(), "upperarm_l");
+			break;
+		case SURFACE_RIGHT_ARM:
+			SetCurrentState(EBossState::ArmDismember);
+			PlayArmDismemberMontage("RightArm");
+			DismemberArm(RightArmMesh, GetMesh(), "upperarm_r");
+			break;
+		default:
+			break;
+	}
+	
+}
+
+void ASuraCharacterBossProto::OnBossDeath()
+{
+	SetCurrentState(EBossState::Dead);
+	USuraBossAnimInstanceProto* AnimInstance = Cast<USuraBossAnimInstanceProto>(GetMesh()->GetAnimInstance());
+	if (!AnimInstance) return;
+
+	AnimInstance->Montage_Play(DeathMontage);
+	AnimInstance->bIsDead = true;
+	
 }
 
 void ASuraCharacterBossProto::UpdateHeadHitColor(float Alpha)

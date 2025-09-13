@@ -7,6 +7,7 @@
 #include "ANS_BossAttackArea.generated.h"
 
 
+class ASuraBossAttackArea;
 enum class EDamageType : uint8;
 class ASuraCharacterBossProto;
 
@@ -22,9 +23,17 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<ASuraCharacterBossProto> BossRef;
 
+	UPROPERTY()
+	ASuraBossAttackArea* AttackArea;
+
 	bool bHasHit = false;
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName AttackAreaTag;
+
+	
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EDamageType DamageType;
 

@@ -445,6 +445,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
 		CurrentJumpCount++;
 		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+		bIsDashing = false;
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -454,6 +455,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		bJumpPadForceRequested = false;
 		Velocity.Z = JumpPadForceAmount;
 		CurrentJumpCount++;
+		bIsDashing = false;
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -595,6 +597,7 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
 		CurrentJumpCount++;
 		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+		bIsDashing = false;
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -604,6 +607,7 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		bJumpPadForceRequested = false;
 		Velocity.Z = JumpPadForceAmount;
 		CurrentJumpCount++;
+		bIsDashing = false;
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -966,12 +970,14 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
 
 		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+		bIsDashing = false;
 	}
 
 	if (bJumpPadForceRequested)
 	{
 		bJumpPadForceRequested = false;
 		Velocity.Z = JumpPadForceAmount;
+		bIsDashing = false;
 	}
 
 	if (Input.bJumpPressed && CurrentJumpCount < MaxJumpCount)
@@ -1320,6 +1326,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
 		CurrentJumpCount++;
 		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+		bIsDashing = false;
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -1329,6 +1336,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		bJumpPadForceRequested = false;
 		Velocity.Z = JumpPadForceAmount;
 		CurrentJumpCount++;
+		bIsDashing = false;
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}

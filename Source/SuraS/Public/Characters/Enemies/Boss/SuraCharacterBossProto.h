@@ -29,17 +29,42 @@ public:
 
 	void SetCurrentState(EBossState NewState);
 
-	UPROPERTY(EditInstanceOnly, Category="Attack")
-	TObjectPtr<ASuraBossAttackArea> AttackArea;
+	EBossState GetCurrentState() const { return CurrentState; }
+
+	ASuraBossAttackArea* GetAttackAreaByTag(FName Tag);
 
 	
 protected:
 
 	UPROPERTY(EditAnywhere)
+	TObjectPtr<UPhysicsAsset> LeftArmPhysicsAsset;
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UPhysicsAsset> RightArmPhysicsAsset;
+
+	UPROPERTY(VisibleAnywhere, Category="Attack")
+	TArray<AActor*> AttackAreas;
+
+	UPROPERTY(EditAnywhere)
 	TObjectPtr<UAnimMontage> HitMontage;
 
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UAnimMontage> ArmDismemberMontage;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UAnimMontage> DeathMontage;
+
+	void OnArmDismemberMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	
 	void PlayHitMontage(FName SectionName);
+
+	void PlayArmDismemberMontage(FName SectionName);
+	
+	void DismemberArm(USkeletalMeshComponent* PartMesh, USkeletalMeshComponent* LeaderMesh, FName HideBoneName);
+
+	UFUNCTION()
+	void OnBossPartDestroyed(TEnumAsByte<EPhysicalSurface> PhysicalSurface);
+	
+	void OnBossDeath();
 	
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UBlackboardComponent> BlackboardComp;
@@ -84,6 +109,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UCurveFloat> HitColorCurve;
 
-
+	
 	
 };

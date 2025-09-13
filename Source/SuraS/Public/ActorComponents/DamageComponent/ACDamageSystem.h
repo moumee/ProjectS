@@ -19,10 +19,13 @@ class SURAS_API UACDamageSystem : public UActorComponent
 	GENERATED_BODY()
 
 protected:
+	UPROPERTY(VisibleAnywhere)
 	float Health = 100.f;
+	UPROPERTY(VisibleAnywhere)
 	float MaxHealth = 100.f;
 	bool bIsInterruptible = true;
 	bool bIsInvincible = false;
+	UPROPERTY(VisibleAnywhere)
 	bool bIsDead = false;
 
 public:	
