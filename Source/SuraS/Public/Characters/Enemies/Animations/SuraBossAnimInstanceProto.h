@@ -13,5 +13,10 @@ UCLASS()
 class SURAS_API USuraBossAnimInstanceProto : public UAnimInstance
 {
 	GENERATED_BODY()
+
+public:
+	
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsDead = false;
 	
 };
