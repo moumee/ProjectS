@@ -482,6 +482,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Crouch")
 	bool bCrouchPressed = false;
 
+	void SetIsDashing(bool bNewIsDashing);
+
+	void OnIsDashingChanged(bool bNewIsDashing);
+
 	void InitMovementData();
 
 	void AddControllerRoll(float DeltaTime, const FVector& WallRunDirection, EWallRunSide WallRunSide);

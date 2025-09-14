@@ -240,11 +240,8 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		{
 			SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
 			Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + SlideAdditionalSpeed);
-			bIsDashing = false;
-			OnDashEnd.Broadcast();
-			ElapsedTimeFromDash = 0.f;
+			SetIsDashing(false);
 			SlideResetTimer = 0.f;
-			
 			OnSlide.Broadcast();
 			SetMovementState(EMovementState::EMS_Slide);
 			return;
@@ -356,16 +353,14 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 			if (FVector::DotProduct(Input.WorldInputDir, Velocity.GetSafeNormal2D()) < 0.f)
 			{
-				bIsDashing = false;
-				OnDashEnd.Broadcast();
+				SetIsDashing(false);
 				ElapsedTimeFromDash = 0.f;
 				Velocity = FVector::ZeroVector;
 			}
 		}
 		else
 		{
-			bIsDashing = false;
-			OnDashEnd.Broadcast();
+			SetIsDashing(false);
 			ElapsedTimeFromDash = 0.f;
 			Velocity = Velocity.GetSafeNormal() * DashEndSpeed;
 		}
@@ -445,7 +440,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
 		CurrentJumpCount++;
 		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
-		bIsDashing = false;
+		SetIsDashing(false);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -455,7 +450,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		bJumpPadForceRequested = false;
 		Velocity.Z = JumpPadForceAmount;
 		CurrentJumpCount++;
-		bIsDashing = false;
+		SetIsDashing(false);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -477,15 +472,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		// If dash is available
 		if (DashGauge >= 1.f)
 		{
-			if (!bIsDashing)
-			{
-				bIsDashing = true;
-			}
-			else
-			{
-				// Reset the ongoing dash timer to renew the dash since we used the dash again.
-				ElapsedTimeFromDash = 0.f;
-			}
+			SetIsDashing(true);
 
 			bIsRunning = true; // Player will run after dash ends
 		
@@ -493,7 +480,6 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		
 			const FVector DashDirection = Input.WorldInputDir.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : Input.WorldInputDir;
 			Velocity = DashDirection * DashStartSpeed;
-			OnDash.Broadcast(MovementInputVector);
 		}
 		else
 		{
@@ -597,7 +583,7 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
 		CurrentJumpCount++;
 		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
-		bIsDashing = false;
+		SetIsDashing(false);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -607,7 +593,7 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		bJumpPadForceRequested = false;
 		Velocity.Z = JumpPadForceAmount;
 		CurrentJumpCount++;
-		bIsDashing = false;
+		SetIsDashing(false);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -628,15 +614,7 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 	{
 		if (DashGauge >= 1.f)
 		{
-			if (!bIsDashing)
-			{
-				bIsDashing = true;
-			}
-			else
-			{
-				// Reset the ongoing dash timer to renew the dash since we used the dash again.
-				ElapsedTimeFromDash = 0.f;
-			}
+			SetIsDashing(true);
 
 			bIsRunning = true; // Player will run after dash ends
 		
@@ -644,7 +622,6 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		
 			const FVector DashDirection = Input.WorldInputDir.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : Input.WorldInputDir;
 			Velocity = DashDirection * DashStartSpeed;
-			OnDash.Broadcast(MovementInputVector);
 			SetMovementState(EMovementState::EMS_Move);
 			return;
 		}
@@ -738,8 +715,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 				{
 					SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
 					Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + SlideAdditionalSpeed);
-					bIsDashing = false;
-					OnDashEnd.Broadcast();
+					SetIsDashing(false);
 					ElapsedTimeFromDash = 0.f;
 					SlideResetTimer = 0.f;
 			
@@ -816,8 +792,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		
 		if (PreviousMovementState != EMovementState::EMS_WallRun)
 		{
-			bIsDashing = false;
-			OnDashEnd.Broadcast();
+			SetIsDashing(false);
 			ElapsedTimeFromDash = 0.f;
 			OnWallRun.Broadcast();
 			SetMovementState(EMovementState::EMS_WallRun);
@@ -827,8 +802,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		{
 			if (ElapsedTimeFromSurface > WallJumpBuffer)
 			{
-				bIsDashing = false;
-				OnDashEnd.Broadcast();
+				SetIsDashing(false);
 				ElapsedTimeFromDash = 0.f;
 				OnWallRun.Broadcast();
 				SetMovementState(EMovementState::EMS_WallRun);
@@ -860,8 +834,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 
 			if (bMantleFloorHit && MantleFloorHit.IsValidBlockingHit() && MantleFloorHit.ImpactNormal.Z >= MinWalkableFloorZ)
 			{
-				bIsDashing = false;
-				OnDashEnd.Broadcast();
+				SetIsDashing(false);
 				ElapsedTimeFromDash = 0.f;
 				OnMantle.Broadcast();
 				SetMovementState(EMovementState::EMS_Mantle);
@@ -942,8 +915,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		}
 		else
 		{
-			bIsDashing = false;
-			OnDashEnd.Broadcast();
+			SetIsDashing(false);
 			ElapsedTimeFromDash = 0.f;
 			FVector HorizontalVelocity = Velocity.GetSafeNormal2D() * DashEndSpeed;
 			Velocity = FVector(HorizontalVelocity.X, HorizontalVelocity.Y, Velocity.Z);
@@ -970,14 +942,14 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
 
 		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
-		bIsDashing = false;
+		SetIsDashing(false);
 	}
 
 	if (bJumpPadForceRequested)
 	{
 		bJumpPadForceRequested = false;
 		Velocity.Z = JumpPadForceAmount;
-		bIsDashing = false;
+		SetIsDashing(false);
 	}
 
 	if (Input.bJumpPressed && CurrentJumpCount < MaxJumpCount)
@@ -1007,15 +979,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	{
 		if (DashGauge >= 1.f)
 		{
-			if (!bIsDashing)
-			{
-				bIsDashing = true;
-			}
-			else
-			{
-				// Reset the ongoing dash timer to renew the dash since we used the dash again.
-				ElapsedTimeFromDash = 0.f;
-			}
+			SetIsDashing(true);
 
 			bIsRunning = true; // Player will run after dash ends
 		
@@ -1026,8 +990,6 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			const FVector DashDirection = Input.WorldInputDir.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : Input.WorldInputDir;
 			// Commented out the Velocity.Z addition since it didn't seem smooth and user couldn't feel the second dash.
 			Velocity = DashDirection.GetSafeNormal2D() * DashStartSpeed; // + FVector(0, 0, Velocity.Z)
-		 
-			OnDash.Broadcast(MovementInputVector);
 		}
 		else
 		{
@@ -1326,7 +1288,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
 		CurrentJumpCount++;
 		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
-		bIsDashing = false;
+		SetIsDashing(false);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -1336,7 +1298,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		bJumpPadForceRequested = false;
 		Velocity.Z = JumpPadForceAmount;
 		CurrentJumpCount++;
-		bIsDashing = false;
+		SetIsDashing(false);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -1924,6 +1886,26 @@ void USuraPlayerMovementComponent::AddControllerRoll(float DeltaTime, const FVec
 	NewControlRotation.Roll = NewRoll;
 	SuraPlayerController->SetControlRotation(NewControlRotation);
 }
+
+void USuraPlayerMovementComponent::SetIsDashing(bool bNewIsDashing)
+{
+	bIsDashing = bNewIsDashing;
+	OnIsDashingChanged(bNewIsDashing);
+}
+
+void USuraPlayerMovementComponent::OnIsDashingChanged(bool bNewIsDashing)
+{
+	if (bNewIsDashing)
+	{
+		ElapsedTimeFromDash = 0.f;
+		OnDash.Broadcast(MovementInputVector);
+	}
+	else
+	{
+		OnDashEnd.Broadcast();
+	}
+}
+
 
 void USuraPlayerMovementComponent::InitMovementData()
 {
