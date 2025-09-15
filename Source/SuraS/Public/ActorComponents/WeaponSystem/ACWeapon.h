@@ -162,6 +162,11 @@ protected:
 	void FireMultiHitScan();
 #pragma endregion
 
+#pragma region AutoAim
+	void FireSingleAutoAim(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
+
+#pragma endregion
+
 public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void ZoomToggle();
@@ -338,6 +343,8 @@ protected:
 public:
 	bool PerformLineTrace(FVector StartLocation, FVector LineDirection, float MaxDistance, FVector& HitLocation);
 	bool PerformSphereTrace(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& HitLocation);
+	bool PerformSphereTrace_new(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& HitLocation);
+	bool PerformSphereTrace_Multi_ChooseOne(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& OutHitLocation, FHitResult* OutHitResult);
 
 	FVector CalculateScreenCenterWorldPositionAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const;
 

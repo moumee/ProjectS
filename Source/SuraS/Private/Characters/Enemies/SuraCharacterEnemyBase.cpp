@@ -57,6 +57,9 @@ ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 	GetCapsuleComponent()->SetCollisionProfileName("EnemyPawnOverlap");
 
 	HitColorTimeline = CreateDefaultSubobject<UTimelineComponent>("HitColorTimeline");
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel8, ECollisionResponse::ECR_Block); // <JaeHyeong>
+
 }
 
 void ASuraCharacterEnemyBase::BeginPlay()
@@ -73,6 +76,8 @@ void ASuraCharacterEnemyBase::BeginPlay()
 	}
 	
 	BindKillLogOnDeath();
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel8, ECollisionResponse::ECR_Block); // <JaeHyeong>
 }
 
 void ASuraCharacterEnemyBase::Tick(float DeltaSeconds)

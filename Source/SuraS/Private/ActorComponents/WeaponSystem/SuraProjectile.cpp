@@ -768,6 +768,147 @@ void ASuraProjectile::UpdateHitScanProjectileMovement(float DeltaTime)
 }
 #pragma endregion
 
+#pragma region AutoAim
+void ASuraProjectile::LaunchAutoAim(FVector StartLocation, FVector TraceDirection, float MaxDistance, FHitResult* FirstHitResult)
+{
+	//PerformHitScan(StartLocation, TraceDirection, 50000.f, ProjectileRadius, HitScanEndPoints); //TODO: MaxDistnace 설정해야함
+	//------------------
+	if (FirstHitResult && FirstHitResult->GetActor())
+	{
+		ApplyDamage(FirstHitResult->GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
+			EDamageType::Melee, false, FirstHitResult->BoneName, UPhysicalMaterial::DetermineSurfaceType(FirstHitResult->PhysMaterial.Get()), TraceDirection);
+
+		if (OnBodyShot.IsBound())
+		{
+			OnBodyShot.Execute();
+		}
+
+		UE_LOG(LogTemp, Error, TEXT("FirstHitResult!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"));
+	}
+
+
+	//-------------------
+
+	FVector Start = StartLocation;
+	FVector Direction = TraceDirection;
+	FVector End = StartLocation + TraceDirection * MaxDistance;
+
+	TArray<FVector> HitStaticLocations;
+
+	FCollisionObjectQueryParams ObjectQueryParams;
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_GameTraceChannel6);
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(ProjectileOwner);
+	Params.AddIgnoredComponent(Weapon->GetWeaponMesh());
+	Params.AddIgnoredComponent(ProjectileMesh);
+	Params.AddIgnoredActor(this);
+	Params.bReturnPhysicalMaterial = true;
+
+	for (int32 RicochetCount = 0; RicochetCount <= MaxRicochetCount; RicochetCount++)
+	{
+		TArray<FHitResult> TempHitResults;
+
+		bool bHit = GetWorld()->SweepMultiByObjectType(
+			TempHitResults,
+			Start,
+			End,
+			FQuat::Identity,
+			ObjectQueryParams,
+			FCollisionShape::MakeSphere(ProjectileRadius),
+			Params
+		);
+		
+		if (bDebugHitScan) { DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 10.f); }
+
+		bool bIsBlockedByWorldStatic = false;
+
+		if (bHit)
+		{
+			TArray<AActor*> OnceDamagedEnemies;
+
+			if (FirstHitResult && FirstHitResult->GetActor())
+			{
+				OnceDamagedEnemies.AddUnique(FirstHitResult->GetActor());
+			}
+			for (const FHitResult& HitResult : TempHitResults)
+			{
+				if (NumPenetratedObjects <= NumPenetrableObjects)
+				{
+					ACharacter* Enemy = Cast<ACharacter>(HitResult.GetActor());
+					if (Enemy && !OnceDamagedEnemies.Contains(Enemy))
+					{
+						OnceDamagedEnemies.AddUnique(Enemy);
+
+						if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(HitResult))
+						{
+							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
+								EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
+
+							if (OnHeadShot.IsBound())
+							{
+								OnHeadShot.Execute();
+							}
+						}
+						else
+						{
+							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
+							UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
+							if (OnBodyShot.IsBound())
+							{
+								OnBodyShot.Execute();
+							}
+						}
+
+						UpdatePenetration();
+					}
+				}
+
+				if (HitResult.GetComponent()->GetCollisionObjectType() == ECC_WorldStatic)
+				{
+					HitStaticLocations.Add(HitResult.ImpactPoint);
+
+					if (bDebugHitScan) { DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 12, FColor::Red, false, 50.f); }
+
+					Start = HitResult.ImpactPoint;
+
+					if (CheckRicochetAngle(HitResult.ImpactNormal, Direction))
+					{
+						Direction = GetReflectionAngle(HitResult.ImpactNormal, Direction);
+						Start = Start + Direction.GetSafeNormal() * (ProjectileRadius + 1.f);
+						End = Start + Direction * MaxDistance;
+						CurrentRicochetCount++;
+					}
+					else
+					{
+						RicochetCount = MaxRicochetCount + 1;
+					}
+					bIsBlockedByWorldStatic = true;
+					break;
+				}
+			}
+		}
+
+		if (!bHit || !bIsBlockedByWorldStatic)
+		{
+			HitStaticLocations.Add(End);
+			break;
+		}		
+	}
+
+	HitScanEndPoints = HitStaticLocations;
+
+
+	//---------
+
+	InitHitScanProjectileMovement();
+
+}
+#pragma endregion
+
 #pragma region Penetration
 void ASuraProjectile::UpdatePenetration() //TODO: ���� �Լ��� �߾�� �߳�?
 {
