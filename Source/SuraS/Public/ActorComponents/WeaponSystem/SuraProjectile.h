@@ -198,7 +198,7 @@ public:
 
 #pragma region AutoAim
 public:
-	void LaunchAutoAim(FVector StartLocation, FVector TraceDirection, float MaxDistance, FHitResult* FirstHitResult);
+	void LaunchAutoAim(FVector StartLocation, FVector TraceDirection, float MaxDistance, FHitResult& FirstHitResult);
 	
 
 #pragma endregion

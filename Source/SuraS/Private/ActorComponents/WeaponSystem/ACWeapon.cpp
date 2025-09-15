@@ -912,7 +912,7 @@ void AWeapon::FireSingleAutoAim(FWeaponFireData* FireData, int32 NumPenetrable, 
 
 		//TODO: 여기 Radius를 DT에서 설정 가능하도록
 		float LineTraceRadius = 400.f;
-		FHitResult* FirstHitResult = nullptr;
+		FHitResult FirstHitResult;
 		if (PerformSphereTrace_Multi_ChooseOne(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, LineTraceRadius, LineTraceHitLocation, FirstHitResult))
 		{
 			UE_LOG(LogTemp, Error, TEXT("Auto Aim Hit!!!!!!!!!!!!"));
@@ -1314,7 +1314,7 @@ bool AWeapon::PerformSphereTrace_new(FVector StartLocation, FVector TraceDirecti
 	return bHit;
 }
 
-bool AWeapon::PerformSphereTrace_Multi_ChooseOne(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& OutHitLocation, FHitResult* OutHitResult)
+bool AWeapon::PerformSphereTrace_Multi_ChooseOne(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& OutHitLocation, FHitResult& OutHitResult)
 {
 	FVector Start = StartLocation;
 	FVector End = StartLocation + TraceDirection * MaxDistance;
@@ -1351,7 +1351,7 @@ bool AWeapon::PerformSphereTrace_Multi_ChooseOne(FVector StartLocation, FVector 
 				{
 					MinDistance = DistToPlayer;
 					OutHitLocation = HitActor->GetActorLocation();
-					OutHitResult = &HitResult;
+					OutHitResult = HitResult;
 				}
 			}
 		}

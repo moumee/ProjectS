@@ -769,14 +769,14 @@ void ASuraProjectile::UpdateHitScanProjectileMovement(float DeltaTime)
 #pragma endregion
 
 #pragma region AutoAim
-void ASuraProjectile::LaunchAutoAim(FVector StartLocation, FVector TraceDirection, float MaxDistance, FHitResult* FirstHitResult)
+void ASuraProjectile::LaunchAutoAim(FVector StartLocation, FVector TraceDirection, float MaxDistance, FHitResult& FirstHitResult)
 {
 	//PerformHitScan(StartLocation, TraceDirection, 50000.f, ProjectileRadius, HitScanEndPoints); //TODO: MaxDistnace 설정해야함
 	//------------------
-	if (FirstHitResult && FirstHitResult->GetActor())
+	if (FirstHitResult.IsValidBlockingHit() && FirstHitResult.GetActor())
 	{
-		ApplyDamage(FirstHitResult->GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
-			EDamageType::Melee, false, FirstHitResult->BoneName, UPhysicalMaterial::DetermineSurfaceType(FirstHitResult->PhysMaterial.Get()), TraceDirection);
+		ApplyDamage(FirstHitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
+			EDamageType::Melee, false, FirstHitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(FirstHitResult.PhysMaterial.Get()), TraceDirection);
 
 		if (OnBodyShot.IsBound())
 		{
@@ -830,9 +830,9 @@ void ASuraProjectile::LaunchAutoAim(FVector StartLocation, FVector TraceDirectio
 		{
 			TArray<AActor*> OnceDamagedEnemies;
 
-			if (FirstHitResult && FirstHitResult->GetActor())
+			if (FirstHitResult.IsValidBlockingHit() && FirstHitResult.GetActor())
 			{
-				OnceDamagedEnemies.AddUnique(FirstHitResult->GetActor());
+				OnceDamagedEnemies.AddUnique(FirstHitResult.GetActor());
 			}
 			for (const FHitResult& HitResult : TempHitResults)
 			{
