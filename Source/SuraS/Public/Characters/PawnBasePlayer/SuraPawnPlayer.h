@@ -93,6 +93,11 @@ public:
 
 	virtual void JumpPadLaunchPlayer(float ForceAmount) override;
 
+	virtual void RequestMovementDataModification(const TArray<FPlayerMovementDataModifier>& Modifiers) override;
+
+	virtual void RequestMovementKeyHoldModification(const TArray<FPlayerKeyHoldModifier>& Modifiers) override;
+
+	virtual void RequestResetModification() override;
 
 protected:
 

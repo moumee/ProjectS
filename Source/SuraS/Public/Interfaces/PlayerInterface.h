@@ -6,6 +6,10 @@
 #include "UObject/Interface.h"
 #include "PlayerInterface.generated.h"
 
+struct FPlayerKeyHoldModifier;
+struct FPlayerMovementDataModifier;
+enum class EMovementTriggerKey : uint8;
+enum class EMovementDataType : uint8;
 // This class does not need to be modified.
 UINTERFACE()
 class UPlayerInterface : public UInterface
@@ -25,4 +29,7 @@ public:
 
 	virtual void GravityLaunchPlayer(const FVector& Direction, float ForceAmount) = 0;
 	virtual void JumpPadLaunchPlayer(float ForceAmount) = 0;
+	virtual void RequestMovementDataModification(const TArray<FPlayerMovementDataModifier>& Modifiers) = 0;
+	virtual void RequestMovementKeyHoldModification(const TArray<FPlayerKeyHoldModifier>& Modifiers) = 0;
+	virtual void RequestResetModification() = 0;
 };

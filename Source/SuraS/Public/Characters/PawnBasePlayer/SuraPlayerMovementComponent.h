@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Enumerations/EDamageType.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "Utilities/SuraPlayerMovementTrigger.h"
 #include "SuraPlayerMovementComponent.generated.h"
 
 class UCurveVector;
@@ -12,13 +13,20 @@ enum class EDamageTypeTest;
 class ASuraPlayerController;
 class ASuraPawnPlayer;
 
-
+USTRUCT(BlueprintType)
 struct FCachedInput
 {
+	GENERATED_BODY()
+	
+	UPROPERTY(VisibleAnywhere)
 	FVector WorldInputDir = FVector::ZeroVector;
+	UPROPERTY(VisibleAnywhere)
 	FVector2D MovementInput2D = FVector2D::ZeroVector;
+	UPROPERTY(VisibleAnywhere)
 	bool bJumpPressed = false;
+	UPROPERTY(VisibleAnywhere)
 	bool bShiftPressed = false;
+	UPROPERTY(VisibleAnywhere)
 	bool bCrouchHeld = false;
 };
 
@@ -139,6 +147,12 @@ public:
 	void NotifyGravityLaunchForce(const FVector& Direction, float ForceAmount);
 
 	void NotifyJumpPadLaunchForce(float ForceAmount);
+
+	void NotifyMovementDataModification(const TArray<FPlayerMovementDataModifier>& Modifiers);
+	
+	void NotifyMovementKeyHoldModification(const TArray<FPlayerKeyHoldModifier>& Modifiers);
+
+	void NotifyResetModification();
 
 	FOnMove	OnMove;
 	FOnWallRun OnWallRun;
@@ -261,6 +275,7 @@ protected:
 
 protected:
 
+	UPROPERTY(VisibleAnywhere, Category = "Input")
 	FCachedInput Input;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
@@ -460,8 +475,6 @@ protected:
 
 	FVector GravityAcceleration;
 	
-	FVector GravityDirection = FVector::DownVector;
-
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	EMovementState PreviousMovementState;
 
@@ -471,7 +484,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	FVector2D MovementInputVector = FVector2D::ZeroVector;
 
-	float MinWalkableFloorZ;
+	float MinWalkableFloorZ = 0.f;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Jump")
 	bool bJumpPressed = false;
@@ -482,11 +495,36 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Movement|Crouch")
 	bool bCrouchPressed = false;
 
+	bool bMovementDataModificationRequested = false;
+
+	bool bMovementKeyHoldModificationRequested = false;
+
+	bool bMovementKeyHoldActive = false;
+
+	bool bMovementModificationResetRequested = false;
+
+	TArray<FPlayerMovementDataModifier> MovementDataModifiers;
+	
+	TArray<FPlayerKeyHoldModifier> KeyHoldModifiers;
+	
+	TMap<EMovementDataType, float*> MovementDataTypeMap;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement Modification")
+	TMap<EMovementTriggerKey, bool> MovementTriggerKeyMap;
+
+	void InitializeMovementDataTypeMap();
+
+	void InitializeMovementTriggerKeyMap();
+
+	void ApplyMovementDataModifiers();
+	
+	void ApplyKeyHoldModifiers();
+
 	void SetIsDashing(bool bNewIsDashing);
 
 	void OnIsDashingChanged(bool bNewIsDashing);
 
-	void InitMovementData();
+	void ApplyMovementDataTable();
 
 	void AddControllerRoll(float DeltaTime, const FVector& WallRunDirection, EWallRunSide WallRunSide);
 
@@ -525,4 +563,6 @@ protected:
 	void CacheInput();
 
 	void UpdateDamageFlags();
+
+	void UpdateDependentMovementData();
 };
