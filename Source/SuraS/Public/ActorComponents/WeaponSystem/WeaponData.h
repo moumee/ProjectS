@@ -246,4 +246,9 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	bool bIsHitScan_Left = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitScan")
 	bool bIsHitScan_Right = false;
+	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AutoAim")
+	bool bIsAirborneAutoAimActive = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AutoAim")
+	float AutoAimRadius = 100.f;
 };

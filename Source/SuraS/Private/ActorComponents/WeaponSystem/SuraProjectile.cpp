@@ -38,9 +38,11 @@ ASuraProjectile::ASuraProjectile()
 	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
 	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel7);
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); //Projectile
+	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Ignore); //ClimbWall
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Ignore); //Weapon
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Ignore); //Player
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel7, ECR_Ignore); //PlayerProjectile
+	//CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // for test
 	CollisionComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 
 	CollisionComp->bReturnMaterialOnMove = true;
@@ -81,6 +83,9 @@ ASuraProjectile::ASuraProjectile()
 
 void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable, bool HitScan)
 {
+	//CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Ignore); //ClimbWall // for test
+
+
 	if (IsValid(OwnerWeapon))
 	{
 		Weapon = OwnerWeapon;

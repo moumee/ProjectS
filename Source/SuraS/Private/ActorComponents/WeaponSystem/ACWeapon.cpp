@@ -313,6 +313,10 @@ void AWeapon::LoadWeaponData()
 
 		// <IK>
 		RightHandOffset = WeaponData->RightHandOffset;
+
+		// <AutoAim>
+		bIsAirborneAutoAimActive = WeaponData->bIsAirborneAutoAimActive;
+		AutoAimRadius = WeaponData->AutoAimRadius;
 	}
 }
 
@@ -911,7 +915,7 @@ void AWeapon::FireSingleAutoAim(FWeaponFireData* FireData, int32 NumPenetrable, 
 		//----------------------------------------------
 
 		//TODO: 여기 Radius를 DT에서 설정 가능하도록
-		float LineTraceRadius = 400.f;
+		float LineTraceRadius = AutoAimRadius;
 		FHitResult FirstHitResult;
 		if (PerformSphereTrace_Multi_ChooseOne(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, LineTraceRadius, LineTraceHitLocation, FirstHitResult))
 		{
@@ -2233,7 +2237,7 @@ void AWeapon::UpdateFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int3
 	{
 		if (Character && Character->GetPlayerMovementComponent())
 		{
-			if (Character->GetPlayerMovementComponent()->GetMovementState() == EMovementState::EMS_Airborne)
+			if (bIsAirborneAutoAimActive && Character->GetPlayerMovementComponent()->GetMovementState() == EMovementState::EMS_Airborne)
 			{
 				if (bIsLeftInput)
 				{

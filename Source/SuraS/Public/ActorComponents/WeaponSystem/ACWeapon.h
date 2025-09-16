@@ -163,6 +163,10 @@ protected:
 #pragma endregion
 
 #pragma region AutoAim
+protected:
+	bool bIsAirborneAutoAimActive = true;
+	float AutoAimRadius = 100.f;
+
 	void FireSingleAutoAim(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 
 #pragma endregion
