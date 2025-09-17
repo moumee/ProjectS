@@ -1,5 +1,4 @@
 
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -14,7 +13,6 @@
 #include "SuraProjectile.generated.h"
 
 class AWeapon;
-
 class ASuraCharacterEnemyBase;
 
 class USphereComponent;

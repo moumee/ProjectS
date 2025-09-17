@@ -35,15 +35,16 @@ ASuraProjectile::ASuraProjectile()
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	//CollisionComp->InitSphereRadius(5.0f);
-	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
+	//CollisionComp->BodyInstance.SetCollisionProfileName("PlayerProjectile"); //TODO: 무슨차이지?
+	CollisionComp->SetCollisionProfileName("PlayerProjectile");
 	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel7);
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); //Projectile
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Ignore); //ClimbWall
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Ignore); //Weapon
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Ignore); //Player
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel7, ECR_Ignore); //PlayerProjectile
-	//CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // for test
 	CollisionComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	CollisionComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);
 
 	CollisionComp->bReturnMaterialOnMove = true;
 
@@ -73,6 +74,8 @@ ASuraProjectile::ASuraProjectile()
 	//ProjectileMesh->SetCollisionObjectType(ECC_GameTraceChannel1);
 	ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	ProjectileMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+	ProjectileMesh->SetCollisionObjectType(ECC_GameTraceChannel7);
+	ProjectileMesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);
 
 	ProjectileMesh->SetCastShadow(false);
 
@@ -83,9 +86,6 @@ ASuraProjectile::ASuraProjectile()
 
 void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable, bool HitScan)
 {
-	//CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Ignore); //ClimbWall // for test
-
-
 	if (IsValid(OwnerWeapon))
 	{
 		Weapon = OwnerWeapon;
@@ -326,6 +326,15 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 				SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 				SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+				if (!bShouldUpdateTrailEffect)
+				{
+					if (TrailEffectComponent)
+					{
+						TrailEffectComponent->Deactivate();
+						TrailEffectComponent->DestroyComponent();
+						TrailEffectComponent = nullptr;
+					}
+				}
 
 				PlaySoundAtLocationByMaterial(UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()), Hit.ImpactPoint);
 
@@ -377,11 +386,11 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 		}
 		else
 		{
-			// Only add impulse and destroy projectile if we hit a physics
-			if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
-			{
-				OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
-			}
+			//// Only add impulse and destroy projectile if we hit a physics
+			//if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
+			//{
+			//	OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
+			//}
 
 			SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 			SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
@@ -496,24 +505,11 @@ void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Roc
 		{
 			UE_LOG(LogTemp, Error, TEXT("Spawn Trail Effect!!!"));
 
-
 			TrailEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 				GetWorld(),
 				TrailEffect,
 				Weapon->GetWeaponMesh()->GetSocketLocation(FName(TEXT("Muzzle"))),
 				FRotator(0.f, 0.f, 0.f), FVector(1), true, true, ENCPoolMethod::AutoRelease);
-
-
-			//TODO: effect�� weapon muzzle�� ������ų��, �߻������� �������� Input���� ���������ϰ� �ϱ�
-			
-			//TrailEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
-			//	TrailEffect,
-			//	Weapon,
-			//	FName(TEXT("Muzzle")),
-			//	FVector(0, 0, 0),
-			//	FRotator(0, 0, 0),
-			//	EAttachLocation::KeepRelativeOffset,
-			//	true);
 
 			bShouldUpdateTrailEffect = true;
 
