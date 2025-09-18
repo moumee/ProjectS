@@ -48,4 +48,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	ASuraPawnPlayer* GetAttackTarget();
+
+	bool IsTraversing = false;
 };

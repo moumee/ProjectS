@@ -35,7 +35,8 @@ protected:
 
 private:
 	// 점프 로직
-	void JumpAnimationSet(UAnimMontage* Montage);
+	UFUNCTION()
+	void JumpAnimationEndSet(UAnimMontage* AnimMontage, bool bInterrupted);
 	// 시퀀스 종료 로직
 	void FinishSequence();
 
@@ -65,11 +66,18 @@ private:
 	// -- 상태 변수 --
 	bool bIsMoving;
 	float ElapsedTime;      // 이동 경과 시간
-	float TotalDuration;    // 총 이동 시간
-	float ArcHeight;        // 포물선 최고 높이
+	UPROPERTY(EditAnywhere, Category = "Jump Settings")
+	float TotalDuration = 0.7f;;    // 총 이동 시간
+	UPROPERTY(EditAnywhere, Category = "Jump Settings")
+	float ArcHeight = 100;;        // 포물선 최고 높이
+	float jumpdage;
 	FVector StartPosition;    // 시작 월드 좌표
 	FVector EndPosition;      // 도착 월드 좌표
-	float jumpdage;
+	bool bIsWating = false;
+	UPROPERTY(EditAnywhere, Category = "Jump Settings")
+	float WaitingTime = 0.2f;;  
 	UPROPERTY()
-	UAnimInstance*  EnemyAnimInstance;
+	UAnimInstance* EnemyAnimInstance;
+	UPROPERTY(EditAnywhere, Category = "Jump Settings")
+	float AnimSpeed = 2.f;
 };
