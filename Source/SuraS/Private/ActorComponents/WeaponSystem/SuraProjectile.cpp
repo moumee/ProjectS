@@ -35,13 +35,16 @@ ASuraProjectile::ASuraProjectile()
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	//CollisionComp->InitSphereRadius(5.0f);
-	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
+	//CollisionComp->BodyInstance.SetCollisionProfileName("PlayerProjectile"); //TODO: 무슨차이지?
+	CollisionComp->SetCollisionProfileName("PlayerProjectile");
 	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel7);
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); //Projectile
+	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Ignore); //ClimbWall
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Ignore); //Weapon
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Ignore); //Player
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel7, ECR_Ignore); //PlayerProjectile
 	CollisionComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	CollisionComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);
 
 	CollisionComp->bReturnMaterialOnMove = true;
 
@@ -71,6 +74,8 @@ ASuraProjectile::ASuraProjectile()
 	//ProjectileMesh->SetCollisionObjectType(ECC_GameTraceChannel1);
 	ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	ProjectileMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+	ProjectileMesh->SetCollisionObjectType(ECC_GameTraceChannel7);
+	ProjectileMesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);
 
 	ProjectileMesh->SetCastShadow(false);
 
@@ -321,6 +326,15 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 				SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 				SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+				if (!bShouldUpdateTrailEffect)
+				{
+					if (TrailEffectComponent)
+					{
+						TrailEffectComponent->Deactivate();
+						TrailEffectComponent->DestroyComponent();
+						TrailEffectComponent = nullptr;
+					}
+				}
 
 				PlaySoundAtLocationByMaterial(UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()), Hit.ImpactPoint);
 
@@ -372,11 +386,11 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 		}
 		else
 		{
-			// Only add impulse and destroy projectile if we hit a physics
-			if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
-			{
-				OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
-			}
+			//// Only add impulse and destroy projectile if we hit a physics
+			//if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
+			//{
+			//	OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
+			//}
 
 			SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 			SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
@@ -491,24 +505,11 @@ void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Roc
 		{
 			UE_LOG(LogTemp, Error, TEXT("Spawn Trail Effect!!!"));
 
-
 			TrailEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 				GetWorld(),
 				TrailEffect,
 				Weapon->GetWeaponMesh()->GetSocketLocation(FName(TEXT("Muzzle"))),
 				FRotator(0.f, 0.f, 0.f), FVector(1), true, true, ENCPoolMethod::AutoRelease);
-
-
-			//TODO: effect�� weapon muzzle�� ������ų��, �߻������� �������� Input���� ���������ϰ� �ϱ�
-			
-			//TrailEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
-			//	TrailEffect,
-			//	Weapon,
-			//	FName(TEXT("Muzzle")),
-			//	FVector(0, 0, 0),
-			//	FRotator(0, 0, 0),
-			//	EAttachLocation::KeepRelativeOffset,
-			//	true);
 
 			bShouldUpdateTrailEffect = true;
 
@@ -765,6 +766,147 @@ void ASuraProjectile::UpdateHitScanProjectileMovement(float DeltaTime)
 			DistanceMoved = 0;
 		}
 	}
+}
+#pragma endregion
+
+#pragma region AutoAim
+void ASuraProjectile::LaunchAutoAim(FVector StartLocation, FVector TraceDirection, float MaxDistance, FHitResult& FirstHitResult)
+{
+	//PerformHitScan(StartLocation, TraceDirection, 50000.f, ProjectileRadius, HitScanEndPoints); //TODO: MaxDistnace 설정해야함
+	//------------------
+	if (FirstHitResult.IsValidBlockingHit() && FirstHitResult.GetActor())
+	{
+		ApplyDamage(FirstHitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
+			EDamageType::Melee, false, FirstHitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(FirstHitResult.PhysMaterial.Get()), TraceDirection);
+
+		if (OnBodyShot.IsBound())
+		{
+			OnBodyShot.Execute();
+		}
+
+		UE_LOG(LogTemp, Error, TEXT("FirstHitResult!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"));
+	}
+
+
+	//-------------------
+
+	FVector Start = StartLocation;
+	FVector Direction = TraceDirection;
+	FVector End = StartLocation + TraceDirection * MaxDistance;
+
+	TArray<FVector> HitStaticLocations;
+
+	FCollisionObjectQueryParams ObjectQueryParams;
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_GameTraceChannel6);
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(ProjectileOwner);
+	Params.AddIgnoredComponent(Weapon->GetWeaponMesh());
+	Params.AddIgnoredComponent(ProjectileMesh);
+	Params.AddIgnoredActor(this);
+	Params.bReturnPhysicalMaterial = true;
+
+	for (int32 RicochetCount = 0; RicochetCount <= MaxRicochetCount; RicochetCount++)
+	{
+		TArray<FHitResult> TempHitResults;
+
+		bool bHit = GetWorld()->SweepMultiByObjectType(
+			TempHitResults,
+			Start,
+			End,
+			FQuat::Identity,
+			ObjectQueryParams,
+			FCollisionShape::MakeSphere(ProjectileRadius),
+			Params
+		);
+		
+		if (bDebugHitScan) { DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 10.f); }
+
+		bool bIsBlockedByWorldStatic = false;
+
+		if (bHit)
+		{
+			TArray<AActor*> OnceDamagedEnemies;
+
+			if (FirstHitResult.IsValidBlockingHit() && FirstHitResult.GetActor())
+			{
+				OnceDamagedEnemies.AddUnique(FirstHitResult.GetActor());
+			}
+			for (const FHitResult& HitResult : TempHitResults)
+			{
+				if (NumPenetratedObjects <= NumPenetrableObjects)
+				{
+					ACharacter* Enemy = Cast<ACharacter>(HitResult.GetActor());
+					if (Enemy && !OnceDamagedEnemies.Contains(Enemy))
+					{
+						OnceDamagedEnemies.AddUnique(Enemy);
+
+						if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(HitResult))
+						{
+							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
+								EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
+
+							if (OnHeadShot.IsBound())
+							{
+								OnHeadShot.Execute();
+							}
+						}
+						else
+						{
+							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
+							UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
+							if (OnBodyShot.IsBound())
+							{
+								OnBodyShot.Execute();
+							}
+						}
+
+						UpdatePenetration();
+					}
+				}
+
+				if (HitResult.GetComponent()->GetCollisionObjectType() == ECC_WorldStatic)
+				{
+					HitStaticLocations.Add(HitResult.ImpactPoint);
+
+					if (bDebugHitScan) { DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 12, FColor::Red, false, 50.f); }
+
+					Start = HitResult.ImpactPoint;
+
+					if (CheckRicochetAngle(HitResult.ImpactNormal, Direction))
+					{
+						Direction = GetReflectionAngle(HitResult.ImpactNormal, Direction);
+						Start = Start + Direction.GetSafeNormal() * (ProjectileRadius + 1.f);
+						End = Start + Direction * MaxDistance;
+						CurrentRicochetCount++;
+					}
+					else
+					{
+						RicochetCount = MaxRicochetCount + 1;
+					}
+					bIsBlockedByWorldStatic = true;
+					break;
+				}
+			}
+		}
+
+		if (!bHit || !bIsBlockedByWorldStatic)
+		{
+			HitStaticLocations.Add(End);
+			break;
+		}		
+	}
+
+	HitScanEndPoints = HitStaticLocations;
+
+
+	//---------
+
+	InitHitScanProjectileMovement();
+
 }
 #pragma endregion
 

@@ -1,6 +1,7 @@
 
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
+#include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 
 #include "ActorComponents/WeaponSystem/SuraProjectile.h"
 #include "ActorComponents/WeaponSystem/WeaponInterface.h"
@@ -30,6 +31,8 @@
 #include "Animation/AnimInstance.h"
 #include "Engine/LocalPlayer.h" //TODO: ������ ���� header���� �˾ƺ�����
 #include "Engine/World.h"
+#include "Engine/StreamableManager.h"
+#include "Engine/AssetManager.h"
 
 #include "Camera/CameraComponent.h"
 #include "Camera/PlayerCameraManager.h"
@@ -167,9 +170,74 @@ void AWeapon::InitializeUI()
 
 void AWeapon::LoadWeaponData()
 {
-	WeaponData = WeaponDataTableHandle.GetRow<FWeaponData>("");
+	//FWeaponData* WeaponData = WeaponDataTableHandle.GetRow<FWeaponData>("");
+
+	if (WeaponDataTable.IsNull() || WeaponRowName.IsNone()) return;
+
+	UDataTable* Table = WeaponDataTable.LoadSynchronous();
+	if (!Table) return;
+
+	FWeaponData* WeaponData = Table->FindRow<FWeaponData>(WeaponRowName, TEXT("LoadWeaponData"));
+
 	if (WeaponData)
 	{
+		FWeaponData* WeaponAsset = WeaponData;
+
+		TArray<FSoftObjectPath> Paths;
+		auto Push = [&Paths](const FSoftObjectPath& P) {if (P.IsValid()) Paths.Add(P); };
+
+		// <Classes>
+		Push(WeaponData->LeftProjectileClass.ToSoftObjectPath());
+		Push(WeaponData->RightProjectileClass.ToSoftObjectPath());
+		Push(WeaponData->SkillProjectileClass.ToSoftObjectPath());
+
+		// <Effects>
+		Push(WeaponData->FireEffect_L.ToSoftObjectPath());
+		Push(WeaponData->FireEffect_R.ToSoftObjectPath());
+		Push(WeaponData->FireEffect_Skill.ToSoftObjectPath());
+		Push(WeaponData->ChargeEffect.ToSoftObjectPath());
+
+		// <Sound>
+		Push(WeaponData->FireSound_L.ToSoftObjectPath());
+		Push(WeaponData->FireSound_R.ToSoftObjectPath());
+		Push(WeaponData->FireSound_Skill.ToSoftObjectPath());
+		Push(WeaponData->ChargeSound.ToSoftObjectPath());
+		Push(WeaponData->TargetSearchLoopSound.ToSoftObjectPath());
+		Push(WeaponData->TargetLockedSound.ToSoftObjectPath());
+
+		if (Paths.Num() == 0) return;
+
+		auto& SM = UAssetManager::GetStreamableManager();
+		TWeakObjectPtr<AWeapon> WeakThis(this);
+
+		WeaponAssetsHandle = SM.RequestAsyncLoad(
+			Paths,
+			FStreamableDelegate::CreateWeakLambda(this, [this, WeakThis, WeaponAsset]() {
+					if (!WeakThis.IsValid()) return;
+
+					// 로드 완료 and 하드 포인터로 캐시
+					FireData_L.ProjectileClass = WeaponAsset->LeftProjectileClass.Get();
+					FireData_R.ProjectileClass = WeaponAsset->RightProjectileClass.Get();
+					FireData_Skill.ProjectileClass = WeaponAsset->SkillProjectileClass.Get();
+
+					FireData_L.MuzzleFireEffect = WeaponAsset->FireEffect_L.Get();
+					FireData_R.MuzzleFireEffect = WeaponAsset->FireEffect_R.Get();
+					FireData_Skill.MuzzleFireEffect = WeaponAsset->FireEffect_Skill.Get();
+					ChargeEffect = WeaponAsset->ChargeEffect.Get();
+
+					FireData_L.FireSound = WeaponAsset->FireSound_L.Get();
+					FireData_R.FireSound = WeaponAsset->FireSound_R.Get();
+					FireData_Skill.FireSound = WeaponAsset->FireSound_Skill.Get();
+
+					ChargeSound = WeaponAsset->ChargeSound.Get();
+					TargetSearchLoopSound = WeaponAsset->TargetSearchLoopSound.Get();
+					TargetLockedSound = WeaponAsset->TargetLockedSound.Get();
+
+					WeaponAssetsHandle.Reset();
+				}));
+
+		//-------------------------------------
+
 		// <WeaponSocket>
 		WeaponSocketName = WeaponData->WeaponSocket;
 
@@ -183,29 +251,29 @@ void AWeapon::LoadWeaponData()
 		SkillAction = WeaponData->SkillAction;
 
 		// <Projectile Class>
-		FireData_L.ProjectileClass = WeaponData->LeftProjectileClass;
-		FireData_R.ProjectileClass = WeaponData->RightProjectileClass;
-		FireData_Skill.ProjectileClass = WeaponData->SkillProjectileClass;
+		//FireData_L.ProjectileClass = WeaponData->LeftProjectileClass;
+		//FireData_R.ProjectileClass = WeaponData->RightProjectileClass;
+		//FireData_Skill.ProjectileClass = WeaponData->SkillProjectileClass;
 
-		// <Sound>
-		ChargeSound = WeaponData->ChargeSound;
+		//// <Sound>
+		//ChargeSound = WeaponData->ChargeSound;
 
-		FireData_L.FireSound = WeaponData->FireSound_L;
-		FireData_R.FireSound = WeaponData->FireSound_R;
-		FireData_Skill.FireSound = WeaponData->FireSound_Skill;
+		//FireData_L.FireSound = WeaponData->FireSound_L;
+		//FireData_R.FireSound = WeaponData->FireSound_R;
+		//FireData_Skill.FireSound = WeaponData->FireSound_Skill;
 
-		TargetSearchLoopSound = WeaponData->TargetSearchLoopSound;
-		TargetLockedSound = WeaponData->TargetLockedSound;
+		//TargetSearchLoopSound = WeaponData->TargetSearchLoopSound;
+		//TargetLockedSound = WeaponData->TargetLockedSound;
 
 		// <Effect>
-		ChargeEffect = WeaponData->ChargeEffect;
+		//ChargeEffect = WeaponData->ChargeEffect;
 		ChargeEffectLocation = WeaponData->ChargeEffectLocation;
 		ChargeEffectRotation = WeaponData->ChargeEffectRotation;
 		ChargeEffenctScale = WeaponData->ChargeEffenctScale;
 
-		FireData_L.MuzzleFireEffect = WeaponData->FireEffect_L;
-		FireData_R.MuzzleFireEffect = WeaponData->FireEffect_R;
-		FireData_Skill.MuzzleFireEffect = WeaponData->FireEffect_Skill;
+		//FireData_L.MuzzleFireEffect = WeaponData->FireEffect_L;
+		//FireData_R.MuzzleFireEffect = WeaponData->FireEffect_R;
+		//FireData_Skill.MuzzleFireEffect = WeaponData->FireEffect_Skill;
 
 		// <Reload>
 		ReloadingTime = WeaponData->ReloadingTime;
@@ -312,6 +380,10 @@ void AWeapon::LoadWeaponData()
 
 		// <IK>
 		RightHandOffset = WeaponData->RightHandOffset;
+
+		// <AutoAim>
+		bIsAirborneAutoAimActive = WeaponData->bIsAirborneAutoAimActive;
+		AutoAimRadius = WeaponData->AutoAimRadius;
 	}
 }
 
@@ -725,8 +797,7 @@ void AWeapon::FireMultiProjectile(FWeaponFireData* FireData, int32 NumPenetrable
 
 void AWeapon::FireSingleHitScan(FWeaponFireData* FireData, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
 {
-	UE_LOG(LogTemp, Error, TEXT("FireSingleHitScan!"));
-
+	//UE_LOG(LogTemp, Warning, TEXT("FireSingleHitScan!"));
 	if (CurrentState != UnequippedState)
 	{
 		if (Character == nullptr || Character->GetController() == nullptr)
@@ -791,7 +862,7 @@ void AWeapon::FireSingleHitScan(FWeaponFireData* FireData, int32 NumPenetrable, 
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("LineTrace Failed!!!!!!!!!!!!!"));
+			//UE_LOG(LogTemp, Error, TEXT("LineTrace Failed!!!!!!!!!!!!!"));
 			TargetLocationOfProjectile = LineTraceHitLocation;
 		}
 
@@ -846,6 +917,141 @@ void AWeapon::FireSingleHitScan(FWeaponFireData* FireData, int32 NumPenetrable, 
 		AddArmRecoil(&FireData->Armrecoil);
 	}
 }
+
+#pragma region AutoAim
+void AWeapon::FireSingleAutoAim(FWeaponFireData* FireData, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
+{
+	UE_LOG(LogTemp, Error, TEXT("FireSingAutoAim!"));
+
+	if (CurrentState != UnequippedState)
+	{
+		if (Character == nullptr || Character->GetController() == nullptr)
+		{
+			return;
+		}
+
+		if (FireData->AmmoCost > 0)
+		{
+			if (FireData->bAllowFireWithInsufficientAmmo)
+			{
+				if (LeftAmmoInCurrentMag <= 0)
+				{
+					return;
+				}
+			}
+			else
+			{
+				if (!HasAmmoInCurrentMag(FireData->AmmoCost))
+				{
+					return;
+				}
+			}
+			ConsumeAmmo(FireData->AmmoCost, FireData->bAllowFireWithInsufficientAmmo);
+		}
+
+		FVector LineTraceStartLocation = Character->GetCameraComponent()->GetComponentLocation();
+		FVector LineTraceDirection = Character->GetCameraComponent()->GetForwardVector();
+
+		//if (bIsZoomIn)
+		//{
+		//	if (ZoomSpread.bEnableProjectileSpread)
+		//	{
+		//		LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
+		//	}
+
+		//	if (ZoomSpread.bEnableProjectileSpread || ZoomSpread.bEnableAimUISpread)
+		//	{
+		//		AddSpreadValue(&ZoomSpread);
+		//	}
+		//}
+		//else
+		//{
+		//	if (DefaultSpread.bEnableProjectileSpread)
+		//	{
+		//		LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
+		//	}
+
+		//	if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
+		//	{
+		//		AddSpreadValue(&DefaultSpread);
+		//	}
+		//}
+
+		FVector LineTraceHitLocation;
+
+		//----------------------------------------------
+
+		//TODO: 여기 Radius를 DT에서 설정 가능하도록
+		float LineTraceRadius = AutoAimRadius;
+		FHitResult FirstHitResult;
+		if (PerformSphereTrace_Multi_ChooseOne(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, LineTraceRadius, LineTraceHitLocation, FirstHitResult))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Auto Aim Hit!!!!!!!!!!!!"));
+
+			DrawDebugSphere(GetWorld(), LineTraceHitLocation, 40.f, 12, FColor::Red, false, 1.f);
+
+			TargetLocationOfProjectile = LineTraceHitLocation;
+		}
+		else
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("LineTrace Failed!!!!!!!!!!!!!"));
+			TargetLocationOfProjectile = LineTraceHitLocation;
+		}
+
+		// Try and fire a projectile
+		if (FireData != nullptr && FireData->ProjectileClass != nullptr)
+		{
+			UWorld* const World = GetWorld();
+			if (World != nullptr)
+			{
+				const FVector SpawnLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
+				const FRotator SpawnRotation = (TargetLocationOfProjectile - SpawnLocation).Rotation();
+
+				//Set Spawn Collision Handling Override
+				FActorSpawnParameters ActorSpawnParams;
+				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+				// Spawn the projectile at the muzzle
+				ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(FireData->ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+				Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable, true);
+				SetUpAimUIDelegateBinding(Projectile);
+
+				Projectile->SetHomingTarget(false, nullptr);
+
+				//Projectile->LaunchProjectile(); //TODO: not to use Collision Check
+				//Projectile->LaunchHitScan(LineTraceStartLocation, LineTraceDirection);
+				Projectile->LaunchAutoAim(LineTraceStartLocation, LineTraceDirection, 50000.f, FirstHitResult);
+
+				SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, SpawnRotation);
+			}
+		}
+
+		// Try and play the sound if specified
+		if (FireData != nullptr && FireData->FireSound != nullptr)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, FireData->FireSound, Character->GetActorLocation());
+		}
+
+		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
+
+		// <Recoil & CamShake>
+		if (bIsZoomIn)
+		{
+			AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+			ApplyCameraShake(ZoomCameraShakeClass);
+		}
+		else
+		{
+			AddRecoilValue(&FireData->Recoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+			ApplyCameraShake(FireData->CamShake);
+		}
+
+		// <ArmRecoil Animation>
+		AddArmRecoil(&FireData->Armrecoil);
+	}
+
+}
+#pragma endregion
 
 void AWeapon::ZoomToggle()
 {
@@ -1120,6 +1326,112 @@ bool AWeapon::PerformSphereTrace(FVector StartLocation, FVector TraceDirection, 
 	else
 	{
 		HitLocation = End;
+	}
+
+	return bHit;
+}
+
+bool AWeapon::PerformSphereTrace_new(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& HitLocation)
+{
+	FVector Start = StartLocation;
+	FVector End = StartLocation + TraceDirection * MaxDistance;
+
+	FHitResult HitResult;
+
+	// TODO: Trace Query로 처리하고 싶은데, PawnBaseEnemy에서 Collision Respone 처리해줘야 해서 일단은 ObjectQuery로 처리함. // 아니다 그냥 추가한다음에 말씀드리자
+	//FCollisionObjectQueryParams ObjectQueryParams;
+	//ObjectQueryParams.AddObjectTypesToQuery(ECC_Visibility);
+	//ObjectQueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
+	//ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
+	//ObjectQueryParams.AddObjectTypesToQuery(ECC_EngineTraceChannel6);
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredComponent(WeaponMesh);
+	Params.AddIgnoredComponent(Character->GetArmMesh());
+	Params.AddIgnoredComponent(Character->GetHandsMesh());
+	Params.AddIgnoredActor(this);
+	Params.AddIgnoredActor(Character);
+
+	bool bHit = GetWorld()->SweepSingleByChannel(HitResult, Start, End, FQuat::Identity, ECC_GameTraceChannel8, FCollisionShape::MakeSphere(SphereRadius), Params);
+
+	//bool bHit = GetWorld()->SweepSingleByObjectType(
+	//	HitResult,
+	//	Start,
+	//	End,
+	//	FQuat::Identity,
+	//	ObjectQueryParams,
+	//	FCollisionShape::MakeSphere(SphereRadius),
+	//	Params
+	//);
+
+	if (bHit)
+	{
+		FVector TraceEndedPoint = Start + TraceDirection * FVector::Distance(Start, End) * HitResult.Time;
+		HitLocation = TraceEndedPoint;
+		UE_LOG(LogTemp, Error, TEXT("Hit actor: %s"), *GetNameSafe(HitResult.GetActor()));
+
+		//---------------
+		AActor* HitActor = HitResult.GetActor();
+		if (HitActor)
+		{
+			HitLocation = HitActor->GetActorLocation();
+		}
+	}
+	else
+	{
+		HitLocation = End;
+	}
+
+	return bHit;
+}
+
+bool AWeapon::PerformSphereTrace_Multi_ChooseOne(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& OutHitLocation, FHitResult& OutHitResult)
+{
+	FVector Start = StartLocation;
+	FVector End = StartLocation + TraceDirection * MaxDistance;
+
+	TArray<FHitResult> HitResults;
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredComponent(WeaponMesh);
+	Params.AddIgnoredComponent(Character->GetArmMesh());
+	Params.AddIgnoredComponent(Character->GetHandsMesh());
+	Params.AddIgnoredActor(this);
+	Params.AddIgnoredActor(Character);
+
+	//bool bHit = GetWorld()->SweepSingleByChannel(HitResult, Start, End, FQuat::Identity, ECC_GameTraceChannel8, FCollisionShape::MakeSphere(SphereRadius), Params);
+
+	bool bHit = GetWorld()->SweepMultiByChannel(HitResults, Start, End, FQuat::Identity, ECC_GameTraceChannel8, FCollisionShape::MakeSphere(SphereRadius), Params);
+
+	if (bHit)
+	{
+		//FVector TraceEndedPoint = Start + TraceDirection * FVector::Distance(Start, End) * HitResult.Time;
+		//HitLocation = TraceEndedPoint;
+		//UE_LOG(LogTemp, Error, TEXT("Hit actor: %s"), *GetNameSafe(HitResult.GetActor()));
+
+		//---------------
+		float MinDistance = MaxDistance;
+
+		for (FHitResult HitResult : HitResults)
+		{
+			AActor* HitActor = HitResult.GetActor();
+			if (HitActor)
+			{
+				float DistToPlayer = FVector::Distance(Character->GetActorLocation(), HitActor->GetActorLocation());
+				if (DistToPlayer <= MinDistance)
+				{
+					MinDistance = DistToPlayer;
+					OutHitLocation = HitActor->GetActorLocation();
+					OutHitResult = HitResult;
+				}
+			}
+		}
+
+		DrawDebugSphere(GetWorld(), OutHitLocation, 40.f, 12, FColor::Blue, false, 1.f);
+	}
+	else
+	{
+		OutHitLocation = End;
 	}
 
 	return bHit;
@@ -1487,19 +1799,24 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 			if (CharacterAnimInstance != nullptr && AM_Reload_Character != nullptr)
 			{
 				float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopEnd")));
+				float PumpRealodingTotalTime = SectionTime;
+				if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
+				{
+					PumpRealodingTotalTime += AM_Reload_Weapon->GetPlayLength();
+				}
 
-				UE_LOG(LogTemp, Error, TEXT("SectionTime_End: %f"), SectionTime);
-				UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_End: %f"), PumpReloadingTime_End);
+				//UE_LOG(LogTemp, Error, TEXT("SectionTime_End: %f"), SectionTime);
+				//UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_End: %f"), PumpReloadingTime_End);
 
-				CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_End);
+				CharacterAnimInstance->Montage_Play(AM_Reload_Character, PumpRealodingTotalTime / PumpReloadingTime_End);
 				CharacterAnimInstance->Montage_JumpToSection(FName("LoopEnd"), AM_Reload_Character);
 			}
 
-			if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
-			{
-				WeaponMesh->GetAnimInstance()->Montage_Play(AM_Reload_Weapon, AM_Reload_Weapon->GetPlayLength() / PumpReloadingTime_End);
-				WeaponMesh->GetAnimInstance()->Montage_JumpToSection(FName("LoopEnd"), AM_Reload_Weapon);
-			}
+			//if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
+			//{
+			//	WeaponMesh->GetAnimInstance()->Montage_Play(AM_Reload_Weapon, AM_Reload_Weapon->GetPlayLength() / PumpReloadingTime_End);
+			//	WeaponMesh->GetAnimInstance()->Montage_JumpToSection(FName("LoopEnd"), AM_Reload_Weapon);
+			//}
 
 			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_End, false);
 		}
@@ -1509,8 +1826,8 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 			{
 				float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopStart")));
 
-				UE_LOG(LogTemp, Error, TEXT("SectionTime_Loop: %f"), SectionTime);
-				UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_Loop: %f"), PumpReloadingTime_Loop);
+				//UE_LOG(LogTemp, Error, TEXT("SectionTime_Loop: %f"), SectionTime);
+				//UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_Loop: %f"), PumpReloadingTime_Loop);
 
 				CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_Loop);
 				CharacterAnimInstance->Montage_JumpToSection(FName("LoopStart"), AM_Reload_Character);
@@ -1781,7 +2098,31 @@ void AWeapon::AutoReload()
 void AWeapon::ReloadingEnd()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
-	ReloadAmmo(true);
+
+	if (LeftAmmoInCurrentMag < MaxAmmoPerMag)
+	{
+		ReloadAmmo(true);
+	}
+	else
+	{
+		if (bActivePumpActionReload)
+		{
+
+			UE_LOG(LogTemp, Error, TEXT("Pump Action Reload Sliding!!!!"));
+			if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
+			{
+				float PumpReloadingTotalTime = AM_Reload_Weapon->GetPlayLength();
+				if (CharacterAnimInstance != nullptr && AM_Reload_Character != nullptr)
+				{
+					float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopEnd")));
+					PumpReloadingTotalTime += SectionTime;
+				}
+				WeaponMesh->GetAnimInstance()->Montage_Play(AM_Reload_Weapon, PumpReloadingTotalTime / PumpReloadingTime_End);
+
+				UE_LOG(LogTemp, Warning, TEXT("Pump Action Reload Sliding!!!!"));
+			}
+		}
+	}
 }
 #pragma endregion
 
@@ -1896,7 +2237,7 @@ void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, int32 N
 			else { FireSingleProjectile(&FireData_L, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, false); }
 		}
 		else
-		{ 
+		{
 			FireMultiProjectile(&FireData_L, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, AdditionalPellet, false);
 		}
 	}
@@ -1930,7 +2271,7 @@ void AWeapon::StartBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 Nu
 		{
 			if (bSingleProjectile)
 			{
-				if (bIsHitScan_L) { FireSingleHitScan(&FireData_L, NumPenetrable,  AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw); }
+				if (bIsHitScan_L) { FireSingleHitScan(&FireData_L, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw); }
 				else { FireSingleProjectile(&FireData_L, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false); }
 			}
 			else
@@ -1990,15 +2331,45 @@ void AWeapon::UpdateFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int3
 {
 	if (bSingleProjectile)
 	{
-		if (bIsLeftInput)
+		if (Character && Character->GetPlayerMovementComponent())
 		{
-			if (bIsHitScan_L) { FireSingleHitScan(&FireData_L, NumPenetrable); }
-			else { FireSingleProjectile(&FireData_L, NumPenetrable); }
+			if (bIsAirborneAutoAimActive && Character->GetPlayerMovementComponent()->GetMovementState() == EMovementState::EMS_Airborne)
+			{
+				if (bIsLeftInput)
+				{
+					FireSingleAutoAim(&FireData_L, NumPenetrable);
+				}
+				else
+				{
+					FireSingleAutoAim(&FireData_R, NumPenetrable);
+				}
+			}
+			else
+			{
+				if (bIsLeftInput)
+				{
+					if (bIsHitScan_L) { FireSingleHitScan(&FireData_L, NumPenetrable); }
+					else { FireSingleProjectile(&FireData_L, NumPenetrable); }
+				}
+				else
+				{
+					if (bIsHitScan_R) { FireSingleHitScan(&FireData_R, NumPenetrable); }
+					else { FireSingleProjectile(&FireData_R, NumPenetrable); }
+				}
+			}
 		}
 		else
 		{
-			if (bIsHitScan_R) { FireSingleHitScan(&FireData_R, NumPenetrable); }
-			else { FireSingleProjectile(&FireData_R, NumPenetrable); }
+			if (bIsLeftInput)
+			{
+				if (bIsHitScan_L) { FireSingleHitScan(&FireData_L, NumPenetrable); }
+				else { FireSingleProjectile(&FireData_L, NumPenetrable); }
+			}
+			else
+			{
+				if (bIsHitScan_R) { FireSingleHitScan(&FireData_R, NumPenetrable); }
+				else { FireSingleProjectile(&FireData_R, NumPenetrable); }
+			}
 		}
 	}
 	else

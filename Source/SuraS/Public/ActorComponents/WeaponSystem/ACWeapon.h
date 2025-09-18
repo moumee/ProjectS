@@ -48,6 +48,7 @@ class UTargetingSkillWidget;
 
 class UInputAction;
 struct FInputBindingHandle;
+struct FStreamableHandle;
 
 //suhyeon
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRocketLauncherSkillActivated);
@@ -62,16 +63,25 @@ class SURAS_API AWeapon : public AActor, public IWeaponInterface
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon)
-	FDataTableRowHandle WeaponDataTableHandle;
-	FWeaponData* WeaponData;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon)
+	//FDataTableRowHandle WeaponDataTableHandle;
+	////FWeaponData* WeaponData;
+
+	UPROPERTY(EditAnywhere, Category = Weapon)
+	TSoftObjectPtr<UDataTable> WeaponDataTable;
+	UPROPERTY(EditAnywhere, Category = Weapon)
+	FName WeaponRowName;
+
+
+	TSharedPtr<FStreamableHandle> WeaponAssetsHandle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponMesh")
 	USkeletalMeshComponent* WeaponMesh;
 	UFUNCTION()
 	USkeletalMeshComponent* GetWeaponMesh() { return WeaponMesh; }
 	UFUNCTION()
-	UTexture2D* GetWeaponImage() {return WeaponData->WeaponImage;}
+	//UTexture2D* GetWeaponImage() {return WeaponDataTableHandle.GetRow<FWeaponData>("")->WeaponImage;}
+	UTexture2D* GetWeaponImage() { return WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(WeaponRowName, TEXT("LoadWeaponData"))->WeaponImage; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	EWeaponAction LeftMouseAction;
@@ -160,6 +170,15 @@ protected:
 
 	void FireSingleHitScan(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 	void FireMultiHitScan();
+#pragma endregion
+
+#pragma region AutoAim
+protected:
+	bool bIsAirborneAutoAimActive = true;
+	float AutoAimRadius = 100.f;
+
+	void FireSingleAutoAim(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
+
 #pragma endregion
 
 public:
@@ -338,6 +357,8 @@ protected:
 public:
 	bool PerformLineTrace(FVector StartLocation, FVector LineDirection, float MaxDistance, FVector& HitLocation);
 	bool PerformSphereTrace(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& HitLocation);
+	bool PerformSphereTrace_new(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& HitLocation);
+	bool PerformSphereTrace_Multi_ChooseOne(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& OutHitLocation, FHitResult& OutHitResult);
 
 	FVector CalculateScreenCenterWorldPositionAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const;
 

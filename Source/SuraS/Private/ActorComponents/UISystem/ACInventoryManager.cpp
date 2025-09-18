@@ -142,14 +142,16 @@ void UACInventoryManager::OnConfirmWeaponEquip()
 
 void UACInventoryManager::UpdateWeaponAttributeUI(AWeapon* Weapon)
 {
-	if (!Weapon || !Weapon->WeaponData || !Weapon->WeaponData->WeaponImage || !InventoryWidget)
+	//if (!Weapon || !Weapon->WeaponDataTableHandle.GetRow<FWeaponData>("") || !Weapon->WeaponDataTableHandle.GetRow<FWeaponData>("")->WeaponImage || !InventoryWidget)
+	if (!Weapon || !Weapon->WeaponDataTable || !Weapon->WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(Weapon->WeaponRowName, TEXT("LoadWeaponData"))->WeaponImage || !InventoryWidget)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Weapon 또는 WeaponData 또는 WeaponImage 또는 InventoryWidget이 nullptr입니다."));
 		return;
 	}
 
 	// 무기 이미지 표시
-	InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(Weapon->WeaponData->WeaponImage);
+	//InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(Weapon->WeaponDataTableHandle.GetRow<FWeaponData>("")->WeaponImage);
+	InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(Weapon->WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(Weapon->WeaponRowName, TEXT("LoadWeaponData"))->WeaponImage);
 	InventoryWidget->CurrentWeaponImage->SetOpacity(1.0f);
 
 	// Magazine
@@ -173,9 +175,9 @@ void UACInventoryManager::UpdateWeaponAttributeUI(AWeapon* Weapon)
 	
 	// ProjectileData 접근 (CDO + 강제 Load)
 	const ASuraProjectile* ProjectileCDO = nullptr;
-	if (Weapon->WeaponData->LeftProjectileClass)
+	if (Weapon->WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(Weapon->WeaponRowName, TEXT("LoadWeaponData"))->LeftProjectileClass)
 	{
-		ProjectileCDO = Weapon->WeaponData->LeftProjectileClass->GetDefaultObject<ASuraProjectile>();
+		ProjectileCDO = Weapon->WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(Weapon->WeaponRowName, TEXT("LoadWeaponData"))->LeftProjectileClass->GetDefaultObject<ASuraProjectile>();
 		if (ProjectileCDO)
 		{
 			const_cast<ASuraProjectile*>(ProjectileCDO)->LoadProjectileData();
@@ -204,7 +206,7 @@ void UACInventoryManager::UpdateWeaponAttributeUI(AWeapon* Weapon)
 	}
 
 	// FireRate
-	const float FireRate = Weapon->WeaponData->FullAutoShotFireRate;
+	const float FireRate = Weapon->WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(Weapon->WeaponRowName, TEXT("LoadWeaponData"))->FullAutoShotFireRate;
 	if (InventoryWidget->CurrentWeaponFireRate)
 	{
 		InventoryWidget->CurrentWeaponFireRate->SetPercent(FireRate);
@@ -215,7 +217,7 @@ void UACInventoryManager::UpdateWeaponAttributeUI(AWeapon* Weapon)
 	}
 
 	// HandleSpeed (Recoil)
-	const float Recoil = Weapon->WeaponData->DefaultRecoil.RecoilAmountPitch;
+	const float Recoil = Weapon->WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(Weapon->WeaponRowName, TEXT("LoadWeaponData"))->DefaultRecoil.RecoilAmountPitch;
 	if (InventoryWidget->CurrentWeaponRecoil)
 	{
 		InventoryWidget->CurrentWeaponRecoil->SetPercent(Recoil / 10.f);
@@ -298,14 +300,14 @@ void UACInventoryManager::ChangeWeaponByName(const FString& WeaponNameStr)
     for (int32 i = 0; i < Inventory.Num(); ++i)
     {
         AWeapon* Weapon = Inventory[i];
-        if (!Weapon || !Weapon->WeaponData)
+        if (!Weapon || !Weapon->WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(Weapon->WeaponRowName, TEXT("LoadWeaponData")))
         {
             GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow,
                 FString::Printf(TEXT("[%d] 무기 또는 WeaponData가 nullptr"), i));
             continue;
         }
 
-        FString WeaponEnumStr = UEnum::GetDisplayValueAsText(Weapon->WeaponData->WeaponName).ToString();
+        FString WeaponEnumStr = UEnum::GetDisplayValueAsText(Weapon->WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(Weapon->WeaponRowName, TEXT("LoadWeaponData"))->WeaponName).ToString();
 
         // GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White,
         //     FString::Printf(TEXT("[%d] 무기 이름: %s"), i, *WeaponEnumStr));
@@ -351,6 +353,32 @@ void UACInventoryManager::CreateAndAddWeaponFromData(FWeaponData* WeaponData)
 	UWorld* World = GetWorld();
 	if (!World) return;
 
+	// <JaeHyeong> 
+	//----------------------
+	// 0) WeaponClass soft ref -> 실제 UClass 동기 로드
+	TSubclassOf<AWeapon> ResolvedWeaponClass = nullptr;
+
+	if (WeaponData->WeaponClass.IsNull())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("WeaponClass is null in row for %s"), *UEnum::GetValueAsString(WeaponData->WeaponName));
+		return;
+	}
+	else if (UClass* AlreadyLoaded = WeaponData->WeaponClass.Get())
+	{
+		ResolvedWeaponClass = AlreadyLoaded; // 이미 메모리에 있으면 그대로 사용
+	}
+	else
+	{
+		// 디스크에서 바로 로드(블로킹). 히치가 우려되면 아래 B안 사용.
+		ResolvedWeaponClass = WeaponData->WeaponClass.LoadSynchronous();
+		if (!ResolvedWeaponClass)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to LoadSynchronous WeaponClass for %s"), *UEnum::GetValueAsString(WeaponData->WeaponName));
+			return;
+		}
+	}
+	//-----------------
+
 	// 📌 1. SuraWeaponPickUp 임시 생성
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = GetOwner();
@@ -360,7 +388,7 @@ void UACInventoryManager::CreateAndAddWeaponFromData(FWeaponData* WeaponData)
 	if (!TempPickUp) return;
 
 	// 📌 2. 무기 정보 입력
-	TempPickUp->SetWeaponClass(WeaponData->WeaponClass); // Setter 만들어야 함
+	TempPickUp->SetWeaponClass(ResolvedWeaponClass); // Setter 만들어야 함
 	TempPickUp->SetWeaponName(WeaponData->WeaponName);   // Setter 만들어야 함
 
 	// 📌 3. 무기 생성

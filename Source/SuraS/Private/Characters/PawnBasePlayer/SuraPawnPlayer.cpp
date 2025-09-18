@@ -61,6 +61,7 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	// <WeaponSystem>
 	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
 	CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel7, ECR_Ignore);
+	CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel8, ECR_Ignore);
 	ArmMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	// FPSceneCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent")); //<JaeHyeong>
 	// FPSceneCapture->SetupAttachment(Camera);
