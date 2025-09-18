@@ -25,6 +25,9 @@ void AEnemyTraverseLink::OnReceiveSmartLinkReached(AActor* Agent, const FVector&
 	if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(Agent))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Traverse LINK REACHED"));
+
+		if (Enemy->GetAIController()->GetCurrentState() == EEnemyStates::Pursue || Enemy->GetAIController()->GetCurrentState() == EEnemyStates::Attacking)
+			Enemy->GetAIController()->EndPursueState();
 		//PathPoints.Add(Destination);
 		WorldPathPoints.Empty();
 		for (const FVector& LocalPoint : PathPoints)

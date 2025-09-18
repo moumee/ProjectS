@@ -74,5 +74,6 @@ void UBTT_TraverseNavLink::OnTraversalCompleted(UBehaviorTreeComponent* Behavior
     {
         // Latent Task를 성공으로 종료시킵니다.
         FinishLatentTask(*BehaviorTreeComponent, EBTNodeResult::Succeeded);
+        
     }
 }
