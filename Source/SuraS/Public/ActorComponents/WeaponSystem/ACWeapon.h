@@ -405,7 +405,7 @@ protected:
 	UPROPERTY(EditAnywhere)
 	int32 MaxAmmoPerMag = 20.f;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 LeftAmmoInCurrentMag;
 
 	FTimerHandle ReloadingTimer;
