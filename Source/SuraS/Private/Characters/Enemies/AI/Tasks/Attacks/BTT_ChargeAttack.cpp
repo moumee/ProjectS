@@ -71,7 +71,7 @@ void UBTT_ChargeAttack::OnAttackReadyEnded()
 	CachedCharger->GetCharacterMovement()->bRequestedMoveUseAcceleration = false;
 
 	CachedCharger->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay); // to face only the front
-	// CachedCharger->ActivateDashEffect();
+	CachedCharger->ActivateDashEffect();
 	
 	UAnimMontage* AttackAnimation = CachedCharger->ChooseRandomAttackMontage();
 
