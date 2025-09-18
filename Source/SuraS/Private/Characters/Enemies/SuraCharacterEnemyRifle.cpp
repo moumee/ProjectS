@@ -36,7 +36,7 @@ void ASuraCharacterEnemyRifle::SpawnProjectile()
 	
 	if (ProjectileClass)
 	{
-		const FVector SpawnLocation = GetMesh()->GetSocketLocation(FName(TEXT("Hole")));
+		const FVector SpawnLocation = GetMesh()->GetSocketLocation(FName(TEXT("Muzzle")));
 
 		FActorSpawnParameters ActorSpawnParams;
 		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -46,7 +46,7 @@ void ASuraCharacterEnemyRifle::SpawnProjectile()
 		Projectile->SetOwner(this);
 
 		FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-		Projectile->AttachToComponent(GetMesh(), AttachmentRules, FName("Hole"));
+		Projectile->AttachToComponent(GetMesh(), AttachmentRules, FName("Muzzle"));
 	}
 }
 

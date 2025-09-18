@@ -71,7 +71,7 @@ void UBTT_ChargeAttack::OnAttackReadyEnded()
 	CachedCharger->GetCharacterMovement()->bRequestedMoveUseAcceleration = false;
 
 	CachedCharger->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay); // to face only the front
-	CachedCharger->ActivateDashEffect();
+	// CachedCharger->ActivateDashEffect();
 	
 	UAnimMontage* AttackAnimation = CachedCharger->ChooseRandomAttackMontage();
 
@@ -144,6 +144,7 @@ void UBTT_ChargeAttack::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 			
 				Player->TakeDamage(DamageData, CachedCharger);
 
+				CachedCharger->ActivateCollisionEffect();
 				bWasAttackSuccessful = true;
 			}
 		}
@@ -152,6 +153,7 @@ void UBTT_ChargeAttack::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 			// UE_LOG(LogTemp, Error, TEXT("Charger Hit with %s"), *ActorHitComp->GetCollisionProfileName().ToString());
 			
 			bIsAttacking = false;
+			CachedCharger->ActivateCollisionEffect();
 			
 			UAnimMontage* StunAnimation = CachedCharger->GetStunAnimation();
 

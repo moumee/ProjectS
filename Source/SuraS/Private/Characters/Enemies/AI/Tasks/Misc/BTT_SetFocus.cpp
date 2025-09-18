@@ -13,16 +13,14 @@ UBTT_SetFocus::UBTT_SetFocus(FObjectInitializer const& ObjectInitializer)
 
 EBTNodeResult::Type UBTT_SetFocus::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	if (AEnemyBaseAIController* const EnemyController = Cast<AEnemyBaseAIController>(OwnerComp.GetAIOwner()))
+	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
 	{
-		if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
-		{
-			EnemyController->SetFocus(Player, EAIFocusPriority::Gameplay);
+		OwnerComp.GetAIOwner()->SetFocus(Player, EAIFocusPriority::Gameplay);
 
-			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-			return EBTNodeResult::Succeeded;
-		}
+		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+		return EBTNodeResult::Succeeded;
 	}
 
+	UE_LOG(LogTemp, Error, TEXT("no enemy controller"));
 	return EBTNodeResult::Failed;
 }

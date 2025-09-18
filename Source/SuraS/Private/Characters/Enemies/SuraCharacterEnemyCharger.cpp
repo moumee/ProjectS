@@ -44,6 +44,25 @@ void ASuraCharacterEnemyCharger::ActivateDashEffect() const
 			DashEffect.Get(),
 			GetMesh(),
 			NAME_None,
+			FVector(0, -1000, 100),
+			FRotator(0, 90, 0),
+			EAttachLocation::KeepRelativeOffset,
+			true, false, ENCPoolMethod::AutoRelease);
+
+		GetNiagaraComponent()->Activate();
+	}
+}
+
+void ASuraCharacterEnemyCharger::ActivateCollisionEffect() const
+{
+	if (CollisionEffect)
+	{
+		GetNiagaraComponent()->Deactivate();
+		
+		UNiagaraFunctionLibrary::SpawnSystemAttached(
+			CollisionEffect.Get(),
+			GetMesh(),
+			NAME_None,
 			FVector::ZeroVector,
 			FRotator::ZeroRotator,
 			EAttachLocation::KeepRelativeOffset,
@@ -52,6 +71,7 @@ void ASuraCharacterEnemyCharger::ActivateDashEffect() const
 		GetNiagaraComponent()->Activate();
 	}
 }
+
 
 UAnimMontage* ASuraCharacterEnemyCharger::ChooseRandomRoarMontage()
 {
