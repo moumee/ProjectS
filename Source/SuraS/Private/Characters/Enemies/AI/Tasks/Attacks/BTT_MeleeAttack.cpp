@@ -11,7 +11,6 @@
 UBTT_MeleeAttack::UBTT_MeleeAttack(FObjectInitializer const& ObjectInitializer)
 {
 	NodeName = "Melee Attack";
-
 	bCreateNodeInstance = true;
 }
 

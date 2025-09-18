@@ -34,17 +34,40 @@ void ASuraCharacterEnemyCharger::Attack(ASuraPawnPlayer* Player)
 	Super::Attack(Player);
 }
 
-void ASuraCharacterEnemyCharger::ActivateDashEffect() const
+void ASuraCharacterEnemyCharger::ActivateDashEffect()
 {
 	if (DashEffect)
 	{
+		UE_LOG(LogTemp, Error, TEXT("dash wind should work"));
+		
 		GetNiagaraComponent()->Deactivate();
 		
-		UNiagaraFunctionLibrary::SpawnSystemAttached(
+		NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
 			DashEffect.Get(),
 			GetMesh(),
 			NAME_None,
-			FVector::ZeroVector,
+			FVector(0, -1000, 100),
+			FRotator(0, 90, 0),
+			EAttachLocation::KeepRelativeOffset,
+			true, false, ENCPoolMethod::AutoRelease);
+
+		GetNiagaraComponent()->Activate();
+	}
+}
+
+void ASuraCharacterEnemyCharger::ActivateCollisionEffect()
+{
+	if (CollisionEffect)
+	{
+		UE_LOG(LogTemp, Error, TEXT("collision fire should work"));
+		
+		GetNiagaraComponent()->Deactivate();
+		
+		NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			CollisionEffect.Get(),
+			GetMesh(),
+			NAME_None,
+			FVector(0, 0, 100),
 			FRotator::ZeroRotator,
 			EAttachLocation::KeepRelativeOffset,
 			true, false, ENCPoolMethod::AutoRelease);
@@ -52,6 +75,7 @@ void ASuraCharacterEnemyCharger::ActivateDashEffect() const
 		GetNiagaraComponent()->Activate();
 	}
 }
+
 
 UAnimMontage* ASuraCharacterEnemyCharger::ChooseRandomRoarMontage()
 {

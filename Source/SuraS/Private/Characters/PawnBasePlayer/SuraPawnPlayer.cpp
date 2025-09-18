@@ -210,7 +210,6 @@ void ASuraPawnPlayer::CheckPlayerHealth()
 
 void ASuraPawnPlayer::HandleMoveInput(const FInputActionValue& Value)
 {
-
 	if (!MovementComponent)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Player movement component is not valid!"));
@@ -315,6 +314,21 @@ void ASuraPawnPlayer::GravityLaunchPlayer(const FVector& Direction, float ForceA
 void ASuraPawnPlayer::JumpPadLaunchPlayer(float ForceAmount)
 {
 	GetPlayerMovementComponent()->NotifyJumpPadLaunchForce(ForceAmount);
+}
+
+void ASuraPawnPlayer::RequestMovementDataModification(const TArray<FPlayerMovementDataModifier>& Modifiers)
+{
+	GetPlayerMovementComponent()->NotifyMovementDataModification(Modifiers);
+}
+
+void ASuraPawnPlayer::RequestMovementKeyHoldModification(const TArray<FPlayerKeyHoldModifier>& Modifiers)
+{
+	GetPlayerMovementComponent()->NotifyMovementKeyHoldModification(Modifiers);
+}
+
+void ASuraPawnPlayer::RequestResetModification()
+{
+	GetPlayerMovementComponent()->NotifyResetModification();
 }
 
 void ASuraPawnPlayer::OnDamaged()

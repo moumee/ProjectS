@@ -9,6 +9,6 @@ enum class EBossState : uint8
 {
 	Idle UMETA(DisplayName = "Idle"),
 	Attack UMETA(DisplayName = "Attack"),
-	Hit UMETA(DisplayName = "Hit"),
+	ArmDismember UMETA(DisplayName = "Arm Dismember"),
 	Dead UMETA(DisplayName = "Dead"),
 };

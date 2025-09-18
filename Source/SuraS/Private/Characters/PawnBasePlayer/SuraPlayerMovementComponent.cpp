@@ -17,8 +17,6 @@
 #include "Characters/PawnBasePlayer/SuraPlayerController.h"
 #include "Components/CapsuleComponent.h"
 #include "Curves/CurveVector.h"
-#include "Engine/AssetManager.h"
-#include "Engine/StreamableManager.h"
 
 #define WALL_TRACE_CHANNEL ECC_GameTraceChannel2
 #define ENEMY_TRACE_CHANNEL ECC_GameTraceChannel6
@@ -27,8 +25,6 @@ USuraPlayerMovementComponent::USuraPlayerMovementComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.TickGroup = TG_DuringPhysics;
-
-	MinWalkableFloorZ = FMath::Cos(FMath::DegreesToRadians(MaxWalkableFloorAngle));
 }
 
 void USuraPlayerMovementComponent::BeginPlay()
@@ -41,17 +37,20 @@ void USuraPlayerMovementComponent::BeginPlay()
 		SuraPlayerController = Cast<ASuraPlayerController>(PawnOwner->GetController());
 	}
 
-	InitMovementData();
+	// Init trigger box related maps
+	InitializeMovementDataTypeMap();
+	InitializeMovementTriggerKeyMap();
 
-	GravityAcceleration = GravityDirection * GravityScale;
+	// Initialize player movement data values.
+	ApplyMovementDataTable();
+	
+	
 	
 	// Start as airborne state
 	CurrentMovementState = EMovementState::EMS_Airborne;
 	OnAirborne.Broadcast();
 	
-	PrimaryJumpZVelocity = FMath::Sqrt(2 * GravityScale * PrimaryJumpHeight);
-	DoubleJumpZVelocity = FMath::Sqrt(2 * GravityScale * DoubleJumpHeight);
-	WallJumpZVelocity = FMath::Sqrt(2 * GravityScale * WallJumpHeight);
+	
 
 }
 
@@ -72,6 +71,24 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 	{
 		return;
 	}
+
+	// If requested reset and remove all movement modifications.
+	if (bMovementModificationResetRequested)
+	{
+		bMovementModificationResetRequested = false;
+		
+		bMovementKeyHoldActive = false;
+		for (auto& Elem : MovementTriggerKeyMap)
+		{
+			Elem.Value = false;
+		}
+		MovementDataModifiers.Empty();
+		
+		ApplyMovementDataTable();
+	}
+
+	ApplyMovementDataModifiers();
+	ApplyKeyHoldModifiers();
 	
 	UpdateDashGauge(DeltaTime);
 
@@ -231,7 +248,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		return;
 	}
 
-	if (bCrouchPressed)
+	if (Input.bCrouchHeld)
 	{
 
 		bIsCrouching = true;
@@ -240,11 +257,8 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		{
 			SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
 			Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + SlideAdditionalSpeed);
-			bIsDashing = false;
-			OnDashEnd.Broadcast();
-			ElapsedTimeFromDash = 0.f;
+			SetIsDashing(false);
 			SlideResetTimer = 0.f;
-			
 			OnSlide.Broadcast();
 			SetMovementState(EMovementState::EMS_Slide);
 			return;
@@ -303,7 +317,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 	if (!bIsDashing)
 	{
-		if (MovementInputVector.IsNearlyZero())
+		if (Input.MovementInput2D.IsNearlyZero())
 		{
 			if (Velocity.Size() > 0.f)
 			{
@@ -332,7 +346,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 					}
 				}
 				
-				if (MovementInputVector.Y <= 0)
+				if (Input.MovementInput2D.Y <= 0)
 				{
 					bIsRunning = false;
 				}
@@ -356,16 +370,14 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 
 			if (FVector::DotProduct(Input.WorldInputDir, Velocity.GetSafeNormal2D()) < 0.f)
 			{
-				bIsDashing = false;
-				OnDashEnd.Broadcast();
+				SetIsDashing(false);
 				ElapsedTimeFromDash = 0.f;
 				Velocity = FVector::ZeroVector;
 			}
 		}
 		else
 		{
-			bIsDashing = false;
-			OnDashEnd.Broadcast();
+			SetIsDashing(false);
 			ElapsedTimeFromDash = 0.f;
 			Velocity = Velocity.GetSafeNormal() * DashEndSpeed;
 		}
@@ -445,6 +457,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
 		CurrentJumpCount++;
 		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+		SetIsDashing(false);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -454,6 +467,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		bJumpPadForceRequested = false;
 		Velocity.Z = JumpPadForceAmount;
 		CurrentJumpCount++;
+		SetIsDashing(false);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -475,15 +489,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		// If dash is available
 		if (DashGauge >= 1.f)
 		{
-			if (!bIsDashing)
-			{
-				bIsDashing = true;
-			}
-			else
-			{
-				// Reset the ongoing dash timer to renew the dash since we used the dash again.
-				ElapsedTimeFromDash = 0.f;
-			}
+			SetIsDashing(true);
 
 			bIsRunning = true; // Player will run after dash ends
 		
@@ -491,7 +497,6 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		
 			const FVector DashDirection = Input.WorldInputDir.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : Input.WorldInputDir;
 			Velocity = DashDirection * DashStartSpeed;
-			OnDash.Broadcast(MovementInputVector);
 		}
 		else
 		{
@@ -519,7 +524,7 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		return;
 	}
 
-	if (!bCrouchPressed)
+	if (!Input.bCrouchHeld)
 	{
 		bIsCrouching = false;
 		OnMove.Broadcast();
@@ -595,6 +600,7 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
 		CurrentJumpCount++;
 		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+		SetIsDashing(false);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -604,6 +610,7 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		bJumpPadForceRequested = false;
 		Velocity.Z = JumpPadForceAmount;
 		CurrentJumpCount++;
+		SetIsDashing(false);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -624,15 +631,7 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 	{
 		if (DashGauge >= 1.f)
 		{
-			if (!bIsDashing)
-			{
-				bIsDashing = true;
-			}
-			else
-			{
-				// Reset the ongoing dash timer to renew the dash since we used the dash again.
-				ElapsedTimeFromDash = 0.f;
-			}
+			SetIsDashing(true);
 
 			bIsRunning = true; // Player will run after dash ends
 		
@@ -640,7 +639,6 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 		
 			const FVector DashDirection = Input.WorldInputDir.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : Input.WorldInputDir;
 			Velocity = DashDirection * DashStartSpeed;
-			OnDash.Broadcast(MovementInputVector);
 			SetMovementState(EMovementState::EMS_Move);
 			return;
 		}
@@ -677,7 +675,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		return;
 	}
 
-	if (bCrouchPressed)
+	if (Input.bCrouchHeld)
 	{
 	
 		bIsCrouching = true;
@@ -730,12 +728,11 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			
 			if (GroundHit.ImpactNormal.Z >= MinWalkableFloorZ)
 			{
-				if (bCrouchPressed && Velocity.Size2D() >= RunSpeed)
+				if (Input.bCrouchHeld && Velocity.Size2D() >= RunSpeed)
 				{
 					SlideStartDirection = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal();
 					Velocity = bHasRecentlySlid ? SlideStartDirection * Velocity.Size() : SlideStartDirection * (Velocity.Size() + SlideAdditionalSpeed);
-					bIsDashing = false;
-					OnDashEnd.Broadcast();
+					SetIsDashing(false);
 					ElapsedTimeFromDash = 0.f;
 					SlideResetTimer = 0.f;
 			
@@ -744,7 +741,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 					return;
 				}
 				
-				if (bIsDashing || bCrouchPressed || !MovementInputVector.IsZero())
+				if (bIsDashing || Input.bCrouchHeld || !Input.MovementInput2D.IsZero())
 				{
 					Velocity = FVector::VectorPlaneProject(Velocity, GroundHit.ImpactNormal).GetSafeNormal() * (bIsRunning ? RunSpeed : WalkSpeed);
 				}
@@ -812,8 +809,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		
 		if (PreviousMovementState != EMovementState::EMS_WallRun)
 		{
-			bIsDashing = false;
-			OnDashEnd.Broadcast();
+			SetIsDashing(false);
 			ElapsedTimeFromDash = 0.f;
 			OnWallRun.Broadcast();
 			SetMovementState(EMovementState::EMS_WallRun);
@@ -823,8 +819,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		{
 			if (ElapsedTimeFromSurface > WallJumpBuffer)
 			{
-				bIsDashing = false;
-				OnDashEnd.Broadcast();
+				SetIsDashing(false);
 				ElapsedTimeFromDash = 0.f;
 				OnWallRun.Broadcast();
 				SetMovementState(EMovementState::EMS_WallRun);
@@ -843,7 +838,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 
 	if (bMantleWallHit && MantleWallHit.bBlockingHit && MantleWallHit.ImpactNormal.Z < MinWalkableFloorZ && MantleWallHit.ImpactPoint.Z > -0.3f)
 	{
-		if (MovementInputVector.Y > 0.f && !bCrouchPressed)
+		if (Input.MovementInput2D.Y > 0.f && !Input.bCrouchHeld)
 		{
 			// TODO: Make Mantle Available Height as a variable 50.f
 			FVector FloorHitStart = FVector(MantleWallHit.ImpactPoint.X, MantleWallHit.ImpactPoint.Y, SuraPawnPlayer->GetActorLocation().Z + 200.f);
@@ -856,8 +851,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 
 			if (bMantleFloorHit && MantleFloorHit.IsValidBlockingHit() && MantleFloorHit.ImpactNormal.Z >= MinWalkableFloorZ)
 			{
-				bIsDashing = false;
-				OnDashEnd.Broadcast();
+				SetIsDashing(false);
 				ElapsedTimeFromDash = 0.f;
 				OnMantle.Broadcast();
 				SetMovementState(EMovementState::EMS_Mantle);
@@ -938,8 +932,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		}
 		else
 		{
-			bIsDashing = false;
-			OnDashEnd.Broadcast();
+			SetIsDashing(false);
 			ElapsedTimeFromDash = 0.f;
 			FVector HorizontalVelocity = Velocity.GetSafeNormal2D() * DashEndSpeed;
 			Velocity = FVector(HorizontalVelocity.X, HorizontalVelocity.Y, Velocity.Z);
@@ -966,12 +959,14 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
 
 		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+		SetIsDashing(false);
 	}
 
 	if (bJumpPadForceRequested)
 	{
 		bJumpPadForceRequested = false;
 		Velocity.Z = JumpPadForceAmount;
+		SetIsDashing(false);
 	}
 
 	if (Input.bJumpPressed && CurrentJumpCount < MaxJumpCount)
@@ -1001,15 +996,7 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 	{
 		if (DashGauge >= 1.f)
 		{
-			if (!bIsDashing)
-			{
-				bIsDashing = true;
-			}
-			else
-			{
-				// Reset the ongoing dash timer to renew the dash since we used the dash again.
-				ElapsedTimeFromDash = 0.f;
-			}
+			SetIsDashing(true);
 
 			bIsRunning = true; // Player will run after dash ends
 		
@@ -1020,8 +1007,6 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			const FVector DashDirection = Input.WorldInputDir.IsNearlyZero() ? PawnOwner->GetActorForwardVector() : Input.WorldInputDir;
 			// Commented out the Velocity.Z addition since it didn't seem smooth and user couldn't feel the second dash.
 			Velocity = DashDirection.GetSafeNormal2D() * DashStartSpeed; // + FVector(0, 0, Velocity.Z)
-		 
-			OnDash.Broadcast(MovementInputVector);
 		}
 		else
 		{
@@ -1306,7 +1291,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		}
 	}
 
-	if (!bIsDeceleratingZ && MovementInputVector.Y != 0.f)
+	if (!bIsDeceleratingZ && Input.MovementInput2D.Y != 0.f)
 	{
 		Velocity.Z = 0.f;
 	}
@@ -1320,6 +1305,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		Velocity.Z = GravityLaunchForceDir.Z * GravityLaunchForceAmount;
 		CurrentJumpCount++;
 		JumpPadInitialVelocityXY = FVector(Velocity.X, Velocity.Y, 0.f);
+		SetIsDashing(false);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -1329,6 +1315,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		bJumpPadForceRequested = false;
 		Velocity.Z = JumpPadForceAmount;
 		CurrentJumpCount++;
+		SetIsDashing(false);
 		SetMovementState(EMovementState::EMS_Airborne);
 		return;
 	}
@@ -1343,7 +1330,7 @@ void USuraPlayerMovementComponent::TickWallRun(float DeltaTime)
 		return;
 	}
 
-	if (bCrouchPressed)
+	if (Input.bCrouchHeld)
 	{
 		Velocity += CurrentWallHit.ImpactNormal * 100.f;
 		OnAirborne.Broadcast();
@@ -1786,6 +1773,23 @@ void USuraPlayerMovementComponent::NotifyJumpPadLaunchForce(float ForceAmount)
 	}
 }
 
+void USuraPlayerMovementComponent::NotifyMovementDataModification(const TArray<FPlayerMovementDataModifier>& Modifiers)
+{
+	bMovementDataModificationRequested = true;
+	MovementDataModifiers = Modifiers;
+}
+
+void USuraPlayerMovementComponent::NotifyMovementKeyHoldModification(const TArray<FPlayerKeyHoldModifier>& Modifiers)
+{
+	bMovementKeyHoldModificationRequested = true;
+	KeyHoldModifiers = Modifiers;
+}
+
+void USuraPlayerMovementComponent::NotifyResetModification()
+{
+	bMovementModificationResetRequested = true;
+}
+
 
 void USuraPlayerMovementComponent::SetMovementInputVector(const FVector2D& InMovementInputVector)
 {
@@ -1852,6 +1856,7 @@ void USuraPlayerMovementComponent::UpdateDashGauge(float DeltaTime)
 
 void USuraPlayerMovementComponent::CacheInput()
 {
+	
 	Input.WorldInputDir = ConsumeInputVector().GetSafeNormal();
 	Input.MovementInput2D = MovementInputVector;
 	Input.bJumpPressed = bJumpPressed;
@@ -1860,6 +1865,33 @@ void USuraPlayerMovementComponent::CacheInput()
 
 	bJumpPressed = false;
 	bShiftPressed = false;
+
+	if (bMovementKeyHoldActive)
+    {
+		float InputAxisX = (MovementTriggerKeyMap[EMovementTriggerKey::A] ? -1.f : 0.f) +
+			(MovementTriggerKeyMap[EMovementTriggerKey::D] ? 1.f : 0.f);
+
+		float InputAxisY = (MovementTriggerKeyMap[EMovementTriggerKey::S] ? -1.f : 0.f) +
+			(MovementTriggerKeyMap[EMovementTriggerKey::W] ? 1.f : 0.f);
+		
+        Input.MovementInput2D.X += !FMath::IsNearlyZero(InputAxisX) ? InputAxisX : 0.f;
+		Input.MovementInput2D.X = FMath::Clamp(Input.MovementInput2D.X, -1.f, 1.f);
+
+		Input.MovementInput2D.Y += !FMath::IsNearlyZero(InputAxisY) ? InputAxisY : 0.f;
+		Input.MovementInput2D.Y = FMath::Clamp(Input.MovementInput2D.Y, -1.f, 1.f);
+		
+
+		const FRotator YawRot(0.f, SuraPlayerController->GetControlRotation().Yaw, 0.f);
+		const FVector Forward = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X); 
+		const FVector Right = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y); 
+
+		FVector WorldDir = Forward * Input.MovementInput2D.Y + Right * Input.MovementInput2D.X;
+		Input.WorldInputDir = WorldDir.GetSafeNormal();
+		
+        Input.bJumpPressed = MovementTriggerKeyMap.FindRef(EMovementTriggerKey::Space) || Input.bJumpPressed;
+        Input.bShiftPressed = MovementTriggerKeyMap.FindRef(EMovementTriggerKey::Shift) || Input.bShiftPressed;
+        Input.bCrouchHeld  = MovementTriggerKeyMap.FindRef(EMovementTriggerKey::Ctrl)  || Input.bCrouchHeld;
+    }
 	
 }
 
@@ -1882,6 +1914,15 @@ void USuraPlayerMovementComponent::UpdateDamageFlags()
 			bIsInvincible = false;
 		}
 	}
+}
+
+void USuraPlayerMovementComponent::UpdateDependentMovementData()
+{
+	MinWalkableFloorZ = FMath::Cos(FMath::DegreesToRadians(MaxWalkableFloorAngle));
+	GravityAcceleration = FVector::DownVector * GravityScale;
+	PrimaryJumpZVelocity = FMath::Sqrt(2 * GravityScale * PrimaryJumpHeight);
+	DoubleJumpZVelocity = FMath::Sqrt(2 * GravityScale * DoubleJumpHeight);
+	WallJumpZVelocity = FMath::Sqrt(2 * GravityScale * WallJumpHeight);
 }
 
 void USuraPlayerMovementComponent::AddControllerRoll(float DeltaTime, const FVector& WallRunDirection, EWallRunSide WallRunSide)
@@ -1917,9 +1958,66 @@ void USuraPlayerMovementComponent::AddControllerRoll(float DeltaTime, const FVec
 	SuraPlayerController->SetControlRotation(NewControlRotation);
 }
 
-void USuraPlayerMovementComponent::InitMovementData()
+
+
+
+void USuraPlayerMovementComponent::ApplyMovementDataModifiers()
 {
-	checkf(MovementDataTable, TEXT("MovementDataTable is not assigned in SuraPawnPlayer blueprint!!!!!!!!"));
+	if (bMovementDataModificationRequested)
+	{
+		bMovementDataModificationRequested = false;
+		if (MovementDataModifiers.IsEmpty()) return;
+
+		for (auto Modifier : MovementDataModifiers)
+		{
+			*MovementDataTypeMap.FindRef(Modifier.DataType) = Modifier.ModifiedValue;
+		}
+
+		UpdateDependentMovementData();
+	}
+}
+
+void USuraPlayerMovementComponent::ApplyKeyHoldModifiers()
+{
+	if (bMovementKeyHoldModificationRequested)
+	{
+		bMovementKeyHoldModificationRequested = false;
+		if (KeyHoldModifiers.IsEmpty()) return;
+		
+		for (auto Modifier : KeyHoldModifiers)
+		{
+			MovementTriggerKeyMap[Modifier.Key] = true;
+		}
+		bMovementKeyHoldActive = true;
+
+		
+	}
+}
+
+void USuraPlayerMovementComponent::SetIsDashing(bool bNewIsDashing)
+{
+	bIsDashing = bNewIsDashing;
+	OnIsDashingChanged(bNewIsDashing);
+}
+
+void USuraPlayerMovementComponent::OnIsDashingChanged(bool bNewIsDashing)
+{
+	if (bNewIsDashing)
+	{
+		ElapsedTimeFromDash = 0.f;
+		OnDash.Broadcast(MovementInputVector);
+	}
+	else
+	{
+		OnDashEnd.Broadcast();
+	}
+}
+
+
+void USuraPlayerMovementComponent::ApplyMovementDataTable()
+{
+	
+	ensureMsgf(MovementDataTable, TEXT("MovementDataTable is not assigned in SuraPawnPlayer blueprint!!!!!!!!"));
 
 
 	if (!MovementDataTable) return;
@@ -1965,8 +2063,65 @@ void USuraPlayerMovementComponent::InitMovementData()
 	DamageSlowDebuffDuration = Row->DamageSlowDebuffDuration;
 	DownedDuration = Row->DownedDuration;
 	DownedInvincibleDuration = Row->DownedInvincibleDuration;
+
+	UpdateDependentMovementData();
 }
 
+void USuraPlayerMovementComponent::InitializeMovementDataTypeMap()
+{
+	MovementDataTypeMap.Add(EMovementDataType::GravityScale, &GravityScale);
+	MovementDataTypeMap.Add(EMovementDataType::WalkSpeed, &WalkSpeed);
+	MovementDataTypeMap.Add(EMovementDataType::DashStartSpeed, &DashStartSpeed);
+	MovementDataTypeMap.Add(EMovementDataType::DashEndSpeed, &DashEndSpeed);
+	MovementDataTypeMap.Add(EMovementDataType::DashDecelerationTime, &DashDecelerationTime);
+	MovementDataTypeMap.Add(EMovementDataType::DashCooldown, &DashCooldown);
+	MovementDataTypeMap.Add(EMovementDataType::RunSpeed, &RunSpeed);
+	MovementDataTypeMap.Add(EMovementDataType::CrouchSpeed, &CrouchSpeed);
+	MovementDataTypeMap.Add(EMovementDataType::CrouchHeightScale, &CrouchHeightScale);
+	MovementDataTypeMap.Add(EMovementDataType::PrimaryJumpHeight, &PrimaryJumpHeight);
+	MovementDataTypeMap.Add(EMovementDataType::DoubleJumpHeight, &DoubleJumpHeight),
+	MovementDataTypeMap.Add(EMovementDataType::WallJumpHeight, &WallJumpHeight),
+	MovementDataTypeMap.Add(EMovementDataType::Acceleration, &Acceleration);
+	MovementDataTypeMap.Add(EMovementDataType::Deceleration, &Deceleration),
+	MovementDataTypeMap.Add(EMovementDataType::AirDirectionInterpSpeed, &AirDirectionInterpSpeed);
+	MovementDataTypeMap.Add(EMovementDataType::AirAcceleration, &AirAcceleration);
+	MovementDataTypeMap.Add(EMovementDataType::AirDeceleration, &AirDeceleration);
+	MovementDataTypeMap.Add(EMovementDataType::MaxFallVerticalSpeed, &MaxFallVerticalSpeed);
+	MovementDataTypeMap.Add(EMovementDataType::MaxWalkableFloorAngle, &MaxWalkableFloorAngle);
+	MovementDataTypeMap.Add(EMovementDataType::MaxStepHeight, &MaxStepHeight);
+	MovementDataTypeMap.Add(EMovementDataType::WallRunMaxDuration, &WallRunMaxDuration);
+	MovementDataTypeMap.Add(EMovementDataType::WallRunAcceleration, &WallRunAcceleration);
+	MovementDataTypeMap.Add(EMovementDataType::WallRunDeceleration, &WallRunDeceleration);
+	MovementDataTypeMap.Add(EMovementDataType::WallRunMaxDuration, &WallRunMaxDuration);
+	MovementDataTypeMap.Add(EMovementDataType::WallRunAcceleration, &WallRunAcceleration);
+	MovementDataTypeMap.Add(EMovementDataType::WallRunDeceleration, &WallRunDeceleration);
+	MovementDataTypeMap.Add(EMovementDataType::WallRunMaxSpeed, &WallRunMaxSpeed);
+	MovementDataTypeMap.Add(EMovementDataType::WallRunBackwardMaxSpeed, &WallRunBackwardMaxSpeed);
+	MovementDataTypeMap.Add(EMovementDataType::WallRunJumpAirSpeed2D, &WallRunJumpAirSpeed2D);
+	MovementDataTypeMap.Add(EMovementDataType::WallRunJumpNormalForce, &WallRunJumpNormalForce);
+	MovementDataTypeMap.Add(EMovementDataType::WallRunCameraTiltAngle, &WallRunCameraTiltAngle);
+	MovementDataTypeMap.Add(EMovementDataType::PreWallRunDetectionRange, &PreWallRunDetectionRange);
+	MovementDataTypeMap.Add(EMovementDataType::WallRunCameraTiltInterpSpeed, &WallRunCameraTiltInterpSpeed);
+	MovementDataTypeMap.Add(EMovementDataType::SlideInitialWindow, &SlideInitialWindow);
+	MovementDataTypeMap.Add(EMovementDataType::SlideMaxDuration, &SlideMaxDuration);
+	MovementDataTypeMap.Add(EMovementDataType::SlideAdditionalSpeed, &SlideAdditionalSpeed);
+	MovementDataTypeMap.Add(EMovementDataType::GroundPointDetectionLength, &GroundPointDetectionLength);
+	MovementDataTypeMap.Add(EMovementDataType::CoyoteTime, &CoyoteTime);
+	MovementDataTypeMap.Add(EMovementDataType::DamageSlowDebuffMultiplier, &DamageSlowDebuffMultiplier);
+	MovementDataTypeMap.Add(EMovementDataType::DamageSlowDebuffDuration, &DamageSlowDebuffDuration);
+	MovementDataTypeMap.Add(EMovementDataType::DownedDuration, &DownedDuration);
+	MovementDataTypeMap.Add(EMovementDataType::DownedInvincibleDuration, &DownedInvincibleDuration);
+}
 
+void USuraPlayerMovementComponent::InitializeMovementTriggerKeyMap()
+{
+	MovementTriggerKeyMap.Add(EMovementTriggerKey::Ctrl, false);
+	MovementTriggerKeyMap.Add(EMovementTriggerKey::Shift, false);
+	MovementTriggerKeyMap.Add(EMovementTriggerKey::Space, false);
+	MovementTriggerKeyMap.Add(EMovementTriggerKey::W, false);
+	MovementTriggerKeyMap.Add(EMovementTriggerKey::A, false);
+	MovementTriggerKeyMap.Add(EMovementTriggerKey::S, false);
+	MovementTriggerKeyMap.Add(EMovementTriggerKey::D, false);
+}
 
 

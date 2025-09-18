@@ -15,7 +15,7 @@ void ASuraBossAIController::BeginPlay()
 
 	if (APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0))
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, "PlayerPawn Valid");
 		GetBlackboardComponent()->SetValueAsObject("PlayerPawn", PlayerPawn);
 	}
-	
 }

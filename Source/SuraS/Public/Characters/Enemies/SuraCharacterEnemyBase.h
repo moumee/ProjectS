@@ -16,6 +16,7 @@
 class UNiagaraComponent;
 class UACEnemyDamageSystem;
 class UWidgetComponent;
+class UMotionWarpingComponent;
 class AEnemyBaseAIController;
 class UBehaviorTree;
 class ASuraEnemyWeapon;
@@ -31,16 +32,16 @@ class SURAS_API ASuraCharacterEnemyBase : public ASuraCharacterBase, public IDam
 	GENERATED_BODY()
 
 	UPROPERTY()
-	AEnemyBaseAIController* AIController;
+	TObjectPtr<AEnemyBaseAIController> AIController;
 
 	UPROPERTY()
-	APlayerController* PlayerController;
+	TObjectPtr<APlayerController> PlayerController;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actor Components", meta = (AllowPrivateAccess = "true"))
-	UACEnemyDamageSystem* DamageSystemComp;
+	TObjectPtr<UACEnemyDamageSystem> DamageSystemComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widgets", meta = (AllowPrivateAccess = "true"))
-	UWidgetComponent* HealthBarWidget;
+	TObjectPtr<UWidgetComponent> HealthBarWidget;
 
 	FVector2D HealthBarWidgetSize;
 
@@ -52,16 +53,19 @@ protected:
 	FName EnemyType; // for initializing differently btw enemy types from the DT
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
-	UBehaviorTree* BehaviorTree;
+	TObjectPtr<UBehaviorTree> BehaviorTree;
 
 	/*UPROPERTY()
 	ASuraEnemyWeapon* EnemyWeapon;*/
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Niagara")
-	UNiagaraComponent* NiagaraComponent;
+	TObjectPtr<UNiagaraComponent> NiagaraComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MotionWarping", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Patrol Route", meta = (AllowPrivateAccess = "true"))
-	AEnemyPatrolRoute* PatrolRoute;
+	TObjectPtr<AEnemyPatrolRoute> PatrolRoute;
 
 	UPROPERTY(VisibleDefaultsOnly)
 	TObjectPtr<UTimelineComponent> HitColorTimeline;
@@ -124,6 +128,9 @@ public:
 	// niagara comp
 	UNiagaraComponent* GetNiagaraComponent() const { return NiagaraComponent; }
 
+	// motion warp comp
+	UMotionWarpingComponent* GetMotionWarpingComponent() const { return MotionWarpingComponent; }
+
 	// other getters
 	FORCEINLINE float GetAttackDamageAmount() const { return AttackDamageAmount; }
 	FORCEINLINE float GetMeleeAttackRange() const { return MeleeAttackRange; }
@@ -160,7 +167,9 @@ public:
 
 	UAnimMontage* ChooseRandomAttackMontage();
 
-	UAnimMontage* GetCoopAttackMontage() const { return ThrowMontage; };
+	UAnimMontage* GetCoopAttackMontage() const { return ThrowAnimation; };
+
+	UAnimMontage* GetFallingMontage() const { return FallingAnimation; };
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	TArray<UAnimMontage*> HitAnimations;
@@ -175,7 +184,10 @@ public:
 	UAnimMontage* ClimbAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
-	UAnimMontage* ThrowMontage;
+	UAnimMontage* ThrowAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
+	UAnimMontage* FallingAnimation;
 
 	//poolsystem
 	bool isInitialized = false;

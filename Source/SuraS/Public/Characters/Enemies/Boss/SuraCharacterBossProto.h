@@ -3,10 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BehaviorTree/BehaviorTreeTypes.h"
 #include "Characters/Enemies/Boss/SuraCharacterBossBase.h"
 #include "Components/TimelineComponent.h"
 #include "SuraCharacterBossProto.generated.h"
 
+class UBlackboardComponent;
 enum class EBossState : uint8;
 class ASuraBossAttackArea;
 class UTimelineComponent;
@@ -25,12 +27,48 @@ public:
 
 	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser) override;
 
-	UPROPERTY(EditInstanceOnly, Category="Attack")
-	TObjectPtr<ASuraBossAttackArea> AttackArea;
+	void SetCurrentState(EBossState NewState);
+
+	EBossState GetCurrentState() const { return CurrentState; }
+
+	ASuraBossAttackArea* GetAttackAreaByTag(FName Tag);
 
 	
 protected:
 
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UPhysicsAsset> LeftArmPhysicsAsset;
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UPhysicsAsset> RightArmPhysicsAsset;
+
+	UPROPERTY(VisibleAnywhere, Category="Attack")
+	TArray<AActor*> AttackAreas;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UAnimMontage> HitMontage;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UAnimMontage> ArmDismemberMontage;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UAnimMontage> DeathMontage;
+
+	void OnArmDismemberMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	
+	void PlayHitMontage(FName SectionName);
+
+	void PlayArmDismemberMontage(FName SectionName);
+	
+	void DismemberArm(USkeletalMeshComponent* PartMesh, USkeletalMeshComponent* LeaderMesh, FName HideBoneName);
+
+	UFUNCTION()
+	void OnBossPartDestroyed(TEnumAsByte<EPhysicalSurface> PhysicalSurface);
+	
+	void OnBossDeath();
+	
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UBlackboardComponent> BlackboardComp;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EBossState CurrentState;
 
@@ -71,6 +109,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UCurveFloat> HitColorCurve;
 
-
+	
 	
 };

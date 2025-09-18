@@ -7,10 +7,7 @@
 #include "Interfaces/Damageable.h"
 #include "SuraCharacterBossBase.generated.h"
 
-#define SURFACE_HEAD SurfaceType6
-#define SURFACE_BODY SurfaceType7
-#define SURFACE_LEFT_ARM SurfaceType8
-#define SURFACE_RIGHT_ARM SurfaceType9
+
 
 class UACBossDamageSystem;
 /**
@@ -32,8 +29,8 @@ public:
 
 	virtual void Destroyed() override;
 protected:
-
-	UPROPERTY()
+	
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UACBossDamageSystem> DamageSystemComponent;
 
 	

@@ -13,7 +13,8 @@ UBTT_SetStateToAttacking::UBTT_SetStateToAttacking(FObjectInitializer const& Obj
 
 EBTNodeResult::Type UBTT_SetStateToAttacking::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	if (AEnemyBaseAIController* const EnemyController = Cast<AEnemyBaseAIController>(OwnerComp.GetAIOwner()))
+	AEnemyBaseAIController* const EnemyController = Cast<AEnemyBaseAIController>(OwnerComp.GetAIOwner());
+	if ( EnemyController && !(EnemyController->IsTraversing))
 	{
 		EnemyController->UpdateCurrentState(EEnemyStates::Attacking);
 

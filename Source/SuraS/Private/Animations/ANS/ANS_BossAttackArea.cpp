@@ -9,6 +9,7 @@
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/BoxComponent.h"
 #include "Engine/OverlapResult.h"
+#include "Slate/SGameLayerManager.h"
 
 #define PLAYER_TRACE_CHANNEL ECollisionChannel::ECC_GameTraceChannel4
 
@@ -20,7 +21,9 @@ void UANS_BossAttackArea::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeq
 	bHasHit = false;
 	BossRef = Cast<ASuraCharacterBossProto>(MeshComp->GetOwner());
 	if (!BossRef) return;
- 	BossRef->AttackArea->SetAttackBoxCollision(ECollisionEnabled::Type::QueryOnly);
+	AttackArea = BossRef->GetAttackAreaByTag(AttackAreaTag);
+	if (!AttackArea) return;
+ 	AttackArea->SetAttackBoxCollision(ECollisionEnabled::Type::QueryOnly);
 }
 
 void UANS_BossAttackArea::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
@@ -29,15 +32,15 @@ void UANS_BossAttackArea::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequ
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 
 	if (!BossRef) return;
-	if (!BossRef->AttackArea) return;
+	if (!AttackArea) return;
 	if (bHasHit) return;
 	
 	TArray<AActor*> OverlappingActors;
-	BossRef->AttackArea->GetAttackBox()->GetOverlappingActors(OverlappingActors, ASuraPawnPlayer::StaticClass());
+	AttackArea->GetAttackBox()->GetOverlappingActors(OverlappingActors, ASuraPawnPlayer::StaticClass());
 
 	for (const auto& OverlappingActor : OverlappingActors)
 	{
-		if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OverlappingActor))
+		if (IPlayerInterface* PlayerInterface = Cast<IPlayerInterface>(OverlappingActor))
 		{
 			bHasHit = true;
 			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Hit"));
@@ -49,9 +52,14 @@ void UANS_BossAttackArea::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequ
 			{
 				GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Charge Hit"));
 				DamageData.ImpulseMagnitude = 1000.f;
-				DamageData.ImpulseDirection = (Player->GetActorLocation() - MeshComp->GetOwner()->GetActorLocation()).GetSafeNormal2D();
+				DamageData.ImpulseDirection = (OverlappingActor->GetActorLocation() - MeshComp->GetOwner()->GetActorLocation()).GetSafeNormal2D();
 			}
-			Player->TakeDamage(DamageData, MeshComp->GetOwner());
+
+			if (IDamageable* Damageable = Cast<IDamageable>(OverlappingActor))
+			{
+				Damageable->TakeDamage(DamageData, MeshComp->GetOwner());
+			}
+			
 		}
 	}
 
@@ -63,9 +71,9 @@ void UANS_BossAttackArea::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSeque
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
 
-	if (!BossRef || !BossRef->AttackArea) return;
+	if (!BossRef || !AttackArea) return;
 	
-	BossRef->AttackArea->SetAttackBoxCollision(ECollisionEnabled::Type::NoCollision);
+	AttackArea->SetAttackBoxCollision(ECollisionEnabled::Type::NoCollision);
 }
 
 

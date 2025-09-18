@@ -67,6 +67,8 @@ void UBTT_ChargeAttack::OnAttackReadyEnded()
 	bIsAttacking = true;
 	OriginalMaxWalkSpeed = CachedCharger->GetCharacterMovement()->MaxWalkSpeed;
 	CachedCharger->GetCharacterMovement()->MaxWalkSpeed = ChargeMaxWalkSpeed;
+	CachedCharger->GetCharacterMovement()->MaxAcceleration = ChargeMaxWalkSpeed;
+	CachedCharger->GetCharacterMovement()->bRequestedMoveUseAcceleration = false;
 
 	CachedCharger->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay); // to face only the front
 	CachedCharger->ActivateDashEffect();
@@ -82,6 +84,7 @@ void UBTT_ChargeAttack::EndTask()
 	ElapsedChargeTime = 0.f;
 	bIsAttacking = false;
 	CachedCharger->GetCharacterMovement()->MaxWalkSpeed = OriginalMaxWalkSpeed;
+	CachedCharger->GetCharacterMovement()->bRequestedMoveUseAcceleration = true;
 	bWasAttackSuccessful = false;
 
 	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(CachedOwnerComp.Get()->GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
@@ -141,6 +144,7 @@ void UBTT_ChargeAttack::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 			
 				Player->TakeDamage(DamageData, CachedCharger);
 
+				CachedCharger->ActivateCollisionEffect();
 				bWasAttackSuccessful = true;
 			}
 		}
@@ -149,6 +153,7 @@ void UBTT_ChargeAttack::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 			// UE_LOG(LogTemp, Error, TEXT("Charger Hit with %s"), *ActorHitComp->GetCollisionProfileName().ToString());
 			
 			bIsAttacking = false;
+			CachedCharger->ActivateCollisionEffect();
 			
 			UAnimMontage* StunAnimation = CachedCharger->GetStunAnimation();
 

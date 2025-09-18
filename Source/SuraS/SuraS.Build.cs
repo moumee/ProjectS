@@ -24,6 +24,7 @@ public class SuraS : ModuleRules
 			"PhysicsCore", //Added by Boranaga for Animation
 			"BoranagaSKControl", //Added by Boranaga for Animation
             "GameplayTags", // Added by <Eren Yeager> for the use of GameplayTags
+            "MotionWarping", // Added by Yoony for Enemy motion warping
             "TemplateSequence",
             "GameplayCameras",
             "CinematicCamera"

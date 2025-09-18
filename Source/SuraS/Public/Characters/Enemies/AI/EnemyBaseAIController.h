@@ -9,6 +9,7 @@
 #include "Enumerations/Enemies/EnemyEnums.h"
 #include "EnemyBaseAIController.generated.h"
 
+class ASuraCharacterEnemyBase;
 class ASuraPawnPlayer;
 /**
  * 
@@ -20,16 +21,18 @@ class SURAS_API AEnemyBaseAIController : public AAIController
 
 	UPROPERTY()
 	class UAISenseConfig_Sight* SightConfig;
+	
+	TWeakObjectPtr<ASuraCharacterEnemyBase> CachedPossessedPawn;
 
 	void SetupPerceptionSystem();
-
-	UFUNCTION()
-	void OnTargetSighted(AActor* SeenTarget, FAIStimulus const Stimulus);
 
 	EEnemyStates _CurrentState;
 
 protected:
 	virtual void OnPossess(APawn* PossessedPawn) override;
+
+	UFUNCTION()
+	virtual void OnTargetSighted(AActor* SeenTarget, FAIStimulus const Stimulus);
 
 public:
 	AEnemyBaseAIController(FObjectInitializer const& ObjectInitializer);
@@ -48,4 +51,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	ASuraPawnPlayer* GetAttackTarget();
+
+	bool IsTraversing = false;
 };
