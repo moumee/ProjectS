@@ -1701,13 +1701,16 @@ bool USuraPlayerMovementComponent::IsGrounded()
 {
 	FCollisionQueryParams GroundSweepParams;
 	GroundSweepParams.AddIgnoredActor(PawnOwner);
+
+	FCollisionResponseParams ResponseParams;
+	ResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel7, ECR_Ignore);
 	
 	FVector SweepStart = SuraPawnPlayer->GetActorLocation();
 	FVector SweepEnd = SuraPawnPlayer->GetActorLocation() +
 		FVector::DownVector * (SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 	
 	bool bHit = GetWorld()->SweepSingleByChannel(GroundHit, SweepStart, SweepEnd, FQuat::Identity, ECC_WorldStatic,
-		FCollisionShape::MakeSphere(15.f), GroundSweepParams);
+		FCollisionShape::MakeSphere(15.f), GroundSweepParams, ResponseParams);
 	
 
 	if (!bHit || !GroundHit.bBlockingHit)
