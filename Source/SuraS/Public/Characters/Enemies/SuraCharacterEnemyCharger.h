@@ -32,6 +32,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "NiagaraEffects")
 	TSoftObjectPtr<UNiagaraSystem> DashEffect;
 
+	UPROPERTY(EditAnywhere, Category = "NiagaraEffects")
+	TSoftObjectPtr<UNiagaraSystem> CollisionEffect;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -40,6 +43,7 @@ public:
 	virtual void Attack(ASuraPawnPlayer* Player) override;
 
 	void ActivateDashEffect() const;
+	void ActivateCollisionEffect() const;
 
 	UAnimMontage* GetChargeReadyAnimation() const { return ChargeReadyAnimation; };
 	UAnimMontage* GetStunAnimation() const { return StunAnimation; };

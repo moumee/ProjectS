@@ -3,10 +3,14 @@
 
 #include "Characters/Enemies/AI/EnemySequentialJumpComponent.h"
 
+#include "AIController.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Kismet/GameplayStatics.h" 
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Animation/AnimMontage.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "Characters/Enemies/AI/EnemyBaseAIController.h"
 
 
 UEnemySequentialJumpComponent::UEnemySequentialJumpComponent()
@@ -39,6 +43,11 @@ void UEnemySequentialJumpComponent::BeginPlay()
     OwnerCharacter = Cast<ASuraCharacterEnemyBase>(GetOwner());
     SetComponentTickEnabled(false);
     EnemyAnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+    
+    //OnMontageEnded.BindUObject(this, &UEnemySequentialJumpComponent::JumpAnimationEndSet);
+    //EnemyAnimInstance->Montage_SetEndDelegate(OnMontageEnded, JumpStartMontage);
+    //EnemyAnimInstance->Montage_SetEndDelegate(OnMontageEnded, JumpLoopMontage);
+    //EnemyAnimInstance->Montage_SetBlendingOutDelegate(OnMontageEnded, JumpStartMontage);
 }
 
 void UEnemySequentialJumpComponent::StartJumpSequence()
@@ -48,51 +57,34 @@ void UEnemySequentialJumpComponent::StartJumpSequence()
     {
         return;
     }
-
+    OwnerCharacter->GetController<AEnemyBaseAIController>()->IsTraversing = true;
     bIsMoving = true;
     CurrentTargetIndex = 0;
     bIsSequenceActive = true;
+    EnemyAnimInstance->OnMontageEnded.AddDynamic(this, &UEnemySequentialJumpComponent::JumpAnimationEndSet);
     JumpInitialize();
     SetComponentTickEnabled(true);
+    
 }
-
-void UEnemySequentialJumpComponent::JumpAnimationSet(UAnimMontage* Montage)
+            
+void UEnemySequentialJumpComponent::JumpAnimationEndSet(UAnimMontage* AnimMontage, bool bInterrupted)
 {
-    if (Montage == JumpStartMontage)
+    UE_LOG(LogTemp, Error, TEXT("Delegate Start"));
+    if (ElapsedTime > TotalDuration) EnemyAnimInstance->Montage_Stop(0.1f);
+    
+    else if (TotalDuration- JumpEndMontage->GetPlayLength() < ElapsedTime)
     {
-        // '시작' 몽타주가 끝났으므로, '루프' 몽타주를 재생합니다.
+        UE_LOG(LogTemp, Error, TEXT("Jumploop"));
+        // 죵료모션.
+        EnemyAnimInstance->Montage_Play(JumpEndMontage, AnimSpeed);
+    }
+    else if (JumpStartMontage->GetPlayLength() < TotalDuration)
+    {
+            
+        // 루프
         EnemyAnimInstance->Montage_Play(JumpLoopMontage);
     }
-    else if (Montage == JumpLoopMontage)
-    {
-        // '루프' 몽타주가 한 번 끝났습니다.
-        // 타이머에 남은 시간을 확인합니다.
-        //float TimeRemaining = GetWorld()->GetTimerManager().GetTimerRemaining(AttackTimerHandle);
-
-        if (TotalDuration > ElapsedTime)
-        {
-            // 남은 시간이 충분하면, '루프' 몽타주를 다시 재생합니다.
-            EnemyAnimInstance->Montage_Play(JumpLoopMontage);
-        }
-        else
-        {
-            // 남은 시간이 부족하면, '마무리' 몽타주를 재생합니다.
-            EnemyAnimInstance->Montage_Play(JumpEndMontage);
-        }
-    }
-    else if (Montage == JumpEndMontage)
-    {
-        if (EnemyAnimInstance)
-        {
-            // 현재 재생 중인 몽타주를 모두 중지합니다.
-            EnemyAnimInstance->Montage_Stop(0.1f);
-            // 매우 중요: 다른 몽타주에 영향을 주지 않도록 바인딩했던 델리게이트를 반드시 해제합니다.
-            //EnemyAnimInstance->OnMontageEnded.RemoveDynamic(this, &AMyCharacter::OnAttackMontageEnded);
-        }
     
-        // 타이머를 확실히 정리합니다.
-        //GetWorld()->GetTimerManager().ClearTimer(AttackTimerHandle);
-    }
     
 }
 
@@ -102,16 +94,8 @@ void UEnemySequentialJumpComponent::JumpInitialize()
 {
     StartPosition = OwnerCharacter->GetActorLocation();
     EndPosition = PathPoints[CurrentTargetIndex];
-    TotalDuration = 0.5f;
-    ArcHeight = 100;
     ElapsedTime = 0.f;
-
-    
-    //EnemyAnimInstance->OnMontageEnded.AddDynamic(this, &AMyCharacter::OnAttackMontageEnded);
-
-    // 2. 전체 공격 시간을 관리할 타이머를 설정합니다. (시간이 다 되면 공격 강제 종료)
-    //GetWorld()->GetTimerManager().SetTimer(AttackTimerHandle, this, &AMyCharacter::StopAttackSequence, TotalDuration, false);
-    EnemyAnimInstance->Montage_Play(JumpStartMontage);
+    EnemyAnimInstance->Montage_Play(JumpStartMontage, AnimSpeed);
 }
 
 void UEnemySequentialJumpComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -141,8 +125,21 @@ void UEnemySequentialJumpComponent::TickComponent(float DeltaTime, ELevelTick Ti
     FVector NewLocation = FVector(CurrentLinearPosition.X, CurrentLinearPosition.Y, CurrentLinearPosition.Z + ZOffset);
     OwnerCharacter->SetActorLocation(NewLocation);
 
+    
+    UAnimMontage* CurrentMontage = EnemyAnimInstance->GetCurrentActiveMontage();
+    if (CurrentMontage == JumpLoopMontage && ElapsedTime > TotalDuration - JumpEndMontage->GetPlayLength())
+    {
+        UE_LOG(LogTemp, Error, TEXT("escape and landing"));
+        EnemyAnimInstance->Montage_Play(JumpEndMontage, AnimSpeed);
+    }
+    //     else if (CurrentMontage != JumpLoopMontage)
+    //     {
+    //         EnemyAnimInstance->Montage_Play(JumpLoopMontage);
+    //     }
+    // }
+    
     // 5. 이동이 완료되었는지 확인합니다.
-    if (Alpha >= 1.f)
+    if (Alpha >= 1.f && ElapsedTime > TotalDuration + WaitingTime)
     {
         UE_LOG(LogTemp, Log, TEXT("점프 서브시퀀스 완료."));
         CurrentTargetIndex++;
@@ -156,6 +153,7 @@ void UEnemySequentialJumpComponent::TickComponent(float DeltaTime, ELevelTick Ti
         }
         
     }
+    
 }
 
 void UEnemySequentialJumpComponent::FinishSequence()
@@ -168,8 +166,12 @@ void UEnemySequentialJumpComponent::FinishSequence()
     {
         OwnerCharacter->GetCharacterMovement()->Velocity = FVector::ZeroVector;
         OwnerCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+        AAIController* AIController = OwnerCharacter->GetController<AAIController>();
+        AIController->SetFocus(Cast<ASuraPawnPlayer>(AIController->GetBlackboardComponent()->GetValueAsObject("AttackTarget")));
+        Cast<AEnemyBaseAIController>(AIController)->UpdateCurrentState(EEnemyStates::Chase);
+        OwnerCharacter->GetController<AEnemyBaseAIController>()->IsTraversing = false;
     }
-    
+    EnemyAnimInstance->OnMontageEnded.RemoveDynamic(this, &UEnemySequentialJumpComponent::JumpAnimationEndSet);
     OnSequenceCompleted.Broadcast();
     UE_LOG(LogTemp, Log, TEXT("점프 시퀀스 완료."));
 }

@@ -9,6 +9,7 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Characters/Enemies/SuraCharacterEnemyTurret.h"
 #include "Navigation/CrowdFollowingComponent.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
 
@@ -29,8 +30,10 @@ void AEnemyBaseAIController::OnPossess(APawn* PossessedPawn)
 {
 	Super::OnPossess(PossessedPawn);
 
-	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(PossessedPawn))
+	if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(PossessedPawn))
 	{
+		CachedPossessedPawn = Enemy;
+		
 		if (UBehaviorTree* const BehaviorTree = Enemy->GetBehaviorTree())
 		{
 			UBlackboardComponent* Bboard;
@@ -79,13 +82,27 @@ void AEnemyBaseAIController::SetupPerceptionSystem()
 
 void AEnemyBaseAIController::OnTargetSighted(AActor* SeenTarget, FAIStimulus const Stimulus)
 {
-	SetStateToChaseOrPursue(SeenTarget);
+	if (Cast<ASuraCharacterEnemyTurret>(CachedPossessedPawn.Get()))
+	{
+		if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(SeenTarget))
+		{
+			GetBlackboardComponent()->SetValueAsObject("AttackTarget", Player);
+			UpdateCurrentState(EEnemyStates::Attacking);
+		}
+	}
+	else
+	{
+		SetStateToChaseOrPursue(SeenTarget);
+	}
 }
 
 void AEnemyBaseAIController::UpdateCurrentState(EEnemyStates NewState)
 {
-	_CurrentState = NewState;
-	GetBlackboardComponent()->SetValueAsEnum("State", static_cast<uint8>(_CurrentState));
+	if (GetCurrentState() != NewState)
+	{
+		_CurrentState = NewState;
+		GetBlackboardComponent()->SetValueAsEnum("State", static_cast<uint8>(_CurrentState));
+	}
 }
 
 void AEnemyBaseAIController::SetStateToChaseOrPursue(AActor* TargetActor)
