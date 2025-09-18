@@ -48,6 +48,7 @@ class UTargetingSkillWidget;
 
 class UInputAction;
 struct FInputBindingHandle;
+struct FStreamableHandle;
 
 //suhyeon
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRocketLauncherSkillActivated);
@@ -62,16 +63,25 @@ class SURAS_API AWeapon : public AActor, public IWeaponInterface
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon)
-	FDataTableRowHandle WeaponDataTableHandle;
-	FWeaponData* WeaponData;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon)
+	//FDataTableRowHandle WeaponDataTableHandle;
+	////FWeaponData* WeaponData;
+
+	UPROPERTY(EditAnywhere, Category = Weapon)
+	TSoftObjectPtr<UDataTable> WeaponDataTable;
+	UPROPERTY(EditAnywhere, Category = Weapon)
+	FName WeaponRowName;
+
+
+	TSharedPtr<FStreamableHandle> WeaponAssetsHandle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponMesh")
 	USkeletalMeshComponent* WeaponMesh;
 	UFUNCTION()
 	USkeletalMeshComponent* GetWeaponMesh() { return WeaponMesh; }
 	UFUNCTION()
-	UTexture2D* GetWeaponImage() {return WeaponData->WeaponImage;}
+	//UTexture2D* GetWeaponImage() {return WeaponDataTableHandle.GetRow<FWeaponData>("")->WeaponImage;}
+	UTexture2D* GetWeaponImage() { return WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(WeaponRowName, TEXT("LoadWeaponData"))->WeaponImage; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	EWeaponAction LeftMouseAction;

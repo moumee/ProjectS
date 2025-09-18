@@ -31,6 +31,8 @@
 #include "Animation/AnimInstance.h"
 #include "Engine/LocalPlayer.h" //TODO: ������ ���� header���� �˾ƺ�����
 #include "Engine/World.h"
+#include "Engine/StreamableManager.h"
+#include "Engine/AssetManager.h"
 
 #include "Camera/CameraComponent.h"
 #include "Camera/PlayerCameraManager.h"
@@ -168,9 +170,74 @@ void AWeapon::InitializeUI()
 
 void AWeapon::LoadWeaponData()
 {
-	WeaponData = WeaponDataTableHandle.GetRow<FWeaponData>("");
+	//FWeaponData* WeaponData = WeaponDataTableHandle.GetRow<FWeaponData>("");
+
+	if (WeaponDataTable.IsNull() || WeaponRowName.IsNone()) return;
+
+	UDataTable* Table = WeaponDataTable.LoadSynchronous();
+	if (!Table) return;
+
+	FWeaponData* WeaponData = Table->FindRow<FWeaponData>(WeaponRowName, TEXT("LoadWeaponData"));
+
 	if (WeaponData)
 	{
+		FWeaponData* WeaponAsset = WeaponData;
+
+		TArray<FSoftObjectPath> Paths;
+		auto Push = [&Paths](const FSoftObjectPath& P) {if (P.IsValid()) Paths.Add(P); };
+
+		// <Classes>
+		Push(WeaponData->LeftProjectileClass.ToSoftObjectPath());
+		Push(WeaponData->RightProjectileClass.ToSoftObjectPath());
+		Push(WeaponData->SkillProjectileClass.ToSoftObjectPath());
+
+		// <Effects>
+		Push(WeaponData->FireEffect_L.ToSoftObjectPath());
+		Push(WeaponData->FireEffect_R.ToSoftObjectPath());
+		Push(WeaponData->FireEffect_Skill.ToSoftObjectPath());
+		Push(WeaponData->ChargeEffect.ToSoftObjectPath());
+
+		// <Sound>
+		Push(WeaponData->FireSound_L.ToSoftObjectPath());
+		Push(WeaponData->FireSound_R.ToSoftObjectPath());
+		Push(WeaponData->FireSound_Skill.ToSoftObjectPath());
+		Push(WeaponData->ChargeSound.ToSoftObjectPath());
+		Push(WeaponData->TargetSearchLoopSound.ToSoftObjectPath());
+		Push(WeaponData->TargetLockedSound.ToSoftObjectPath());
+
+		if (Paths.Num() == 0) return;
+
+		auto& SM = UAssetManager::GetStreamableManager();
+		TWeakObjectPtr<AWeapon> WeakThis(this);
+
+		WeaponAssetsHandle = SM.RequestAsyncLoad(
+			Paths,
+			FStreamableDelegate::CreateWeakLambda(this, [this, WeakThis, WeaponAsset]() {
+					if (!WeakThis.IsValid()) return;
+
+					// 로드 완료 and 하드 포인터로 캐시
+					FireData_L.ProjectileClass = WeaponAsset->LeftProjectileClass.Get();
+					FireData_R.ProjectileClass = WeaponAsset->RightProjectileClass.Get();
+					FireData_Skill.ProjectileClass = WeaponAsset->SkillProjectileClass.Get();
+
+					FireData_L.MuzzleFireEffect = WeaponAsset->FireEffect_L.Get();
+					FireData_R.MuzzleFireEffect = WeaponAsset->FireEffect_R.Get();
+					FireData_Skill.MuzzleFireEffect = WeaponAsset->FireEffect_Skill.Get();
+					ChargeEffect = WeaponAsset->ChargeEffect.Get();
+
+					FireData_L.FireSound = WeaponAsset->FireSound_L.Get();
+					FireData_R.FireSound = WeaponAsset->FireSound_R.Get();
+					FireData_Skill.FireSound = WeaponAsset->FireSound_Skill.Get();
+
+					ChargeSound = WeaponAsset->ChargeSound.Get();
+					TargetSearchLoopSound = WeaponAsset->TargetSearchLoopSound.Get();
+					TargetLockedSound = WeaponAsset->TargetLockedSound.Get();
+
+					WeaponAssetsHandle.Reset();
+				}));
+
+		//-------------------------------------
+
 		// <WeaponSocket>
 		WeaponSocketName = WeaponData->WeaponSocket;
 
@@ -184,29 +251,29 @@ void AWeapon::LoadWeaponData()
 		SkillAction = WeaponData->SkillAction;
 
 		// <Projectile Class>
-		FireData_L.ProjectileClass = WeaponData->LeftProjectileClass;
-		FireData_R.ProjectileClass = WeaponData->RightProjectileClass;
-		FireData_Skill.ProjectileClass = WeaponData->SkillProjectileClass;
+		//FireData_L.ProjectileClass = WeaponData->LeftProjectileClass;
+		//FireData_R.ProjectileClass = WeaponData->RightProjectileClass;
+		//FireData_Skill.ProjectileClass = WeaponData->SkillProjectileClass;
 
-		// <Sound>
-		ChargeSound = WeaponData->ChargeSound;
+		//// <Sound>
+		//ChargeSound = WeaponData->ChargeSound;
 
-		FireData_L.FireSound = WeaponData->FireSound_L;
-		FireData_R.FireSound = WeaponData->FireSound_R;
-		FireData_Skill.FireSound = WeaponData->FireSound_Skill;
+		//FireData_L.FireSound = WeaponData->FireSound_L;
+		//FireData_R.FireSound = WeaponData->FireSound_R;
+		//FireData_Skill.FireSound = WeaponData->FireSound_Skill;
 
-		TargetSearchLoopSound = WeaponData->TargetSearchLoopSound;
-		TargetLockedSound = WeaponData->TargetLockedSound;
+		//TargetSearchLoopSound = WeaponData->TargetSearchLoopSound;
+		//TargetLockedSound = WeaponData->TargetLockedSound;
 
 		// <Effect>
-		ChargeEffect = WeaponData->ChargeEffect;
+		//ChargeEffect = WeaponData->ChargeEffect;
 		ChargeEffectLocation = WeaponData->ChargeEffectLocation;
 		ChargeEffectRotation = WeaponData->ChargeEffectRotation;
 		ChargeEffenctScale = WeaponData->ChargeEffenctScale;
 
-		FireData_L.MuzzleFireEffect = WeaponData->FireEffect_L;
-		FireData_R.MuzzleFireEffect = WeaponData->FireEffect_R;
-		FireData_Skill.MuzzleFireEffect = WeaponData->FireEffect_Skill;
+		//FireData_L.MuzzleFireEffect = WeaponData->FireEffect_L;
+		//FireData_R.MuzzleFireEffect = WeaponData->FireEffect_R;
+		//FireData_Skill.MuzzleFireEffect = WeaponData->FireEffect_Skill;
 
 		// <Reload>
 		ReloadingTime = WeaponData->ReloadingTime;
@@ -1732,19 +1799,24 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 			if (CharacterAnimInstance != nullptr && AM_Reload_Character != nullptr)
 			{
 				float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopEnd")));
+				float PumpRealodingTotalTime = SectionTime;
+				if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
+				{
+					PumpRealodingTotalTime += AM_Reload_Weapon->GetPlayLength();
+				}
 
-				UE_LOG(LogTemp, Error, TEXT("SectionTime_End: %f"), SectionTime);
-				UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_End: %f"), PumpReloadingTime_End);
+				//UE_LOG(LogTemp, Error, TEXT("SectionTime_End: %f"), SectionTime);
+				//UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_End: %f"), PumpReloadingTime_End);
 
-				CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_End);
+				CharacterAnimInstance->Montage_Play(AM_Reload_Character, PumpRealodingTotalTime / PumpReloadingTime_End);
 				CharacterAnimInstance->Montage_JumpToSection(FName("LoopEnd"), AM_Reload_Character);
 			}
 
-			if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
-			{
-				WeaponMesh->GetAnimInstance()->Montage_Play(AM_Reload_Weapon, AM_Reload_Weapon->GetPlayLength() / PumpReloadingTime_End);
-				WeaponMesh->GetAnimInstance()->Montage_JumpToSection(FName("LoopEnd"), AM_Reload_Weapon);
-			}
+			//if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
+			//{
+			//	WeaponMesh->GetAnimInstance()->Montage_Play(AM_Reload_Weapon, AM_Reload_Weapon->GetPlayLength() / PumpReloadingTime_End);
+			//	WeaponMesh->GetAnimInstance()->Montage_JumpToSection(FName("LoopEnd"), AM_Reload_Weapon);
+			//}
 
 			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_End, false);
 		}
@@ -1754,8 +1826,8 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 			{
 				float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopStart")));
 
-				UE_LOG(LogTemp, Error, TEXT("SectionTime_Loop: %f"), SectionTime);
-				UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_Loop: %f"), PumpReloadingTime_Loop);
+				//UE_LOG(LogTemp, Error, TEXT("SectionTime_Loop: %f"), SectionTime);
+				//UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_Loop: %f"), PumpReloadingTime_Loop);
 
 				CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_Loop);
 				CharacterAnimInstance->Montage_JumpToSection(FName("LoopStart"), AM_Reload_Character);
@@ -2026,7 +2098,31 @@ void AWeapon::AutoReload()
 void AWeapon::ReloadingEnd()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
-	ReloadAmmo(true);
+
+	if (LeftAmmoInCurrentMag < MaxAmmoPerMag)
+	{
+		ReloadAmmo(true);
+	}
+	else
+	{
+		if (bActivePumpActionReload)
+		{
+
+			UE_LOG(LogTemp, Error, TEXT("Pump Action Reload Sliding!!!!"));
+			if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
+			{
+				float PumpReloadingTotalTime = AM_Reload_Weapon->GetPlayLength();
+				if (CharacterAnimInstance != nullptr && AM_Reload_Character != nullptr)
+				{
+					float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopEnd")));
+					PumpReloadingTotalTime += SectionTime;
+				}
+				WeaponMesh->GetAnimInstance()->Montage_Play(AM_Reload_Weapon, PumpReloadingTotalTime / PumpReloadingTime_End);
+
+				UE_LOG(LogTemp, Warning, TEXT("Pump Action Reload Sliding!!!!"));
+			}
+		}
+	}
 }
 #pragma endregion
 
