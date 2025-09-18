@@ -32,16 +32,16 @@ class SURAS_API ASuraCharacterEnemyBase : public ASuraCharacterBase, public IDam
 	GENERATED_BODY()
 
 	UPROPERTY()
-	AEnemyBaseAIController* AIController;
+	TObjectPtr<AEnemyBaseAIController> AIController;
 
 	UPROPERTY()
-	APlayerController* PlayerController;
+	TObjectPtr<APlayerController> PlayerController;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actor Components", meta = (AllowPrivateAccess = "true"))
-	UACEnemyDamageSystem* DamageSystemComp;
+	TObjectPtr<UACEnemyDamageSystem> DamageSystemComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widgets", meta = (AllowPrivateAccess = "true"))
-	UWidgetComponent* HealthBarWidget;
+	TObjectPtr<UWidgetComponent> HealthBarWidget;
 
 	FVector2D HealthBarWidgetSize;
 
@@ -53,19 +53,19 @@ protected:
 	FName EnemyType; // for initializing differently btw enemy types from the DT
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
-	UBehaviorTree* BehaviorTree;
+	TObjectPtr<UBehaviorTree> BehaviorTree;
 
 	/*UPROPERTY()
 	ASuraEnemyWeapon* EnemyWeapon;*/
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Niagara")
-	UNiagaraComponent* NiagaraComponent;
+	TObjectPtr<UNiagaraComponent> NiagaraComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MotionWarping", meta = (AllowPrivateAccess = "true"))
-	UMotionWarpingComponent* MotionWarpingComponent;
+	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Patrol Route", meta = (AllowPrivateAccess = "true"))
-	AEnemyPatrolRoute* PatrolRoute;
+	TObjectPtr<AEnemyPatrolRoute> PatrolRoute;
 
 	UPROPERTY(VisibleDefaultsOnly)
 	TObjectPtr<UTimelineComponent> HitColorTimeline;

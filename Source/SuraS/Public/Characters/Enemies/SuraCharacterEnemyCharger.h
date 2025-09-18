@@ -18,22 +18,22 @@ public:
 	ASuraCharacterEnemyCharger();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
-	UAnimMontage* ChargeReadyAnimation;
+	TObjectPtr<UAnimMontage> ChargeReadyAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
-	UAnimMontage* StunAnimation;
+	TObjectPtr<UAnimMontage> StunAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	TArray<UAnimMontage*> RoarAnimations;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OverlapEnemies")
-	UBoxComponent* OverlapBox;
+	TObjectPtr<UBoxComponent> OverlapBox;
 
 	UPROPERTY(EditAnywhere, Category = "NiagaraEffects")
-	TSoftObjectPtr<UNiagaraSystem> DashEffect;
+	TObjectPtr<UNiagaraSystem> DashEffect;
 
 	UPROPERTY(EditAnywhere, Category = "NiagaraEffects")
-	TSoftObjectPtr<UNiagaraSystem> CollisionEffect;
+	TObjectPtr<UNiagaraSystem> CollisionEffect;
 
 protected:
 	// Called when the game starts or when spawned
@@ -42,8 +42,8 @@ protected:
 public:
 	virtual void Attack(ASuraPawnPlayer* Player) override;
 
-	void ActivateDashEffect() const;
-	void ActivateCollisionEffect() const;
+	void ActivateDashEffect();
+	void ActivateCollisionEffect();
 
 	UAnimMontage* GetChargeReadyAnimation() const { return ChargeReadyAnimation; };
 	UAnimMontage* GetStunAnimation() const { return StunAnimation; };
