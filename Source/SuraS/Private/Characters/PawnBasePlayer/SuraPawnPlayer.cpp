@@ -18,6 +18,11 @@
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
+#include "GameModes/SuraLevelGameMode.h"
+#include "Instance/SuraCheckpointSubsystem.h"
+#include "Kismet/GameplayStatics.h"
+#include "SaveGame/SuraSaveGame.h"
+#include "Slate/SGameLayerManager.h"
 #include "UI/DamageIndicatorWidget.h"
 #include "UI/PlayerHUD.h"
 #include "Widgets/Player/PlayerHitWidget.h"
@@ -36,6 +41,7 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	CapsuleComponent->InitCapsuleSize(40.f, 90.f);
 	CapsuleComponent->SetCollisionProfileName(TEXT("Pawn"));
 	CapsuleComponent->SetNotifyRigidBodyCollision(true);
+	
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(CapsuleComponent);
@@ -99,6 +105,13 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 void ASuraPawnPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (USuraCheckpointSubsystem* CheckpointSubsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>())
+	{
+		CheckpointSubsystem->OnCheckpointLoadedDelegate.AddDynamic(this, &ThisClass::OnCheckPointLoaded);
+	}
+
+	
 
 	GetDamageSystemComponent()->OnDamaged.AddUObject(this, &ASuraPawnPlayer::OnDamaged);
 	GetDamageSystemComponent()->OnDeath.AddUObject(this, &ASuraPawnPlayer::OnDeath);
@@ -342,7 +355,11 @@ void ASuraPawnPlayer::OnDamaged()
 
 void ASuraPawnPlayer::OnDeath()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Player Dead"));
+	GEngine->AddOnScreenDebugMessage(10, 15.0f, FColor::Yellow, TEXT("Player Dead"));
+	if (ASuraLevelGameMode* GameMode = Cast<ASuraLevelGameMode>(UGameplayStatics::GetGameMode(this)))
+	{
+		GameMode->OnPlayerDeath(this);
+	}
 }
 
 void ASuraPawnPlayer::OnDash(FVector2D MovementInput)
@@ -383,6 +400,26 @@ void ASuraPawnPlayer::OnDashEnd()
 	LeftDashEffectComponent->Deactivate();
 	RightDashEffectComponent->Deactivate();
 }
+
+void ASuraPawnPlayer::OnCheckPointLoaded()
+{
+	if (USuraCheckpointSubsystem* Subsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>())
+	{
+		USuraSaveGame* SaveData = Subsystem->GetCurrentSave();
+		check(SaveData);
+
+		FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
+		if (SaveData->MapName == CurrentMapName)
+		{
+			TeleportTo(SaveData->SpawnTransform.GetLocation(), SaveData->SpawnTransform.Rotator());
+		}
+		else
+		{
+			UGameplayStatics::OpenLevel(this, SaveData->MapName);
+		}
+	}
+}
+
 
 
 
