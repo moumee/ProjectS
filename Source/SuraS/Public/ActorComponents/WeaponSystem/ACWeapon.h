@@ -358,7 +358,7 @@ public:
 	bool PerformLineTrace(FVector StartLocation, FVector LineDirection, float MaxDistance, FVector& HitLocation);
 	bool PerformSphereTrace(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& HitLocation);
 	bool PerformSphereTrace_new(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& HitLocation);
-	bool PerformSphereTrace_Multi_ChooseOne(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& OutHitLocation, FHitResult& OutHitResult);
+	bool TrySphereSweepNearestActor(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& OutHitLocation, FHitResult& OutHitResult);
 
 	FVector CalculateScreenCenterWorldPositionAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const;
 
