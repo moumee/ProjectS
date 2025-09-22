@@ -984,7 +984,7 @@ void AWeapon::FireSingleAutoAim(FWeaponFireData* FireData, int32 NumPenetrable, 
 		//TODO: 여기 Radius를 DT에서 설정 가능하도록
 		float LineTraceRadius = AutoAimRadius;
 		FHitResult FirstHitResult;
-		if (PerformSphereTrace_Multi_ChooseOne(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, LineTraceRadius, LineTraceHitLocation, FirstHitResult))
+		if (TrySphereSweepNearestActor(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, LineTraceRadius, LineTraceHitLocation, FirstHitResult))
 		{
 			UE_LOG(LogTemp, Error, TEXT("Auto Aim Hit!!!!!!!!!!!!"));
 
@@ -1385,56 +1385,79 @@ bool AWeapon::PerformSphereTrace_new(FVector StartLocation, FVector TraceDirecti
 	return bHit;
 }
 
-bool AWeapon::PerformSphereTrace_Multi_ChooseOne(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& OutHitLocation, FHitResult& OutHitResult)
+bool AWeapon::TrySphereSweepNearestActor(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& OutHitLocation, FHitResult& OutHitResult)
 {
-	FVector Start = StartLocation;
-	FVector End = StartLocation + TraceDirection * MaxDistance;
+	const FVector Dir = TraceDirection.GetSafeNormal();
+	const FVector End = StartLocation + Dir * MaxDistance;
+
+	FCollisionQueryParams BaseParams(SCENE_QUERY_STAT(WeaponSphereSweep), /*bTraceComplex=*/false);
+	BaseParams.AddIgnoredActor(this);
+	BaseParams.AddIgnoredActor(Character);
+	if (WeaponMesh)                     BaseParams.AddIgnoredComponent(WeaponMesh);
+	if (Character->GetArmMesh())        BaseParams.AddIgnoredComponent(Character->GetArmMesh());
+	if (Character->GetHandsMesh())      BaseParams.AddIgnoredComponent(Character->GetHandsMesh());
 
 	TArray<FHitResult> HitResults;
+	HitResults.Reserve(6);
 
-	FCollisionQueryParams Params;
-	Params.AddIgnoredComponent(WeaponMesh);
-	Params.AddIgnoredComponent(Character->GetArmMesh());
-	Params.AddIgnoredComponent(Character->GetHandsMesh());
-	Params.AddIgnoredActor(this);
-	Params.AddIgnoredActor(Character);
+	const FCollisionShape Sphere = FCollisionShape::MakeSphere(SphereRadius);
+	
+	const bool bAnyHit = GetWorld()->SweepMultiByChannel(
+		HitResults, StartLocation, End, FQuat::Identity, ECC_GameTraceChannel8, Sphere, BaseParams);
 
-	//bool bHit = GetWorld()->SweepSingleByChannel(HitResult, Start, End, FQuat::Identity, ECC_GameTraceChannel8, FCollisionShape::MakeSphere(SphereRadius), Params);
-
-	bool bHit = GetWorld()->SweepMultiByChannel(HitResults, Start, End, FQuat::Identity, ECC_GameTraceChannel8, FCollisionShape::MakeSphere(SphereRadius), Params);
-
-	if (bHit)
-	{
-		//FVector TraceEndedPoint = Start + TraceDirection * FVector::Distance(Start, End) * HitResult.Time;
-		//HitLocation = TraceEndedPoint;
-		//UE_LOG(LogTemp, Error, TEXT("Hit actor: %s"), *GetNameSafe(HitResult.GetActor()));
-
-		//---------------
-		float MinDistance = MaxDistance;
-
-		for (FHitResult HitResult : HitResults)
-		{
-			AActor* HitActor = HitResult.GetActor();
-			if (HitActor)
-			{
-				float DistToPlayer = FVector::Distance(Character->GetActorLocation(), HitActor->GetActorLocation());
-				if (DistToPlayer <= MinDistance)
-				{
-					MinDistance = DistToPlayer;
-					OutHitLocation = HitActor->GetActorLocation();
-					OutHitResult = HitResult;
-				}
-			}
-		}
-
-		DrawDebugSphere(GetWorld(), OutHitLocation, 40.f, 12, FColor::Blue, false, 1.f);
-	}
-	else
+	if (!bAnyHit)
 	{
 		OutHitLocation = End;
+		return false;
 	}
 
-	return bHit;
+	float BestDistSq = TNumericLimits<float>::Max();
+	bool  bFound = false;
+
+	TSet<const AActor*> Seen;
+	Seen.Reserve(HitResults.Num());
+
+	const FVector CharLoc = Character->GetActorLocation();
+
+	for (const FHitResult& Hr : HitResults)
+	{
+		const AActor* HitActor = Hr.GetActor();
+		if (!HitActor || Seen.Contains(HitActor)) continue;
+		Seen.Add(HitActor);
+
+		const FVector CandidateLoc = HitActor->GetActorLocation();
+
+		FCollisionResponseParams WorldStaticResponseParams;
+		WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel1, ECR_Ignore);
+		WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel3, ECR_Ignore);
+		WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel4, ECR_Ignore);
+		WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel5, ECR_Ignore);
+		WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel6, ECR_Ignore);
+		WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel7, ECR_Ignore);
+
+		FHitResult BlockHit;
+		const bool bBlocked = GetWorld()->LineTraceSingleByChannel(
+			BlockHit,
+			StartLocation,
+			CandidateLoc,
+			ECC_WorldStatic,
+			BaseParams,
+			WorldStaticResponseParams);
+
+		if (bBlocked) continue;
+
+		const float DistSq = FVector::DistSquared(CharLoc, CandidateLoc);
+		if (DistSq < BestDistSq)
+		{
+			BestDistSq = DistSq;
+			OutHitLocation = CandidateLoc;
+			OutHitResult = Hr;
+			bFound = true;
+		}
+	}
+
+	if (!bFound) OutHitLocation = End;
+	return bFound;
 }
 
 FVector AWeapon::CalculateScreenCenterWorldPositionAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const
