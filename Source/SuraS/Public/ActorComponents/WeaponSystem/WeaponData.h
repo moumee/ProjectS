@@ -97,6 +97,8 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
 	float PumpReloadingTime_End = 0.6f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
+	float PumpReloadingTime_StartAndEnd = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
 	float PumpReloadingTime_LoopToFire = 0.2f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
 	int32 MaxAmmoPerMag = 10.f;

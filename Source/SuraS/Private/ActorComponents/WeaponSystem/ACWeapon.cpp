@@ -280,6 +280,7 @@ void AWeapon::LoadWeaponData()
 		PumpReloadingTime_Start = WeaponData->PumpReloadingTime_Start;
 		PumpReloadingTime_Loop = WeaponData->PumpReloadingTime_Loop;
 		PumpReloadingTime_End = WeaponData->PumpReloadingTime_End;
+		PumpReloadingTime_StartAndEnd = WeaponData->PumpReloadingTime_StartAndEnd;
 		PumpReloadingTime_LoopToFire = WeaponData->PumpReloadingTime_LoopToFire;
 		MaxTotalAmmo = WeaponData->MaxTotalAmmo;
 		TotalAmmo = MaxTotalAmmo;
@@ -1821,8 +1822,8 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 		{
 			if (CharacterAnimInstance != nullptr && AM_Reload_Character != nullptr)
 			{
-				float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopEnd")));
-				float PumpRealodingTotalTime = SectionTime;
+				CurrPumpActionReloadSectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopEnd")));
+				float PumpRealodingTotalTime = CurrPumpActionReloadSectionTime;
 				if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
 				{
 					PumpRealodingTotalTime += AM_Reload_Weapon->GetPlayLength();
@@ -1841,6 +1842,7 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 			//	WeaponMesh->GetAnimInstance()->Montage_JumpToSection(FName("LoopEnd"), AM_Reload_Weapon);
 			//}
 
+			CurrPumpActionReloadTime = PumpReloadingTime_End;
 			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_End, false);
 		}
 		else
@@ -1870,32 +1872,54 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 	}
 	else
 	{
-		if (CharacterAnimInstance->Montage_IsPlaying(AM_Reload_Weapon))
+		if (CharacterAnimInstance->Montage_IsPlaying(AM_Reload_Character))
 		{
-			CharacterAnimInstance->Montage_Stop(0.f, AM_Reload_Weapon);
+			CharacterAnimInstance->Montage_Stop(0.f, AM_Reload_Character);
 		}
 
-		if (CharacterAnimInstance != nullptr && AM_Reload_Character != nullptr)
+		//-------------------------------------------------------
+		if (LeftAmmoInCurrentMag + 1 == MaxAmmoPerMag)
 		{
-			float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("Start")));
+			if (CharacterAnimInstance != nullptr && AM_Reload_Character != nullptr)
+			{
+				CurrPumpActionReloadSectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("StartAndEnd")));
+				float PumpRealodingTotalTime = CurrPumpActionReloadSectionTime;
+				if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
+				{
+					PumpRealodingTotalTime += AM_Reload_Weapon->GetPlayLength();
+				}
 
-			UE_LOG(LogTemp, Error, TEXT("SectionTime_Start: %f"), SectionTime);
-			UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_Start: %f"), PumpReloadingTime_Start);
+				CharacterAnimInstance->Montage_Play(AM_Reload_Character, PumpRealodingTotalTime / PumpReloadingTime_StartAndEnd);
+				CharacterAnimInstance->Montage_JumpToSection(FName("StartAndEnd"), AM_Reload_Character);
+			}
 
-			CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_Start);
-			CharacterAnimInstance->Montage_JumpToSection(FName("Start"), AM_Reload_Character);
-
-			AM_Reload_Character->BlendOut.SetBlendTime(1000.f);
-			AM_Reload_Character->bEnableAutoBlendOut = false;
+			CurrPumpActionReloadTime = PumpReloadingTime_StartAndEnd;
+			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_StartAndEnd, false);
 		}
-
-		if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
+		else
 		{
-			WeaponMesh->GetAnimInstance()->Montage_Play(AM_Reload_Weapon, AM_Reload_Weapon->GetPlayLength() / PumpReloadingTime_Start);
-			WeaponMesh->GetAnimInstance()->Montage_JumpToSection(FName("Start"), AM_Reload_Weapon);
-		}
+			if (CharacterAnimInstance != nullptr && AM_Reload_Character != nullptr)
+			{
+				float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("Start")));
 
-		GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_Start, false);
+				UE_LOG(LogTemp, Error, TEXT("SectionTime_Start: %f"), SectionTime);
+				UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_Start: %f"), PumpReloadingTime_Start);
+
+				CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_Start);
+				CharacterAnimInstance->Montage_JumpToSection(FName("Start"), AM_Reload_Character);
+
+				AM_Reload_Character->BlendOut.SetBlendTime(1000.f);
+				AM_Reload_Character->bEnableAutoBlendOut = false;
+			}
+
+			if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
+			{
+				WeaponMesh->GetAnimInstance()->Montage_Play(AM_Reload_Weapon, AM_Reload_Weapon->GetPlayLength() / PumpReloadingTime_Start);
+				WeaponMesh->GetAnimInstance()->Montage_JumpToSection(FName("Start"), AM_Reload_Weapon);
+			}
+
+			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_Start, false);
+		}
 	}
 }
 void AWeapon::StopReload()
@@ -2131,18 +2155,29 @@ void AWeapon::ReloadingEnd()
 		if (bActivePumpActionReload)
 		{
 
-			UE_LOG(LogTemp, Error, TEXT("Pump Action Reload Sliding!!!!"));
+			//UE_LOG(LogTemp, Error, TEXT("Pump Action Reload Sliding!!!!"));
 			if (WeaponAnimInstance != nullptr && AM_Reload_Weapon != nullptr)
 			{
 				float PumpReloadingTotalTime = AM_Reload_Weapon->GetPlayLength();
 				if (CharacterAnimInstance != nullptr && AM_Reload_Character != nullptr)
 				{
-					float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopEnd")));
-					PumpReloadingTotalTime += SectionTime;
-				}
-				WeaponMesh->GetAnimInstance()->Montage_Play(AM_Reload_Weapon, PumpReloadingTotalTime / PumpReloadingTime_End);
+					if (CharacterAnimInstance->Montage_IsPlaying(AM_Reload_Character))
+					{
+						CharacterAnimInstance->Montage_Stop(0.f, AM_Reload_Character);
+						//UE_LOG(LogTemp, Error, TEXT("Stop Reloading Animation!!!!"));
+					}
 
-				UE_LOG(LogTemp, Warning, TEXT("Pump Action Reload Sliding!!!!"));
+					CharacterAnimInstance->Montage_Stop(0.f, AM_Reload_Character);
+
+					UE_LOG(LogTemp, Error, TEXT("Stop Reloading Animation!!!!"));
+
+					//float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopEnd")));
+					PumpReloadingTotalTime += CurrPumpActionReloadSectionTime;
+				}
+				WeaponMesh->GetAnimInstance()->Montage_Play(AM_Reload_Weapon, PumpReloadingTotalTime / CurrPumpActionReloadTime);
+				//WeaponMesh->GetAnimInstance()->Montage_Play(AM_Reload_Weapon, 1.f);
+
+				UE_LOG(LogTemp, Error, TEXT("Pump Action Reload Sliding!!!!"));
 			}
 		}
 	}

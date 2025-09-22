@@ -394,7 +394,11 @@ protected:
 	float PumpReloadingTime_Start = 0.6f;
 	float PumpReloadingTime_Loop = 0.4;
 	float PumpReloadingTime_End = 0.6;
+	float PumpReloadingTime_StartAndEnd = 1.f;
 	float PumpReloadingTime_LoopToFire = 0.2f;
+
+	float CurrPumpActionReloadSectionTime = 1.f;
+	float CurrPumpActionReloadTime = 1.f;
 
 	UPROPERTY(EditAnywhere)
 	int32 MaxTotalAmmo = 200.f;
