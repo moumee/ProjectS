@@ -18,23 +18,19 @@ ASuraPlayerMovementTrigger::ASuraPlayerMovementTrigger()
 	GetCollisionComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	GetCollisionComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
 	GetCollisionComponent()->SetCollisionResponseToChannel(PLAYER_TRACE_CHANNEL, ECR_Overlap);
-	
-	OnActorBeginOverlap.AddDynamic(this, &ThisClass::OnTriggerBeginOverlap);
 }
 
 // Called when the game starts or when spawned
 void ASuraPlayerMovementTrigger::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	OnActorBeginOverlap.AddDynamic(this, &ThisClass::OnTriggerBeginOverlap);
 }
 
 void ASuraPlayerMovementTrigger::OnTriggerBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
-	UE_LOG(LogTemp, Display, TEXT("Trigger Begin Overlap"));
 	if (IPlayerInterface* PlayerInterface = Cast<IPlayerInterface>(OtherActor))
 	{
-		UE_LOG(LogTemp, Display, TEXT("Player Interface"));
 		switch (MovementTriggerType)
 		{
 			case EMovementTriggerType::Start:

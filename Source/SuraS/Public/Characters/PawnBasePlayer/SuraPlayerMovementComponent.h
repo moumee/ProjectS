@@ -30,7 +30,7 @@ struct FCachedInput
 	bool bCrouchHeld = false;
 };
 
-UENUM(Blueprintable)
+UENUM(BlueprintType)
 enum class EWallRunEnter : uint8
 {
 	EWRE_Upward,
@@ -38,7 +38,7 @@ enum class EWallRunEnter : uint8
 	EWRE_Neutral
 };
 
-UENUM(Blueprintable)
+UENUM(BlueprintType)
 enum class EMovementState : uint8
 {
 	EMS_Move,
@@ -50,7 +50,7 @@ enum class EMovementState : uint8
 	EMS_Dead,
 };
 
-UENUM(Blueprintable)
+UENUM(BlueprintType)
 enum class EWallRunSide : uint8
 {
 	EWRS_None,
@@ -69,6 +69,8 @@ struct FWallInfo
 	UPROPERTY()
 	double TimeStamp = 0;
 };
+
+
 
 DECLARE_MULTICAST_DELEGATE(FOnMove);
 DECLARE_MULTICAST_DELEGATE(FOnWallRun);
@@ -153,6 +155,8 @@ public:
 	void NotifyMovementKeyHoldModification(const TArray<FPlayerKeyHoldModifier>& Modifiers);
 
 	void NotifyResetModification();
+
+	void NotifyDeath();
 
 	FOnMove	OnMove;
 	FOnWallRun OnWallRun;
@@ -466,6 +470,14 @@ protected:
 	float JumpPadForceAmount = 0.f;
 	
 #pragma endregion JumpPad
+
+#pragma region Dead
+
+	bool bDeadRequested = false;
+
+	void ConsumeDeadRequest();
+	
+#pragma endregion Dead
 
 	UPROPERTY()
 	TObjectPtr<ASuraPawnPlayer> SuraPawnPlayer = nullptr;

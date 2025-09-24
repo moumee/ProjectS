@@ -37,20 +37,20 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	EWeaponAction SkillAction = EWeaponAction::WeaponAction_None;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
-	TSubclassOf<class ASuraProjectile> LeftProjectileClass;
+	TSoftClassPtr<class ASuraProjectile> LeftProjectileClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
-	TSubclassOf<class ASuraProjectile> RightProjectileClass;
+	TSoftClassPtr<class ASuraProjectile> RightProjectileClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
-	TSubclassOf<class ASuraProjectile> SkillProjectileClass;
+	TSoftClassPtr<class ASuraProjectile> SkillProjectileClass;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UNiagaraSystem* FireEffect_L = nullptr;
+	TSoftObjectPtr<UNiagaraSystem> FireEffect_L = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UNiagaraSystem* FireEffect_R = nullptr;
+	TSoftObjectPtr<UNiagaraSystem> FireEffect_R = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UNiagaraSystem* FireEffect_Skill = nullptr;
+	TSoftObjectPtr<UNiagaraSystem> FireEffect_Skill = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UNiagaraSystem* ChargeEffect = nullptr;
+	TSoftObjectPtr<UNiagaraSystem> ChargeEffect = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	FVector ChargeEffectLocation = FVector();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
@@ -59,17 +59,17 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	FVector ChargeEffenctScale = { 1.f, 1.f, 1.f };
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* FireSound_L = nullptr;
+	TSoftObjectPtr<USoundBase> FireSound_L = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* FireSound_R = nullptr;
+	TSoftObjectPtr<USoundBase> FireSound_R = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* FireSound_Skill = nullptr;
+	TSoftObjectPtr<USoundBase> FireSound_Skill = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* ChargeSound = nullptr;
+	TSoftObjectPtr<USoundBase> ChargeSound = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* TargetSearchLoopSound = nullptr;
+	TSoftObjectPtr<USoundBase> TargetSearchLoopSound = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* TargetLockedSound = nullptr;
+	TSoftObjectPtr<USoundBase> TargetLockedSound = nullptr;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IK")
 	FTransform RightHandOffset = FTransform();
@@ -83,7 +83,7 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	bool bIsWeaponOwned = false; // 총기 소유 불값
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<class AWeapon> WeaponClass; // weaponinventory 동기화 위해서
+	TSoftClassPtr<class AWeapon> WeaponClass; // weaponinventory 동기화 위해서
 	
 	/** End Suhyeon **/
 
@@ -96,6 +96,8 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	float PumpReloadingTime_Loop = 0.4;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
 	float PumpReloadingTime_End = 0.6f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
+	float PumpReloadingTime_StartAndEnd = 1.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
 	float PumpReloadingTime_LoopToFire = 0.2f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
@@ -246,4 +248,9 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	bool bIsHitScan_Left = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitScan")
 	bool bIsHitScan_Right = false;
+	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AutoAim")
+	bool bIsAirborneAutoAimActive = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AutoAim")
+	float AutoAimRadius = 100.f;
 };

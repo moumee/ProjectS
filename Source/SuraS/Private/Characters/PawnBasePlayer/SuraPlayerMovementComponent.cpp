@@ -1,9 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-// TODO: Make and assign custom trace channels for geometry
-// TODO: WallRun 90 degree case handling, WallRun camera yaw handling
-
-
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 
 #include "KismetTraceUtils.h"
@@ -62,15 +58,20 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 	if (bPrintMovementDebug)
 	{
 		GEngine->AddOnScreenDebugMessage(
-			0, 0.f, FColor::Cyan, FString::Printf(TEXT("Current State : %s"), *UEnum::GetValueAsString(CurrentMovementState)));
+			0, 0.f, FColor::Cyan, FString::Printf(TEXT("Current State : %s"),
+				*UEnum::GetValueAsString(CurrentMovementState)));
 		GEngine->AddOnScreenDebugMessage(
-			1, 0.f, FColor::Cyan, FString::Printf(TEXT("Velocity : (%f, %f, %f) / Size : %f / Size2D : %f "), Velocity.X, Velocity.Y, Velocity.Z, Velocity.Size(), Velocity.Size2D()));
+			1, 0.f, FColor::Cyan,
+			FString::Printf(TEXT("Velocity : (%f, %f, %f) / Size : %f / Size2D : %f "),
+				Velocity.X, Velocity.Y, Velocity.Z, Velocity.Size(), Velocity.Size2D()));
 	}
 
 	if (!PawnOwner || !UpdatedComponent)
 	{
 		return;
 	}
+
+	ConsumeDeadRequest();
 
 	// If requested reset and remove all movement modifications.
 	if (bMovementModificationResetRequested)
@@ -217,15 +218,10 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 			SuraPawnPlayer->GetActorLocation() + SuraPawnPlayer->GetActorForwardVector() * 50.f, SuraPawnPlayer->GetActorQuat(),
 			ECC_WorldStatic, SuraPawnPlayer->GetCapsuleComponent()->GetCollisionShape(), SteppingFrontParams);
 
+		
 		Velocity = StepUpDir * (bIsRunning ? RunSpeed : WalkSpeed);
-		if (bIsRunning)
-		{
-			Velocity = StepUpDir * (bDamageSlowDebuff ? RunSpeed * DamageSlowDebuffMultiplier : RunSpeed);
-		}
-		else
-		{
-			Velocity = StepUpDir * (bDamageSlowDebuff ? WalkSpeed * DamageSlowDebuffMultiplier : WalkSpeed);
-		}
+		
+		Velocity = bDamageSlowDebuff ? Velocity * DamageSlowDebuffMultiplier : Velocity;
 		
 
 		if (!bSteppingFrontHit || FVector::DotProduct(Input.WorldInputDir, StepWallHit.ImpactNormal) >= 0.f)
@@ -352,8 +348,9 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 				}
 			}
 			
-			float WishSpeed = bIsCrouching ? (bDamageSlowDebuff ? CrouchSpeed * DamageSlowDebuffMultiplier : CrouchSpeed) :
-			(bIsRunning ? (bDamageSlowDebuff ? RunSpeed * DamageSlowDebuffMultiplier : RunSpeed) : (bDamageSlowDebuff ? WalkSpeed * DamageSlowDebuffMultiplier : WalkSpeed));
+			float WishSpeed = bIsCrouching ? CrouchSpeed : (bIsRunning ? RunSpeed : WalkSpeed);
+
+			WishSpeed = bDamageSlowDebuff ? WishSpeed * DamageSlowDebuffMultiplier : WishSpeed;
 			
 			FVector AcceleratedVelocity = Velocity + Input.WorldInputDir * Acceleration * DeltaTime;
 			Velocity = AcceleratedVelocity.Size() > WishSpeed ? AcceleratedVelocity.GetSafeNormal() * WishSpeed : AcceleratedVelocity;
@@ -1469,6 +1466,8 @@ void USuraPlayerMovementComponent::TickDowned(float DeltaTime)
 
 void USuraPlayerMovementComponent::TickDead(float DeltaTime)
 {
+	// 1. Play death animation
+	// 2. Go to main menu
 }
 
 bool USuraPlayerMovementComponent::CanWallRun()
@@ -1701,13 +1700,16 @@ bool USuraPlayerMovementComponent::IsGrounded()
 {
 	FCollisionQueryParams GroundSweepParams;
 	GroundSweepParams.AddIgnoredActor(PawnOwner);
+
+	FCollisionResponseParams ResponseParams;
+	ResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel7, ECR_Ignore);
 	
 	FVector SweepStart = SuraPawnPlayer->GetActorLocation();
 	FVector SweepEnd = SuraPawnPlayer->GetActorLocation() +
 		FVector::DownVector * (SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 	
 	bool bHit = GetWorld()->SweepSingleByChannel(GroundHit, SweepStart, SweepEnd, FQuat::Identity, ECC_WorldStatic,
-		FCollisionShape::MakeSphere(15.f), GroundSweepParams);
+		FCollisionShape::MakeSphere(15.f), GroundSweepParams, ResponseParams);
 	
 
 	if (!bHit || !GroundHit.bBlockingHit)
@@ -2065,6 +2067,14 @@ void USuraPlayerMovementComponent::ApplyMovementDataTable()
 	DownedInvincibleDuration = Row->DownedInvincibleDuration;
 
 	UpdateDependentMovementData();
+}
+
+void USuraPlayerMovementComponent::ConsumeDeadRequest()
+{
+	if (!bDeadRequested) return;
+
+	bDeadRequested = false;
+	SetMovementState(EMovementState::EMS_Dead);
 }
 
 void USuraPlayerMovementComponent::InitializeMovementDataTypeMap()

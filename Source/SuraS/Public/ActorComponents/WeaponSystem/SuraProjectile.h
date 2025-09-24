@@ -1,5 +1,4 @@
 
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -14,7 +13,6 @@
 #include "SuraProjectile.generated.h"
 
 class AWeapon;
-
 class ASuraCharacterEnemyBase;
 
 class USphereComponent;
@@ -194,6 +192,12 @@ protected:
 public:
 	void SetHitScanActive(bool bflag);
 	void LaunchHitScan(FVector StartLocation, FVector TraceDirection);
+#pragma endregion
+
+#pragma region AutoAim
+public:
+	void LaunchAutoAim(FVector StartLocation, FVector TraceDirection, float MaxDistance, FHitResult& FirstHitResult);
+	
 
 #pragma endregion
 

@@ -189,6 +189,9 @@ protected:
 
 	void OnDash(FVector2D MovementInput);
 	void OnDashEnd();
+
+	UFUNCTION()
+	void OnCheckPointLoaded();
 };
 
 
