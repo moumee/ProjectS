@@ -7,6 +7,7 @@
 #include "MovieSceneSequencePlaybackSettings.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/BoxComponent.h"
+#include "MovieScene.h"
 
 
 // Sets default values
@@ -33,10 +34,10 @@ void AEnemyLevelSequenceTriggerBox::OnOverlapBegin(UPrimitiveComponent* Overlapp
 {
 	if (Cast<ASuraPawnPlayer>(OtherActor))
 	{
-		FMovieSceneSequencePlaybackSettings LSPlaybackSettings;
-
 		if (LevelSequenceAsset)
 		{
+			const FMovieSceneSequencePlaybackSettings LSPlaybackSettings;
+			
 			ALevelSequenceActor* OutActor;
 			LevelSequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), LevelSequenceAsset, LSPlaybackSettings, OutActor);
 
