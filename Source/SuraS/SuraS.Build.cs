@@ -27,7 +27,9 @@ public class SuraS : ModuleRules
             "MotionWarping", // Added by Yoony for Enemy motion warping
             "TemplateSequence",
             "GameplayCameras",
-            "CinematicCamera"
+            "CinematicCamera",
+            "LevelSequence", // Added by Yoony for Level Sequence
+            "MovieScene" // Added by Yoony for Level Sequence
         });
 
 
