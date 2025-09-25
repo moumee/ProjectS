@@ -13,23 +13,31 @@
 // Sets default values
 AEnemyCoopAttackTriggerBox::AEnemyCoopAttackTriggerBox()
 {
-	TriggerBox = CreateDefaultSubobject<UBoxComponent>(FName("TriggerBox"));
-	RootComponent = TriggerBox;
-	TriggerBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
-	TriggerBox->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); // Ignore Projectile
-	TriggerBox->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap); // Ignore Enemies Overlap channel
-	TriggerBox->SetGenerateOverlapEvents(true);
+	EnemiesTriggerBox = CreateDefaultSubobject<UBoxComponent>(FName("Enemies Trigger Box"));
+	RootComponent = EnemiesTriggerBox;
+	EnemiesTriggerBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+	EnemiesTriggerBox->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); // Ignore Projectile
+	EnemiesTriggerBox->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap); // Ignore Enemies Overlap channel
+	EnemiesTriggerBox->SetGenerateOverlapEvents(true);
+
+	PlayerTriggerBox = CreateDefaultSubobject<UBoxComponent>(FName("Player Trigger Box"));
+	PlayerTriggerBox->SetupAttachment(RootComponent);
+	PlayerTriggerBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+	PlayerTriggerBox->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); // Ignore Projectile
+	PlayerTriggerBox->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap); // Ignore Enemies Overlap channel
+	PlayerTriggerBox->SetGenerateOverlapEvents(true);
 }
 
 // Called when the game starts or when spawned
 void AEnemyCoopAttackTriggerBox::BeginPlay()
 {
 	Super::BeginPlay();
-
-	TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCoopAttackTriggerBox::OnOverlapBegin);
+	
+	PlayerTriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCoopAttackTriggerBox::OnPlayerOverlapBegin);
+	PlayerTriggerBox->OnComponentEndOverlap.AddDynamic(this, &AEnemyCoopAttackTriggerBox::OnPlayerOverlapEnd);
 }
 
-void AEnemyCoopAttackTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+void AEnemyCoopAttackTriggerBox::OnEnemiesOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(OtherActor))
@@ -61,3 +69,31 @@ void AEnemyCoopAttackTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedC
 	}
 }
 
+void AEnemyCoopAttackTriggerBox::OnPlayerOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (Cast<ASuraPawnPlayer>(OtherActor))
+	{
+		EnemiesTriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCoopAttackTriggerBox::OnEnemiesOverlapBegin);
+	}
+}
+
+void AEnemyCoopAttackTriggerBox::OnPlayerOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OtherActor))
+	{
+		EnemiesTriggerBox->OnComponentBeginOverlap.RemoveAll(this);
+
+		if (!EnemiesForCoopAttack.IsEmpty())
+		{
+			for (auto Enemy : EnemiesForCoopAttack)
+			{
+				Enemy->GetAIController()->GetBrainComponent()->RestartLogic();
+				Enemy->GetAIController()->SetStateToChaseOrPursue(Player);
+			}
+
+			EnemiesForCoopAttack.Empty();
+		}
+	}
+}

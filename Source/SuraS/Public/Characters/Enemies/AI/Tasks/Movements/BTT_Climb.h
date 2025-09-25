@@ -15,23 +15,20 @@ class SURAS_API UBTT_Climb : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
 
-	bool bDoneClimbing = false;
-	FVector TargetLocation = FVector::ZeroVector;
-	FVector Destination = FVector::ZeroVector;
+	bool bHasLedgeDetected = false;
+	
+	FVector TargetVelocity = FVector::ZeroVector;
 	FRotator TargetRotation = FRotator::ZeroRotator;
 
 	UPROPERTY()
-	ASuraCharacterEnemyBase* CachedEnemy = nullptr;
+	TWeakObjectPtr<ASuraCharacterEnemyBase> CachedEnemy = nullptr;
 	
 	void TraceGroundAndWall();
-	void TraceLedge(float EnemyHalfHeight);
+	void MoveUpTheLedge(FVector ImpactNormal);
 	void Move(UBehaviorTreeComponent& OwnerComp) const;
 
 public:
 	explicit UBTT_Climb(FObjectInitializer const& ObjectInitializer);
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
-	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	float ArrivalAcceptance = 100.f;
 };
