@@ -54,5 +54,7 @@ void AEnemyLevelSequenceTriggerBox::OnOverlapBegin(UPrimitiveComponent* Overlapp
 		{
 			UE_LOG(LogTemp, Error, TEXT("Unable to find level sequence asset"));
 		}
+		
+		Destroy();
 	}
 }
