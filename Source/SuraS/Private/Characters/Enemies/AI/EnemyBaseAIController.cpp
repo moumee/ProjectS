@@ -92,7 +92,8 @@ void AEnemyBaseAIController::OnTargetSighted(AActor* SeenTarget, FAIStimulus con
 	}
 	else
 	{
-		SetStateToChaseOrPursue(SeenTarget);
+		if (GetCurrentState() != EEnemyStates::Climbing)
+			SetStateToChaseOrPursue(SeenTarget);
 	}
 }
 

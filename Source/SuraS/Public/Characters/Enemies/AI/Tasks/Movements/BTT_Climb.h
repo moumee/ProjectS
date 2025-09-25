@@ -16,6 +16,7 @@ class SURAS_API UBTT_Climb : public UBTTask_BlackboardBase
 	GENERATED_BODY()
 
 	bool bHasLedgeDetected = false;
+	bool bIsDoneClimbing = false;
 	
 	FVector TargetVelocity = FVector::ZeroVector;
 	FRotator TargetRotation = FRotator::ZeroRotator;
