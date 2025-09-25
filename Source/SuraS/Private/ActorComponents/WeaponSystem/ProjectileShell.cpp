@@ -16,7 +16,7 @@ AProjectileShell::AProjectileShell()
 	//CapsuleComponent->SetCollisionObjectType(ECC_WorldDynamic);
 	CapsuleComponent->SetCollisionProfileName(FName("ProjectileShell"));
 	CapsuleComponent->SetSimulatePhysics(true);
-	CapsuleComponent->InitCapsuleSize(1.f, 2.f);
+	CapsuleComponent->InitCapsuleSize(4.f, 10.f);
 
 	ProjectileShellMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileShell"));
 	ProjectileShellMesh->SetupAttachment(RootComponent);
@@ -53,15 +53,15 @@ void AProjectileShell::HideProjectileShell()
 	CapsuleComponent->SetSimulatePhysics(false);
 }
 
-void AProjectileShell::EjectShell(const FVector EjectLocation, const FVector EjectImpulse)
+void AProjectileShell::EjectShell(const FVector EjectLocation, const FRotator EjectRotation, const FVector EjectImpulse)
 {
 	if (GetWorld()->GetTimerManager().IsTimerActive(InvisibleTimer))
 	{
 		GetWorld()->GetTimerManager().ClearTimer(InvisibleTimer);
 	}
 
-
 	SetActorLocation(EjectLocation);
+	SetActorRotation(EjectRotation);
 	if (!ProjectileShellMesh) return;
 	if (!CapsuleComponent) return;
 	ProjectileShellMesh->SetVisibility(true);

@@ -38,6 +38,6 @@ protected:
 	void InitShell();
 	void HideProjectileShell();
 public:
-	void EjectShell(const FVector EjectLocation, const FVector EjectImpulse);
+	void EjectShell(const FVector EjectLocation, const FRotator EjectRotation, const FVector EjectImpulse);
 
 };

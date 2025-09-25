@@ -1270,28 +1270,34 @@ void AWeapon::InitProjectileShells() //TODO: need to be called in Weapon Init
 }
 void AWeapon::EjectProjectileShell() //TODO: set return value
 {
-	//bool bIsEjected = false;
-
 	FTransform ActorToWorldTransform = GetTransform();
 	FVector EjectLocation;
-	if (WeaponMesh) { EjectLocation = WeaponMesh->GetSocketLocation(FName("Chamber")); }
-	else { EjectLocation = GetActorLocation(); }
-	FVector EjectImpulse = ActorToWorldTransform.InverseTransformVector(DefaultEjectImpulseVec);
+	FRotator EjectRotation;
+	if (WeaponMesh) 
+	{ 
+		EjectLocation = WeaponMesh->GetSocketLocation(FName("Chamber"));
+		EjectRotation = WeaponMesh->GetSocketRotation(FName("Chamber"));
+	}
+	else 
+	{ 
+		EjectLocation = GetActorLocation(); 
+		EjectRotation = GetActorRotation();
+	}
+	//FVector EjectImpulse = ActorToWorldTransform.InverseTransformVector(DefaultEjectImpulseVec);
+	FVector EjectImpulse = EjectRotation.RotateVector(DefaultEjectImpulseVec).GetSafeNormal();
 
 
-	EjectImpulse = UKismetMathLibrary::RandomUnitVectorInConeInDegrees(EjectImpulse.GetSafeNormal(), 10.f);
+	EjectImpulse = UKismetMathLibrary::RandomUnitVectorInConeInDegrees(EjectImpulse.GetSafeNormal(), 5.f);
 
 
 
 	EjectImpulse *= DefaultEjectImpulse;
 
 	if (!ProjectileShells[CurrProjectileShellIdx]) return;
-	ProjectileShells[CurrProjectileShellIdx]->EjectShell(EjectLocation, EjectImpulse);
+	ProjectileShells[CurrProjectileShellIdx]->EjectShell(EjectLocation, EjectRotation, EjectImpulse);
 
 	if (CurrProjectileShellIdx + 1 >= MaxProjectileShellNum) { CurrProjectileShellIdx = 0; }
 	else { CurrProjectileShellIdx++; }
-
-	//return bIsEjected;
 }
 #pragma endregion
 
