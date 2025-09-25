@@ -142,6 +142,13 @@ public:
 	FORCEINLINE float GetMinAttackRateVariation() const { return MinAttackRateVariation; }
 	FORCEINLINE float GetMaxAttackRateVariation() const { return MaxAttackRateVariation; }
 
+	// for ai controller turn off/on
+	UFUNCTION(BlueprintCallable)
+	void TurnOffAIController();
+
+	UFUNCTION(BlueprintCallable)
+	void TurnOnAIController();
+
 	// behavior tree getter
 	FORCEINLINE UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
 
@@ -166,6 +173,8 @@ public:
 	virtual void LungeToTarget(float LungeForce);
 
 	UAnimMontage* ChooseRandomAttackMontage();
+
+	UAnimMontage* GetClimbMontage() const { return ClimbAnimation; };
 
 	UAnimMontage* GetCoopAttackMontage() const { return ThrowAnimation; };
 

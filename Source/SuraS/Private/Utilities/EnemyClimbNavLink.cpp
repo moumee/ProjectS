@@ -39,7 +39,7 @@ void  AEnemyClimbNavLink::OnReceiveSmartLinkReached(AActor* Agent, const FVector
 		CachedEnemy = Enemy;
 		CachedEnemy->GetDamageSystemComp()->OnDeath.AddUObject(this, &AEnemyClimbNavLink::OnCachedEnemyDeath); // if enemy dies while climbing up, re-enable the link
 
-		SetLinkUsable(false);
+		// SetLinkUsable(false);
 		
 		CachedEnemy->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay);
 		

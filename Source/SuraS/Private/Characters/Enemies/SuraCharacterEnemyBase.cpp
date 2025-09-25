@@ -465,6 +465,17 @@ void ASuraCharacterEnemyBase::BindKillLogOnDeath() const
 	}
 }
 
+void ASuraCharacterEnemyBase::TurnOffAIController()
+{
+	GetAIController()->EndPursueState();
+	GetAIController()->GetBrainComponent()->StopLogic("Turn Off AIC");
+}
+
+void ASuraCharacterEnemyBase::TurnOnAIController()
+{
+	GetAIController()->GetBrainComponent()->RestartLogic();
+}
+
 void ASuraCharacterEnemyBase::SetUpAIController(AEnemyBaseAIController* const NewAIController)
 {
 	AIController = NewAIController;
