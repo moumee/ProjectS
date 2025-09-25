@@ -18,6 +18,10 @@ void IWeaponInterface::ReloadingEnd()
 {
 }
 
+void IWeaponInterface::EjectProjectileShell()
+{
+}
+
 void IWeaponInterface::SwitchToOtherWeapon()
 {
 }

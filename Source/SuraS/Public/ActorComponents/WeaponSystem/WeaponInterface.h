@@ -30,6 +30,8 @@ public:
 
 	virtual void ReloadingEnd();
 
+	virtual void EjectProjectileShell();
+
 	virtual void SwitchToOtherWeapon();
 
 	//<ArmRecoilAnimation>
