@@ -1,0 +1,43 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "ProjectileShell.generated.h"
+
+class UCapsuleComponent;
+class UStaticMeshComponent;
+
+UCLASS()
+class SURAS_API AProjectileShell : public AActor
+{
+	GENERATED_BODY()
+public:	
+	// Sets default values for this actor's properties
+	AProjectileShell();
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+protected:
+	UPROPERTY(EditAnywhere)
+	UCapsuleComponent* CapsuleComponent;
+	UPROPERTY(EditAnywhere)
+	UStaticMeshComponent* ProjectileShellMesh;
+	UPROPERTY(EditAnywhere)
+	float VisibleDuration = 5.f;
+	FTimerHandle InvisibleTimer;
+
+protected:
+	void InitShell();
+	void HideProjectileShell();
+public:
+	void EjectShell(const FVector EjectLocation, const FVector EjectImpulse);
+
+};

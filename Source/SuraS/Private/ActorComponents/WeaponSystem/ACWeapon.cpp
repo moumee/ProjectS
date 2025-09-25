@@ -21,6 +21,7 @@
 #include "ActorComponents/WeaponSystem/AmmoCounterWidget.h"
 #include "ActorComponents/WeaponSystem/WeaponAimUIWidget.h"
 #include "ActorComponents/WeaponSystem/TargetingSkillWidget.h"
+#include "ActorComponents/WeaponSystem/ProjectileShell.h"
 
 
 #include "GameFramework/PlayerController.h"
@@ -431,6 +432,7 @@ void AWeapon::BeginPlay()
 
 	//SetCollisionProfileName(FName("Weapon"));
 	//SetCollisionResponseToAllChannels(ECR_Ignore);
+	InitProjectileShells();
 }
 
 void AWeapon::Tick(float DeltaTime)
@@ -1245,6 +1247,51 @@ void AWeapon::DestroyChargeEffect()
 		ChargeEffectComponent->DestroyComponent();
 		ChargeEffectComponent = nullptr;
 	}
+}
+#pragma endregion
+
+#pragma region ProjectileShell
+void AWeapon::InitProjectileShells() //TODO: need to be called in Weapon Init
+{
+	const FVector SpawnLocation = GetActorLocation();
+	const FRotator SpawnRotation = GetActorRotation();
+	FActorSpawnParameters SpawnParameter;
+	SpawnParameter.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	for (int i = 0; i < MaxProjectileShellNum; i++)
+	{
+		AProjectileShell* NewProjectileShell = GetWorld()->SpawnActor<AProjectileShell>(ProjectileShellClass, SpawnLocation, SpawnRotation, SpawnParameter);
+		if (!NewProjectileShell) continue;
+		ProjectileShells.Add(NewProjectileShell);
+	}
+
+	int32 numofshell = ProjectileShells.Num();
+	UE_LOG(LogTemp, Error, TEXT("Num of Shell: %d"), numofshell);
+}
+void AWeapon::EjectProjectileShell() //TODO: set return value
+{
+	//bool bIsEjected = false;
+
+	FTransform ActorToWorldTransform = GetTransform();
+	FVector EjectLocation;
+	if (WeaponMesh) { EjectLocation = WeaponMesh->GetSocketLocation(FName("Chamber")); }
+	else { EjectLocation = GetActorLocation(); }
+	FVector EjectImpulse = ActorToWorldTransform.InverseTransformVector(DefaultEjectImpulseVec);
+
+
+	EjectImpulse = UKismetMathLibrary::RandomUnitVectorInConeInDegrees(EjectImpulse.GetSafeNormal(), 10.f);
+
+
+
+	EjectImpulse *= DefaultEjectImpulse;
+
+	if (!ProjectileShells[CurrProjectileShellIdx]) return;
+	ProjectileShells[CurrProjectileShellIdx]->EjectShell(EjectLocation, EjectImpulse);
+
+	if (CurrProjectileShellIdx + 1 >= MaxProjectileShellNum) { CurrProjectileShellIdx = 0; }
+	else { CurrProjectileShellIdx++; }
+
+	//return bIsEjected;
 }
 #pragma endregion
 

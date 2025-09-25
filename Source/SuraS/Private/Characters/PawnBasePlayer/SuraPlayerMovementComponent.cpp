@@ -1703,6 +1703,7 @@ bool USuraPlayerMovementComponent::IsGrounded()
 
 	FCollisionResponseParams ResponseParams;
 	ResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel7, ECR_Ignore);
+	ResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel9, ECR_Ignore);
 	
 	FVector SweepStart = SuraPawnPlayer->GetActorLocation();
 	FVector SweepEnd = SuraPawnPlayer->GetActorLocation() +

@@ -38,6 +38,7 @@ class USuraWeaponSwitchingState;
 class USuraWeaponTargetingState;
 class USuraWeaponChargingState;
 class USuraWeaponWaitingState;
+class AProjectileShell;
 class UWeaponCameraShakeBase;
 
 class UNiagaraSystem;
@@ -331,6 +332,27 @@ public:
 	void SpawnMuzzleFireEffect(UNiagaraSystem* FireEffect = nullptr, FVector SpawnLocation = FVector(), FRotator SpawnRotation = FRotator());
 	void SpawnChargeEffect(FVector SpawnLocation, FRotator SpawnRotation, FVector EffectScale);
 	void DestroyChargeEffect();
+#pragma endregion
+
+#pragma region ProjectileShell
+protected:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AProjectileShell> ProjectileShellClass;
+	UPROPERTY(EditAnywhere)
+	int32 MaxProjectileShellNum = 5;
+	TArray<AProjectileShell*> ProjectileShells; //TODO: queue로 대체 , 근데 그냥 array가 나을듯
+
+	UPROPERTY(EditAnywhere)
+	FVector DefaultEjectImpulseVec;
+	UPROPERTY(EditAnywhere)
+	float DefaultEjectImpulse;
+
+	int32 CurrProjectileShellIdx = 0;
+
+	void InitProjectileShells();
+	virtual void EjectProjectileShell() override;
+
+
 #pragma endregion
 
 #pragma region Aim
