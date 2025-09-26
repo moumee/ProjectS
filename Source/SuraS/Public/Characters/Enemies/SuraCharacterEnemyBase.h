@@ -86,6 +86,8 @@ protected:
 	float MinAttackRateVariation;
 	float MaxAttackRateVariation;
 
+	bool bIsLevelSequenceSpawned = false;
+
 	// [protected functions]
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -144,7 +146,7 @@ public:
 
 	// for ai controller turn off/on
 	UFUNCTION(BlueprintCallable)
-	void TurnOffAIController();
+	void TurnOffAIController(bool bIsLevelSequenceSpawned);
 
 	UFUNCTION(BlueprintCallable)
 	void TurnOnAIController();
