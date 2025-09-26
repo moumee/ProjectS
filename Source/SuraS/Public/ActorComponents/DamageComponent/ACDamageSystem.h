@@ -43,6 +43,7 @@ public:
 	float GetHealth() const { return Health; }
 	float GetMaxHealth() const { return MaxHealth; }
 	bool GetIsInterruptible() const { return bIsInterruptible; }
+	bool GetIsDead() const { return bIsDead; }
 
 	FOnDamaged OnDamaged;
 	FOnDeath OnDeath;

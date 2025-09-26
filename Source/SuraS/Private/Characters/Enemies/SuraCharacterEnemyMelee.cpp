@@ -45,7 +45,7 @@ void ASuraCharacterEnemyMelee::Attack(ASuraPawnPlayer* AttackTarget)
 
 	GetWorldTimerManager().SetTimer(
 		ClearTimerHandle,
-		FTimerDelegate::CreateLambda([&]() { GetWorldTimerManager().ClearTimer(RotationHandle); }),
+		FTimerDelegate::CreateWeakLambda(this, [this]() { GetWorldTimerManager().ClearTimer(RotationHandle); }),
 		1.f,
 		false
 	);
