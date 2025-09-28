@@ -129,7 +129,7 @@ void ASuraCharacterEnemyBase::OnDamagedTriggered()
 
 	GetWorldTimerManager().SetTimer(
 		HideHealthBarHandle,
-		FTimerDelegate::CreateLambda([&]() { HealthBarWidget->SetHiddenInGame(true); }),
+		FTimerDelegate::CreateWeakLambda(this, [this]() { HealthBarWidget->SetHiddenInGame(true); }),
 		1.f,
 		false
 	);
@@ -345,7 +345,7 @@ void ASuraCharacterEnemyBase::JumpWall(const FVector& Destination)
 	
 	GetWorldTimerManager().SetTimer(
 		GravityScaleHandle,
-		FTimerDelegate::CreateLambda([&]() { GetCharacterMovement()->GravityScale = 2.f; }),
+		FTimerDelegate::CreateWeakLambda(this, [this]() { GetCharacterMovement()->GravityScale = 2.f; }),
 		2.f,
 		false
 	);
@@ -465,14 +465,27 @@ void ASuraCharacterEnemyBase::BindKillLogOnDeath() const
 	}
 }
 
-void ASuraCharacterEnemyBase::TurnOffAIController()
+void ASuraCharacterEnemyBase::TurnOffAIController(bool bIsLSSpawned)
 {
 	GetAIController()->EndPursueState();
 	GetAIController()->GetBrainComponent()->StopLogic("Turn Off AIC");
+
+	if (bIsLSSpawned)
+	{
+		bIsLevelSequenceSpawned = true;
+		GetDamageSystemComp()->OnDeath.RemoveAll(this);
+	}
 }
 
 void ASuraCharacterEnemyBase::TurnOnAIController()
 {
+	if (bIsLevelSequenceSpawned && GetDamageSystemComp()->GetIsDead())
+	{
+		// Play death anim
+		OnDeathTriggered();
+		return;
+	}
+	
 	GetAIController()->GetBrainComponent()->RestartLogic();
 }
 
