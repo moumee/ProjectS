@@ -245,4 +245,21 @@ protected:
 	FVector GetReflectionAngle(FVector normal, FVector input);
 #pragma endregion;
 
+#pragma region Damage Decay
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageDecay")
+	float DamageDecayTime = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageDecay")
+	float DamageDecayRate = 0.5f;
+
+	FTimerHandle DamageDecayTimer;
+
+	//TODO: Spawn 될 때 타이머 돌려야 함
+	// 아니면 그냥 Tick에서 처리?
+	void ApplyDamageDecay();
+
+
+
+#pragma endregion
+
 };

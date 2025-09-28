@@ -97,4 +97,9 @@ struct SURAS_API FProjectileData : public FTableRowBase
 	//--------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitScan")
 	bool bDebugHitScan = false;
+	//--------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageDecay")
+	float DamageDecayTime = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageDecay")
+	float DamageDecayRate = 0.5f;
 };

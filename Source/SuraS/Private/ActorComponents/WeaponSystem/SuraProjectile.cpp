@@ -35,7 +35,6 @@ ASuraProjectile::ASuraProjectile()
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	//CollisionComp->InitSphereRadius(5.0f);
-	//CollisionComp->BodyInstance.SetCollisionProfileName("PlayerProjectile"); //TODO: 무슨차이지?
 	CollisionComp->SetCollisionProfileName("PlayerProjectile");
 	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel7);
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); //Projectile
@@ -80,8 +79,6 @@ ASuraProjectile::ASuraProjectile()
 	ProjectileMesh->SetCastShadow(false);
 
 	InitialLifeSpan = 10.0f;
-
-	UE_LOG(LogTemp, Warning, TEXT("Projectile is Spawned!!!"));
 }
 
 void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable, bool HitScan)
@@ -143,8 +140,14 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 		CollisionComp->SetSphereRadius(InitialRadius + AdditionalRadius);
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Projectile InitialSpeed: %f"), ProjectileMovement->InitialSpeed);
-	UE_LOG(LogTemp, Warning, TEXT("Projectile MaxSpeed: %f"), ProjectileMovement->MaxSpeed);
+	//UE_LOG(LogTemp, Warning, TEXT("Projectile InitialSpeed: %f"), ProjectileMovement->InitialSpeed);
+	//UE_LOG(LogTemp, Warning, TEXT("Projectile MaxSpeed: %f"), ProjectileMovement->MaxSpeed);
+
+	//TODO: Set Damage Decay Timer
+	if (DamageDecayTime > 0)
+	{
+		GetWorld()->GetTimerManager().SetTimer(DamageDecayTimer, this, &ASuraProjectile::ApplyDamageDecay, DamageDecayTime, false);
+	}
 }
 
 void ASuraProjectile::LoadProjectileData()
@@ -204,6 +207,10 @@ void ASuraProjectile::LoadProjectileData()
 
 		// <HitScan>
 		bDebugHitScan = ProjectileData->bDebugHitScan;
+
+		// <DamageDecay>
+		DamageDecayTime = ProjectileData->DamageDecayTime;
+		DamageDecayRate = ProjectileData->DamageDecayRate;
 	}
 }
 
@@ -402,8 +409,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Error, TEXT("Projectile Overlapped!!!"));
-
+	//UE_LOG(LogTemp, Error, TEXT("Projectile Overlapped!!!"));
 	if (NumPenetrableObjects > 0 || bCanPenetrate)
 	{
 		if (OtherActor != nullptr)
@@ -434,9 +440,7 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 				else
 				{
 					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(SweepResult.PhysMaterial.Get()));
-
-					UE_LOG(LogTemp, Error, TEXT("Projectile Overlapped!!!"));
-
+					//UE_LOG(LogTemp, Error, TEXT("Projectile Overlapped!!!"));
 					if (Cast<ACharacter>(OtherActor))
 					{
 						if (OnBodyShot.IsBound())
@@ -503,7 +507,7 @@ void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Roc
 		
 		if (bShouldAttachedToWeapon)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Spawn Trail Effect!!!"));
+			//UE_LOG(LogTemp, Error, TEXT("Spawn Trail Effect!!!"));
 
 			TrailEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 				GetWorld(),
@@ -677,7 +681,7 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 						else
 						{
 							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
-							UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
+							//UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
 							if (OnBodyShot.IsBound())
 							{
 								OnBodyShot.Execute();
@@ -783,10 +787,7 @@ void ASuraProjectile::LaunchAutoAim(FVector StartLocation, FVector TraceDirectio
 		{
 			OnBodyShot.Execute();
 		}
-
-		UE_LOG(LogTemp, Error, TEXT("FirstHitResult!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"));
 	}
-
 
 	//-------------------
 
@@ -857,7 +858,7 @@ void ASuraProjectile::LaunchAutoAim(FVector StartLocation, FVector TraceDirectio
 						else
 						{
 							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
-							UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
+							//UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
 							if (OnBodyShot.IsBound())
 							{
 								OnBodyShot.Execute();
@@ -911,12 +912,12 @@ void ASuraProjectile::LaunchAutoAim(FVector StartLocation, FVector TraceDirectio
 #pragma endregion
 
 #pragma region Penetration
-void ASuraProjectile::UpdatePenetration() //TODO: ���� �Լ��� �߾�� �߳�?
+void ASuraProjectile::UpdatePenetration() //TODO: ?
 {
 	NumPenetratedObjects++;
 }
 
-void ASuraProjectile::ResetPenetration()  //TODO: ���� �Լ��� �߾�� �߳�?
+void ASuraProjectile::ResetPenetration()  //TODO: ?
 {
 	NumPenetratedObjects = 0;
 }
@@ -928,7 +929,6 @@ bool ASuraProjectile::CheckHeadHit(const FHitResult& HitResult)
 	//UE_LOG(LogTemp, Error, TEXT("FName: %s"), *HitResult.BoneName.ToString());
 	if (HitResult.BoneName == "head")
 	{
-		//UE_LOG(LogTemp, Error, TEXT("Head Shot!!!"));
 		return true;
 	}
 	return false;
@@ -973,14 +973,9 @@ void ASuraProjectile::UpdateTargetInfo()
 {
 	if (ProjectileMovement->bIsHomingProjectile)
 	{
-		if (!IsTargetValid() || IsTargetWithInRange()) // TODO: ������ �ӽ÷� ||�� ó����
+		if (!IsTargetValid() || IsTargetWithInRange()) // TODO:
 		{
-			//TODO: TargetLocation�� ���� ���ư��� �����ϵ��� �����ϱ�
-			//TODO: ������ Target�� ��ġ�� ���� �Ÿ� �̻� ��������� �ڵ� �����ϵ��� �ϴ� �͵� ������ ���� �� ����
-			//-> �̴� Target�� ������ο� ��� ���� �����ϴ� ���� ���� ��
-
-			UE_LOG(LogTemp, Error, TEXT("Target is not valid!!!"));
-
+			//UE_LOG(LogTemp, Error, TEXT("Target is not valid!!!"));
 			SpawnExplosionEffect(GetActorLocation());
 			ApplyExplosiveDamage(bIsExplosive, GetActorLocation());
 			Destroy();
@@ -1021,6 +1016,14 @@ FVector ASuraProjectile::GetReflectionAngle(FVector normal, FVector input)
 }
 #pragma endregion
 
+#pragma region Damage Decay
+void ASuraProjectile::ApplyDamageDecay()
+{
+	DefaultDamage *= DamageDecayRate;
+	UE_LOG(LogTemp, Warning, TEXT("ApplyDamageDecay()"));
+}
+#pragma endregion
+
 
 //// Called when the game starts or when spawned
 //void ASuraProjectile::BeginPlay()
@@ -1040,7 +1043,6 @@ void ASuraProjectile::Tick(float DeltaTime)
 	{
 		//Projectile Movement Update
 		UpdateHitScanProjectileMovement(DeltaTime);
-
 	}
 }
 
