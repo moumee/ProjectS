@@ -247,9 +247,9 @@ protected:
 
 #pragma region Damage Decay
 protected:
-	UPROPERTY(EditAnywhere)
-	float DamageDecayTime;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageDecay")
+	float DamageDecayTime = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageDecay")
 	float DamageDecayRate = 0.5f;
 
 	FTimerHandle DamageDecayTimer;

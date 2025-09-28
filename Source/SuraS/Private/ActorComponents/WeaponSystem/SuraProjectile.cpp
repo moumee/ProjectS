@@ -144,7 +144,10 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 	//UE_LOG(LogTemp, Warning, TEXT("Projectile MaxSpeed: %f"), ProjectileMovement->MaxSpeed);
 
 	//TODO: Set Damage Decay Timer
-
+	if (DamageDecayTime > 0)
+	{
+		GetWorld()->GetTimerManager().SetTimer(DamageDecayTimer, this, &ASuraProjectile::ApplyDamageDecay, DamageDecayTime, false);
+	}
 }
 
 void ASuraProjectile::LoadProjectileData()
@@ -204,6 +207,10 @@ void ASuraProjectile::LoadProjectileData()
 
 		// <HitScan>
 		bDebugHitScan = ProjectileData->bDebugHitScan;
+
+		// <DamageDecay>
+		DamageDecayTime = ProjectileData->DamageDecayTime;
+		DamageDecayRate = ProjectileData->DamageDecayRate;
 	}
 }
 
@@ -1013,7 +1020,7 @@ FVector ASuraProjectile::GetReflectionAngle(FVector normal, FVector input)
 void ASuraProjectile::ApplyDamageDecay()
 {
 	DefaultDamage *= DamageDecayRate;
-
+	UE_LOG(LogTemp, Warning, TEXT("ApplyDamageDecay()"));
 }
 #pragma endregion
 
