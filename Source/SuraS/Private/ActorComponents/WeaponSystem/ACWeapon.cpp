@@ -621,7 +621,7 @@ void AWeapon::FireSingleProjectile(FWeaponFireData* FireData, int32 NumPenetrabl
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("LineTrace Failed!!!!!!!!!!!!!"));
+			//UE_LOG(LogTemp, Error, TEXT("LineTrace Failed!!!!!!!!!!!!!"));
 			TargetLocationOfProjectile = LineTraceHitLocation;
 		}
 
@@ -924,8 +924,6 @@ void AWeapon::FireSingleHitScan(FWeaponFireData* FireData, int32 NumPenetrable, 
 #pragma region AutoAim
 void AWeapon::FireSingleAutoAim(FWeaponFireData* FireData, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
 {
-	UE_LOG(LogTemp, Error, TEXT("FireSingAutoAim!"));
-
 	if (CurrentState != UnequippedState)
 	{
 		if (Character == nullptr || Character->GetController() == nullptr)
@@ -955,40 +953,17 @@ void AWeapon::FireSingleAutoAim(FWeaponFireData* FireData, int32 NumPenetrable, 
 		FVector LineTraceStartLocation = Character->GetCameraComponent()->GetComponentLocation();
 		FVector LineTraceDirection = Character->GetCameraComponent()->GetForwardVector();
 
-		//if (bIsZoomIn)
-		//{
-		//	if (ZoomSpread.bEnableProjectileSpread)
-		//	{
-		//		LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
-		//	}
-
-		//	if (ZoomSpread.bEnableProjectileSpread || ZoomSpread.bEnableAimUISpread)
-		//	{
-		//		AddSpreadValue(&ZoomSpread);
-		//	}
-		//}
-		//else
-		//{
-		//	if (DefaultSpread.bEnableProjectileSpread)
-		//	{
-		//		LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
-		//	}
-
-		//	if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
-		//	{
-		//		AddSpreadValue(&DefaultSpread);
-		//	}
-		//}
-
 		FVector LineTraceHitLocation;
 
 		//----------------------------------------------
 
 		//TODO: 여기 Radius를 DT에서 설정 가능하도록
 		float LineTraceRadius = AutoAimRadius;
+		bool bIsAutoAimSucceeded = false;
 		FHitResult FirstHitResult;
 		if (TrySphereSweepNearestActor(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, LineTraceRadius, LineTraceHitLocation, FirstHitResult))
 		{
+			bIsAutoAimSucceeded = true;
 			UE_LOG(LogTemp, Error, TEXT("Auto Aim Hit!!!!!!!!!!!!"));
 
 			DrawDebugSphere(GetWorld(), LineTraceHitLocation, 40.f, 12, FColor::Red, false, 1.f);
@@ -997,8 +972,29 @@ void AWeapon::FireSingleAutoAim(FWeaponFireData* FireData, int32 NumPenetrable, 
 		}
 		else
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("LineTrace Failed!!!!!!!!!!!!!"));
+			bIsAutoAimSucceeded = false;
 			TargetLocationOfProjectile = LineTraceHitLocation;
+
+			//--------
+
+			if (DefaultSpread.bEnableProjectileSpread)
+			{
+				LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
+			}
+			if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
+			{
+				AddSpreadValue(&DefaultSpread);
+			}
+
+			if (PerformLineTrace(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, LineTraceHitLocation))
+			{
+				TargetLocationOfProjectile = LineTraceHitLocation;
+			}
+			else
+			{
+				//UE_LOG(LogTemp, Error, TEXT("LineTrace Failed!!!!!!!!!!!!!"));
+				TargetLocationOfProjectile = LineTraceHitLocation;
+			}
 		}
 
 		// Try and fire a projectile
@@ -1016,14 +1012,21 @@ void AWeapon::FireSingleAutoAim(FWeaponFireData* FireData, int32 NumPenetrable, 
 
 				// Spawn the projectile at the muzzle
 				ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(FireData->ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-				Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable, true);
-				SetUpAimUIDelegateBinding(Projectile);
 
-				Projectile->SetHomingTarget(false, nullptr);
-
-				//Projectile->LaunchProjectile(); //TODO: not to use Collision Check
-				//Projectile->LaunchHitScan(LineTraceStartLocation, LineTraceDirection);
-				Projectile->LaunchAutoAim(LineTraceStartLocation, LineTraceDirection, 50000.f, FirstHitResult);
+				if (bIsAutoAimSucceeded)
+				{
+					Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable, true);
+					SetUpAimUIDelegateBinding(Projectile);
+					Projectile->SetHomingTarget(false, nullptr);
+					Projectile->LaunchAutoAim(LineTraceStartLocation, LineTraceDirection, 50000.f, FirstHitResult);
+				}
+				else
+				{
+					Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable);
+					SetUpAimUIDelegateBinding(Projectile);
+					Projectile->SetHomingTarget(false, nullptr);
+					Projectile->LaunchProjectile();
+				}
 
 				SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, SpawnRotation);
 			}
@@ -1455,9 +1458,19 @@ bool AWeapon::TrySphereSweepNearestActor(FVector StartLocation, FVector TraceDir
 	HitResults.Reserve(6);
 
 	const FCollisionShape Sphere = FCollisionShape::MakeSphere(SphereRadius);
+
+	//-------
+	FCollisionResponseParams ResponseParams;
+	ResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel1, ECR_Ignore);
+	ResponseParams.CollisionResponse.SetResponse(ECC_WorldStatic, ECR_Ignore);
+	//ResponseParams.CollisionResponse.SetResponse(ECC_Pawn, ECR_Ignore);
+	//ResponseParams.CollisionResponse.SetResponse(ECC_Visibility, ECR_Ignore);
+	//-------
+
+
 	
 	const bool bAnyHit = GetWorld()->SweepMultiByChannel(
-		HitResults, StartLocation, End, FQuat::Identity, ECC_GameTraceChannel8, Sphere, BaseParams);
+		HitResults, StartLocation, End, FQuat::Identity, ECC_GameTraceChannel8, Sphere, BaseParams, ResponseParams);
 
 	if (!bAnyHit)
 	{
@@ -1483,6 +1496,7 @@ bool AWeapon::TrySphereSweepNearestActor(FVector StartLocation, FVector TraceDir
 
 		FCollisionResponseParams WorldStaticResponseParams;
 		WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel1, ECR_Ignore);
+		//WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel2, ECR_Ignore); //ClimbWall
 		WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel3, ECR_Ignore);
 		WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel4, ECR_Ignore);
 		WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel5, ECR_Ignore);
