@@ -24,7 +24,7 @@ protected:
 
 public:
 	UEnemyPoolBase();
-	virtual void Initialize(UWorld* const world, int initialAmount, AActor* object) override;
+	virtual void Initialize(UWorld* const world, int initialAmount, TSubclassOf<AActor> object) override;
 	
 
 };

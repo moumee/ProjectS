@@ -8,7 +8,6 @@ void ASuraCharacterEnemyBodyPartBase::BeginPlay()
 	Super::BeginPlay();
 	if (auto SkeletalMesh = GetComponentByClass<USkeletalMeshComponent>())
 	{
-		UE_LOG(LogTemp, Error, TEXT("f"));
 		SkeletalMesh->SetCollisionProfileName(TEXT("Ragdoll"));
 		SkeletalMesh->SetSimulatePhysics(true);
 	}

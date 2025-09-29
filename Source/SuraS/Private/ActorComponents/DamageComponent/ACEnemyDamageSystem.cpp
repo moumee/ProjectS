@@ -6,6 +6,9 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
+#include "Instance/ObjectPoolManager.h"
+#include "Instance/ObjectPoolBase.h"
+#include "Characters/Enemies/Animations/SuraEnemyPartAnimInstance.h"
 
 TSet<FName> UACEnemyDamageSystem::HeadBoneNames = {FName(TEXT("head"))};
 TSet<FName> UACEnemyDamageSystem::LArmBoneNames = {FName(TEXT("upperarm_l")), FName(TEXT("lowerarm_l")), FName(TEXT("hand_l"))};
@@ -121,6 +124,7 @@ void UACEnemyDamageSystem::PartBroken(AActor* OwningEnemyActor, const FDamageDat
 	FVector SpawnLocation = OwningEnemyActor->FindComponentByClass<USkeletalMeshComponent>()
 		->GetSocketLocation(PartsParent);
 
+	//나이아가라 시스템
 	if (BloodEffect)
 	{
 		UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
@@ -135,7 +139,9 @@ void UACEnemyDamageSystem::PartBroken(AActor* OwningEnemyActor, const FDamageDat
 	if (SeparatedPart != nullptr)
 	{
 		AActor* bodyPart;
-		bodyPart = GetWorld()->SpawnActor<AActor>(SeparatedPart, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
+		bodyPart = GetOwner()->GetGameInstance()->GetSubsystem<UObjectPoolManager>()->GetPool(SeparatedPart, GetWorld())
+		->GetPooledObject(GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation());
+		//bodyPart = GetWorld()->SpawnActor<AActor>(SeparatedPart, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
 			
 		UPrimitiveComponent* Enemy = Cast<UPrimitiveComponent>(bodyPart->GetRootComponent());
 		UE_LOG(LogTemp, Error, TEXT("vector: %s"), *(DamageData.ImpulseDirection).ToString());
@@ -145,4 +151,21 @@ void UACEnemyDamageSystem::PartBroken(AActor* OwningEnemyActor, const FDamageDat
 			Enemy->AddImpulse(DamageData.ImpulseDirection * -CalculateImpulsePower(DamageData.DamageAmount, PartMaxHealth) * 3, PartsParent, true );
 		}
 	}
+}
+
+void UACEnemyDamageSystem::PoseSnapShot(USkeletalMeshComponent* PartMesh)
+{
+	if (!PartMesh) return;
+	
+	if (USuraEnemyPartAnimInstance* partanim = Cast<USuraEnemyPartAnimInstance>(PartMesh->GetAnimInstance()))
+	{
+		FPoseSnapshot LeaderPoseSnapshot;
+		GetOwner()->GetComponentByClass<USkeletalMeshComponent>()->SnapshotPose(LeaderPoseSnapshot);
+		partanim->LeaderPoseSnapshot = LeaderPoseSnapshot;
+		partanim->bIsDead = true;
+	}
+
+	
+	PartMesh->SetSimulatePhysics(true);
+	PartMesh->WakeAllRigidBodies();
 }

@@ -1,9 +1,9 @@
 //***********************************************************
-// 1. ±âº» ¿ÀºêÁ§Æ® Ç® º£ÀÌ½º - Actor ±â¹Ý
-// 2. ¿ùµå¿¡ Á¸Àçx, objectpoolManager¿¡ °ü¸®µÇ°í ÀúÀå
-// 3. ÀÚÃ¼°¡ ¿ùµå¸¦ ºÒ·¯¿Ã ¼ö ¾øÀ¸¹Ç·Î ¿ùµå¸¦ ºÒ·¯¿À´Â ¸Å°³º¯¼ö ÇÊ¿ä
-// 4. ÃÑ¾Ë°ú ÀûÀÇ ¼ÒÈ¯¹æ½Ä°ú ÈÄÃ³¸®°¡ ´Ù¸£Áö¸¸, ÀÌµ¿°ú °ãÄ§ ¿À·ùÃ³¸®´Â µ¿ÀÏÇÏ¹Ç·Î ¹Û¿¡¼­ »ç¿ëµÇ´Â ¸Þ¼Òµå(GetPooledObject)´Â ¿ùµå¿Í À§Ä¡, È¸ÀüÀ» Á¦°ø¹ÞÀ½
-// 5.GetPooledObject ³»ºÎ¿¡¼­ ½ÇÁ¦ ¼ÒÈ¯Ã³¸®¸¦ ÇÏ´Â º°°³ÀÇ ÇÔ¼ö¸¦ ¸¸µé°í, »ó¼Ó Å¬·¡½º¿¡¼­ ¿øÇÏ´Â ´ë·Î º¯°æ
+// 1. ï¿½âº» ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® Ç® ï¿½ï¿½ï¿½Ì½ï¿½ - Actor ï¿½ï¿½ï¿½
+// 2. ï¿½ï¿½ï¿½å¿¡ ï¿½ï¿½ï¿½ï¿½x, objectpoolManagerï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ ï¿½ï¿½ï¿½ï¿½
+// 3. ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½å¸¦ ï¿½Ò·ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ ï¿½ï¿½ï¿½å¸¦ ï¿½Ò·ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Å°ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½
+// 4. ï¿½Ñ¾Ë°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯ï¿½ï¿½Ä°ï¿½ ï¿½ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¸ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Ìµï¿½ï¿½ï¿½ ï¿½ï¿½Ä§ ï¿½ï¿½ï¿½ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¹Ç·ï¿½ ï¿½Û¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ç´ï¿½ ï¿½Þ¼Òµï¿½(GetPooledObject)ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡, È¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+// 5.GetPooledObject ï¿½ï¿½ï¿½Î¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯Ã³ï¿½ï¿½ï¿½ï¿½ ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 //
 
 #include "Instance/ObjectPoolBase.h"
@@ -12,12 +12,11 @@ UObjectPoolBase::UObjectPoolBase()
 {
 }
 
-void UObjectPoolBase::Initialize(UWorld* const world, int initialAmount, AActor* object)
+void UObjectPoolBase::Initialize(UWorld* const world, int initialAmount, TSubclassOf<AActor> object)
 {
 	if (object != nullptr || world != nullptr)
 	{
-		PooledObject = object;
-		PooledObjectSubclass = object->GetClass();
+		PooledObjectSubclass = object;
 		World = world;
 		ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
@@ -57,7 +56,7 @@ AActor* UObjectPoolBase::GetPooledObject(FVector position, FRotator rotation)
 {
 	if (true)
 	{
-		//UE_LOG(LogTemp, Log, TEXT("2"));
+		UE_LOG(LogTemp, Log, TEXT("2"));
 		for (AActor* PoolableActor : ObjectPool)
 		{
 			if (PoolableActor != nullptr && PoolableActor->IsHidden())
@@ -73,16 +72,20 @@ AActor* UObjectPoolBase::GetPooledObject(FVector position, FRotator rotation)
 
 	AActor* SpawnedObject;
 	SpawnPooledObject(SpawnedObject);
-	//SpawnedObject = World->SpawnActor<AActor>(PooledObjectSubclass,
-		//FVector().ZeroVector, FRotator().ZeroRotator, ActorSpawnParameters);
-	ObjectPool.Add(SpawnedObject);
+	SpawnedObject = World->SpawnActor<AActor>(PooledObjectSubclass,
+		FVector().ZeroVector, FRotator().ZeroRotator, ActorSpawnParameters);
+	 if (SpawnedObject)
+	 {
+	 	ObjectPool.Add(SpawnedObject);
 	
-	SpawnedObject->TeleportTo(position, rotation);
-	//PoolableActor->InitializeEnemy();
-	SpawnedObject->SetActorHiddenInGame(false);
-	SpawnedObject->SetActorEnableCollision(true);
-
-	return SpawnedObject;
+	 	SpawnedObject->TeleportTo(position, rotation);
+	 	//PoolableActor->InitializeEnemy();
+	 	SpawnedObject->SetActorHiddenInGame(false);
+	 	SpawnedObject->SetActorEnableCollision(true);
+	 	return SpawnedObject;
+	 }
+	
+	return nullptr;
 }
 
 void UObjectPoolBase::SpawnPooledObject(AActor*& spawnedObject)
