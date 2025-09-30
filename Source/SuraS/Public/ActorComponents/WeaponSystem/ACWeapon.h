@@ -73,7 +73,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = Weapon)
 	FName WeaponRowName;
 
-
 	TSharedPtr<FStreamableHandle> WeaponAssetsHandle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponMesh")
@@ -146,7 +145,13 @@ public:
 	void InitializeCamera(ASuraPawnPlayer* NewCharacter);
 	void InitializeUI();
 
+protected:
+	UPROPERTY() UDataTable* LoadedWeaponTable = nullptr;
+	UPROPERTY(Transient) bool bWeaponAssetsReady = false;
+
+public:
 	void LoadWeaponData();
+	void LoadWeaponData_Upgrade();
 	void SetMeshVisibility(bool bflag);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
