@@ -4,6 +4,8 @@
 #include "Utilities/EnemyTraverseLink.h"
 
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
+#include "Characters/Enemies/SuraCharacterEnemyMelee.h"
+#include "Characters/Enemies/SuraCharacterEnemyRifle.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "Characters/Enemies/AI/EnemySequentialJumpComponent.h"
 
@@ -22,8 +24,9 @@ void AEnemyTraverseLink::BeginPlay()
 void AEnemyTraverseLink::OnReceiveSmartLinkReached(AActor* Agent, const FVector& Destination)
 {
 	
-	if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(Agent))
+	if (ASuraCharacterEnemyMelee* Enemy = Cast<ASuraCharacterEnemyMelee>(Agent))
 	{
+		//if (Cast<ASuraCharacterEnemyRifle>(Agent))return;
 		UE_LOG(LogTemp, Error, TEXT("Traverse LINK REACHED"));
 
 		if (Enemy->GetAIController()->GetCurrentState() == EEnemyStates::Pursue || Enemy->GetAIController()->GetCurrentState() == EEnemyStates::Attacking)
