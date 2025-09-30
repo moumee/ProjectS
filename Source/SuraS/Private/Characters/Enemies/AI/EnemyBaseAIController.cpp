@@ -92,7 +92,7 @@ void AEnemyBaseAIController::OnTargetSighted(AActor* SeenTarget, FAIStimulus con
 	}
 	else
 	{
-		if (GetCurrentState() != EEnemyStates::Climbing)
+		if (GetCurrentState() != EEnemyStates::Climbing && GetCurrentState() != EEnemyStates::CoopAttacking)
 			SetStateToChaseOrPursue(SeenTarget);
 	}
 }

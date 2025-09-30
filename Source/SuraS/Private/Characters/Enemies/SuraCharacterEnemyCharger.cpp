@@ -38,7 +38,7 @@ void ASuraCharacterEnemyCharger::ActivateDashEffect()
 {
 	if (DashEffect)
 	{
-		UE_LOG(LogTemp, Error, TEXT("dash wind should work"));
+		// UE_LOG(LogTemp, Error, TEXT("dash wind should work"));
 		
 		GetNiagaraComponent()->Deactivate();
 		
@@ -59,7 +59,7 @@ void ASuraCharacterEnemyCharger::ActivateCollisionEffect()
 {
 	if (CollisionEffect)
 	{
-		UE_LOG(LogTemp, Error, TEXT("collision fire should work"));
+		// UE_LOG(LogTemp, Error, TEXT("collision fire should work"));
 		
 		GetNiagaraComponent()->Deactivate();
 		
