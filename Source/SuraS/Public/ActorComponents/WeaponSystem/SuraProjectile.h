@@ -251,12 +251,36 @@ protected:
 	float DamageDecayTime = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageDecay")
 	float DamageDecayRate = 0.5f;
-
 	FTimerHandle DamageDecayTimer;
-
-	//TODO: Spawn 될 때 타이머 돌려야 함
-	// 아니면 그냥 Tick에서 처리?
 	void ApplyDamageDecay();
+#pragma endregion
+
+#pragma region ProjectileMovement
+protected:
+	bool bUseCustomProjectieMovement = false;
+	UPROPERTY(EditAnywhere)
+	float PM_Cam_To_d_Len;
+	float PM_Start_To_d_Len;
+
+	float PM_Vel;
+
+	float PM_k_by_d;
+
+	FVector PM_Cam_Pos;
+	FVector PM_d_Pos;
+	FVector PM_Start_Pos;
+	FVector PM_Dir;
+	FVector PM_Dir_d_To_Muzzle;
+
+	FVector PM_Muzzle_Start_Pos;
+
+public:
+	void InitProjectileMovement(FVector StartPos, FVector Direction, FVector MuzzlePos);
+
+protected:
+	void UpdateProjectileMovement(float DeltaTime);
+
+
 
 
 

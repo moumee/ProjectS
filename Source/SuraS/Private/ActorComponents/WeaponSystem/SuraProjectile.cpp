@@ -117,6 +117,7 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 		}
 		else
 		{
+			UE_LOG(LogTemp, Error, TEXT("OnComponentHit"));
 			CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
 		}
 	}
@@ -211,6 +212,9 @@ void ASuraProjectile::LoadProjectileData()
 		// <DamageDecay>
 		DamageDecayTime = ProjectileData->DamageDecayTime;
 		DamageDecayRate = ProjectileData->DamageDecayRate;
+
+		// <CustomProjectileMovement>
+		PM_Cam_To_d_Len = ProjectileData->PM_Cam_To_d_Len;
 	}
 }
 
@@ -301,6 +305,9 @@ bool ASuraProjectile::SearchOverlappedActor(FVector CenterLocation, float Search
 
 void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	UE_LOG(LogTemp, Error, TEXT("HIT HIT HIT HIT HIT HIT HIT"));
+
+
 	//TODO: Projectile�� �ٸ� actor���� hit ���� ��, OtherActor�� ������ ���� �ٸ� event �߻���Ű��. Interface ����ϱ�
 	if (bCanPenetrate)
 	{
@@ -1025,6 +1032,99 @@ void ASuraProjectile::ApplyDamageDecay()
 #pragma endregion
 
 
+#pragma region ProjectileMovement
+void ASuraProjectile::InitProjectileMovement(FVector StartPos, FVector Direction, FVector MuzzlePos)
+{
+	bUseCustomProjectieMovement = true;
+
+	ProjectileMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+	//ProjectileMesh->SetUsing
+
+	PM_Vel = MaxSpeed;
+
+
+	//TODO: Dettach MeshComponent from Collision(Root)Component	
+	PM_Cam_Pos = StartPos;
+	PM_Dir = Direction.GetSafeNormal();
+
+	PM_d_Pos = PM_Cam_Pos + PM_Dir * PM_Cam_To_d_Len;
+	PM_Dir_d_To_Muzzle = (MuzzlePos - PM_d_Pos).GetSafeNormal();
+
+	PM_Start_To_d_Len = FMath::Abs(FVector::DotProduct((-PM_Dir), PM_Dir_d_To_Muzzle)) * FVector::Distance(PM_d_Pos, MuzzlePos);
+	PM_Start_Pos = PM_Cam_Pos + PM_Dir * (PM_Cam_To_d_Len - PM_Start_To_d_Len);
+
+	PM_k_by_d = FVector::Distance(PM_d_Pos, MuzzlePos) / PM_Start_To_d_Len;
+
+	//------------------------------
+	ProjectileMesh->SetVisibility(true);
+	DistanceMoved = 0.f;
+	SetActorLocation(PM_Start_Pos);
+
+	FVector MeshTargetLocation = PM_Start_Pos + (PM_d_Pos - PM_Start_Pos) + PM_Dir_d_To_Muzzle * (PM_d_Pos - PM_Start_Pos).Length() * PM_k_by_d;
+	ProjectileMesh->SetWorldLocationAndRotation(MeshTargetLocation, (-PM_Dir_d_To_Muzzle).Rotation());
+
+
+	//TODO: Draw Debug Sphere
+	DrawDebugLine(
+		GetWorld(),
+		PM_Start_Pos,
+		PM_Start_Pos + PM_Dir * 1000.f,
+		FColor::Red,
+		false,
+		50.f);
+
+	DrawDebugLine(
+		GetWorld(),
+		MuzzlePos,
+		MuzzlePos + (-1) * PM_Dir_d_To_Muzzle * FVector::Distance(PM_d_Pos, MuzzlePos),
+		FColor::Blue,
+		false,
+		50.f);
+
+
+
+	////---------------------
+	//PM_Start_Pos = StartPos;
+	//PM_Dir = Direction.GetSafeNormal();
+	//
+	//PM_d_Pos = PM_Start_Pos + PM_Dir * PM_Cam_To_d_Len;
+	//PM_Dir_d_To_Muzzle = (MuzzlePos - PM_d_Pos).GetSafeNormal();
+
+	//PM_k_by_d = FVector::Distance(PM_d_Pos, MuzzlePos) / PM_Cam_To_d_Len;
+	//
+	////----------------------------
+	//PM_Dir_d_To_Muzzle
+
+	//PM_StartPos = StartPos;
+
+}
+void ASuraProjectile::UpdateProjectileMovement(float DeltaTime)
+{
+	FVector CurrLocation = GetActorLocation();
+
+	FVector DeltaPos = PM_Dir * PM_Vel * DeltaTime;
+
+	FVector CollisionTargetLocation = CurrLocation + DeltaPos;
+
+	DistanceMoved += DeltaPos.Length();
+
+	//SetActorLocation(CollisionTargetLocation);
+	AddActorWorldOffset(DeltaPos, /*bSweep=*/true);
+
+	if (DistanceMoved < PM_Start_To_d_Len)
+	{
+		FVector MeshTargetLocation = CollisionTargetLocation + (PM_d_Pos - CollisionTargetLocation) + PM_Dir_d_To_Muzzle * (PM_d_Pos - CollisionTargetLocation).Length() * PM_k_by_d;
+		ProjectileMesh->SetWorldLocationAndRotation(MeshTargetLocation, (-PM_Dir_d_To_Muzzle).Rotation());
+	}
+	else
+	{
+		//TODO: Attach MeshComponent to Collision Component (Once)
+		ProjectileMesh->SetWorldLocationAndRotation(CollisionTargetLocation, PM_Dir.Rotation());
+	}
+}
+#pragma endregion
+
+
 //// Called when the game starts or when spawned
 //void ASuraProjectile::BeginPlay()
 //{
@@ -1043,6 +1143,11 @@ void ASuraProjectile::Tick(float DeltaTime)
 	{
 		//Projectile Movement Update
 		UpdateHitScanProjectileMovement(DeltaTime);
+	}
+
+	if (bUseCustomProjectieMovement)
+	{
+		UpdateProjectileMovement(DeltaTime);
 	}
 }
 
