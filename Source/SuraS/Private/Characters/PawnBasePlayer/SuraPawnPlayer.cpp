@@ -112,7 +112,7 @@ void ASuraPawnPlayer::BeginPlay()
 	}
 
 	
-
+	GetDamageSystemComponent()->OnDamaged.AddUObject(CameraMovementComponent, &USuraPlayerCameraComponent::OnDamaged);
 	GetDamageSystemComponent()->OnDamaged.AddUObject(this, &ASuraPawnPlayer::OnDamaged);
 	GetDamageSystemComponent()->OnDeath.AddUObject(this, &ASuraPawnPlayer::OnDeath);
 

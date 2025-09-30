@@ -20,7 +20,7 @@ public:
 	void SpawnWrapper();
 
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
-	AActor* PooledObject;
+	TSubclassOf<AActor> PooledObject;
 
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
 	UBehaviorTree* BehaviorTree;

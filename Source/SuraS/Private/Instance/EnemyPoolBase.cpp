@@ -3,6 +3,7 @@
 
 #include "Instance/EnemyPoolBase.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "Characters/Enemies/AI/EnemyBaseAIController.h"
 
 
 void UEnemyPoolBase::SpawnPooledObject(AActor*& spawnedObject)
@@ -24,9 +25,10 @@ void UEnemyPoolBase::SpawnPooledObject(AActor*& spawnedObject)
 		TSubclassOf<APawn> CastedEnemyClass = TSubclassOf<APawn>(PooledObjectSubclass);
 		if (World != nullptr)
 		{
-			
-			AActor* newPoolableActor = UAIBlueprintHelperLibrary::SpawnAIFromClass(World,
-				*CastedEnemyClass, BehaviorTree, FVector().ZeroVector, FRotator().ZeroRotator, true);
+			//AActor* newPoolableActor = UAIBlueprintHelperLibrary::SpawnAIFromClass(World,
+			//	*CastedEnemyClass, BehaviorTree, FVector().ZeroVector, FRotator().ZeroRotator, true );
+			APawn* newPoolableActor = GetWorld()->SpawnActor<ASuraCharacterEnemyBase>(PooledObjectSubclass, FVector().ZeroVector, FRotator().ZeroRotator, ActorSpawnParameters);
+
 			Cast<ASuraCharacterEnemyBase>(newPoolableActor)->InitializeEnemy();
 			newPoolableActor->SetActorHiddenInGame(false);
 			ObjectPool.Add(newPoolableActor);
@@ -41,8 +43,8 @@ UEnemyPoolBase::UEnemyPoolBase()
 
 }
 
-void UEnemyPoolBase::Initialize(UWorld* const world, int initialAmount, AActor* object)
+void UEnemyPoolBase::Initialize(UWorld* const world, int initialAmount, TSubclassOf<AActor> object)
 {
 	Super::Initialize(world, initialAmount, object);
-	BehaviorTree = Cast<ASuraCharacterEnemyBase>(PooledObject)->GetBehaviorTree();
+	//BehaviorTree = Cast<ASuraCharacterEnemyBase>(PooledObject)->GetBehaviorTree();
 }

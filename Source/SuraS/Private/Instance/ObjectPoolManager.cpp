@@ -9,11 +9,9 @@ UObjectPoolManager::UObjectPoolManager()
 {
 }
 
-UObjectPoolBase* UObjectPoolManager::GetPool(AActor* ObjectClass, UObject* WorldContext)
+UObjectPoolBase* UObjectPoolManager::GetPool(TSubclassOf<AActor> ObjectClass, UObject* WorldContext)
 {
 	if (!ObjectClass || !WorldContext) return nullptr;
-
-	//FScopeLock Lock(&MyCriticalSection);
 
 	if (ObjectPool_List.Contains(ObjectClass)) 
 	{
@@ -21,15 +19,17 @@ UObjectPoolBase* UObjectPoolManager::GetPool(AActor* ObjectClass, UObject* World
 	}
 	else 
 	{
-		if (true)
+		if (ObjectClass->IsChildOf(ASuraCharacterEnemyBase::StaticClass()))
 		{
+			UE_LOG(LogTemp, Error, TEXT("enemypool"));
 			UObjectPoolBase* newPool = NewObject<UEnemyPoolBase>(this, UEnemyPoolBase::StaticClass(), TEXT("ObjectPoolBase"));
-			newPool->Initialize(GetWorld(), 3, ObjectClass);
+			newPool->Initialize(GetWorld(), 10, ObjectClass);
 			ObjectPool_List.Add(ObjectClass, newPool);
 			return newPool;
 		}
 		else
 		{
+			UE_LOG(LogTemp, Error, TEXT("objectpool"));
 			UObjectPoolBase* newPool = NewObject<UObjectPoolBase>(this, UObjectPoolBase::StaticClass(), TEXT("ObjectPoolBase"));
 			newPool->Initialize(GetWorld(), 3, ObjectClass);
 			ObjectPool_List.Add(ObjectClass, newPool);

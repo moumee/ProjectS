@@ -22,6 +22,8 @@ public:
 	USuraPlayerCameraComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void OnDowned();
+	void PlayOneShotCameraShake(const TSubclassOf<UCameraShakeBase>& InShake);
+	void OnDamaged();
 
 protected:
 	virtual void BeginPlay() override;
@@ -110,6 +112,8 @@ protected:
 	TSubclassOf<UCameraShakeBase> BackwardRightDashCameraShake;
 	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|One Shot")
 	TSubclassOf<UCameraShakeBase> BackwardLeftDashCameraShake;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|One Shot")
+	TSubclassOf<UCameraShakeBase> HitCameraShake;
 	
 
 	UPROPERTY(VisibleAnywhere, Category="Camera Shake")
@@ -133,7 +137,7 @@ protected:
 	FTimerDelegate DownedGoingUpShakeDelegate;
 
 	void ChangeCameraLoopShake(const TSubclassOf<UCameraShakeBase>& InShake);
-	void PlayOneShotCameraShake(const TSubclassOf<UCameraShakeBase>& InShake);
+	
 	void TickMoveStateCamera(float DeltaTime);
 	void TickWallRunStateCamera(float DeltaTime);
 	void TickSlideStateCamera(float DeltaTime);

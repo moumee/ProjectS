@@ -1,7 +1,7 @@
 //
-//¿øÇÏ´Â ¾×ÅÍ¸¦ ¼ÒÈ¯ÇÏ´Â ½ºÆ÷³Ê ¿¹Á¦
-// 1. ÇØ´ç ½ºÆ÷³Ê´Â PoolManager¿¡¼­ poolÀ» °¡Á®¿Í pool¿¡¼­ actor¸¦ ¹ÝÈ¯¹Þ´Â ÀÏ·ÃÀÇ °úÁ¤ÀÇ ¿¹Á¦ÀÌ´Ù.
-// 2. intervalÀ» ÁÖ±â·Î ¾×ÅÍ¸¦ ½ºÆùÇÑ´Ù
+//ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½È¯ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+// 1. ï¿½Ø´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ê´ï¿½ PoolManagerï¿½ï¿½ï¿½ï¿½ poolï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ poolï¿½ï¿½ï¿½ï¿½ actorï¿½ï¿½ ï¿½ï¿½È¯ï¿½Þ´ï¿½ ï¿½Ï·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ì´ï¿½.
+// 2. intervalï¿½ï¿½ ï¿½Ö±ï¿½ï¿½ ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½
 //
 
 
@@ -23,7 +23,7 @@ void ASpawnerBase::SpawnWrapper()
 {
 	for (int i = 0; i < spawnCount; i++)
 	{
-		Pool->GetPooledObject(GetActorLocation() + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator().ZeroRotator);
+		Pool->GetPooledObject(GetActorLocation() + FVector(FMath::RandRange(-200, 200), FMath::RandRange(-200, 200), 0), FRotator().ZeroRotator);
 	}
 }
 
@@ -35,6 +35,7 @@ void ASpawnerBase::BeginPlay()
 	if (PooledObject)
 	{
 		Pool = GetGameInstance()->GetSubsystem<UObjectPoolManager>()->GetPool(PooledObject, GetWorld());
+		Pool->BehaviorTree = BehaviorTree;
 		GetWorld()->GetTimerManager().SetTimer(TimerHandler, this, &ASpawnerBase::SpawnWrapper, interval, true);
 	}
 }
