@@ -77,5 +77,4 @@ Plugins/**/Intermediate/*
 DerivedDataCache/*
 
 # Allow Plugins
-!Plugins/**/
 !Plugins/**/*.lib
