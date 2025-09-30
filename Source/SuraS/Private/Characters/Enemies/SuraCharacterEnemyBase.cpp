@@ -117,9 +117,9 @@ void ASuraCharacterEnemyBase::Tick(float DeltaSeconds)
 
 void ASuraCharacterEnemyBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
-
 	GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+	
+	Super::EndPlay(EndPlayReason);
 }
 
 void ASuraCharacterEnemyBase::OnDamagedTriggered()
@@ -208,6 +208,8 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 
 	//objectpoolDisableEnemy
 	FTimerHandle DeathHandle;
+	
+	
 	
 	GetWorldTimerManager().SetTimer(
 		DeathHandle,
