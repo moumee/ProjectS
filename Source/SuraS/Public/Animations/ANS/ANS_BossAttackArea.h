@@ -24,7 +24,7 @@ private:
 	TObjectPtr<ASuraCharacterBossProto> BossRef;
 
 	UPROPERTY()
-	ASuraBossAttackArea* AttackArea;
+	TArray<ASuraBossAttackArea*> AttackAreas;
 
 	bool bHasHit = false;
 
