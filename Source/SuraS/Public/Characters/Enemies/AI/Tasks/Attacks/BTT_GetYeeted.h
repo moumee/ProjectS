@@ -19,6 +19,7 @@ class SURAS_API UBTT_GetYeeted : public UBTTask_BlackboardBase
 	ASuraCharacterEnemyBase* CachedEnemy;
 
 	bool bIsFalling = false;
+	bool bIsDoneGettingYeeted =false;
 
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);

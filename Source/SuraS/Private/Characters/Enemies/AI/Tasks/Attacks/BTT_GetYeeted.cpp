@@ -4,7 +4,9 @@
 #include "Characters/Enemies/AI/Tasks/Attacks/BTT_GetYeeted.h"
 
 #include "AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
+#include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -22,6 +24,8 @@ EBTNodeResult::Type UBTT_GetYeeted::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 	{
 		CachedEnemy->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &UBTT_GetYeeted::OnHit);
 	}
+
+	bIsDoneGettingYeeted = false;
 	
 	return EBTNodeResult::InProgress;
 }
@@ -50,13 +54,20 @@ void UBTT_GetYeeted::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemo
 			if (bIsFalling)
 			{
 				bIsFalling = false;
-
-				UAnimInstance* const EnemyAnimInstance = CachedEnemy->GetMesh()->GetAnimInstance();
-				EnemyAnimInstance->Montage_Stop(0.2f);
-				CachedEnemy->GetCapsuleComponent()->OnComponentHit.RemoveDynamic(this, &UBTT_GetYeeted::OnHit);
-
-				FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+				bIsDoneGettingYeeted = true;
 			}
+		}
+
+		if (bIsDoneGettingYeeted)
+		{
+			// UE_LOG(LogTemp, Error, TEXT("Done Getting Yeeted"));
+
+			UAnimInstance* const EnemyAnimInstance = CachedEnemy->GetMesh()->GetAnimInstance();
+			EnemyAnimInstance->Montage_Stop(0.2f);
+			CachedEnemy->GetCapsuleComponent()->OnComponentHit.RemoveDynamic(this, &UBTT_GetYeeted::OnHit);
+			CachedEnemy->SetActorRotation(CachedEnemy->GetAIController()->GetBlackboardComponent()->GetValueAsRotator("TargetRotation"));
+
+			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 		}
 	}
 }
@@ -82,5 +93,20 @@ void UBTT_GetYeeted::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 		DamageData.ImpulseMagnitude = 1000.f;
 			
 		Player->TakeDamage(DamageData, CachedEnemy);
+
+		CachedEnemy->GetCapsuleComponent()->OnComponentHit.RemoveDynamic(this, &UBTT_GetYeeted::OnHit);
+
+		bIsDoneGettingYeeted = true;
+	}
+	else
+	{
+		bIsDoneGettingYeeted = true;
+
+		if (CachedEnemy->GetAIController()->GetBrainComponent()->IsPaused())
+		{
+			UE_LOG(LogTemp, Error, TEXT("AI Paused"));
+			CachedEnemy->GetAIController()->GetBrainComponent()->RestartLogic();
+			CachedEnemy->GetAIController()->SetStateToChaseOrPursue(CachedEnemy);
+		}
 	}
 }

@@ -25,6 +25,15 @@ EBTNodeResult::Type UBTT_CoopAttack::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 		CachedEnemy = Enemy;
 
 		CachedEnemyAlly = Cast<ASuraCharacterEnemyBase>(CachedEnemy->GetAIController()->GetBlackboardComponent()->GetValueAsObject("CoopAlly"));
+
+		if (CachedEnemyAlly && CachedEnemyAlly->GetAIController()->GetCurrentState() != EEnemyStates::CoopAttacking)
+		{
+			CachedEnemyAlly->GetAIController()->SetStateToCoopAttack(CachedEnemy, false);
+			CachedEnemyAlly->GetAIController()->GetBlackboardComponent()->SetValueAsRotator(
+			"TargetRotation",
+			FRotator(0, CachedEnemyAlly->GetActorRotation().Yaw, 0)
+			);
+		}
 		
 		OnAttackMontageEnded.BindUObject(this, &UBTT_CoopAttack::OnAttackEnded, &OwnerComp);
 
@@ -61,5 +70,7 @@ void UBTT_CoopAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMem
 
 void UBTT_CoopAttack::OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp)
 {
+	CachedEnemy->GetAIController()->GetBlackboardComponent()->SetValueAsBool("IsCoopThrower", false);
+	
 	FinishLatentTask(*OwnerComp, EBTNodeResult::Succeeded);
 }
