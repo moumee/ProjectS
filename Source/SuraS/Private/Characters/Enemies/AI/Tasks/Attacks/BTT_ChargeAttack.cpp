@@ -101,10 +101,12 @@ void UBTT_ChargeAttack::EndTask()
 	float RoarAnimDuration = CachedCharger->PlayAnimMontage(RoarAnimation);
 	
 	FTimerHandle AnimCompleteHandle;
-	GetWorld()->GetTimerManager().SetTimer(AnimCompleteHandle, [this]()
-	{
-		OnRoarEnded();
-	}, RoarAnimDuration,false);
+	CachedCharger->GetWorldTimerManager().SetTimer(
+		AnimCompleteHandle,
+		FTimerDelegate::CreateWeakLambda(this, [this]() { OnRoarEnded(); }),
+		RoarAnimDuration,
+		false
+	);
 }
 
 // Always the last function to be called before the task ends

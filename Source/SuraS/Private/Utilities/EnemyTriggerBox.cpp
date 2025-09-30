@@ -36,7 +36,15 @@ void AEnemyTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 
 		for (ASuraCharacterEnemyBase* Enemy : EnemiesToTrigger)
 		{
-			Enemy->GetAIController()->SetStateToChaseOrPursue(Player);
+			if (Enemy)
+			{
+				AEnemyBaseAIController* EnemyAIC = Enemy->GetAIController();
+
+				if (EnemyAIC)
+				{
+					Enemy->GetAIController()->SetStateToChaseOrPursue(Player);
+				}
+			}
 		}
 
 		EnemiesToTrigger.Empty();
