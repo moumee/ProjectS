@@ -1,0 +1,15 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\users\\yoony\\desktop\\dev project\\suras\\plugins\\streamlinecore\\intermediate\\build\\win64\\unrealeditor\\inc\\streamlinerhi\\uht\\streamlinesettings.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\users\\yoony\\desktop\\dev project\\suras\\intermediate\\build\\win64\\x64\\suraseditor\\debuggame\\unrealed\\sharedpch.unrealed.project.nonoptimized.valapi.cpp20.h.pch",
+        "Includes": [
+            "c:\\users\\yoony\\desktop\\dev project\\suras\\plugins\\streamlinecore\\intermediate\\build\\win64\\x64\\unrealeditor\\debuggame\\streamlinerhi\\definitions.streamlinerhi.h",
+            "c:\\users\\yoony\\desktop\\dev project\\suras\\plugins\\streamlinecore\\source\\streamlinerhi\\public\\streamlinesettings.h",
+            "c:\\users\\yoony\\desktop\\dev project\\suras\\plugins\\streamlinecore\\intermediate\\build\\win64\\unrealeditor\\inc\\streamlinerhi\\uht\\streamlinesettings.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
