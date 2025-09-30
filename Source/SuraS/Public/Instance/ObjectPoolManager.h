@@ -21,15 +21,15 @@ class SURAS_API UObjectPoolManager : public UGameInstanceSubsystem
 public:
 	UObjectPoolManager();
 
-	// Æ¯Á¤ Å¬·¡½ºÀÇ °´Ã¼ °¡Á®¿À±â
-	UObjectPoolBase* GetPool(AActor* ObjectClass, UObject* WorldContext);
+	// Æ¯ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	UObjectPoolBase* GetPool(TSubclassOf<AActor> ObjectClass, UObject* WorldContext);
 
-	// °´Ã¼ Ç®¿¡ ¹ÝÈ¯ÇÏ±â
+	// ï¿½ï¿½Ã¼ Ç®ï¿½ï¿½ ï¿½ï¿½È¯ï¿½Ï±ï¿½
 	void ReturnToPool(AActor* Object);
 
 
 	
 private:
 	UPROPERTY()
-	TMap<AActor*, UObjectPoolBase*> ObjectPool_List;
+	TMap<TSubclassOf<AActor>, UObjectPoolBase*> ObjectPool_List;
 };

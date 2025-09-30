@@ -44,6 +44,7 @@ class SURAS_API UACEnemyDamageSystem : public UACDamageSystem
 
 	void PartBroken(AActor* OwningEnemyActor, const FDamageData& DamageData, float PartMaxHealth, const FName PartsParent, TSubclassOf<AActor> SeparatedPart = nullptr);
 
+	void PoseSnapShot(USkeletalMeshComponent* PartMesh);
 public:
 	// Sets default values for this component's properties
 	UACEnemyDamageSystem();

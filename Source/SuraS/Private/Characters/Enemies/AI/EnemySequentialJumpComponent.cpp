@@ -69,7 +69,7 @@ void UEnemySequentialJumpComponent::StartJumpSequence()
             
 void UEnemySequentialJumpComponent::JumpAnimationEndSet(UAnimMontage* AnimMontage, bool bInterrupted)
 {
-    UE_LOG(LogTemp, Error, TEXT("Delegate Start"));
+    
     if (ElapsedTime > TotalDuration) EnemyAnimInstance->Montage_Stop(0.1f);
     
     else if (TotalDuration- JumpEndMontage->GetPlayLength() < ElapsedTime)
