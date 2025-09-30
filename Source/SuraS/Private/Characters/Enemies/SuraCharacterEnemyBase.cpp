@@ -435,6 +435,8 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 
 		PlayerController = GetWorld()->GetFirstPlayerController();
 
+		bIsLevelSequenceSpawned = false;
+
 		isInitialized = true;
 	}
 }
@@ -481,10 +483,14 @@ void ASuraCharacterEnemyBase::TurnOnAIController()
 {
 	if (bIsLevelSequenceSpawned && GetDamageSystemComp()->GetIsDead())
 	{
-		// Play death anim
 		OnDeathTriggered();
 		return;
 	}
+
+	bIsLevelSequenceSpawned = false;
+	GetDamageSystemComp()->OnDeath.AddUObject(this, &ASuraCharacterEnemyBase::OnDeathTriggered);
+	UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
+	EnemyAnimInstance->StopAllMontages(true); // restart anim instance
 	
 	GetAIController()->GetBrainComponent()->RestartLogic();
 }
