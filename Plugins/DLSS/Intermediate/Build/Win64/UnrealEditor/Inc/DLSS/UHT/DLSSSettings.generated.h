@@ -14,7 +14,7 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 #endif
 #define DLSS_DLSSSettings_generated_h
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_81_INCLASS_NO_PURE_DECLS \
+#define FID_Github_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_81_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesUDLSSOverrideSettings(); \
 	friend struct Z_Construct_UClass_UDLSSOverrideSettings_Statics; \
@@ -25,7 +25,7 @@ public: \
 
 
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_81_ENHANCED_CONSTRUCTORS \
+#define FID_Github_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_81_ENHANCED_CONSTRUCTORS \
 	/** Standard constructor, called after all reflected properties have been initialized */ \
 	NO_API UDLSSOverrideSettings(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
 private: \
@@ -39,19 +39,19 @@ public: \
 	NO_API virtual ~UDLSSOverrideSettings();
 
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_76_PROLOG
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_81_GENERATED_BODY \
+#define FID_Github_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_76_PROLOG
+#define FID_Github_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_81_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_81_INCLASS_NO_PURE_DECLS \
-	FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_81_ENHANCED_CONSTRUCTORS \
+	FID_Github_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_81_INCLASS_NO_PURE_DECLS \
+	FID_Github_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_81_ENHANCED_CONSTRUCTORS \
 public: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
 
 template<> DLSS_API UClass* StaticClass<class UDLSSOverrideSettings>();
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_103_INCLASS_NO_PURE_DECLS \
+#define FID_Github_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_103_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesUDLSSSettings(); \
 	friend struct Z_Construct_UClass_UDLSSSettings_Statics; \
@@ -62,7 +62,7 @@ public: \
 
 
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_103_ENHANCED_CONSTRUCTORS \
+#define FID_Github_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_103_ENHANCED_CONSTRUCTORS \
 	/** Standard constructor, called after all reflected properties have been initialized */ \
 	NO_API UDLSSSettings(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
 private: \
@@ -76,12 +76,12 @@ public: \
 	NO_API virtual ~UDLSSSettings();
 
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_100_PROLOG
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_103_GENERATED_BODY \
+#define FID_Github_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_100_PROLOG
+#define FID_Github_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_103_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_103_INCLASS_NO_PURE_DECLS \
-	FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_103_ENHANCED_CONSTRUCTORS \
+	FID_Github_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_103_INCLASS_NO_PURE_DECLS \
+	FID_Github_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h_103_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
@@ -89,7 +89,7 @@ PRAGMA_ENABLE_DEPRECATION_WARNINGS
 template<> DLSS_API UClass* StaticClass<class UDLSSSettings>();
 
 #undef CURRENT_FILE_ID
-#define CURRENT_FILE_ID FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h
+#define CURRENT_FILE_ID FID_Github_SuraS_Plugins_DLSS_Source_DLSS_Public_DLSSSettings_h
 
 
 #define FOREACH_ENUM_EDLSSSETTINGOVERRIDE(op) \

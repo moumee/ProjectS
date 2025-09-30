@@ -17,7 +17,7 @@ enum class UDLSSSupport : uint8;
 #endif
 #define DLSSBLUEPRINT_DLSSLibrary_generated_h
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_60_RPC_WRAPPERS_NO_PURE_DECLS \
+#define FID_Github_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_60_RPC_WRAPPERS_NO_PURE_DECLS \
 	DECLARE_FUNCTION(execGetDefaultDLSSMode); \
 	DECLARE_FUNCTION(execGetDLSSMode); \
 	DECLARE_FUNCTION(execSetDLSSMode); \
@@ -40,7 +40,7 @@ enum class UDLSSSupport : uint8;
 	DECLARE_FUNCTION(execIsDLSSSupported);
 
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_60_INCLASS_NO_PURE_DECLS \
+#define FID_Github_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_60_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesUDLSSLibrary(); \
 	friend struct Z_Construct_UClass_UDLSSLibrary_Statics; \
@@ -49,7 +49,7 @@ public: \
 	DECLARE_SERIALIZER(UDLSSLibrary)
 
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_60_ENHANCED_CONSTRUCTORS \
+#define FID_Github_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_60_ENHANCED_CONSTRUCTORS \
 	/** Standard constructor, called after all reflected properties have been initialized */ \
 	DLSSBLUEPRINT_API UDLSSLibrary(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
 private: \
@@ -63,13 +63,13 @@ public: \
 	DLSSBLUEPRINT_API virtual ~UDLSSLibrary();
 
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_56_PROLOG
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_60_GENERATED_BODY \
+#define FID_Github_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_56_PROLOG
+#define FID_Github_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_60_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_60_RPC_WRAPPERS_NO_PURE_DECLS \
-	FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_60_INCLASS_NO_PURE_DECLS \
-	FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_60_ENHANCED_CONSTRUCTORS \
+	FID_Github_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_60_RPC_WRAPPERS_NO_PURE_DECLS \
+	FID_Github_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_60_INCLASS_NO_PURE_DECLS \
+	FID_Github_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h_60_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
@@ -77,7 +77,7 @@ PRAGMA_ENABLE_DEPRECATION_WARNINGS
 template<> DLSSBLUEPRINT_API UClass* StaticClass<class UDLSSLibrary>();
 
 #undef CURRENT_FILE_ID
-#define CURRENT_FILE_ID FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h
+#define CURRENT_FILE_ID FID_Github_SuraS_Plugins_DLSS_Source_DLSSBlueprint_Public_DLSSLibrary_h
 
 
 #define FOREACH_ENUM_UDLSSSUPPORT(op) \

@@ -15,7 +15,7 @@ enum class UNISMode : uint8;
 #endif
 #define NISBLUEPRINT_NISLibrary_generated_h
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_49_RPC_WRAPPERS_NO_PURE_DECLS \
+#define FID_Github_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_49_RPC_WRAPPERS_NO_PURE_DECLS \
 	DECLARE_FUNCTION(execGetDefaultNISMode); \
 	DECLARE_FUNCTION(execSetNISSharpness); \
 	DECLARE_FUNCTION(execSetNISCustomScreenPercentage); \
@@ -27,7 +27,7 @@ enum class UNISMode : uint8;
 	DECLARE_FUNCTION(execIsNISSupported);
 
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_49_INCLASS_NO_PURE_DECLS \
+#define FID_Github_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_49_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesUNISLibrary(); \
 	friend struct Z_Construct_UClass_UNISLibrary_Statics; \
@@ -36,7 +36,7 @@ public: \
 	DECLARE_SERIALIZER(UNISLibrary)
 
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_49_ENHANCED_CONSTRUCTORS \
+#define FID_Github_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_49_ENHANCED_CONSTRUCTORS \
 	/** Standard constructor, called after all reflected properties have been initialized */ \
 	NISBLUEPRINT_API UNISLibrary(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
 private: \
@@ -50,13 +50,13 @@ public: \
 	NISBLUEPRINT_API virtual ~UNISLibrary();
 
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_45_PROLOG
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_49_GENERATED_BODY \
+#define FID_Github_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_45_PROLOG
+#define FID_Github_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_49_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_49_RPC_WRAPPERS_NO_PURE_DECLS \
-	FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_49_INCLASS_NO_PURE_DECLS \
-	FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_49_ENHANCED_CONSTRUCTORS \
+	FID_Github_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_49_RPC_WRAPPERS_NO_PURE_DECLS \
+	FID_Github_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_49_INCLASS_NO_PURE_DECLS \
+	FID_Github_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h_49_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
@@ -64,7 +64,7 @@ PRAGMA_ENABLE_DEPRECATION_WARNINGS
 template<> NISBLUEPRINT_API UClass* StaticClass<class UNISLibrary>();
 
 #undef CURRENT_FILE_ID
-#define CURRENT_FILE_ID FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h
+#define CURRENT_FILE_ID FID_Github_SuraS_Plugins_NIS_Source_NISBlueprint_Public_NISLibrary_h
 
 
 #define FOREACH_ENUM_UNISSUPPORT(op) \

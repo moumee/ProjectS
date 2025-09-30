@@ -14,7 +14,7 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 #endif
 #define STREAMLINERHI_StreamlineSettings_generated_h
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_30_INCLASS_NO_PURE_DECLS \
+#define FID_Github_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_30_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesUStreamlineOverrideSettings(); \
 	friend struct Z_Construct_UClass_UStreamlineOverrideSettings_Statics; \
@@ -25,7 +25,7 @@ public: \
 
 
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_30_ENHANCED_CONSTRUCTORS \
+#define FID_Github_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_30_ENHANCED_CONSTRUCTORS \
 	/** Standard constructor, called after all reflected properties have been initialized */ \
 	NO_API UStreamlineOverrideSettings(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
 private: \
@@ -39,19 +39,19 @@ public: \
 	NO_API virtual ~UStreamlineOverrideSettings();
 
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_27_PROLOG
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_30_GENERATED_BODY \
+#define FID_Github_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_27_PROLOG
+#define FID_Github_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_30_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_30_INCLASS_NO_PURE_DECLS \
-	FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_30_ENHANCED_CONSTRUCTORS \
+	FID_Github_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_30_INCLASS_NO_PURE_DECLS \
+	FID_Github_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_30_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
 
 template<> STREAMLINERHI_API UClass* StaticClass<class UStreamlineOverrideSettings>();
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_62_INCLASS_NO_PURE_DECLS \
+#define FID_Github_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_62_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesUStreamlineSettings(); \
 	friend struct Z_Construct_UClass_UStreamlineSettings_Statics; \
@@ -62,7 +62,7 @@ public: \
 
 
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_62_ENHANCED_CONSTRUCTORS \
+#define FID_Github_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_62_ENHANCED_CONSTRUCTORS \
 	/** Standard constructor, called after all reflected properties have been initialized */ \
 	NO_API UStreamlineSettings(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
 private: \
@@ -76,12 +76,12 @@ public: \
 	NO_API virtual ~UStreamlineSettings();
 
 
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_59_PROLOG
-#define FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_62_GENERATED_BODY \
+#define FID_Github_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_59_PROLOG
+#define FID_Github_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_62_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_62_INCLASS_NO_PURE_DECLS \
-	FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_62_ENHANCED_CONSTRUCTORS \
+	FID_Github_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_62_INCLASS_NO_PURE_DECLS \
+	FID_Github_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h_62_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
@@ -89,7 +89,7 @@ PRAGMA_ENABLE_DEPRECATION_WARNINGS
 template<> STREAMLINERHI_API UClass* StaticClass<class UStreamlineSettings>();
 
 #undef CURRENT_FILE_ID
-#define CURRENT_FILE_ID FID_Users_Yoony_Desktop_Dev_Project_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h
+#define CURRENT_FILE_ID FID_Github_SuraS_Plugins_StreamlineCore_Source_StreamlineRHI_Public_StreamlineSettings_h
 
 
 #define FOREACH_ENUM_ESTREAMLINESETTINGOVERRIDE(op) \

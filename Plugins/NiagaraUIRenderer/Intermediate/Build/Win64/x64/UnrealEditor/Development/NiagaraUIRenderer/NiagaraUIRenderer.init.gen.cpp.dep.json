@@ -1,0 +1,13 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\github\\suras\\plugins\\niagarauirenderer\\intermediate\\build\\win64\\unrealeditor\\inc\\niagarauirenderer\\uht\\niagarauirenderer.init.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\github\\suras\\intermediate\\build\\win64\\x64\\suraseditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "c:\\github\\suras\\plugins\\niagarauirenderer\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\niagarauirenderer\\definitions.niagarauirenderer.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

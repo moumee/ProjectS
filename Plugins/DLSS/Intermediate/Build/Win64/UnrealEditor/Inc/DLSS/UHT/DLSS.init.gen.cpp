@@ -17,7 +17,7 @@ void EmptyLinkFunctionForGeneratedCodeDLSS_init() {}
 				nullptr,
 				0,
 				PKG_CompiledIn | 0x00000000,
-				0x0D4862BA,
+				0xC8E2F2FC,
 				0xBA9A1F1A,
 				METADATA_PARAMS(0, nullptr)
 			};
@@ -25,5 +25,5 @@ void EmptyLinkFunctionForGeneratedCodeDLSS_init() {}
 		}
 		return Z_Registration_Info_UPackage__Script_DLSS.OuterSingleton;
 	}
-	static FRegisterCompiledInInfo Z_CompiledInDeferPackage_UPackage__Script_DLSS(Z_Construct_UPackage__Script_DLSS, TEXT("/Script/DLSS"), Z_Registration_Info_UPackage__Script_DLSS, CONSTRUCT_RELOAD_VERSION_INFO(FPackageReloadVersionInfo, 0x0D4862BA, 0xBA9A1F1A));
+	static FRegisterCompiledInInfo Z_CompiledInDeferPackage_UPackage__Script_DLSS(Z_Construct_UPackage__Script_DLSS, TEXT("/Script/DLSS"), Z_Registration_Info_UPackage__Script_DLSS, CONSTRUCT_RELOAD_VERSION_INFO(FPackageReloadVersionInfo, 0xC8E2F2FC, 0xBA9A1F1A));
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
