@@ -31,7 +31,7 @@ public:
 
 	EBossState GetCurrentState() const { return CurrentState; }
 
-	ASuraBossAttackArea* GetAttackAreaByTag(FName Tag);
+	void GetAttackAreasByTag(FName Tag, TArray<ASuraBossAttackArea*>& OutAreas);
 
 	
 protected:
