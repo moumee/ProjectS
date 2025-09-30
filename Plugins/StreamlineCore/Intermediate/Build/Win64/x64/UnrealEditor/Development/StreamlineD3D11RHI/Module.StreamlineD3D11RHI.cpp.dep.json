@@ -6,6 +6,8 @@
         "PCH": "c:\\github\\suras\\intermediate\\build\\win64\\x64\\suraseditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
         "Includes": [
             "c:\\github\\suras\\plugins\\streamlinecore\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\streamlined3d11rhi\\definitions.streamlined3d11rhi.h",
+            "c:\\github\\suras\\plugins\\streamlinecore\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\streamlined3d11rhi\\permoduleinline.gen.cpp",
+            "c:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\core\\public\\hal\\permoduleinline.inl",
             "c:\\github\\suras\\plugins\\streamlinecore\\source\\streamlined3d11rhi\\private\\streamlined3d11rhi.cpp",
             "c:\\github\\suras\\plugins\\streamlinecore\\source\\streamlined3d11rhi\\public\\streamlined3d11rhi.h",
             "c:\\github\\suras\\plugins\\streamlinecore\\source\\streamlinerhi\\public\\streamlinerhi.h",

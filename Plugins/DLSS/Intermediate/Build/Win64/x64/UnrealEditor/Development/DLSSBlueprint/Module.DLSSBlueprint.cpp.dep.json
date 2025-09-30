@@ -6,6 +6,9 @@
         "PCH": "c:\\github\\suras\\intermediate\\build\\win64\\x64\\suraseditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
         "Includes": [
             "c:\\github\\suras\\plugins\\dlss\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\dlssblueprint\\definitions.dlssblueprint.h",
+            "c:\\github\\suras\\plugins\\dlss\\intermediate\\build\\win64\\unrealeditor\\inc\\dlssblueprint\\uht\\dlssblueprint.init.gen.cpp",
+            "c:\\github\\suras\\plugins\\dlss\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\dlssblueprint\\permoduleinline.gen.cpp",
+            "c:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\core\\public\\hal\\permoduleinline.inl",
             "c:\\github\\suras\\plugins\\dlss\\source\\dlssblueprint\\private\\dlsslibrary.cpp",
             "c:\\github\\suras\\plugins\\dlss\\source\\dlssblueprint\\public\\dlsslibrary.h",
             "c:\\github\\suras\\plugins\\dlss\\intermediate\\build\\win64\\unrealeditor\\inc\\dlssblueprint\\uht\\dlsslibrary.generated.h",

@@ -2,8 +2,8 @@
 	"RemapUnityFiles": 
 	{
 		"Module.DLSSEditor.cpp.obj": [
-			"DLSSEditor.cpp.obj",
-			"PerModuleInline.gen.cpp.obj"
+			"PerModuleInline.gen.cpp.obj",
+			"DLSSEditor.cpp.obj"
 		]
 	}
 }
