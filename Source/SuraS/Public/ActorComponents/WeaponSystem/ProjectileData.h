@@ -102,4 +102,7 @@ struct SURAS_API FProjectileData : public FTableRowBase
 	float DamageDecayTime = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageDecay")
 	float DamageDecayRate = 0.5f;
+	//--------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomMovement")
+	float PM_Cam_To_d_Len = 200.f;
 };

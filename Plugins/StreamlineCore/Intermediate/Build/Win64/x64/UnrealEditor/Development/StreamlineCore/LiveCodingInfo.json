@@ -1,0 +1,15 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.StreamlineCore.cpp.obj": [
+			"PerModuleInline.gen.cpp.obj",
+			"StreamlineCore.cpp.obj",
+			"StreamlineDeepDVC.cpp.obj",
+			"StreamlineDLSSG.cpp.obj",
+			"StreamlineLatewarp.cpp.obj",
+			"StreamlineReflex.cpp.obj",
+			"StreamlineReflexCamera.cpp.obj",
+			"StreamlineViewExtension.cpp.obj"
+		]
+	}
+}

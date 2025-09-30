@@ -1,0 +1,9 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.NGXRHI.cpp.obj": [
+			"PerModuleInline.gen.cpp.obj",
+			"NGXRHI.cpp.obj"
+		]
+	}
+}
