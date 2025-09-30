@@ -120,6 +120,8 @@ struct SURAS_API FPlayerCameraMovementRow : public FTableRowBase
 	TSubclassOf<UCameraShakeBase> BackwardRightDashCameraShake;
 	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|One Shot")
 	TSubclassOf<UCameraShakeBase> BackwardLeftDashCameraShake;
+	UPROPERTY(EditDefaultsOnly, Category="Camera Shake|One Shot")
+	TSubclassOf<UCameraShakeBase> HitCameraShake;
 	
 
 	
