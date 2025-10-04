@@ -110,6 +110,9 @@ private:
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* WeaponInventoryNum;
 
+	UPROPERTY(meta=(BindWidget))
+	UImage* background;
+
 	int32 CurrentWeaponIndex = 0; // 인벤토리 기준 현재 무기 인덱스
 
 	UWeaponSystemComponent* WeaponSystemComponent = nullptr;
