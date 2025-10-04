@@ -82,7 +82,7 @@ public:
 	USkeletalMeshComponent* GetWeaponMesh() { return WeaponMesh; }
 	UFUNCTION()
 	//UTexture2D* GetWeaponImage() {return WeaponDataTableHandle.GetRow<FWeaponData>("")->WeaponImage;}
-	UTexture2D* GetWeaponImage() { return WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(WeaponRowName, TEXT("LoadWeaponData"))->WeaponImage; }
+	UTexture2D* GetWeaponImage() { return WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(WeaponRowName, TEXT("LoadWeaponData"))->WeaponImage_HUD; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	EWeaponAction LeftMouseAction;

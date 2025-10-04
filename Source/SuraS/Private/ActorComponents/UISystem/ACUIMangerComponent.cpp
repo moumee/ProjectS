@@ -154,7 +154,7 @@ void UACUIMangerComponent::InitializeWidgets()
 				{
 					PlayerHUDManager->SetPlayerHUDWidget(PW);
 					PW->SetPlayerHUDManager(PlayerHUDManager);
-					PW->AddToViewport(); 
+					PW->AddToViewport(-1);
 
 					//UE_LOG(LogTemp, Warning, TEXT("✔ KillLogWidget Viewport에 추가됨"));
 				}

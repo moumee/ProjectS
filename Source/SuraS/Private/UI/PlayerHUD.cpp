@@ -6,6 +6,7 @@
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/Overlay.h"
 #include "Components/TextBlock.h"
 #include "Widgets/Player/PlayerHitWidget.h"
@@ -48,6 +49,7 @@ void UPlayerHUD::NativeConstruct()
 	AnimationMap.Add(TEXT("Slot2_TopToCenter"), Slot2_TopToCenter);
 	AnimationMap.Add(TEXT("Slot2_CenterToBottom"), Slot2_CenterToBottom);
 	AnimationMap.Add(TEXT("Slot2_BottomToTop"), Slot2_BottomToTop);
+	
 }
 
 void UPlayerHUD::SetPlayerHUDManager(UACPlayerHUDManager* InManager)
