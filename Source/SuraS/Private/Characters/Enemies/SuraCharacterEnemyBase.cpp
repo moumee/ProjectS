@@ -117,9 +117,9 @@ void ASuraCharacterEnemyBase::Tick(float DeltaSeconds)
 
 void ASuraCharacterEnemyBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
-
 	GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+	
+	Super::EndPlay(EndPlayReason);
 }
 
 void ASuraCharacterEnemyBase::OnDamagedTriggered()
@@ -208,6 +208,8 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 
 	//objectpoolDisableEnemy
 	FTimerHandle DeathHandle;
+	
+	
 	
 	GetWorldTimerManager().SetTimer(
 		DeathHandle,
@@ -435,6 +437,8 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 
 		PlayerController = GetWorld()->GetFirstPlayerController();
 
+		bIsLevelSequenceSpawned = false;
+
 		isInitialized = true;
 	}
 }
@@ -481,10 +485,14 @@ void ASuraCharacterEnemyBase::TurnOnAIController()
 {
 	if (bIsLevelSequenceSpawned && GetDamageSystemComp()->GetIsDead())
 	{
-		// Play death anim
 		OnDeathTriggered();
 		return;
 	}
+
+	bIsLevelSequenceSpawned = false;
+	GetDamageSystemComp()->OnDeath.AddUObject(this, &ASuraCharacterEnemyBase::OnDeathTriggered);
+	UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
+	EnemyAnimInstance->StopAllMontages(true); // restart anim instance
 	
 	GetAIController()->GetBrainComponent()->RestartLogic();
 }

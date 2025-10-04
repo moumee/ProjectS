@@ -91,7 +91,7 @@ void ASuraEnemyProjectile::SetOwner(AActor* TheOwner)
 
 void ASuraEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("hit"));
+	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("hit"));
 
 	// UE_LOG(LogTemp, Warning, TEXT("hit actor: %s"), *OtherActor->GetName());
 
@@ -211,10 +211,7 @@ void ASuraEnemyProjectile::LaunchProjectileWithVelocity(const FVector& Velocity)
 	
 	GetWorldTimerManager().SetTimer(
 		DestroyHandle,
-		FTimerDelegate::CreateLambda([&]()
-		{
-			Destroy();
-		}),
+		FTimerDelegate::CreateWeakLambda(this, [this](){ Destroy(); }),
 		M_DestroyDurationAfterLaunch,
 		false
 	);

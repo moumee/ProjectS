@@ -35,7 +35,6 @@ ASuraProjectile::ASuraProjectile()
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	//CollisionComp->InitSphereRadius(5.0f);
-	//CollisionComp->BodyInstance.SetCollisionProfileName("PlayerProjectile"); //TODO: 무슨차이지?
 	CollisionComp->SetCollisionProfileName("PlayerProjectile");
 	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel7);
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); //Projectile
@@ -80,8 +79,6 @@ ASuraProjectile::ASuraProjectile()
 	ProjectileMesh->SetCastShadow(false);
 
 	InitialLifeSpan = 10.0f;
-
-	UE_LOG(LogTemp, Warning, TEXT("Projectile is Spawned!!!"));
 }
 
 void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable, bool HitScan)
@@ -120,6 +117,7 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 		}
 		else
 		{
+			UE_LOG(LogTemp, Error, TEXT("OnComponentHit"));
 			CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
 		}
 	}
@@ -143,8 +141,14 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 		CollisionComp->SetSphereRadius(InitialRadius + AdditionalRadius);
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Projectile InitialSpeed: %f"), ProjectileMovement->InitialSpeed);
-	UE_LOG(LogTemp, Warning, TEXT("Projectile MaxSpeed: %f"), ProjectileMovement->MaxSpeed);
+	//UE_LOG(LogTemp, Warning, TEXT("Projectile InitialSpeed: %f"), ProjectileMovement->InitialSpeed);
+	//UE_LOG(LogTemp, Warning, TEXT("Projectile MaxSpeed: %f"), ProjectileMovement->MaxSpeed);
+
+	//TODO: Set Damage Decay Timer
+	if (DamageDecayTime > 0)
+	{
+		GetWorld()->GetTimerManager().SetTimer(DamageDecayTimer, this, &ASuraProjectile::ApplyDamageDecay, DamageDecayTime, false);
+	}
 }
 
 void ASuraProjectile::LoadProjectileData()
@@ -204,6 +208,13 @@ void ASuraProjectile::LoadProjectileData()
 
 		// <HitScan>
 		bDebugHitScan = ProjectileData->bDebugHitScan;
+
+		// <DamageDecay>
+		DamageDecayTime = ProjectileData->DamageDecayTime;
+		DamageDecayRate = ProjectileData->DamageDecayRate;
+
+		// <CustomProjectileMovement>
+		PM_Cam_To_d_Len = ProjectileData->PM_Cam_To_d_Len;
 	}
 }
 
@@ -294,6 +305,9 @@ bool ASuraProjectile::SearchOverlappedActor(FVector CenterLocation, float Search
 
 void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	UE_LOG(LogTemp, Error, TEXT("HIT HIT HIT HIT HIT HIT HIT"));
+
+
 	//TODO: Projectile�� �ٸ� actor���� hit ���� ��, OtherActor�� ������ ���� �ٸ� event �߻���Ű��. Interface ����ϱ�
 	if (bCanPenetrate)
 	{
@@ -402,8 +416,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Error, TEXT("Projectile Overlapped!!!"));
-
+	//UE_LOG(LogTemp, Error, TEXT("Projectile Overlapped!!!"));
 	if (NumPenetrableObjects > 0 || bCanPenetrate)
 	{
 		if (OtherActor != nullptr)
@@ -434,9 +447,7 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 				else
 				{
 					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(SweepResult.PhysMaterial.Get()));
-
-					UE_LOG(LogTemp, Error, TEXT("Projectile Overlapped!!!"));
-
+					//UE_LOG(LogTemp, Error, TEXT("Projectile Overlapped!!!"));
 					if (Cast<ACharacter>(OtherActor))
 					{
 						if (OnBodyShot.IsBound())
@@ -503,7 +514,7 @@ void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Roc
 		
 		if (bShouldAttachedToWeapon)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Spawn Trail Effect!!!"));
+			//UE_LOG(LogTemp, Error, TEXT("Spawn Trail Effect!!!"));
 
 			TrailEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 				GetWorld(),
@@ -677,7 +688,7 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 						else
 						{
 							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
-							UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
+							//UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
 							if (OnBodyShot.IsBound())
 							{
 								OnBodyShot.Execute();
@@ -783,10 +794,7 @@ void ASuraProjectile::LaunchAutoAim(FVector StartLocation, FVector TraceDirectio
 		{
 			OnBodyShot.Execute();
 		}
-
-		UE_LOG(LogTemp, Error, TEXT("FirstHitResult!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"));
 	}
-
 
 	//-------------------
 
@@ -857,7 +865,7 @@ void ASuraProjectile::LaunchAutoAim(FVector StartLocation, FVector TraceDirectio
 						else
 						{
 							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
-							UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
+							//UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
 							if (OnBodyShot.IsBound())
 							{
 								OnBodyShot.Execute();
@@ -911,12 +919,12 @@ void ASuraProjectile::LaunchAutoAim(FVector StartLocation, FVector TraceDirectio
 #pragma endregion
 
 #pragma region Penetration
-void ASuraProjectile::UpdatePenetration() //TODO: ���� �Լ��� �߾�� �߳�?
+void ASuraProjectile::UpdatePenetration() //TODO: ?
 {
 	NumPenetratedObjects++;
 }
 
-void ASuraProjectile::ResetPenetration()  //TODO: ���� �Լ��� �߾�� �߳�?
+void ASuraProjectile::ResetPenetration()  //TODO: ?
 {
 	NumPenetratedObjects = 0;
 }
@@ -928,7 +936,6 @@ bool ASuraProjectile::CheckHeadHit(const FHitResult& HitResult)
 	//UE_LOG(LogTemp, Error, TEXT("FName: %s"), *HitResult.BoneName.ToString());
 	if (HitResult.BoneName == "head")
 	{
-		//UE_LOG(LogTemp, Error, TEXT("Head Shot!!!"));
 		return true;
 	}
 	return false;
@@ -973,14 +980,9 @@ void ASuraProjectile::UpdateTargetInfo()
 {
 	if (ProjectileMovement->bIsHomingProjectile)
 	{
-		if (!IsTargetValid() || IsTargetWithInRange()) // TODO: ������ �ӽ÷� ||�� ó����
+		if (!IsTargetValid() || IsTargetWithInRange()) // TODO:
 		{
-			//TODO: TargetLocation�� ���� ���ư��� �����ϵ��� �����ϱ�
-			//TODO: ������ Target�� ��ġ�� ���� �Ÿ� �̻� ��������� �ڵ� �����ϵ��� �ϴ� �͵� ������ ���� �� ����
-			//-> �̴� Target�� ������ο� ��� ���� �����ϴ� ���� ���� ��
-
-			UE_LOG(LogTemp, Error, TEXT("Target is not valid!!!"));
-
+			//UE_LOG(LogTemp, Error, TEXT("Target is not valid!!!"));
 			SpawnExplosionEffect(GetActorLocation());
 			ApplyExplosiveDamage(bIsExplosive, GetActorLocation());
 			Destroy();
@@ -1021,6 +1023,107 @@ FVector ASuraProjectile::GetReflectionAngle(FVector normal, FVector input)
 }
 #pragma endregion
 
+#pragma region Damage Decay
+void ASuraProjectile::ApplyDamageDecay()
+{
+	DefaultDamage *= DamageDecayRate;
+	UE_LOG(LogTemp, Warning, TEXT("ApplyDamageDecay()"));
+}
+#pragma endregion
+
+
+#pragma region ProjectileMovement
+void ASuraProjectile::InitProjectileMovement(FVector StartPos, FVector Direction, FVector MuzzlePos)
+{
+	bUseCustomProjectieMovement = true;
+
+	ProjectileMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+	//ProjectileMesh->SetUsing
+
+	PM_Vel = MaxSpeed;
+
+
+	//TODO: Dettach MeshComponent from Collision(Root)Component	
+	PM_Cam_Pos = StartPos;
+	PM_Dir = Direction.GetSafeNormal();
+
+	PM_d_Pos = PM_Cam_Pos + PM_Dir * PM_Cam_To_d_Len;
+	PM_Dir_d_To_Muzzle = (MuzzlePos - PM_d_Pos).GetSafeNormal();
+
+	PM_Start_To_d_Len = FMath::Abs(FVector::DotProduct((-PM_Dir), PM_Dir_d_To_Muzzle)) * FVector::Distance(PM_d_Pos, MuzzlePos);
+	PM_Start_Pos = PM_Cam_Pos + PM_Dir * (PM_Cam_To_d_Len - PM_Start_To_d_Len);
+
+	PM_k_by_d = FVector::Distance(PM_d_Pos, MuzzlePos) / PM_Start_To_d_Len;
+
+	//------------------------------
+	ProjectileMesh->SetVisibility(true);
+	DistanceMoved = 0.f;
+	SetActorLocation(PM_Start_Pos);
+
+	FVector MeshTargetLocation = PM_Start_Pos + (PM_d_Pos - PM_Start_Pos) + PM_Dir_d_To_Muzzle * (PM_d_Pos - PM_Start_Pos).Length() * PM_k_by_d;
+	ProjectileMesh->SetWorldLocationAndRotation(MeshTargetLocation, (-PM_Dir_d_To_Muzzle).Rotation());
+
+
+	//TODO: Draw Debug Sphere
+	DrawDebugLine(
+		GetWorld(),
+		PM_Start_Pos,
+		PM_Start_Pos + PM_Dir * 1000.f,
+		FColor::Red,
+		false,
+		50.f);
+
+	DrawDebugLine(
+		GetWorld(),
+		MuzzlePos,
+		MuzzlePos + (-1) * PM_Dir_d_To_Muzzle * FVector::Distance(PM_d_Pos, MuzzlePos),
+		FColor::Blue,
+		false,
+		50.f);
+
+
+
+	////---------------------
+	//PM_Start_Pos = StartPos;
+	//PM_Dir = Direction.GetSafeNormal();
+	//
+	//PM_d_Pos = PM_Start_Pos + PM_Dir * PM_Cam_To_d_Len;
+	//PM_Dir_d_To_Muzzle = (MuzzlePos - PM_d_Pos).GetSafeNormal();
+
+	//PM_k_by_d = FVector::Distance(PM_d_Pos, MuzzlePos) / PM_Cam_To_d_Len;
+	//
+	////----------------------------
+	//PM_Dir_d_To_Muzzle
+
+	//PM_StartPos = StartPos;
+
+}
+void ASuraProjectile::UpdateProjectileMovement(float DeltaTime)
+{
+	FVector CurrLocation = GetActorLocation();
+
+	FVector DeltaPos = PM_Dir * PM_Vel * DeltaTime;
+
+	FVector CollisionTargetLocation = CurrLocation + DeltaPos;
+
+	DistanceMoved += DeltaPos.Length();
+
+	//SetActorLocation(CollisionTargetLocation);
+	AddActorWorldOffset(DeltaPos, /*bSweep=*/true);
+
+	if (DistanceMoved < PM_Start_To_d_Len)
+	{
+		FVector MeshTargetLocation = CollisionTargetLocation + (PM_d_Pos - CollisionTargetLocation) + PM_Dir_d_To_Muzzle * (PM_d_Pos - CollisionTargetLocation).Length() * PM_k_by_d;
+		ProjectileMesh->SetWorldLocationAndRotation(MeshTargetLocation, (-PM_Dir_d_To_Muzzle).Rotation());
+	}
+	else
+	{
+		//TODO: Attach MeshComponent to Collision Component (Once)
+		ProjectileMesh->SetWorldLocationAndRotation(CollisionTargetLocation, PM_Dir.Rotation());
+	}
+}
+#pragma endregion
+
 
 //// Called when the game starts or when spawned
 //void ASuraProjectile::BeginPlay()
@@ -1040,7 +1143,11 @@ void ASuraProjectile::Tick(float DeltaTime)
 	{
 		//Projectile Movement Update
 		UpdateHitScanProjectileMovement(DeltaTime);
+	}
 
+	if (bUseCustomProjectieMovement)
+	{
+		UpdateProjectileMovement(DeltaTime);
 	}
 }
 

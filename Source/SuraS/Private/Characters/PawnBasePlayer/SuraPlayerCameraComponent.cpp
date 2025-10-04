@@ -78,6 +78,11 @@ void USuraPlayerCameraComponent::PlayOneShotCameraShake(const TSubclassOf<UCamer
 	PlayerController->PlayerCameraManager->StartCameraShake(InShake);
 }
 
+void USuraPlayerCameraComponent::OnDamaged()
+{
+	PlayOneShotCameraShake(HitCameraShake);
+}
+
 
 void USuraPlayerCameraComponent::TickMoveStateCamera(float DeltaTime)
 {
@@ -351,6 +356,7 @@ void USuraPlayerCameraComponent::InitCameraShakes()
 	BackwardDashCameraShake = Row->BackwardDashCameraShake;
 	BackwardRightDashCameraShake = Row->BackwardRightDashCameraShake;
 	BackwardLeftDashCameraShake = Row->BackwardLeftDashCameraShake;
+	HitCameraShake = Row->HitCameraShake;
 }
 
 

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BehaviorTree/BehaviorTree.h"
 #include "GameFramework/Actor.h" 
 #include "ObjectPoolBase.generated.h" 
 
@@ -18,7 +19,7 @@ public:
 	UObjectPoolBase();
 	~UObjectPoolBase();
 
-	virtual void Initialize(UWorld* const world, int initialAmount, AActor* object);
+	virtual void Initialize(UWorld* const world, int initialAmount, TSubclassOf<AActor> object);
 
 	UFUNCTION(BlueprintCallable, Category = "ObjectPool")
 	AActor* GetPooledObject(FVector position, FRotator rotation);
@@ -26,6 +27,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
 	AActor* PooledObject;
 	TSubclassOf<class AActor> PooledObjectSubclass;
+
+	UBehaviorTree* BehaviorTree;
 
 protected:
 
@@ -36,6 +39,7 @@ protected:
 	FActorSpawnParameters ActorSpawnParameters;
 	UPROPERTY()
 	UWorld* World;
+
 
 private:
 

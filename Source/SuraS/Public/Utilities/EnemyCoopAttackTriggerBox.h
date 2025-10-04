@@ -14,6 +14,10 @@ class SURAS_API AEnemyCoopAttackTriggerBox : public AActor
 {
 	GENERATED_BODY()
 
+	bool bIsPlayerInsideTrigger = false;
+
+	void ActivateCoopAttack();
+
 public:
 	// Sets default values for this actor's properties
 	AEnemyCoopAttackTriggerBox();
@@ -26,14 +30,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TriggerEnemies")
 	TArray<ASuraCharacterEnemyBase*> EnemiesForCoopAttack;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "TriggerEnemies")
-	UBoxComponent* EnemiesTriggerBox;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TObjectPtr<USceneComponent> TriggerRootComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "TriggerEnemies")
-	UBoxComponent* PlayerTriggerBox;
+	TObjectPtr<UBoxComponent> EnemiesTriggerBox;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "TriggerEnemies")
+	TObjectPtr<UBoxComponent> PlayerTriggerBox;
 
 	UFUNCTION()
-	void OnEnemiesOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnEnemyOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnEnemyOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	UFUNCTION()
 	void OnPlayerOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
