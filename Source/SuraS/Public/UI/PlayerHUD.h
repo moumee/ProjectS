@@ -10,6 +10,7 @@
  * 
  */
 
+class UHitScreenWidget;
 class UWeaponSystemComponent;
 class UPlayerHitWidget;
 class UImage;
@@ -37,11 +38,11 @@ private:
 	// 현재 피격 단계 (0~5)
 	int32 CurrentHitStage = 0;
 	
-	// 마지막으로 피격된 시간
-	FTimerHandle RecoveryTimerHandle;
+	// // 마지막으로 피격된 시간
+	// FTimerHandle RecoveryTimerHandle;
 
 	UPROPERTY()
-	UPlayerHitWidget* PlayerHitWidget;
+	UHitScreenWidget* PlayerHitWidget;
 
 	ASuraPawnPlayer* SuraPawnPlayer;
 	
@@ -52,7 +53,7 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<UTexture2D*> HPBarTextures; // 총 6개 (0~5단계)
-
+	
 
 public:
 	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime);
@@ -61,13 +62,7 @@ public:
 	void SetPlayerHUDManager(UACPlayerHUDManager* InManager);
 	
 	UFUNCTION()
-	void UpdateHpBar();
-
-	UFUNCTION()
-	void RecoverHpBarStage();
-	
-	UFUNCTION()
-	void ApplyHpBarImage(int32 Stage);
+	void ApplyHpBarImage(float healthRatio);
 	
 
 #pragma endregion
@@ -132,6 +127,8 @@ public:
 	UFUNCTION()
 	void OnWeaponSwitchAnim(int32 PrevIndex, int32 NewIndex);
 
+	UFUNCTION()
+	void OnHealthUpdated(float NewHealth, float OldHealth, float MaxHealth);
 	UFUNCTION()
 	void InitializeHUD() const;
 	

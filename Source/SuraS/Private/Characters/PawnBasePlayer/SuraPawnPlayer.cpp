@@ -8,7 +8,8 @@
 #include "NiagaraComponent.h"
 #include "ActorComponents/AttackComponents/ACPlayerAttackTokens.h"
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
-#include "ActorComponents/UISystem/ACPlayerHudManager.h"
+#include "ActorComponents/UISystem/ACHitScreenManager.h"
+#include "ActorComponents/UISystem/ACPlayerHealthComponent.h"
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
@@ -23,9 +24,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "SaveGame/SuraSaveGame.h"
 #include "Slate/SGameLayerManager.h"
-#include "UI/DamageIndicatorWidget.h"
-#include "UI/PlayerHUD.h"
-#include "Widgets/Player/PlayerHitWidget.h"
 
 ASuraPawnPlayer::ASuraPawnPlayer()
 {
@@ -76,14 +74,10 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	AttackTokensComponent = CreateDefaultSubobject<UACPlayerAttackTokens>(TEXT("Attack Tokens Component"));
 	DamageSystemComponent = CreateDefaultSubobject<UACDamageSystem>(TEXT("Damage System Component"));
 
-	// Hit Effect Class Init - by Yoony
-	//static ConstructorHelpers::FClassFinder<UPlayerHitWidget> WidgetClass{ TEXT("/Game/UI/Player/WBP_PlayerHit") };
-
 	// UIManager actor components - suhyeon
 	UIManager = CreateDefaultSubobject<UACUIMangerComponent>(TEXT("UI Manager Component"));
-
-	// if (WidgetClass.Succeeded())
-	// 	HitEffectWidgetClass = WidgetClass.Class;
+	HealthComponent = CreateDefaultSubobject<UACPlayerHealthComponent>(TEXT("Health Component"));
+	HitScreenManager = CreateDefaultSubobject<UACHitScreenManager>(TEXT("HitScreen Manager Component"));
 
 	ForwardDashEffectComponent = CreateDefaultSubobject<UNiagaraComponent>("Forward Dash Effect Component");
 	ForwardDashEffectComponent->SetupAttachment(Camera);
@@ -118,18 +112,6 @@ void ASuraPawnPlayer::BeginPlay()
 
 	GetPlayerMovementComponent()->OnDash.AddUObject(this, &ASuraPawnPlayer::OnDash);
 	GetPlayerMovementComponent()->OnDashEnd.AddUObject(this, &ASuraPawnPlayer::OnDashEnd);
-
-	// Hit Effect Widget Init - by Yoony
-	if (IsValid(HitEffectWidgetClass))
-	{
-		HitEffectWidget = Cast<UPlayerHitWidget>(CreateWidget<UPlayerHitWidget>(GetWorld(), HitEffectWidgetClass));
-		
-		if (IsValid(HitEffectWidget))
-		{
-			HitEffectWidget->AddToViewport();
-			//HitEffectWidget->SetVisibility(ESlateVisibility::Hidden);
-		}
-	}
 
 	FTimerDelegate PlayerHealthCheckTimerDelegate;
 	PlayerHealthCheckTimerDelegate.BindUObject(this, &ASuraPawnPlayer::CheckPlayerHealth);
@@ -346,11 +328,10 @@ void ASuraPawnPlayer::RequestResetModification()
 
 void ASuraPawnPlayer::OnDamaged()
 {
-	// HitEffectWidget->SetVisibility(ESlateVisibility::Visible);
-
-	// hit effect - by suhyeon
-	// hpbar update call
-	UIManager->GetPlayerHudManger()->GetPlayerHudWidget()->UpdateHpBar();
+	if (HealthComponent) 
+	{
+		HealthComponent->TakeDamage(10.0f); // default damage 10으로 일단 고정. 추후 변수로 변경
+	}
 }
 
 void ASuraPawnPlayer::OnDeath()
