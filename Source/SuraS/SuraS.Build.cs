@@ -29,7 +29,8 @@ public class SuraS : ModuleRules
             "GameplayCameras",
             "CinematicCamera",
             "LevelSequence", // Added by Yoony for Level Sequence
-            "MovieScene" // Added by Yoony for Level Sequence
+            "MovieScene", // Added by Yoony for Level Sequence
+            "NiagaraUIRenderer" // Addyd by suhyeon for hitscrren niagara
         });
 
 
