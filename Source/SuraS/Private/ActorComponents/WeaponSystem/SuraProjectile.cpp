@@ -301,15 +301,16 @@ void ASuraProjectile::ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector Cen
 	}
 }
 void ASuraProjectile::ApplyDamage(AActor* OtherActor, float DamageAmount, EDamageType DamageType, bool bCanForceDamage,
-	const FName BoneName, TEnumAsByte<EPhysicalSurface> SurfaceType, const FVector ImpulseDirection)
+	const FName BoneName, TEnumAsByte<EPhysicalSurface> SurfaceType, const FVector ImpulseDirection, const FVector ImpactPoint)
 {
-	FDamageData Damage; //TODO: 착탄 위치 적용해서
+	FDamageData Damage; //TODO: 착탄 위치
 	Damage.DamageAmount = DamageAmount;
 	Damage.DamageType = DamageType;
 	Damage.bCanForceDamage = bCanForceDamage;
 	Damage.BoneName = BoneName;
 	Damage.ImpulseDirection = ImpulseDirection;
 	Damage.SurfaceType = SurfaceType;
+	Damage.ImpactPoint = ImpactPoint;
 
 	if (OtherActor->GetClass()->ImplementsInterface(UDamageable::StaticClass()))
 	{
@@ -330,9 +331,6 @@ bool ASuraProjectile::SearchOverlappedActor(FVector CenterLocation, float Search
 
 void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	UE_LOG(LogTemp, Error, TEXT("HIT HIT HIT HIT HIT HIT HIT"));
-
-
 	//TODO: Projectile�� �ٸ� actor���� hit ���� ��, OtherActor�� ������ ���� �ٸ� event �߻���Ű��. Interface ����ϱ�
 	if (bCanPenetrate)
 	{
@@ -379,7 +377,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 				if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(Hit))
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, Hit.BoneName, UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()), Hit.ImpactNormal);
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, Hit.BoneName, UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()), Hit.ImpactNormal, Hit.ImpactPoint);
 
 					if (OnHeadShot.IsBound())
 					{
@@ -388,7 +386,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 				}
 				else
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, Hit.BoneName,UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()), Hit.ImpactNormal);
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, Hit.BoneName,UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()), Hit.ImpactNormal, Hit.ImpactPoint);
 					UE_LOG(LogTemp, Error, TEXT("bone11-1: %s"), *Hit.BoneName.ToString());
 					if (Cast<ACharacter>(OtherActor))
 					{
@@ -462,7 +460,7 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 				
 				if (HeadShotAdditionalDamage > 0.f && CheckHeadOvelap(OtherActor, SweepResult))
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(SweepResult.PhysMaterial.Get()));
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(SweepResult.PhysMaterial.Get()), SweepResult.ImpactNormal, SweepResult.ImpactPoint);
 
 					if (OnHeadShot.IsBound())
 					{
@@ -471,7 +469,7 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 				}
 				else
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(SweepResult.PhysMaterial.Get()));
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(SweepResult.PhysMaterial.Get()), SweepResult.ImpactNormal, SweepResult.ImpactPoint);
 					//UE_LOG(LogTemp, Error, TEXT("Projectile Overlapped!!!"));
 					if (Cast<ACharacter>(OtherActor))
 					{
@@ -705,7 +703,7 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 						if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(HitResult))
 						{
 							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
-								EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
+								EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
 
 							if (OnHeadShot.IsBound())
 							{
@@ -714,7 +712,7 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 						}
 						else
 						{
-							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
+							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
 							//UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
 							if (OnBodyShot.IsBound())
 							{
@@ -814,7 +812,7 @@ void ASuraProjectile::PerformHitScan_Upgrade(FVector StartLocation, FVector Trac
 						if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(HitResult))
 						{
 							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
-								EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
+								EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
 
 							if (OnHeadShot.IsBound())
 							{
@@ -823,7 +821,7 @@ void ASuraProjectile::PerformHitScan_Upgrade(FVector StartLocation, FVector Trac
 						}
 						else
 						{
-							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
+							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
 							//UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
 							if (OnBodyShot.IsBound())
 							{
@@ -918,142 +916,7 @@ void ASuraProjectile::UpdateHitScanProjectileMovement(float DeltaTime)
 #pragma endregion
 
 #pragma region AutoAim
-void ASuraProjectile::LaunchAutoAim(FVector StartLocation, FVector TraceDirection, float MaxDistance, FHitResult& FirstHitResult)
-{
-	//PerformHitScan(StartLocation, TraceDirection, 50000.f, ProjectileRadius, HitScanEndPoints); //TODO: MaxDistnace 설정해야함
-	//------------------
-	if (FirstHitResult.IsValidBlockingHit() && FirstHitResult.GetActor())
-	{
-		ApplyDamage(FirstHitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
-			EDamageType::Melee, false, FirstHitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(FirstHitResult.PhysMaterial.Get()), TraceDirection);
-
-		if (OnBodyShot.IsBound())
-		{
-			OnBodyShot.Execute();
-		}
-	}
-
-	//-------------------
-
-	FVector Start = StartLocation;
-	FVector Direction = TraceDirection;
-	FVector End = StartLocation + TraceDirection * MaxDistance;
-
-	TArray<FVector> HitStaticLocations;
-
-	FCollisionObjectQueryParams ObjectQueryParams;
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_GameTraceChannel6);
-
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(ProjectileOwner);
-	Params.AddIgnoredComponent(Weapon->GetWeaponMesh());
-	Params.AddIgnoredComponent(ProjectileMesh);
-	Params.AddIgnoredActor(this);
-	Params.bReturnPhysicalMaterial = true;
-
-	for (int32 RicochetCount = 0; RicochetCount <= MaxRicochetCount; RicochetCount++)
-	{
-		TArray<FHitResult> TempHitResults;
-
-		bool bHit = GetWorld()->SweepMultiByObjectType(
-			TempHitResults,
-			Start,
-			End,
-			FQuat::Identity,
-			ObjectQueryParams,
-			FCollisionShape::MakeSphere(ProjectileRadius),
-			Params
-		);
-		
-		if (bDebugHitScan) { DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 10.f); }
-
-		bool bIsBlockedByWorldStatic = false;
-
-		if (bHit)
-		{
-			TArray<AActor*> OnceDamagedEnemies;
-
-			if (FirstHitResult.IsValidBlockingHit() && FirstHitResult.GetActor())
-			{
-				OnceDamagedEnemies.AddUnique(FirstHitResult.GetActor());
-			}
-			for (const FHitResult& HitResult : TempHitResults)
-			{
-				if (NumPenetratedObjects <= NumPenetrableObjects)
-				{
-					ACharacter* Enemy = Cast<ACharacter>(HitResult.GetActor());
-					if (Enemy && !OnceDamagedEnemies.Contains(Enemy))
-					{
-						OnceDamagedEnemies.AddUnique(Enemy);
-
-						if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(HitResult))
-						{
-							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
-								EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
-
-							if (OnHeadShot.IsBound())
-							{
-								OnHeadShot.Execute();
-							}
-						}
-						else
-						{
-							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
-							//UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
-							if (OnBodyShot.IsBound())
-							{
-								OnBodyShot.Execute();
-							}
-						}
-
-						UpdatePenetration();
-					}
-				}
-
-				if (HitResult.GetComponent()->GetCollisionObjectType() == ECC_WorldStatic)
-				{
-					HitStaticLocations.Add(HitResult.ImpactPoint);
-
-					if (bDebugHitScan) { DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 12, FColor::Red, false, 50.f); }
-
-					Start = HitResult.ImpactPoint;
-
-					if (CheckRicochetAngle(HitResult.ImpactNormal, Direction))
-					{
-						Direction = GetReflectionAngle(HitResult.ImpactNormal, Direction);
-						Start = Start + Direction.GetSafeNormal() * (ProjectileRadius + 1.f);
-						End = Start + Direction * MaxDistance;
-						CurrentRicochetCount++;
-					}
-					else
-					{
-						RicochetCount = MaxRicochetCount + 1;
-					}
-					bIsBlockedByWorldStatic = true;
-					break;
-				}
-			}
-		}
-
-		if (!bHit || !bIsBlockedByWorldStatic)
-		{
-			HitStaticLocations.Add(End);
-			break;
-		}		
-	}
-
-	HitScanEndPoints = HitStaticLocations;
-
-
-	//---------
-
-	InitHitScanProjectileMovement(GetActorLocation()); //TODO: 정상화
-
-}
-void ASuraProjectile::LaunchAutoAim_Upgrade(FVector StartLocation, FVector TraceDir, FVector AutoAimDir, FVector MuzzleLoc, float MaxDistance, float AutoAimRadius)
+void ASuraProjectile::LaunchAutoAim(FVector StartLocation, FVector TraceDir, FVector AutoAimDir, FVector MuzzleLoc, float MaxDistance, float AutoAimRadius)
 {
 	FVector TraceStart = StartLocation;
 	FVector TraceDirection = TraceDir;
@@ -1100,7 +963,7 @@ void ASuraProjectile::LaunchAutoAim_Upgrade(FVector StartLocation, FVector Trace
 				if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(HitResult))
 				{
 					ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
-						EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
+						EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
 
 					if (OnHeadShot.IsBound())
 					{
@@ -1109,7 +972,7 @@ void ASuraProjectile::LaunchAutoAim_Upgrade(FVector StartLocation, FVector Trace
 				}
 				else
 				{
-					ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
+					ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
 					//UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
 					if (OnBodyShot.IsBound())
 					{
@@ -1209,6 +1072,7 @@ void ASuraProjectile::LaunchAutoAim_Upgrade(FVector StartLocation, FVector Trace
 		{
 			//TODO: 1. 강제 데미지 적용, 2. Set ProjectileMovement
 
+			//TODO: Impact Point 설정하기
 			ApplyDamage(AutoAimHitEnemy, DefaultDamage + AdditionalDamage,
 				EDamageType::Melee, false, AutoAimHitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(AutoAimHitResult.PhysMaterial.Get()), TraceDirection);
 

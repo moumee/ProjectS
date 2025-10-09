@@ -50,7 +50,7 @@ void AProjectileShell::HideProjectileShell()
 {
 	if (!ProjectileShellMesh) return;
 	ProjectileShellMesh->SetVisibility(false);
-	CapsuleComponent->SetSimulatePhysics(false);
+	//CapsuleComponent->SetSimulatePhysics(false);
 }
 
 void AProjectileShell::EjectShell(const FVector EjectLocation, const FRotator EjectRotation, const FVector EjectImpulse)
