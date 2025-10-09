@@ -78,8 +78,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
 	float InitialSpeed = 50000.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
-	float MaxSpeed = 50000.f;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
+	//float MaxSpeed = 50000.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
 	float InitialRadius = 10.f;
@@ -122,7 +122,9 @@ protected:
 
 public:	
 	ASuraProjectile();
-	void InitializeProjectile(AActor* Owner, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0, bool HitScan = false);
+	void InitializeProjectile(AActor* Owner, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0, bool HitScan = false, bool AutoAim = false);
+	void InitPhysicsProjectile();
+	void InitHitScan();
 	void LoadProjectileData();
 	void SetHomingTarget(bool bIsHoming, AActor* Target);
 	void LaunchProjectile();
@@ -187,18 +189,18 @@ protected:
 	float TargetDistance;
 	FVector MovementDirection;
 	void PerformHitScan(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, TArray<FVector>& OutHitLocations);
-	void InitHitScanProjectileMovement();
+	void PerformHitScan_Upgrade(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, TArray<FVector>& OutHitLocations);
+	void InitHitScanProjectileMovement(FVector StartLocation);
 	void UpdateHitScanProjectileMovement(float DeltaTime);
 public:
 	void SetHitScanActive(bool bflag);
-	void LaunchHitScan(FVector StartLocation, FVector TraceDirection);
+	void LaunchHitScan(FVector StartLocation, FVector TraceDirection, FVector MuzzlePos);
 #pragma endregion
 
 #pragma region AutoAim
 public:
 	void LaunchAutoAim(FVector StartLocation, FVector TraceDirection, float MaxDistance, FHitResult& FirstHitResult);
-	
-
+	void LaunchAutoAim_Upgrade(FVector StartLocation, FVector TraceDir, FVector AutoAimDir, FVector MuzzleLoc, float MaxDistance, float AutoAimRadius);
 #pragma endregion
 
 #pragma region Penetration
