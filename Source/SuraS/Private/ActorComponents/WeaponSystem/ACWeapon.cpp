@@ -1431,64 +1431,64 @@ void AWeapon::DestroyChargeEffect()
 #pragma region ProjectileShell
 void AWeapon::InitProjectileShells() //TODO: need to be called in Weapon Init
 {
-	//const FVector SpawnLocation = GetActorLocation();
-	//const FRotator SpawnRotation = GetActorRotation();
-	//FActorSpawnParameters SpawnParameter;
-	//SpawnParameter.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	const FVector SpawnLocation = GetActorLocation();
+	const FRotator SpawnRotation = GetActorRotation();
+	FActorSpawnParameters SpawnParameter;
+	SpawnParameter.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	//for (int i = 0; i < MaxProjectileShellNum; i++)
-	//{
-	//	AProjectileShell* NewProjectileShell = GetWorld()->SpawnActor<AProjectileShell>(ProjectileShellClass, SpawnLocation, SpawnRotation, SpawnParameter);
-	//	if (!NewProjectileShell) continue;
-	//	ProjectileShells.Add(NewProjectileShell);
-	//}
+	for (int i = 0; i < MaxProjectileShellNum; i++)
+	{
+		AProjectileShell* NewProjectileShell = GetWorld()->SpawnActor<AProjectileShell>(ProjectileShellClass, SpawnLocation, SpawnRotation, SpawnParameter);
+		if (!NewProjectileShell) continue;
+		ProjectileShells.Add(NewProjectileShell);
+	}
 
-	//int32 numofshell = ProjectileShells.Num();
-	//UE_LOG(LogTemp, Warning, TEXT("Num of Shell: %d"), numofshell);
+	int32 numofshell = ProjectileShells.Num();
+	UE_LOG(LogTemp, Warning, TEXT("Num of Shell: %d"), numofshell);
 }
 void AWeapon::EjectProjectileShell()
 {
-	//FTransform ActorToWorldTransform = GetTransform();
-	//FVector EjectLocation;
-	//FRotator EjectRotation;
-	//if (WeaponMesh) 
-	//{ 
-	//	EjectLocation = WeaponMesh->GetSocketLocation(FName("Chamber"));
-	//	EjectRotation = WeaponMesh->GetSocketRotation(FName("Chamber"));
-	//}
-	//else 
-	//{ 
-	//	EjectLocation = GetActorLocation(); 
-	//	EjectRotation = GetActorRotation();
-	//}
-	////FVector EjectImpulse = ActorToWorldTransform.InverseTransformVector(DefaultEjectImpulseVec);
-	//FVector EjectImpulse = EjectRotation.RotateVector(DefaultEjectImpulseVec).GetSafeNormal();
+	FTransform ActorToWorldTransform = GetTransform();
+	FVector EjectLocation;
+	FRotator EjectRotation;
+	if (WeaponMesh) 
+	{ 
+		EjectLocation = WeaponMesh->GetSocketLocation(FName("Chamber"));
+		EjectRotation = WeaponMesh->GetSocketRotation(FName("Chamber"));
+	}
+	else 
+	{ 
+		EjectLocation = GetActorLocation(); 
+		EjectRotation = GetActorRotation();
+	}
+	//FVector EjectImpulse = ActorToWorldTransform.InverseTransformVector(DefaultEjectImpulseVec);
+	FVector EjectImpulse = EjectRotation.RotateVector(DefaultEjectImpulseVec).GetSafeNormal();
 
-	//EjectImpulse = UKismetMathLibrary::RandomUnitVectorInConeInDegrees(EjectImpulse.GetSafeNormal(), 5.f);
+	EjectImpulse = UKismetMathLibrary::RandomUnitVectorInConeInDegrees(EjectImpulse.GetSafeNormal(), 5.f);
 
-	//EjectImpulse *= DefaultEjectImpulse;
+	EjectImpulse *= DefaultEjectImpulse;
 
-	//if (!ProjectileShells[CurrProjectileShellIdx] || !IsValid(ProjectileShells[CurrProjectileShellIdx]))
-	//{
-	//	const FVector SpawnLocation = GetActorLocation();
-	//	const FRotator SpawnRotation = GetActorRotation();
-	//	FActorSpawnParameters SpawnParameter;
-	//	SpawnParameter.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	if (!ProjectileShells[CurrProjectileShellIdx] || !IsValid(ProjectileShells[CurrProjectileShellIdx]))
+	{
+		const FVector SpawnLocation = GetActorLocation();
+		const FRotator SpawnRotation = GetActorRotation();
+		FActorSpawnParameters SpawnParameter;
+		SpawnParameter.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	//	AProjectileShell* NewProjectileShell = GetWorld()->SpawnActor<AProjectileShell>(ProjectileShellClass, SpawnLocation, SpawnRotation, SpawnParameter);
+		AProjectileShell* NewProjectileShell = GetWorld()->SpawnActor<AProjectileShell>(ProjectileShellClass, SpawnLocation, SpawnRotation, SpawnParameter);
 
-	//	if (NewProjectileShell)
-	//	{
-	//		ProjectileShells[CurrProjectileShellIdx] = NewProjectileShell;
-	//		ProjectileShells[CurrProjectileShellIdx]->EjectShell(EjectLocation, EjectRotation, EjectImpulse);
-	//	}
-	//}
-	//else
-	//{
-	//	ProjectileShells[CurrProjectileShellIdx]->EjectShell(EjectLocation, EjectRotation, EjectImpulse);
-	//}
+		if (NewProjectileShell)
+		{
+			ProjectileShells[CurrProjectileShellIdx] = NewProjectileShell;
+			ProjectileShells[CurrProjectileShellIdx]->EjectShell(EjectLocation, EjectRotation, EjectImpulse);
+		}
+	}
+	else
+	{
+		ProjectileShells[CurrProjectileShellIdx]->EjectShell(EjectLocation, EjectRotation, EjectImpulse);
+	}
 
-	//CurrProjectileShellIdx = (CurrProjectileShellIdx + 1) % MaxProjectileShellNum;
+	CurrProjectileShellIdx = (CurrProjectileShellIdx + 1) % MaxProjectileShellNum;
 }
 #pragma endregion
 
