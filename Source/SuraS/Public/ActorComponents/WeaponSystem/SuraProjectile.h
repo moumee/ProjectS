@@ -122,7 +122,9 @@ protected:
 
 public:	
 	ASuraProjectile();
-	void InitializeProjectile(AActor* Owner, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0, bool HitScan = false);
+	void InitializeProjectile(AActor* Owner, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0, bool HitScan = false, bool AutoAim = false);
+	void InitPhysicsProjectile();
+	void InitHitScan();
 	void LoadProjectileData();
 	void SetHomingTarget(bool bIsHoming, AActor* Target);
 	void LaunchProjectile();
@@ -198,8 +200,7 @@ public:
 #pragma region AutoAim
 public:
 	void LaunchAutoAim(FVector StartLocation, FVector TraceDirection, float MaxDistance, FHitResult& FirstHitResult);
-	
-
+	void LaunchAutoAim_Upgrade(FVector StartLocation, FVector TraceDir, FVector AutoAimDir, FVector MuzzleLoc, float MaxDistance, float AutoAimRadius);
 #pragma endregion
 
 #pragma region Penetration
