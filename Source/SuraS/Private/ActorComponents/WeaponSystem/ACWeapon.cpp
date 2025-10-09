@@ -132,6 +132,8 @@ void AWeapon::InitializeWeapon(ASuraPawnPlayer* NewCharacter)
 
 	SetMeshVisibility(false);
 	SetAimSocketRelativeTransform();
+
+	InitProjectileShells();
 }
 
 void AWeapon::InitializeCamera(ASuraPawnPlayer* NewCharacter) //TODO: Need to integrate camera system with player system
@@ -658,11 +660,6 @@ void AWeapon::BeginPlay()
 	// �������� ������ �� ������, ���� ��Ȯ�� ������ ã�� ������
 	//ChangeState(UnequippedState);
 
-
-	//SetCollisionObjectType(ECC_EngineTraceChannel2);
-
-	//SetCollisionProfileName(FName("Weapon"));
-	//SetCollisionResponseToAllChannels(ECR_Ignore);
 	//InitProjectileShells();
 }
 
@@ -678,7 +675,7 @@ void AWeapon::Tick(float DeltaTime)
 	UpdateGlobalTimeDiation(DeltaTime); //TODO: If the player tries to switch weapons, reset the global time dilation to its default value
 	UpdateTargetingSkillUI(); //TODO: Should Update UI When even TargetingSkillTimer is not activated
 
-	UpdateOverheat(DeltaTime); //TODO: Overheat ����� �Ⱦ��Ŷ�� �ϴµ�, Ȥ�� mesh�� ���� ȿ�� ������ ���� �����ϱ� �ϴ��� ����
+	UpdateOverheat(DeltaTime); //TODO: Deactivate
 
 	//Suhyeon
 	if (CurrentState == TargetingState)
@@ -785,265 +782,6 @@ void AWeapon::DetachWeaponFromPlayer()
 
 void AWeapon::FireSingleProjectile(FWeaponFireData* FireData, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
 {
-	if (CurrentState != UnequippedState)
-	{
-		if (Character == nullptr || Character->GetController() == nullptr || FireData == nullptr)
-		{
-			return;
-		}
-
-		if (FireData->AmmoCost > 0)
-		{
-			if (FireData->bAllowFireWithInsufficientAmmo)
-			{
-				if (LeftAmmoInCurrentMag <= 0)
-				{
-					return;
-				}
-			}
-			else
-			{
-				if (!HasAmmoInCurrentMag(FireData->AmmoCost))
-				{
-					return;
-				}
-			}
-			ConsumeAmmo(FireData->AmmoCost, FireData->bAllowFireWithInsufficientAmmo);
-		}
-
-		FVector LineTraceStartLocation = Character->GetCameraComponent()->GetComponentLocation();
-		FVector LineTraceDirection = Character->GetCameraComponent()->GetForwardVector();
-
-		if (bIsZoomIn)
-		{
-			if (ZoomSpread.bEnableProjectileSpread)
-			{
-				LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
-			}
-
-			if (ZoomSpread.bEnableProjectileSpread || ZoomSpread.bEnableAimUISpread)
-			{
-				AddSpreadValue(&ZoomSpread);
-			}
-		}
-		else
-		{
-			if (DefaultSpread.bEnableProjectileSpread)
-			{
-				LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
-			}
-			if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
-			{
-				AddSpreadValue(&DefaultSpread);
-			}
-		}
-
-		FVector LineTraceHitLocation;
-
-		//----------------------------------------------
-		//FVector LineTraceStartLocation;
-		//FVector LineTraceDirection;
-		//FVector LineTraceHitLocation;
-		//CalculateScreenCenterWorldPositionAndDirection(LineTraceStartLocation, LineTraceDirection);
-
-		if (PerformLineTrace(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, LineTraceHitLocation))
-		{
-			TargetLocationOfProjectile = LineTraceHitLocation;
-		}
-		else
-		{
-			//UE_LOG(LogTemp, Error, TEXT("LineTrace Failed!!!!!!!!!!!!!"));
-			TargetLocationOfProjectile = LineTraceHitLocation;
-		}
-
-		// Try and fire a projectile
-		if (FireData != nullptr && FireData->ProjectileClass != nullptr)
-		{
-			UWorld* const World = GetWorld();
-			if (World != nullptr)
-			{
-				const FVector SpawnLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
-				const FRotator SpawnRotation = (TargetLocationOfProjectile - SpawnLocation).Rotation();
-
-				//Set Spawn Collision Handling Override
-				FActorSpawnParameters ActorSpawnParams;
-				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-				// Spawn the projectile at the muzzle
-				ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(FireData->ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-				Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable);
-				SetUpAimUIDelegateBinding(Projectile);
-				if (bIsHoming)
-				{
-					Projectile->SetHomingTarget(bIsHoming, HomingTarget);
-				}
-				Projectile->LaunchProjectile();
-
-				if (bWeaponAssetsReady)
-				{
-					SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, SpawnRotation);
-				}
-			}
-		}
-
-		// Try and play the sound if specified
-		if (bWeaponAssetsReady)
-		{
-			if (FireData != nullptr && FireData->FireSound != nullptr)
-			{
-				UGameplayStatics::PlaySoundAtLocation(this, FireData->FireSound, Character->GetActorLocation());
-			}
-		}
-
-		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
-
-		// <Overheat>
-		if (bIsOverheatMode)
-		{
-			AddOverheatValue();
-		}
-
-		// <Recoil & CamShake>
-		if (bIsZoomIn)
-		{
-			AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-			ApplyCameraShake(ZoomCameraShakeClass);
-		}
-		else
-		{
-			AddRecoilValue(&FireData->Recoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-			ApplyCameraShake(FireData->CamShake);
-		}
-
-		// <ArmRecoil Animation>
-		if (bIsSkillWeapon) { AddSkillWeaponRecoil(&FireData->Armrecoil); }
-		else { AddArmRecoil(&FireData->Armrecoil); }
-	}
-}
-
-void AWeapon::FireMultiProjectile(FWeaponFireData* FireData, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 AdditionalPellet, bool bIsHoming, AActor* HomingTarget)
-{
-	if (CurrentState != UnequippedState)
-	{
-		if (Character == nullptr || Character->GetController() == nullptr || FireData == nullptr)
-		{
-			return;
-		}
-
-		if (FireData->AmmoCost > 0)
-		{
-			if (FireData->bAllowFireWithInsufficientAmmo)
-			{
-				if (LeftAmmoInCurrentMag <= 0)
-				{
-					return;
-				}
-			}
-			else
-			{
-				if (!HasAmmoInCurrentMag(FireData->AmmoCost))
-				{
-					return;
-				}
-			}
-			ConsumeAmmo(FireData->AmmoCost, FireData->bAllowFireWithInsufficientAmmo);
-		}
-
-		if (bIsZoomIn)
-		{
-			if (ZoomSpread.bEnableAimUISpread)
-			{
-				AddSpreadValue(&ZoomSpread);
-			}
-		}
-		else
-		{
-			if (DefaultSpread.bEnableAimUISpread)
-			{
-				AddSpreadValue(&DefaultSpread);
-			}
-		}
-
-		FVector LineTraceStartLocation = Character->GetCameraComponent()->GetComponentLocation();
-		FVector LineTraceDirection = Character->GetCameraComponent()->GetForwardVector();
-		FVector LineTraceHitLocation;
-
-		if (PerformSphereTrace(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, SphereTraceRadius, LineTraceHitLocation))
-		{
-			TargetLocationOfProjectile = LineTraceHitLocation;
-		}
-		else
-		{
-			TargetLocationOfProjectile = LineTraceHitLocation;
-		}
-
-		// <Fire Projectile>
-		if (FireData != nullptr && FireData->ProjectileClass != nullptr)
-		{
-			UWorld* const World = GetWorld();
-			if (World != nullptr)
-			{
-				const FVector SpawnLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
-
-				for (int pellet = 0; pellet < (FireData->PelletsNum + AdditionalPellet); pellet++)
-				{
-					const FRotator SpawnRotation = UKismetMathLibrary::RandomUnitVectorInConeInDegrees((TargetLocationOfProjectile - SpawnLocation).GetSafeNormal(), FireData->MaxAngleOfMultiProjectileSpread).Rotation();
-
-					FActorSpawnParameters ActorSpawnParams;
-					ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-					ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(FireData->ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-					Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable);
-					SetUpAimUIDelegateBinding(Projectile);
-					Projectile->LaunchProjectile();
-
-					//TODO: ���߿��� Multi Homing Projectile�� �����ϰ� ���鿹��. �ڵ� Ÿ��������
-				}
-				//UE_LOG(LogTemp, Error, TEXT("Pellet Num: %d"), (FireData->PelletsNum + AdditionalPellet));
-
-				if (bWeaponAssetsReady)
-				{
-					SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, (TargetLocationOfProjectile - SpawnLocation).GetSafeNormal().Rotation());
-				}
-			}
-		}
-
-		// <Sound>
-		if (bWeaponAssetsReady)
-		{
-			if (FireData != nullptr && FireData->FireSound != nullptr)
-			{
-				UGameplayStatics::PlaySoundAtLocation(this, FireData->FireSound, Character->GetActorLocation());
-			}
-		}
-
-		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon); //TODO: ������. ����
-
-		// <Overheat>
-		if (bIsOverheatMode)
-		{
-			AddOverheatValue();
-		}
-
-		// <Recoil & CamShake>
-		if (bIsZoomIn)
-		{
-			AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-			ApplyCameraShake(ZoomCameraShakeClass);
-		}
-		else
-		{
-			AddRecoilValue(&FireData->Recoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-			ApplyCameraShake(FireData->CamShake);
-		}
-
-		// <ArmRecoil Animation>
-		AddArmRecoil(&FireData->Armrecoil);
-	}
-}
-
-void AWeapon::FireSingleProjectile_Upgrade(FWeaponFireData* FireData, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget)
-{
 	if (CurrentState == UnequippedState) return;
 	if (!FireData) return;
 	if (!Character) return;
@@ -1123,7 +861,11 @@ void AWeapon::FireSingleProjectile_Upgrade(FWeaponFireData* FireData, int32 NumP
 				Projectile->InitProjectileMovement(ProjectileStartLocation, ProjectileDirection, MuzzleLocation);
 			}
 
-			SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, SpawnRotation);
+			if (bWeaponAssetsReady)
+			{
+				//TODO: SpawnRotation 정상화
+				SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, MuzzleLocation, SpawnRotation);
+			}
 		}
 	}
 
@@ -1158,392 +900,337 @@ void AWeapon::FireSingleProjectile_Upgrade(FWeaponFireData* FireData, int32 NumP
 	else { AddArmRecoil(&FireData->Armrecoil); }
 }
 
-void AWeapon::FireSingleHitScan(FWeaponFireData* FireData, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
+void AWeapon::FireMultiProjectile(FWeaponFireData* FireData, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 AdditionalPellet, bool bIsHoming, AActor* HomingTarget)
 {
-	//UE_LOG(LogTemp, Warning, TEXT("FireSingleHitScan!"));
-	if (CurrentState != UnequippedState)
+	if (CurrentState == UnequippedState) return;
+	if (!FireData) return;
+	if (!Character) return;
+	if (Character->GetController() == nullptr) return;
+
+	const auto* Cam = Character->GetCameraComponent();
+	if (!Cam) return;
+
+	if (FireData->AmmoCost > 0)
 	{
-		if (Character == nullptr || Character->GetController() == nullptr)
+		if (FireData->bAllowFireWithInsufficientAmmo)
 		{
-			return;
-		}
-
-		if (FireData->AmmoCost > 0)
-		{
-			if (FireData->bAllowFireWithInsufficientAmmo)
+			if (LeftAmmoInCurrentMag <= 0)
 			{
-				if (LeftAmmoInCurrentMag <= 0)
-				{
-					return;
-				}
-			}
-			else
-			{
-				if (!HasAmmoInCurrentMag(FireData->AmmoCost))
-				{
-					return;
-				}
-			}
-			ConsumeAmmo(FireData->AmmoCost, FireData->bAllowFireWithInsufficientAmmo);
-		}
-
-		FVector LineTraceStartLocation = Character->GetCameraComponent()->GetComponentLocation();
-		FVector LineTraceDirection = Character->GetCameraComponent()->GetForwardVector();
-
-		if (bIsZoomIn)
-		{
-			if (ZoomSpread.bEnableProjectileSpread)
-			{
-				LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
-			}
-
-			if (ZoomSpread.bEnableProjectileSpread || ZoomSpread.bEnableAimUISpread)
-			{
-				AddSpreadValue(&ZoomSpread);
+				return;
 			}
 		}
 		else
 		{
-			if (DefaultSpread.bEnableProjectileSpread)
+			if (!HasAmmoInCurrentMag(FireData->AmmoCost))
 			{
-				LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
-			}
-
-			if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
-			{
-				AddSpreadValue(&DefaultSpread);
+				return;
 			}
 		}
+		ConsumeAmmo(FireData->AmmoCost, FireData->bAllowFireWithInsufficientAmmo);
+	}
 
-		FVector LineTraceHitLocation;
+	FVector ProjectileStartLocation = Cam->GetComponentLocation();
+	FVector ProjectileDirection = Cam->GetForwardVector();
 
-		//----------------------------------------------
-
-		if (PerformLineTrace(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, LineTraceHitLocation))
+	//TODO: ProjectileDirection Spread
+	if (bIsZoomIn)
+	{
+		if (ZoomSpread.bEnableAimUISpread)
 		{
-			TargetLocationOfProjectile = LineTraceHitLocation;
+			AddSpreadValue(&ZoomSpread);
 		}
-		else
+	}
+	else
+	{
+		if (DefaultSpread.bEnableAimUISpread)
 		{
-			//UE_LOG(LogTemp, Error, TEXT("LineTrace Failed!!!!!!!!!!!!!"));
-			TargetLocationOfProjectile = LineTraceHitLocation;
+			AddSpreadValue(&DefaultSpread);
 		}
+	}
 
-		// Try and fire a projectile
-		if (FireData != nullptr && FireData->ProjectileClass != nullptr)
+	if (FireData->ProjectileClass != nullptr)
+	{
+		UWorld* const World = GetWorld();
+		if (World != nullptr)
 		{
-			UWorld* const World = GetWorld();
-			if (World != nullptr)
+			const FVector SpawnLocation = ProjectileStartLocation;
+			const FVector MuzzleLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+			for (int pellet = 0; pellet < (FireData->PelletsNum + AdditionalPellet); pellet++)
 			{
-				const FVector SpawnLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
-				const FRotator SpawnRotation = (TargetLocationOfProjectile - SpawnLocation).Rotation();
+				const FVector RandomVec = UKismetMathLibrary::RandomUnitVectorInConeInDegrees(ProjectileDirection.GetSafeNormal(), FireData->MaxAngleOfMultiProjectileSpread);
 
-				//Set Spawn Collision Handling Override
-				FActorSpawnParameters ActorSpawnParams;
-				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-				// Spawn the projectile at the muzzle
-				ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(FireData->ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-				Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable, true);
+				ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(FireData->ProjectileClass, SpawnLocation, RandomVec.Rotation(), SpawnParams);
+				Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable);
 				SetUpAimUIDelegateBinding(Projectile);
 
-				Projectile->SetHomingTarget(false, nullptr);
+				Projectile->InitProjectileMovement(ProjectileStartLocation, RandomVec, MuzzleLocation);
+				//Projectile->LaunchProjectile();
 
-				//Projectile->LaunchProjectile(); //TODO: not to use Collision Check
-				Projectile->LaunchHitScan(LineTraceStartLocation, LineTraceDirection);
+				//TODO: Multi Homing Projectile
+			}
+			//UE_LOG(LogTemp, Error, TEXT("Pellet Num: %d"), (FireData->PelletsNum + AdditionalPellet));
 
-				SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, SpawnRotation);
+			if (bWeaponAssetsReady)
+			{
+				//TODO: 방향 정상화
+				SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, ProjectileDirection.Rotation());
 			}
 		}
+	}
 
-		// Try and play the sound if specified
+	// <Sound>
+	if (bWeaponAssetsReady)
+	{
 		if (FireData != nullptr && FireData->FireSound != nullptr)
 		{
 			UGameplayStatics::PlaySoundAtLocation(this, FireData->FireSound, Character->GetActorLocation());
 		}
-
-		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
-
-		// <Recoil & CamShake>
-		if (bIsZoomIn)
-		{
-			AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-			ApplyCameraShake(ZoomCameraShakeClass);
-		}
-		else
-		{
-			AddRecoilValue(&FireData->Recoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-			ApplyCameraShake(FireData->CamShake);
-		}
-
-		// <ArmRecoil Animation>
-		AddArmRecoil(&FireData->Armrecoil);
 	}
+
+	StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon); //TODO: ������. ����
+
+	// <Overheat> //TODO: Delete
+	if (bIsOverheatMode)
+	{
+		AddOverheatValue();
+	}
+
+	// <Recoil & CamShake>
+	if (bIsZoomIn)
+	{
+		AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+		ApplyCameraShake(ZoomCameraShakeClass);
+	}
+	else
+	{
+		AddRecoilValue(&FireData->Recoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+		ApplyCameraShake(FireData->CamShake);
+	}
+
+	// <ArmRecoil Animation>
+	AddArmRecoil(&FireData->Armrecoil);
 }
 
-void AWeapon::FireSingleHitScan_Upgrade(FWeaponFireData* FireData, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
+void AWeapon::FireSingleHitScan(FWeaponFireData* FireData, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
 {
-	if (CurrentState != UnequippedState)
+	if (CurrentState == UnequippedState) return;
+	if (!FireData) return;
+	if (!Character) return;
+	if (Character->GetController() == nullptr) return;
+
+	const auto* Cam = Character->GetCameraComponent();
+	if (!Cam) return;
+
+	if (FireData->AmmoCost > 0)
 	{
-		if (Character == nullptr || Character->GetController() == nullptr)
+		if (FireData->bAllowFireWithInsufficientAmmo)
 		{
-			return;
-		}
-
-		if (FireData->AmmoCost > 0)
-		{
-			if (FireData->bAllowFireWithInsufficientAmmo)
+			if (LeftAmmoInCurrentMag <= 0)
 			{
-				if (LeftAmmoInCurrentMag <= 0)
-				{
-					return;
-				}
-			}
-			else
-			{
-				if (!HasAmmoInCurrentMag(FireData->AmmoCost))
-				{
-					return;
-				}
-			}
-			ConsumeAmmo(FireData->AmmoCost, FireData->bAllowFireWithInsufficientAmmo);
-		}
-
-		FVector LineTraceStartLocation = Character->GetCameraComponent()->GetComponentLocation();
-		FVector LineTraceDirection = Character->GetCameraComponent()->GetForwardVector();
-
-		if (bIsZoomIn)
-		{
-			if (ZoomSpread.bEnableProjectileSpread)
-			{
-				LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
-			}
-
-			if (ZoomSpread.bEnableProjectileSpread || ZoomSpread.bEnableAimUISpread)
-			{
-				AddSpreadValue(&ZoomSpread);
+				return;
 			}
 		}
 		else
 		{
-			if (DefaultSpread.bEnableProjectileSpread)
+			if (!HasAmmoInCurrentMag(FireData->AmmoCost))
 			{
-				LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
-			}
-
-			if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
-			{
-				AddSpreadValue(&DefaultSpread);
+				return;
 			}
 		}
-
-		FVector LineTraceHitLocation;
-
-		//----------------------------------------------
-
-		if (PerformLineTrace(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, LineTraceHitLocation))
-		{
-			TargetLocationOfProjectile = LineTraceHitLocation;
-		}
-		else
-		{
-			//UE_LOG(LogTemp, Error, TEXT("LineTrace Failed!!!!!!!!!!!!!"));
-			TargetLocationOfProjectile = LineTraceHitLocation;
-		}
-
-		// Try and fire a projectile
-		if (FireData != nullptr && FireData->ProjectileClass != nullptr)
-		{
-			UWorld* const World = GetWorld();
-			if (World != nullptr)
-			{
-				const FVector SpawnLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
-				const FRotator SpawnRotation = (TargetLocationOfProjectile - SpawnLocation).Rotation();
-
-				//Set Spawn Collision Handling Override
-				FActorSpawnParameters ActorSpawnParams;
-				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-				// Spawn the projectile at the muzzle
-				ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(FireData->ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-				Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable, true);
-				SetUpAimUIDelegateBinding(Projectile);
-
-				Projectile->SetHomingTarget(false, nullptr);
-
-				//Projectile->LaunchProjectile(); //TODO: not to use Collision Check
-				Projectile->LaunchHitScan(LineTraceStartLocation, LineTraceDirection);
-
-				SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, SpawnRotation);
-			}
-		}
-
-		// Try and play the sound if specified
-		if (FireData != nullptr && FireData->FireSound != nullptr)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, FireData->FireSound, Character->GetActorLocation());
-		}
-
-		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
-
-		// <Recoil & CamShake>
-		if (bIsZoomIn)
-		{
-			AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-			ApplyCameraShake(ZoomCameraShakeClass);
-		}
-		else
-		{
-			AddRecoilValue(&FireData->Recoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-			ApplyCameraShake(FireData->CamShake);
-		}
-
-		// <ArmRecoil Animation>
-		AddArmRecoil(&FireData->Armrecoil);
+		ConsumeAmmo(FireData->AmmoCost, FireData->bAllowFireWithInsufficientAmmo);
 	}
+
+	FVector ProjectileStartLocation = Cam->GetComponentLocation();
+	FVector ProjectileDirection = Cam->GetForwardVector();
+
+	if (bIsZoomIn)
+	{
+		if (ZoomSpread.bEnableProjectileSpread)
+		{
+			ProjectileDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
+		}
+
+		if (ZoomSpread.bEnableProjectileSpread || ZoomSpread.bEnableAimUISpread)
+		{
+			AddSpreadValue(&ZoomSpread);
+		}
+	}
+	else
+	{
+		if (DefaultSpread.bEnableProjectileSpread)
+		{
+			ProjectileDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
+		}
+
+		if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
+		{
+			AddSpreadValue(&DefaultSpread);
+		}
+	}
+
+	if (FireData->ProjectileClass != nullptr)
+	{
+		UWorld* const World = GetWorld();
+		if (World != nullptr)
+		{
+			const FVector SpawnLocation = ProjectileStartLocation;
+
+			const FVector MuzzleLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
+			const FRotator SpawnRotation = ProjectileStartLocation.Rotation();
+
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+			ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(FireData->ProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
+			Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable, true);
+			SetUpAimUIDelegateBinding(Projectile);
+
+			Projectile->SetHomingTarget(false, nullptr);
+
+			Projectile->LaunchHitScan(ProjectileStartLocation, ProjectileDirection, MuzzleLocation);
+
+			if (bWeaponAssetsReady)
+			{
+				SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, MuzzleLocation, SpawnRotation);
+			}
+		}
+	}
+
+	// Try and play the sound if specified
+	if (FireData != nullptr && FireData->FireSound != nullptr)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, FireData->FireSound, Character->GetActorLocation());
+	}
+
+	StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
+
+	// <Recoil & CamShake>
+	if (bIsZoomIn)
+	{
+		AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+		ApplyCameraShake(ZoomCameraShakeClass);
+	}
+	else
+	{
+		AddRecoilValue(&FireData->Recoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+		ApplyCameraShake(FireData->CamShake);
+	}
+
+	// <ArmRecoil Animation>
+	AddArmRecoil(&FireData->Armrecoil);
 }
 
 #pragma region AutoAim
 void AWeapon::FireSingleAutoAim(FWeaponFireData* FireData, int32 NumPenetrable, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
 {
-	if (CurrentState != UnequippedState)
+	if (CurrentState == UnequippedState) return;
+	if (!FireData) return;
+	if (!Character) return;
+	if (Character->GetController() == nullptr) return;
+
+	const auto* Cam = Character->GetCameraComponent();
+	if (!Cam) return;
+
+	if (FireData->AmmoCost > 0)
 	{
-		if (Character == nullptr || Character->GetController() == nullptr)
+		if (FireData->bAllowFireWithInsufficientAmmo)
 		{
-			return;
-		}
-
-		if (FireData->AmmoCost > 0)
-		{
-			if (FireData->bAllowFireWithInsufficientAmmo)
+			if (LeftAmmoInCurrentMag <= 0)
 			{
-				if (LeftAmmoInCurrentMag <= 0)
-				{
-					return;
-				}
+				return;
 			}
-			else
-			{
-				if (!HasAmmoInCurrentMag(FireData->AmmoCost))
-				{
-					return;
-				}
-			}
-			ConsumeAmmo(FireData->AmmoCost, FireData->bAllowFireWithInsufficientAmmo);
-		}
-
-		FVector LineTraceStartLocation = Character->GetCameraComponent()->GetComponentLocation();
-		FVector LineTraceDirection = Character->GetCameraComponent()->GetForwardVector();
-
-		FVector LineTraceHitLocation;
-
-		//----------------------------------------------
-
-		//TODO: 여기 Radius를 DT에서 설정 가능하도록
-		float LineTraceRadius = AutoAimRadius;
-		bool bIsAutoAimSucceeded = false;
-		FHitResult FirstHitResult;
-		if (TrySphereSweepNearestActor(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, LineTraceRadius, LineTraceHitLocation, FirstHitResult))
-		{
-			bIsAutoAimSucceeded = true;
-			UE_LOG(LogTemp, Error, TEXT("Auto Aim Hit!!!!!!!!!!!!"));
-
-			//DrawDebugSphere(GetWorld(), LineTraceHitLocation, 40.f, 12, FColor::Red, false, 1.f);
-
-			TargetLocationOfProjectile = LineTraceHitLocation;
 		}
 		else
 		{
-			bIsAutoAimSucceeded = false;
-			TargetLocationOfProjectile = LineTraceHitLocation;
-
-			//--------
-
-			if (DefaultSpread.bEnableProjectileSpread)
+			if (!HasAmmoInCurrentMag(FireData->AmmoCost))
 			{
-				LineTraceDirection = GetRandomSpreadVector(Character->GetCameraComponent()->GetForwardVector());
-			}
-			if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
-			{
-				AddSpreadValue(&DefaultSpread);
-			}
-
-			if (PerformLineTrace(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, LineTraceHitLocation))
-			{
-				TargetLocationOfProjectile = LineTraceHitLocation;
-			}
-			else
-			{
-				//UE_LOG(LogTemp, Error, TEXT("LineTrace Failed!!!!!!!!!!!!!"));
-				TargetLocationOfProjectile = LineTraceHitLocation;
+				return;
 			}
 		}
-
-		// Try and fire a projectile
-		if (FireData != nullptr && FireData->ProjectileClass != nullptr)
-		{
-			UWorld* const World = GetWorld();
-			if (World != nullptr)
-			{
-				const FVector SpawnLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
-				const FRotator SpawnRotation = (TargetLocationOfProjectile - SpawnLocation).Rotation();
-
-				//Set Spawn Collision Handling Override
-				FActorSpawnParameters ActorSpawnParams;
-				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-				// Spawn the projectile at the muzzle
-				ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(FireData->ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-
-				if (bIsAutoAimSucceeded)
-				{
-					Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable, true);
-					SetUpAimUIDelegateBinding(Projectile);
-					Projectile->SetHomingTarget(false, nullptr);
-					Projectile->LaunchAutoAim(LineTraceStartLocation, LineTraceDirection, 50000.f, FirstHitResult);
-				}
-				else
-				{
-					Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable);
-					SetUpAimUIDelegateBinding(Projectile);
-					Projectile->SetHomingTarget(false, nullptr);
-					Projectile->LaunchProjectile();
-				}
-
-				if (bWeaponAssetsReady)
-				{
-					SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, SpawnRotation);
-				}
-			}
-		}
-
-		// Try and play the sound if specified
-		if (bWeaponAssetsReady)
-		{
-			if (FireData != nullptr && FireData->FireSound != nullptr)
-			{
-				UGameplayStatics::PlaySoundAtLocation(this, FireData->FireSound, Character->GetActorLocation());
-			}
-		}
-
-		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
-
-		// <Recoil & CamShake>
-		if (bIsZoomIn)
-		{
-			AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-			ApplyCameraShake(ZoomCameraShakeClass);
-		}
-		else
-		{
-			AddRecoilValue(&FireData->Recoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
-			ApplyCameraShake(FireData->CamShake);
-		}
-
-		// <ArmRecoil Animation>
-		AddArmRecoil(&FireData->Armrecoil);
+		ConsumeAmmo(FireData->AmmoCost, FireData->bAllowFireWithInsufficientAmmo);
 	}
 
+	FVector StartLocation = Cam->GetComponentLocation();
+	FVector AutoAimDirection = Cam->GetForwardVector();
+	FVector SpreadedDirection = AutoAimDirection;
+
+	if (bIsZoomIn)
+	{
+		if (ZoomSpread.bEnableProjectileSpread)
+		{
+			SpreadedDirection = GetRandomSpreadVector(AutoAimDirection);
+		}
+		if (ZoomSpread.bEnableProjectileSpread || ZoomSpread.bEnableAimUISpread)
+		{
+			AddSpreadValue(&ZoomSpread);
+		}
+	}
+	else
+	{
+		if (DefaultSpread.bEnableProjectileSpread)
+		{
+			SpreadedDirection = GetRandomSpreadVector(AutoAimDirection);
+		}
+		if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
+		{
+			AddSpreadValue(&DefaultSpread);
+		}
+	}
+
+	if (FireData->ProjectileClass != nullptr)
+	{
+		UWorld* const World = GetWorld();
+		if (World != nullptr)
+		{
+			const FVector SpawnLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
+			const FVector MuzzleLocation = WeaponMesh->GetSocketLocation(FName(TEXT("Muzzle")));
+			const FRotator SpawnRotation = SpreadedDirection.Rotation();
+
+
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+			ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(FireData->ProjectileClass, MuzzleLocation, SpawnRotation, ActorSpawnParams);
+
+			Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable, false, true);
+			SetUpAimUIDelegateBinding(Projectile);
+			Projectile->SetHomingTarget(false, nullptr);
+			Projectile->LaunchAutoAim(StartLocation, SpreadedDirection, AutoAimDirection, MuzzleLocation, 50000.f, AutoAimRadius);
+
+			if (bWeaponAssetsReady)
+			{
+				SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, SpawnRotation);
+			}
+		}
+	}
+
+	if (bWeaponAssetsReady)
+	{
+		if (FireData->FireSound != nullptr)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, FireData->FireSound, Character->GetActorLocation());
+		}
+	}
+
+	StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
+
+	// <Recoil & CamShake>
+	if (bIsZoomIn)
+	{
+		AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+		ApplyCameraShake(ZoomCameraShakeClass);
+	}
+	else
+	{
+		AddRecoilValue(&FireData->Recoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+		ApplyCameraShake(FireData->CamShake);
+	}
+
+	// <ArmRecoil Animation>
+	AddArmRecoil(&FireData->Armrecoil);
 }
 #pragma endregion
 
@@ -1757,38 +1444,51 @@ void AWeapon::InitProjectileShells() //TODO: need to be called in Weapon Init
 	}
 
 	int32 numofshell = ProjectileShells.Num();
-	UE_LOG(LogTemp, Error, TEXT("Num of Shell: %d"), numofshell);
+	UE_LOG(LogTemp, Warning, TEXT("Num of Shell: %d"), numofshell);
 }
-void AWeapon::EjectProjectileShell() //TODO: set return value
+void AWeapon::EjectProjectileShell()
 {
-	//FTransform ActorToWorldTransform = GetTransform();
-	//FVector EjectLocation;
-	//FRotator EjectRotation;
-	//if (WeaponMesh) 
-	//{ 
-	//	EjectLocation = WeaponMesh->GetSocketLocation(FName("Chamber"));
-	//	EjectRotation = WeaponMesh->GetSocketRotation(FName("Chamber"));
-	//}
-	//else 
-	//{ 
-	//	EjectLocation = GetActorLocation(); 
-	//	EjectRotation = GetActorRotation();
-	//}
-	////FVector EjectImpulse = ActorToWorldTransform.InverseTransformVector(DefaultEjectImpulseVec);
-	//FVector EjectImpulse = EjectRotation.RotateVector(DefaultEjectImpulseVec).GetSafeNormal();
+	FTransform ActorToWorldTransform = GetTransform();
+	FVector EjectLocation;
+	FRotator EjectRotation;
+	if (WeaponMesh) 
+	{ 
+		EjectLocation = WeaponMesh->GetSocketLocation(FName("Chamber"));
+		EjectRotation = WeaponMesh->GetSocketRotation(FName("Chamber"));
+	}
+	else 
+	{ 
+		EjectLocation = GetActorLocation(); 
+		EjectRotation = GetActorRotation();
+	}
+	//FVector EjectImpulse = ActorToWorldTransform.InverseTransformVector(DefaultEjectImpulseVec);
+	FVector EjectImpulse = EjectRotation.RotateVector(DefaultEjectImpulseVec).GetSafeNormal();
 
+	EjectImpulse = UKismetMathLibrary::RandomUnitVectorInConeInDegrees(EjectImpulse.GetSafeNormal(), 5.f);
 
-	//EjectImpulse = UKismetMathLibrary::RandomUnitVectorInConeInDegrees(EjectImpulse.GetSafeNormal(), 5.f);
+	EjectImpulse *= DefaultEjectImpulse;
 
+	if (!ProjectileShells[CurrProjectileShellIdx] || !IsValid(ProjectileShells[CurrProjectileShellIdx]))
+	{
+		const FVector SpawnLocation = GetActorLocation();
+		const FRotator SpawnRotation = GetActorRotation();
+		FActorSpawnParameters SpawnParameter;
+		SpawnParameter.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
+		AProjectileShell* NewProjectileShell = GetWorld()->SpawnActor<AProjectileShell>(ProjectileShellClass, SpawnLocation, SpawnRotation, SpawnParameter);
 
-	//EjectImpulse *= DefaultEjectImpulse;
+		if (NewProjectileShell)
+		{
+			ProjectileShells[CurrProjectileShellIdx] = NewProjectileShell;
+			ProjectileShells[CurrProjectileShellIdx]->EjectShell(EjectLocation, EjectRotation, EjectImpulse);
+		}
+	}
+	else
+	{
+		ProjectileShells[CurrProjectileShellIdx]->EjectShell(EjectLocation, EjectRotation, EjectImpulse);
+	}
 
-	//if (!ProjectileShells[CurrProjectileShellIdx]) return;
-	//ProjectileShells[CurrProjectileShellIdx]->EjectShell(EjectLocation, EjectRotation, EjectImpulse);
-
-	//if (CurrProjectileShellIdx + 1 >= MaxProjectileShellNum) { CurrProjectileShellIdx = 0; }
-	//else { CurrProjectileShellIdx++; }
+	CurrProjectileShellIdx = (CurrProjectileShellIdx + 1) % MaxProjectileShellNum;
 }
 #pragma endregion
 
@@ -2848,7 +2548,6 @@ void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, int32 N
 		{
 			if (bIsHitScan_L) { FireSingleHitScan(&FireData_L, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius); }
 			else { FireSingleProjectile(&FireData_L, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, false); }
-			//else { FireSingleProjectile_Upgrade(&FireData_L, NumPenetrable, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, false); }
 
 		}
 		else
@@ -3361,6 +3060,7 @@ void AWeapon::StartMissileLaunch(TArray<AActor*> TargetActors, FWeaponFireData* 
 }
 void AWeapon::UpdateMissileLaunch(FWeaponFireData* FireData)
 {
+	//FireSingleProjectile(FireData, 0, 0.f, 0.f, 0.f, 0.f, true, ConfirmedTargets[CurrentTargetIndex]);
 	FireSingleProjectile(FireData, 0, 0.f, 0.f, 0.f, 0.f, true, ConfirmedTargets[CurrentTargetIndex]);
 	CurrentTargetIndex++;
 	if (ConfirmedTargets.Num() <= CurrentTargetIndex)

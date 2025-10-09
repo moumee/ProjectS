@@ -62,7 +62,7 @@ ASuraProjectile::ASuraProjectile()
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
 	ProjectileMovement->InitialSpeed = InitialSpeed;
-	ProjectileMovement->MaxSpeed = MaxSpeed;
+	ProjectileMovement->MaxSpeed = 0.f;
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.f;
@@ -81,7 +81,7 @@ ASuraProjectile::ASuraProjectile()
 	InitialLifeSpan = 10.0f;
 }
 
-void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable, bool HitScan)
+void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable, bool HitScan, bool AutoAim)
 {
 	if (IsValid(OwnerWeapon))
 	{
@@ -96,29 +96,39 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 		SpawnTrailEffect();
 	}
 
-	if (HitScan)
+	if (AutoAim)
 	{
-		bIsHitScan = HitScan;
-		NumPenetrableObjects = NumPenetrable;
-		UE_LOG(LogTemp, Error, TEXT("Projectile Penetrable Num: %d"), NumPenetrableObjects);
-		CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-		CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap);
+		bIsHitScan = false;
+		NumPenetrableObjects = 0; //TODO: ???
 	}
 	else
 	{
-		if (NumPenetrable > 0 || bCanPenetrate)
+		if (HitScan)
 		{
-			CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
-			CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
-			CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-			CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap);
+			bIsHitScan = HitScan;
 			NumPenetrableObjects = NumPenetrable;
 			UE_LOG(LogTemp, Error, TEXT("Projectile Penetrable Num: %d"), NumPenetrableObjects);
+			//CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+			//CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap);
+			InitHitScan();
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("OnComponentHit"));
-			CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
+			if (NumPenetrable > 0 || bCanPenetrate)
+			{
+				//CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
+				//CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
+				//CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+				//CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap);
+				InitPhysicsProjectile();
+				NumPenetrableObjects = NumPenetrable;
+				UE_LOG(LogTemp, Error, TEXT("Projectile Penetrable Num: %d"), NumPenetrableObjects);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("OnComponentHit"));
+				CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
+			}
 		}
 	}
 
@@ -149,6 +159,20 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 	{
 		GetWorld()->GetTimerManager().SetTimer(DamageDecayTimer, this, &ASuraProjectile::ApplyDamageDecay, DamageDecayTime, false);
 	}
+}
+
+void ASuraProjectile::InitPhysicsProjectile()
+{
+	CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
+	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
+	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap);
+}
+
+void ASuraProjectile::InitHitScan()
+{
+	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap);
 }
 
 void ASuraProjectile::LoadProjectileData()
@@ -189,6 +213,7 @@ void ASuraProjectile::LoadProjectileData()
 		// <Velocity>
 		ProjectileMovement->InitialSpeed = ProjectileData->InitialSpeed;
 		ProjectileMovement->MaxSpeed = ProjectileData->MaxSpeed;
+		PM_Vel = ProjectileData->MaxSpeed;
 		HitScanProjectileVelocity = ProjectileData->InitialSpeed;
 
 		InitialRadius = ProjectileData->InitialRadius;
@@ -276,15 +301,16 @@ void ASuraProjectile::ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector Cen
 	}
 }
 void ASuraProjectile::ApplyDamage(AActor* OtherActor, float DamageAmount, EDamageType DamageType, bool bCanForceDamage,
-	const FName BoneName, TEnumAsByte<EPhysicalSurface> SurfaceType, const FVector ImpulseDirection)
+	const FName BoneName, TEnumAsByte<EPhysicalSurface> SurfaceType, const FVector ImpulseDirection, const FVector ImpactPoint)
 {
-	FDamageData Damage;
+	FDamageData Damage; //TODO: 착탄 위치
 	Damage.DamageAmount = DamageAmount;
 	Damage.DamageType = DamageType;
 	Damage.bCanForceDamage = bCanForceDamage;
 	Damage.BoneName = BoneName;
 	Damage.ImpulseDirection = ImpulseDirection;
 	Damage.SurfaceType = SurfaceType;
+	Damage.ImpactPoint = ImpactPoint;
 
 	if (OtherActor->GetClass()->ImplementsInterface(UDamageable::StaticClass()))
 	{
@@ -305,9 +331,6 @@ bool ASuraProjectile::SearchOverlappedActor(FVector CenterLocation, float Search
 
 void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	UE_LOG(LogTemp, Error, TEXT("HIT HIT HIT HIT HIT HIT HIT"));
-
-
 	//TODO: Projectile�� �ٸ� actor���� hit ���� ��, OtherActor�� ������ ���� �ٸ� event �߻���Ű��. Interface ����ϱ�
 	if (bCanPenetrate)
 	{
@@ -354,7 +377,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 				if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(Hit))
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, Hit.BoneName, UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()), Hit.ImpactNormal);
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, Hit.BoneName, UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()), Hit.ImpactNormal, Hit.ImpactPoint);
 
 					if (OnHeadShot.IsBound())
 					{
@@ -363,7 +386,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 				}
 				else
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, Hit.BoneName,UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()), Hit.ImpactNormal);
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, Hit.BoneName,UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()), Hit.ImpactNormal, Hit.ImpactPoint);
 					UE_LOG(LogTemp, Error, TEXT("bone11-1: %s"), *Hit.BoneName.ToString());
 					if (Cast<ACharacter>(OtherActor))
 					{
@@ -437,7 +460,7 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 				
 				if (HeadShotAdditionalDamage > 0.f && CheckHeadOvelap(OtherActor, SweepResult))
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(SweepResult.PhysMaterial.Get()));
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(SweepResult.PhysMaterial.Get()), SweepResult.ImpactNormal, SweepResult.ImpactPoint);
 
 					if (OnHeadShot.IsBound())
 					{
@@ -446,7 +469,7 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 				}
 				else
 				{
-					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(SweepResult.PhysMaterial.Get()));
+					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(SweepResult.PhysMaterial.Get()), SweepResult.ImpactNormal, SweepResult.ImpactPoint);
 					//UE_LOG(LogTemp, Error, TEXT("Projectile Overlapped!!!"));
 					if (Cast<ACharacter>(OtherActor))
 					{
@@ -618,10 +641,12 @@ void ASuraProjectile::SetHitScanActive(bool bflag)
 {
 	bIsHitScan = bflag;
 }
-void ASuraProjectile::LaunchHitScan(FVector StartLocation, FVector TraceDirection)
+void ASuraProjectile::LaunchHitScan(FVector StartLocation, FVector TraceDirection, FVector MuzzlePos)
 {
-	PerformHitScan(StartLocation, TraceDirection, 50000.f, ProjectileRadius, HitScanEndPoints); //TODO: MaxDistnace 설정해야함
-	InitHitScanProjectileMovement();
+	//PerformHitScan(StartLocation, TraceDirection, 50000.f, ProjectileRadius, HitScanEndPoints); //TODO: MaxDistnace 설정해야함
+	PerformHitScan_Upgrade(StartLocation, TraceDirection, 50000.f, ProjectileRadius, HitScanEndPoints); //TODO: MaxDistnace 설정해야함
+
+	InitHitScanProjectileMovement(MuzzlePos);
 }
 void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, TArray<FVector>& OutHitLocations)
 {
@@ -678,7 +703,7 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 						if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(HitResult))
 						{
 							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
-								EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
+								EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
 
 							if (OnHeadShot.IsBound())
 							{
@@ -687,7 +712,7 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 						}
 						else
 						{
-							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
+							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
 							//UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
 							if (OnBodyShot.IsBound())
 							{
@@ -733,17 +758,127 @@ void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirecti
 
 	OutHitLocations = HitStaticLocations;
 }
-void ASuraProjectile::InitHitScanProjectileMovement()
+void ASuraProjectile::PerformHitScan_Upgrade(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, TArray<FVector>& OutHitLocations)
+{
+	FVector Start = StartLocation;
+	FVector Direction = TraceDirection;
+	FVector End = StartLocation + TraceDirection * MaxDistance;
+
+	TArray<FVector> HitStaticLocations;
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(ProjectileOwner);
+	Params.AddIgnoredComponent(Weapon->GetWeaponMesh());
+	Params.AddIgnoredComponent(ProjectileMesh);
+	Params.AddIgnoredActor(this);
+	Params.bReturnPhysicalMaterial = true;
+
+	FCollisionResponseParams ResponseParams;
+	ResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel6, ECR_Overlap); //PawnEnemy
+
+	FCollisionShape Sphere = FCollisionShape::MakeSphere(SphereRadius);
+
+	for (int32 RicochetCount = 0; RicochetCount <= MaxRicochetCount; RicochetCount++)
+	{
+		TArray<FHitResult> TempHitResults;
+
+		bool bHit = GetWorld()->SweepMultiByChannel(
+			TempHitResults,
+			Start,
+			End,
+			FQuat::Identity,
+			ECC_GameTraceChannel7,
+			Sphere,
+			Params,
+			ResponseParams
+			);
+
+		if (bDebugHitScan) { DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 10.f); }
+
+		bool bIsBlockedByWorldStatic = false;
+
+		if (bHit)
+		{
+			TArray<AActor*> OnceDamagedEnemies;
+			for (const FHitResult& HitResult : TempHitResults)
+			{
+				if (NumPenetratedObjects <= NumPenetrableObjects)
+				{
+					ACharacter* Enemy = Cast<ACharacter>(HitResult.GetActor());
+					if (Enemy && !OnceDamagedEnemies.Contains(Enemy))
+					{
+						OnceDamagedEnemies.AddUnique(Enemy);
+
+						if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(HitResult))
+						{
+							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
+								EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
+
+							if (OnHeadShot.IsBound())
+							{
+								OnHeadShot.Execute();
+							}
+						}
+						else
+						{
+							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
+							//UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
+							if (OnBodyShot.IsBound())
+							{
+								OnBodyShot.Execute();
+							}
+						}
+
+						UpdatePenetration();
+					}
+				}
+
+				if (HitResult.GetComponent()->GetCollisionObjectType() == ECC_WorldStatic)
+				{
+					HitStaticLocations.Add(HitResult.ImpactPoint);
+
+					if (bDebugHitScan) { DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 12, FColor::Red, false, 50.f); }
+
+					Start = HitResult.ImpactPoint;
+
+					if (CheckRicochetAngle(HitResult.ImpactNormal, Direction))
+					{
+						Direction = GetReflectionAngle(HitResult.ImpactNormal, Direction);
+						Start = Start + Direction.GetSafeNormal() * (SphereRadius + 1.f);
+						End = Start + Direction * MaxDistance;
+						CurrentRicochetCount++;
+					}
+					else
+					{
+						RicochetCount = MaxRicochetCount + 1;
+					}
+					bIsBlockedByWorldStatic = true;
+					break;
+				}
+			}
+		}
+
+		if (!bHit || !bIsBlockedByWorldStatic)
+		{
+			HitStaticLocations.Add(End);
+			break;
+		}
+	}
+
+	OutHitLocations = HitStaticLocations;
+}
+void ASuraProjectile::InitHitScanProjectileMovement(FVector StartLocation)
 {
 	bActivatedMeshMovementForHitScan = true;
 
 	if (!HitScanEndPoints.IsEmpty())
 	{
-		FVector CurrLocation = GetActorLocation();
+		//FVector CurrLocation = GetActorLocation();
 		FVector TargetLocation = HitScanEndPoints[0];
-		MovementDirection = (TargetLocation - CurrLocation).GetSafeNormal();
-		SetActorRotation(MovementDirection.Rotation());
-		TargetDistance = FVector::Dist(CurrLocation, TargetLocation);
+		MovementDirection = (TargetLocation - StartLocation).GetSafeNormal();
+		SetActorLocationAndRotation(StartLocation, MovementDirection.Rotation());
+		//SetActorRotation(MovementDirection.Rotation());
+		TargetDistance = FVector::Dist(StartLocation, TargetLocation);
 		CurrEndPointIdx = 0;
 	}
 }
@@ -781,140 +916,184 @@ void ASuraProjectile::UpdateHitScanProjectileMovement(float DeltaTime)
 #pragma endregion
 
 #pragma region AutoAim
-void ASuraProjectile::LaunchAutoAim(FVector StartLocation, FVector TraceDirection, float MaxDistance, FHitResult& FirstHitResult)
+void ASuraProjectile::LaunchAutoAim(FVector StartLocation, FVector TraceDir, FVector AutoAimDir, FVector MuzzleLoc, float MaxDistance, float AutoAimRadius)
 {
-	//PerformHitScan(StartLocation, TraceDirection, 50000.f, ProjectileRadius, HitScanEndPoints); //TODO: MaxDistnace 설정해야함
-	//------------------
-	if (FirstHitResult.IsValidBlockingHit() && FirstHitResult.GetActor())
-	{
-		ApplyDamage(FirstHitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
-			EDamageType::Melee, false, FirstHitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(FirstHitResult.PhysMaterial.Get()), TraceDirection);
+	FVector TraceStart = StartLocation;
+	FVector TraceDirection = TraceDir;
+	FVector TraceEnd = StartLocation + TraceDirection * MaxDistance;
 
-		if (OnBodyShot.IsBound())
+	FCollisionQueryParams BaseParams(SCENE_QUERY_STAT(WeaponSphereSweep), /*bTraceComplex=*/false);
+	if(ProjectileOwner) BaseParams.AddIgnoredActor(ProjectileOwner);
+	if(Weapon->GetWeaponMesh()) BaseParams.AddIgnoredComponent(Weapon->GetWeaponMesh());
+	if(ProjectileMesh) BaseParams.AddIgnoredComponent(ProjectileMesh);
+	BaseParams.AddIgnoredActor(this);
+	BaseParams.bReturnPhysicalMaterial = true; //TODO: ???
+
+	FCollisionShape Sphere = FCollisionShape::MakeSphere(ProjectileRadius);
+
+	FHitResult HitResult;
+
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		TraceStart,
+		TraceEnd,
+		FQuat::Identity,
+		ECC_GameTraceChannel7,
+		Sphere,
+		BaseParams);
+
+	bool bIsBlockedByWorldStatic = false;
+	bool bIsHitByHitScan = false;
+
+	if (bHit)
+	{
+		//TODO: Set ProjectileMesh Movement
+
+		if (HitResult.GetComponent()->GetCollisionObjectType() == ECC_WorldStatic)
 		{
-			OnBodyShot.Execute();
+			bIsBlockedByWorldStatic = true;
+		}
+		else
+		{
+			ACharacter* Enemy = Cast<ACharacter>(HitResult.GetActor());
+			if (Enemy)
+			{
+				bIsHitByHitScan = true;
+				HitScanEndPoints.Add(Enemy->GetActorLocation());
+				if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(HitResult))
+				{
+					ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
+						EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
+
+					if (OnHeadShot.IsBound())
+					{
+						OnHeadShot.Execute();
+					}
+				}
+				else
+				{
+					ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
+					//UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
+					if (OnBodyShot.IsBound())
+					{
+						OnBodyShot.Execute();
+					}
+				}
+				bIsHitScan = true;
+				InitHitScan();
+				InitHitScanProjectileMovement(MuzzleLoc); //TODO: 정상화
+			}
 		}
 	}
 
-	//-------------------
-
-	FVector Start = StartLocation;
-	FVector Direction = TraceDirection;
-	FVector End = StartLocation + TraceDirection * MaxDistance;
-
-	TArray<FVector> HitStaticLocations;
-
-	FCollisionObjectQueryParams ObjectQueryParams;
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_GameTraceChannel6);
-
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(ProjectileOwner);
-	Params.AddIgnoredComponent(Weapon->GetWeaponMesh());
-	Params.AddIgnoredComponent(ProjectileMesh);
-	Params.AddIgnoredActor(this);
-	Params.bReturnPhysicalMaterial = true;
-
-	for (int32 RicochetCount = 0; RicochetCount <= MaxRicochetCount; RicochetCount++)
+	if (!bHit || bIsBlockedByWorldStatic)
 	{
-		TArray<FHitResult> TempHitResults;
+		FHitResult AutoAimHitResult;
 
-		bool bHit = GetWorld()->SweepMultiByObjectType(
-			TempHitResults,
-			Start,
-			End,
-			FQuat::Identity,
-			ObjectQueryParams,
-			FCollisionShape::MakeSphere(ProjectileRadius),
-			Params
-		);
-		
-		if (bDebugHitScan) { DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 10.f); }
+		TArray<FHitResult> HitResults;
+		HitResults.Reserve(6);
 
-		bool bIsBlockedByWorldStatic = false;
+		const FCollisionShape AutoAimSphere = FCollisionShape::MakeSphere(AutoAimRadius);
 
-		if (bHit)
+		//-------
+		FCollisionResponseParams ResponseParams;
+		ResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel1, ECR_Ignore);
+		ResponseParams.CollisionResponse.SetResponse(ECC_WorldStatic, ECR_Ignore);
+		//-------
+
+		const bool bAnyHit = GetWorld()->SweepMultiByChannel(
+			HitResults, 
+			StartLocation, 
+			StartLocation + AutoAimDir * MaxDistance,
+			FQuat::Identity, 
+			ECC_GameTraceChannel8, 
+			AutoAimSphere, BaseParams, ResponseParams);
+
+		if (!bAnyHit)
 		{
-			TArray<AActor*> OnceDamagedEnemies;
+			//TODO: Launch Single Projectile
+			InitPhysicsProjectile();
+			InitProjectileMovement(StartLocation, TraceDir, MuzzleLoc);
+			return;
+		}
 
-			if (FirstHitResult.IsValidBlockingHit() && FirstHitResult.GetActor())
+		float BestDistSq = TNumericLimits<float>::Max();
+		bool  bFound = false;
+
+		TSet<const AActor*> Seen;
+		Seen.Reserve(HitResults.Num());
+
+		const FVector CharLoc = ProjectileOwner->GetActorLocation();
+
+		AActor* AutoAimHitEnemy = nullptr;
+		FVector AutoAimHitLocation;
+		//FHitResult AutoAimHitResult;
+
+		for (const FHitResult& Hr : HitResults)
+		{
+			AActor* HitActor = Hr.GetActor();
+			if (!HitActor || Seen.Contains(HitActor)) continue;
+			Seen.Add(HitActor);
+
+			const FVector CandidateLoc = HitActor->GetActorLocation();
+
+			FCollisionResponseParams WorldStaticResponseParams;
+			WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel1, ECR_Ignore);
+			//WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel2, ECR_Ignore); //ClimbWall
+			WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel3, ECR_Ignore);
+			WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel4, ECR_Ignore);
+			WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel5, ECR_Ignore);
+			WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel6, ECR_Ignore);
+			WorldStaticResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel7, ECR_Ignore);
+
+			FHitResult BlockHit;
+			const bool bBlocked = GetWorld()->LineTraceSingleByChannel(
+				BlockHit,
+				StartLocation,
+				CandidateLoc,
+				ECC_WorldStatic,
+				BaseParams,
+				WorldStaticResponseParams);
+
+			if (bBlocked) continue;
+
+			const float DistSq = FVector::DistSquared(CharLoc, CandidateLoc);
+			if (DistSq < BestDistSq)
 			{
-				OnceDamagedEnemies.AddUnique(FirstHitResult.GetActor());
-			}
-			for (const FHitResult& HitResult : TempHitResults)
-			{
-				if (NumPenetratedObjects <= NumPenetrableObjects)
-				{
-					ACharacter* Enemy = Cast<ACharacter>(HitResult.GetActor());
-					if (Enemy && !OnceDamagedEnemies.Contains(Enemy))
-					{
-						OnceDamagedEnemies.AddUnique(Enemy);
-
-						if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(HitResult))
-						{
-							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
-								EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
-
-							if (OnHeadShot.IsBound())
-							{
-								OnHeadShot.Execute();
-							}
-						}
-						else
-						{
-							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection);
-							//UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
-							if (OnBodyShot.IsBound())
-							{
-								OnBodyShot.Execute();
-							}
-						}
-
-						UpdatePenetration();
-					}
-				}
-
-				if (HitResult.GetComponent()->GetCollisionObjectType() == ECC_WorldStatic)
-				{
-					HitStaticLocations.Add(HitResult.ImpactPoint);
-
-					if (bDebugHitScan) { DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 12, FColor::Red, false, 50.f); }
-
-					Start = HitResult.ImpactPoint;
-
-					if (CheckRicochetAngle(HitResult.ImpactNormal, Direction))
-					{
-						Direction = GetReflectionAngle(HitResult.ImpactNormal, Direction);
-						Start = Start + Direction.GetSafeNormal() * (ProjectileRadius + 1.f);
-						End = Start + Direction * MaxDistance;
-						CurrentRicochetCount++;
-					}
-					else
-					{
-						RicochetCount = MaxRicochetCount + 1;
-					}
-					bIsBlockedByWorldStatic = true;
-					break;
-				}
+				BestDistSq = DistSq;
+				AutoAimHitLocation = CandidateLoc;
+				AutoAimHitEnemy = HitActor;
+				AutoAimHitResult = Hr;
+				bFound = true;
 			}
 		}
 
-		if (!bHit || !bIsBlockedByWorldStatic)
+		if (bFound)
 		{
-			HitStaticLocations.Add(End);
-			break;
-		}		
+			//TODO: 1. 강제 데미지 적용, 2. Set ProjectileMovement
+
+			//TODO: Impact Point 설정하기
+			ApplyDamage(AutoAimHitEnemy, DefaultDamage + AdditionalDamage,
+				EDamageType::Melee, false, AutoAimHitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(AutoAimHitResult.PhysMaterial.Get()), TraceDirection);
+
+			if (OnBodyShot.IsBound())
+			{
+				OnBodyShot.Execute();
+			}
+
+			HitScanEndPoints.Add(AutoAimHitLocation);
+			bIsHitScan = true;
+			InitHitScan();
+			InitHitScanProjectileMovement(MuzzleLoc); //TODO: 정상화
+		}
+		else
+		{
+			//TODO: Launch Single Projectile
+			InitPhysicsProjectile();
+			InitProjectileMovement(StartLocation, TraceDir, MuzzleLoc);
+			return;
+		}
 	}
-
-	HitScanEndPoints = HitStaticLocations;
-
-
-	//---------
-
-	InitHitScanProjectileMovement();
-
 }
 #pragma endregion
 
@@ -1027,7 +1206,6 @@ FVector ASuraProjectile::GetReflectionAngle(FVector normal, FVector input)
 void ASuraProjectile::ApplyDamageDecay()
 {
 	DefaultDamage *= DamageDecayRate;
-	UE_LOG(LogTemp, Warning, TEXT("ApplyDamageDecay()"));
 }
 #pragma endregion
 
@@ -1039,9 +1217,6 @@ void ASuraProjectile::InitProjectileMovement(FVector StartPos, FVector Direction
 
 	ProjectileMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 	//ProjectileMesh->SetUsing
-
-	PM_Vel = MaxSpeed;
-
 
 	//TODO: Dettach MeshComponent from Collision(Root)Component	
 	PM_Cam_Pos = StartPos;
@@ -1063,40 +1238,22 @@ void ASuraProjectile::InitProjectileMovement(FVector StartPos, FVector Direction
 	FVector MeshTargetLocation = PM_Start_Pos + (PM_d_Pos - PM_Start_Pos) + PM_Dir_d_To_Muzzle * (PM_d_Pos - PM_Start_Pos).Length() * PM_k_by_d;
 	ProjectileMesh->SetWorldLocationAndRotation(MeshTargetLocation, (-PM_Dir_d_To_Muzzle).Rotation());
 
+	////TODO: Draw Debug Sphere
+	//DrawDebugLine(
+	//	GetWorld(),
+	//	PM_Start_Pos,
+	//	PM_Start_Pos + PM_Dir * 1000.f,
+	//	FColor::Red,
+	//	false,
+	//	50.f);
 
-	//TODO: Draw Debug Sphere
-	DrawDebugLine(
-		GetWorld(),
-		PM_Start_Pos,
-		PM_Start_Pos + PM_Dir * 1000.f,
-		FColor::Red,
-		false,
-		50.f);
-
-	DrawDebugLine(
-		GetWorld(),
-		MuzzlePos,
-		MuzzlePos + (-1) * PM_Dir_d_To_Muzzle * FVector::Distance(PM_d_Pos, MuzzlePos),
-		FColor::Blue,
-		false,
-		50.f);
-
-
-
-	////---------------------
-	//PM_Start_Pos = StartPos;
-	//PM_Dir = Direction.GetSafeNormal();
-	//
-	//PM_d_Pos = PM_Start_Pos + PM_Dir * PM_Cam_To_d_Len;
-	//PM_Dir_d_To_Muzzle = (MuzzlePos - PM_d_Pos).GetSafeNormal();
-
-	//PM_k_by_d = FVector::Distance(PM_d_Pos, MuzzlePos) / PM_Cam_To_d_Len;
-	//
-	////----------------------------
-	//PM_Dir_d_To_Muzzle
-
-	//PM_StartPos = StartPos;
-
+	//DrawDebugLine(
+	//	GetWorld(),
+	//	MuzzlePos,
+	//	MuzzlePos + (-1) * PM_Dir_d_To_Muzzle * FVector::Distance(PM_d_Pos, MuzzlePos),
+	//	FColor::Blue,
+	//	false,
+	//	50.f);
 }
 void ASuraProjectile::UpdateProjectileMovement(float DeltaTime)
 {

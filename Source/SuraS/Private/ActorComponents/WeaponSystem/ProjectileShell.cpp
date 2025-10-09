@@ -39,10 +39,31 @@ void AProjectileShell::Tick(float DeltaTime)
 
 }
 
+void AProjectileShell::FellOutOfWorld(const UDamageType& dmgType)
+{
+	if (!ProjectileShellMesh) return;
+	if (!CapsuleComponent) return;
+	ProjectileShellMesh->SetVisibility(false);
+	CapsuleComponent->SetSimulatePhysics(false);
+
+	SetActorLocation(FVector::ZeroVector);
+	SetActorRotation(FRotator::ZeroRotator);
+}
+
+void AProjectileShell::OutsideWorldBounds()
+{
+	if (!ProjectileShellMesh) return;
+	if (!CapsuleComponent) return;
+	ProjectileShellMesh->SetVisibility(false);
+	CapsuleComponent->SetSimulatePhysics(false);
+
+	SetActorLocation(FVector::ZeroVector);
+	SetActorRotation(FRotator::ZeroRotator);
+}
+
 void AProjectileShell::InitShell()
 {
 	if (!ProjectileShellMesh) return;
-	ProjectileShellMesh->SetVisibility(false);
 	ProjectileShellMesh->SetVisibility(false);
 }
 
@@ -50,7 +71,7 @@ void AProjectileShell::HideProjectileShell()
 {
 	if (!ProjectileShellMesh) return;
 	ProjectileShellMesh->SetVisibility(false);
-	CapsuleComponent->SetSimulatePhysics(false);
+	//CapsuleComponent->SetSimulatePhysics(false);
 }
 
 void AProjectileShell::EjectShell(const FVector EjectLocation, const FRotator EjectRotation, const FVector EjectImpulse)
