@@ -21,9 +21,7 @@ void UANS_BossAttackArea::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeq
 	bHasHit = false;
 	BossRef = Cast<ASuraCharacterBossProto>(MeshComp->GetOwner());
 	if (!BossRef) return;
-	AttackArea = BossRef->GetAttackAreaByTag(AttackAreaTag);
-	if (!AttackArea) return;
- 	AttackArea->SetAttackBoxCollision(ECollisionEnabled::Type::QueryOnly);
+	BossRef->GetAttackAreasByTag(AttackAreaTag, AttackAreas);
 }
 
 void UANS_BossAttackArea::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
@@ -32,36 +30,55 @@ void UANS_BossAttackArea::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequ
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 
 	if (!BossRef) return;
-	if (!AttackArea) return;
+	if (AttackAreas.IsEmpty()) return;
 	if (bHasHit) return;
-	
-	TArray<AActor*> OverlappingActors;
-	AttackArea->GetAttackBox()->GetOverlappingActors(OverlappingActors, ASuraPawnPlayer::StaticClass());
 
-	for (const auto& OverlappingActor : OverlappingActors)
+	for (const ASuraBossAttackArea* Area : AttackAreas)
 	{
-		if (IPlayerInterface* PlayerInterface = Cast<IPlayerInterface>(OverlappingActor))
+		if (!IsValid(Area)) return;
+		UBoxComponent* Box = Area->GetAttackBox();
+		if (!Box) return;
+
+		FCollisionObjectQueryParams ObjParams;
+		ObjParams.AddObjectTypesToQuery(PLAYER_TRACE_CHANNEL);
+		const FVector BoxLocation = Box->GetComponentLocation();
+		const FQuat Rot = Box->GetComponentQuat();
+		const FCollisionShape Shape = FCollisionShape::MakeBox(Box->GetScaledBoxExtent());
+
+		TArray<FOverlapResult> Hits;
+		bool bHit = MeshComp->GetWorld()->OverlapMultiByObjectType(Hits, BoxLocation, Rot, ObjParams, Shape);
+		if (bHit)
 		{
-			bHasHit = true;
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Hit"));
-			FDamageData DamageData;
-			DamageData.DamageType = DamageType;
-			DamageData.DamageAmount = 10;
-
-			if (DamageType == EDamageType::Charge)
+			for (const FOverlapResult& Result : Hits)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Charge Hit"));
-				DamageData.ImpulseMagnitude = 1000.f;
-				DamageData.ImpulseDirection = (OverlappingActor->GetActorLocation() - MeshComp->GetOwner()->GetActorLocation()).GetSafeNormal2D();
-			}
+				TWeakObjectPtr<AActor> WeakHitActor = Result.GetActor();
+				if (!WeakHitActor.IsValid()) continue;
+				AActor* HitActor = WeakHitActor.Get();
+				if (IPlayerInterface* PlayerInterface = Cast<IPlayerInterface>(HitActor))
+				{
+					bHasHit = true;
+					GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Hit"));
+					FDamageData DamageData;
+					DamageData.DamageType = DamageType;
+					DamageData.DamageAmount = 10;
 
-			if (IDamageable* Damageable = Cast<IDamageable>(OverlappingActor))
-			{
-				Damageable->TakeDamage(DamageData, MeshComp->GetOwner());
+					if (DamageType == EDamageType::Charge)
+					{
+						GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Charge Hit"));
+						DamageData.ImpulseMagnitude = 1000.f;
+						DamageData.ImpulseDirection = (HitActor->GetActorLocation() - MeshComp->GetOwner()->GetActorLocation()).GetSafeNormal2D();
+					}
+
+					if (IDamageable* Damageable = Cast<IDamageable>(HitActor))
+					{
+						Damageable->TakeDamage(DamageData, MeshComp->GetOwner());
+					}
+				}
 			}
-			
 		}
 	}
+	
+	
 
 	
 }
@@ -70,10 +87,6 @@ void UANS_BossAttackArea::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSeque
 	const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
-
-	if (!BossRef || !AttackArea) return;
-	
-	AttackArea->SetAttackBoxCollision(ECollisionEnabled::Type::NoCollision);
 }
 
 

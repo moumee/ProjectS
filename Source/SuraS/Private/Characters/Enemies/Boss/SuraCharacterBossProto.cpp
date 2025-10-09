@@ -102,20 +102,22 @@ void ASuraCharacterBossProto::SetCurrentState(EBossState NewState)
 	BlackboardComp->SetValueAsEnum("CurrentState", static_cast<uint8>(NewState));
 }
 
-ASuraBossAttackArea* ASuraCharacterBossProto::GetAttackAreaByTag(FName Tag)
+void ASuraCharacterBossProto::GetAttackAreasByTag(FName Tag, TArray<ASuraBossAttackArea*>& OutAreas)
 {
-	for (AActor* AttackArea : AttackAreas)
+	OutAreas.Reset();
+	for (const TWeakObjectPtr<AActor>& Weak : AttackAreas)
 	{
-		if (AttackArea->ActorHasTag(Tag))
+		AActor* Actor = Weak.Get();
+		if (!IsValid(Actor)) continue;
+
+		if (ASuraBossAttackArea* Area = Cast<ASuraBossAttackArea>(Actor))
 		{
-			if (ASuraBossAttackArea* CastedAttackArea = Cast<ASuraBossAttackArea>(AttackArea))
+			if (Area->ActorHasTag(Tag))
 			{
-				return CastedAttackArea;
+				OutAreas.Add(Area);
 			}
-			return nullptr;
 		}
 	}
-	return nullptr;
 }
 
 void ASuraCharacterBossProto::OnArmDismemberMontageEnded(UAnimMontage* Montage, bool bInterrupted)

@@ -77,7 +77,10 @@ struct SURAS_API FWeaponData : public FTableRowBase
 
 	/** Start Suhyeon  **/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UTexture2D* WeaponImage = nullptr; // 총기 이미지
+	UTexture2D* WeaponImage_HUD = nullptr; // HUD에 표시할 총기 이미지
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UTexture2D* WeaponImage_Inventory = nullptr; // 인벤토리에 표시할 총기 이미지
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsWeaponOwned = false; // 총기 소유 불값

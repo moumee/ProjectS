@@ -18,7 +18,7 @@ bool UACPlayerAttackTokens::ReserveAttackToken(int ReserveAmount)
 {
 	if (_EnemyAttackTokens >= ReserveAmount)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Reserved Attack Tokens: %d"), _EnemyAttackTokens));
+		// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Reserved Attack Tokens: %d"), _EnemyAttackTokens));
 		_EnemyAttackTokens -= ReserveAmount;
 		return true;
 	}
@@ -28,7 +28,7 @@ bool UACPlayerAttackTokens::ReserveAttackToken(int ReserveAmount)
 
 void UACPlayerAttackTokens::ReturnAttackToken(int ReserveAmount)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Returned Attack Tokens: %d"), _EnemyAttackTokens));
+	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Returned Attack Tokens: %d"), _EnemyAttackTokens));
 	_EnemyAttackTokens += ReserveAmount;
 
 	if (_EnemyAttackTokens > _MaxEnemyAttackTokens)
@@ -43,7 +43,7 @@ int UACPlayerAttackTokens::ReservePursuitToken(int ReserveAmount)
 	if (_EnemyPursuitTokens >= ReserveAmount)
 	{
 		_EnemyPursuitTokens -= ReserveAmount;
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Reserved Pursuit Tokens: %d"), _EnemyPursuitTokens));
+		// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Reserved Pursuit Tokens: %d"), _EnemyPursuitTokens));
 		
 		return _EnemyPursuitTokens;
 	}
@@ -53,7 +53,7 @@ int UACPlayerAttackTokens::ReservePursuitToken(int ReserveAmount)
 
 void UACPlayerAttackTokens::ReturnPursuitToken(int ReserveAmount)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Returned Pursuit Tokens: %d"), _EnemyPursuitTokens));
+	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Returned Pursuit Tokens: %d"), _EnemyPursuitTokens));
 	_EnemyPursuitTokens += ReserveAmount;
 
 	if (_EnemyPursuitTokens > _MaxEnemyPursuitTokens)

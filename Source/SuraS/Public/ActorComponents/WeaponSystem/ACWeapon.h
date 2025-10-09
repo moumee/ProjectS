@@ -73,7 +73,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = Weapon)
 	FName WeaponRowName;
 
-
 	TSharedPtr<FStreamableHandle> WeaponAssetsHandle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponMesh")
@@ -82,7 +81,7 @@ public:
 	USkeletalMeshComponent* GetWeaponMesh() { return WeaponMesh; }
 	UFUNCTION()
 	//UTexture2D* GetWeaponImage() {return WeaponDataTableHandle.GetRow<FWeaponData>("")->WeaponImage;}
-	UTexture2D* GetWeaponImage() { return WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(WeaponRowName, TEXT("LoadWeaponData"))->WeaponImage; }
+	UTexture2D* GetWeaponImage() { return WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(WeaponRowName, TEXT("LoadWeaponData"))->WeaponImage_HUD; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	EWeaponAction LeftMouseAction;
@@ -146,7 +145,13 @@ public:
 	void InitializeCamera(ASuraPawnPlayer* NewCharacter);
 	void InitializeUI();
 
+protected:
+	UPROPERTY() UDataTable* LoadedWeaponTable = nullptr;
+	UPROPERTY(Transient) bool bWeaponAssetsReady = false;
+
+public:
 	void LoadWeaponData();
+	void LoadWeaponData_Upgrade();
 	void SetMeshVisibility(bool bflag);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
@@ -157,6 +162,9 @@ public:
 
 	void FireSingleProjectile(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 	void FireMultiProjectile(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+
+	void FireSingleProjectile_Upgrade(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+
 
 #pragma region Socket
 protected:
@@ -170,6 +178,8 @@ protected:
 	bool bIsHitScan_R = false;
 
 	void FireSingleHitScan(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
+	void FireSingleHitScan_Upgrade(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
+
 	void FireMultiHitScan();
 #pragma endregion
 

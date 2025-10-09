@@ -9,6 +9,8 @@
 #include "Interfaces/PlayerInterface.h"
 #include "SuraPawnPlayer.generated.h"
 
+class UACHitScreenManager;
+class UACPlayerHealthComponent;
 class UNiagaraComponent;
 class UAmmoCounterWidget;
 class USuraPlayerCameraComponent;
@@ -25,7 +27,6 @@ class UInputMappingContext;
 // for interactions with enemies - must keep - by Yoony
 class UACDamageSystem;
 class UACPlayerAttackTokens;
-class UPlayerHitWidget;
 class UACUIMangerComponent;
 
 class UPlayerHUD;
@@ -37,12 +38,6 @@ UCLASS()
 class SURAS_API ASuraPawnPlayer : public APawn, public IDamageable, public IPlayerInterface
 {
 	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class UUserWidget> HitEffectWidgetClass;
-
-	UPROPERTY()
-	UPlayerHitWidget* HitEffectWidget;
 
 public:
 	ASuraPawnPlayer();
@@ -70,6 +65,8 @@ public:
 	USkeletalMeshComponent* GetHandsMesh() { return HandsMesh; }   //<JaeHyeong>
 
 	UACUIMangerComponent* GetUIManager() const { return UIManager; } // <Suhyeon>
+	UACPlayerHealthComponent* GetHealthComponent() const { return HealthComponent; } // <Suheyon>
+	UACHitScreenManager* GetHitScreenManager() const { return HitScreenManager; } // <Suhyeon>
 
 	bool HasWeapon() const;  // <WeaponSystem>s
 
@@ -84,8 +81,8 @@ public:
 	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser) override;
 
 	// SuraPawnPlayer.h - suhyeon
-	UFUNCTION(BlueprintCallable)
-	UPlayerHitWidget* GetPlayerHitWidget() const {return HitEffectWidget;}
+	// UFUNCTION(BlueprintCallable)
+	// UPlayerHitWidget* GetPlayerHitWidget() const {return HitEffectWidget;}
 
 	FOnPlayerHealthHalved OnPlayerHealthHalved;
 
@@ -135,6 +132,12 @@ protected:
 	// UI component - suhyeon
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
 	UACUIMangerComponent* UIManager;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
+	UACPlayerHealthComponent* HealthComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
+	UACHitScreenManager* HitScreenManager;
 
 	UPROPERTY(EditDefaultsOnly, Category="Editor Assign")
 	TObjectPtr<UNiagaraComponent> ForwardDashEffectComponent;
