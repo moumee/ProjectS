@@ -3,6 +3,8 @@
 
 #include "UI/PlayerHUD.h"
 
+#include "ActorComponents/UISystem/ACHitScreenManager.h"
+#include "ActorComponents/UISystem/ACPlayerHealthComponent.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
@@ -48,6 +50,7 @@ void UPlayerHUD::NativeConstruct()
 	AnimationMap.Add(TEXT("Slot2_TopToCenter"), Slot2_TopToCenter);
 	AnimationMap.Add(TEXT("Slot2_CenterToBottom"), Slot2_CenterToBottom);
 	AnimationMap.Add(TEXT("Slot2_BottomToTop"), Slot2_BottomToTop);
+	
 }
 
 void UPlayerHUD::SetPlayerHUDManager(UACPlayerHUDManager* InManager)
@@ -55,90 +58,23 @@ void UPlayerHUD::SetPlayerHUDManager(UACPlayerHUDManager* InManager)
 	PlayerHUDManager = InManager;
 }
 
-
-void UPlayerHUD::UpdateHpBar()
+void UPlayerHUD::ApplyHpBarImage(float healthRatio)
 {
-	if (!PlayerHitWidget && SuraPawnPlayer)
+	int32 TextureIndex;
+
+	if (healthRatio <= 0.0f) {TextureIndex = 5;}
+	else if (healthRatio <= 0.2f) {TextureIndex = 4;}
+	else if (healthRatio <= 0.4f) {TextureIndex = 3;}
+	else if (healthRatio <= 0.6f) {TextureIndex = 2;}
+	else if (healthRatio <= 0.8f) {TextureIndex = 1;}
+	else {TextureIndex = 0;}
+	if (HpBar && HPBarTextures.IsValidIndex(TextureIndex))
 	{
-		PlayerHitWidget = SuraPawnPlayer->GetPlayerHitWidget();
-		if (PlayerHitWidget)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("UPlayerHUD: PlayerHitWidget assigned on demand in UpdateHpBar."));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("UPlayerHUD: PlayerHitWidget is still null after trying to get it in UpdateHpBar."));
-		}
+		HpBar->SetBrushFromTexture(HPBarTextures[TextureIndex]);
 	}
-	
-	// 1. 회복 타이머 초기화 (기존 대기 중이면 제거)
-	GetWorld()->GetTimerManager().ClearTimer(RecoveryTimerHandle);
-
-	// 2. 최대 5단계까지만 증가
-	if (CurrentHitStage < 5)
+	else
 	{
-		CurrentHitStage++;
-	}
-
-	// 3. 체력 이미지 변경
-	ApplyHpBarImage(CurrentHitStage);
-
-	// 4. Hit UI 위젯이 있으면 해당 단계로 업데이트
-	if (PlayerHitWidget)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UpdateHitScreen Called"));
-		PlayerHitWidget->UpdateHitScreen(CurrentHitStage);
-	}
-	else if (!PlayerHitWidget)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayerHitWidget is null"));
-	}
-
-	// 5. 3초 후 회복 처리 타이머 시작
-	GetWorld()->GetTimerManager().SetTimer(
-		RecoveryTimerHandle,
-		this,
-		&UPlayerHUD::RecoverHpBarStage,
-		3.0f,
-		false
-	);
-}
-
-void UPlayerHUD::RecoverHpBarStage()
-{
-	// 최소 단계 0
-	if (CurrentHitStage > 0)
-	{
-		CurrentHitStage--;
-	}
-
-	// 체력 이미지 갱신
-	ApplyHpBarImage(CurrentHitStage);
-
-	// Hit UI 갱신
-	if (PlayerHitWidget)
-	{
-		PlayerHitWidget->UpdateHitScreen(CurrentHitStage);
-	}
-
-	// 추가 회복을 위한 타이머 재등록 (남은 단계가 있다면)
-	if (CurrentHitStage > 0)
-	{
-		GetWorld()->GetTimerManager().SetTimer(
-			RecoveryTimerHandle,
-			this,
-			&UPlayerHUD::RecoverHpBarStage,
-			3.0f,
-			false
-		);
-	}
-}
-
-void UPlayerHUD::ApplyHpBarImage(int32 Stage)
-{
-	if (HpBar && HPBarTextures.IsValidIndex(Stage))
-	{
-		HpBar->SetBrushFromTexture(HPBarTextures[Stage]);
+		UE_LOG(LogTemp, Warning, TEXT("UPlayerHUD::ApplyHpBarImage - HpBar is invalid or TextureIndex %d is out of bounds for HPBarTextures array."), TextureIndex);
 	}
 }
 
@@ -173,6 +109,12 @@ void UPlayerHUD::OnWeaponSwitchAnim(int32 PrevIndex, int32 NewIndex)
 	HandleWeaponSlotUIUpdate(PrevIndex, NewIndex);
 }
 
+void UPlayerHUD::OnHealthUpdated(float NewHealth, float OldHealth, float MaxHealth)
+{
+	const float HealthRatio = (MaxHealth > 0) ? NewHealth / MaxHealth : 0.0f;
+	ApplyHpBarImage(HealthRatio);
+}
+
 void UPlayerHUD::InitializeHUD() const
 {
 	if (!WeaponSystemComponent) return;
@@ -200,6 +142,12 @@ void UPlayerHUD::InitializeHUD() const
 	if (WeaponCount >= 3 && WeaponSlot_2)
 	{
 		WeaponSlot_2->SetVisibility(ESlateVisibility::Visible);
+	}
+
+	UACPlayerHealthComponent* HealthComp = SuraPawnPlayer->FindComponentByClass<UACPlayerHealthComponent>();
+	if (HealthComp)
+	{
+		HealthComp->OnHealthChanged.AddDynamic(this, &UPlayerHUD::OnHealthUpdated);
 	}
 }
 
