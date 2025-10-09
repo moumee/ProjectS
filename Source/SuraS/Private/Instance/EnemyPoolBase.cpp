@@ -27,12 +27,12 @@ void UEnemyPoolBase::SpawnPooledObject(AActor*& spawnedObject)
 		{
 			//AActor* newPoolableActor = UAIBlueprintHelperLibrary::SpawnAIFromClass(World,
 			//	*CastedEnemyClass, BehaviorTree, FVector().ZeroVector, FRotator().ZeroRotator, true );
-			APawn* newPoolableActor = GetWorld()->SpawnActor<ASuraCharacterEnemyBase>(PooledObjectSubclass, FVector().ZeroVector, FRotator().ZeroRotator, ActorSpawnParameters);
+			APawn* NewPoolableActor = GetWorld()->SpawnActor<ASuraCharacterEnemyBase>(PooledObjectSubclass, FVector().ZeroVector, FRotator().ZeroRotator, ActorSpawnParameters);
 
-			Cast<ASuraCharacterEnemyBase>(newPoolableActor)->InitializeEnemy();
-			newPoolableActor->SetActorHiddenInGame(false);
-			ObjectPool.Add(newPoolableActor);
-			spawnedObject = newPoolableActor;
+			Cast<ASuraCharacterEnemyBase>(NewPoolableActor)->InitializeEnemy();
+			NewPoolableActor->SetActorHiddenInGame(false);
+			ObjectPool.Add(NewPoolableActor);
+			spawnedObject = NewPoolableActor;
 			return;
 		}
 	}

@@ -128,10 +128,10 @@ void UACEnemyDamageSystem::PartBroken(AActor* OwningEnemyActor, const FDamageDat
 	if (BloodEffect)
 	{
 		UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			GetWorld(),         // 월드 컨텍스트
-			BloodEffect,     // 나이아가라 시스템
-			SpawnLocation,      // 생성 위치
-			DamageData.ImpulseDirection.Rotation()  // 생성시 회전값
+			GetWorld(),    
+			BloodEffect,   
+			SpawnLocation, 
+			DamageData.ImpulseDirection.Rotation()
 		);
 		NiagaraComp->SetVectorParameter(FName("HitDirection"), DamageData.ImpulseDirection*500);
 	}
@@ -142,7 +142,8 @@ void UACEnemyDamageSystem::PartBroken(AActor* OwningEnemyActor, const FDamageDat
 		bodyPart = GetOwner()->GetGameInstance()->GetSubsystem<UObjectPoolManager>()->GetPool(SeparatedPart, GetWorld())
 		->GetPooledObject(GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation());
 		//bodyPart = GetWorld()->SpawnActor<AActor>(SeparatedPart, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
-			
+		PoseSnapShot(Cast<USkeletalMeshComponent>(bodyPart->GetComponentByClass(USkeletalMeshComponent::StaticClass())));
+		
 		UPrimitiveComponent* Enemy = Cast<UPrimitiveComponent>(bodyPart->GetRootComponent());
 		UE_LOG(LogTemp, Error, TEXT("vector: %s"), *(DamageData.ImpulseDirection).ToString());
 		if (Enemy)
