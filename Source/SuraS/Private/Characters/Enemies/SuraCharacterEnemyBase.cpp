@@ -78,6 +78,9 @@ void ASuraCharacterEnemyBase::BeginPlay()
 	BindKillLogOnDeath();
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel8, ECollisionResponse::ECR_Block); // <JaeHyeong>
+	GetCapsuleComponent()->GetBodyInstance()->bLockXRotation = true;
+	GetCapsuleComponent()->GetBodyInstance()->bLockYRotation = true;
+	GetCapsuleComponent()->GetBodyInstance()->bLockZRotation = false;
 }
 
 void ASuraCharacterEnemyBase::Tick(float DeltaSeconds)
