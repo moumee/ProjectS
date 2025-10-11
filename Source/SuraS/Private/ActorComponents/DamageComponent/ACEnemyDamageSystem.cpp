@@ -40,6 +40,16 @@ bool UACEnemyDamageSystem::TakeDamage(const FDamageData& DamageData, AActor* Dam
 		// Enemy->GetAIController()->AlertNearByEnemies();
 	}*/
 
+	if (BloodEffect)
+	{
+		UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),    
+			BloodEffect,   
+			DamageData.ImpactPoint, 
+			DamageData.ImpulseDirection.Rotation()
+		);
+		NiagaraComp->SetVectorParameter(FName("HitDirection"), DamageData.ImpulseDirection*500);
+	}
 	
 
 	if (HeadBoneNames.Contains((DamageData.BoneName)))
@@ -124,6 +134,8 @@ void UACEnemyDamageSystem::PartBroken(AActor* OwningEnemyActor, const FDamageDat
 	FVector SpawnLocation = OwningEnemyActor->FindComponentByClass<USkeletalMeshComponent>()
 		->GetSocketLocation(PartsParent);
 
+	
+
 	//나이아가라 시스템
 	if (BloodEffect)
 	{
@@ -136,7 +148,7 @@ void UACEnemyDamageSystem::PartBroken(AActor* OwningEnemyActor, const FDamageDat
 		NiagaraComp->SetVectorParameter(FName("HitDirection"), DamageData.ImpulseDirection*500);
 	}
 	
-	if (SeparatedPart != nullptr)
+	if (false)//(SeparatedPart != nullptr)
 	{
 		AActor* bodyPart;
 		bodyPart = GetOwner()->GetGameInstance()->GetSubsystem<UObjectPoolManager>()->GetPool(SeparatedPart, GetWorld())

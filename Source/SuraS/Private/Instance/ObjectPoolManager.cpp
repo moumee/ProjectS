@@ -20,16 +20,16 @@ UObjectPoolBase* UObjectPoolManager::GetPool(TSubclassOf<AActor> ObjectClass, UO
 	if (ObjectClass->IsChildOf(ASuraCharacterEnemyBase::StaticClass()))
 	{
 		UE_LOG(LogTemp, Error, TEXT("enemypool"));
-		UObjectPoolBase* newPool = NewObject<UEnemyPoolBase>(this, UEnemyPoolBase::StaticClass(), TEXT("ObjectPoolBase"));
-		newPool->Initialize(GetWorld(), 10, ObjectClass);
+		UObjectPoolBase* newPool = NewObject<UEnemyPoolBase>(this, TEXT("ObjectPoolBase"));
+		newPool->Initialize(WorldContext->GetWorld(), 10, ObjectClass);
 		ObjectPool_List.Add(ObjectClass, newPool);
 		return newPool;
 	}
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("objectpool"));
-		UObjectPoolBase* newPool = NewObject<UObjectPoolBase>(this, UObjectPoolBase::StaticClass(), TEXT("ObjectPoolBase"));
-		newPool->Initialize(GetWorld(), 3, ObjectClass);
+		UObjectPoolBase* newPool = NewObject<UObjectPoolBase>(this, TEXT("ObjectPoolBase"));
+		newPool->Initialize(WorldContext->GetWorld(), 3, ObjectClass);
 		ObjectPool_List.Add(ObjectClass, newPool);
 		return newPool;
 	}
