@@ -129,6 +129,6 @@ private:
 
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(transient)
-	FText ValidationVisualWarningMessage;
+	FText ValidationVisualWarningMessage = FText();
 #endif
 };

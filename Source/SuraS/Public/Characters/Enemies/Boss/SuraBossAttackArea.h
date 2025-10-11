@@ -9,6 +9,7 @@
 class ASuraCharacterBossBase;
 enum class EDamageType : uint8;
 class UBoxComponent;
+class UBillboardComponent;
 
 UCLASS()
 class SURAS_API ASuraBossAttackArea : public AActor
@@ -26,15 +27,10 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	
 	
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UBoxComponent> AttackBox;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UBillboardComponent> IconBillboard;
-
-
-
 };

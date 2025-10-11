@@ -176,6 +176,7 @@ void FAnimNode_BoneRotationControl::EvaluateComponentSpace_AnyThread(FComponentS
 	}
 }
 
+#if WITH_EDITOR
 void FAnimNode_BoneRotationControl::ClearValidationVisualWarnings()
 {
 	ValidationVisualWarningMessage = FText::GetEmpty();
@@ -185,6 +186,7 @@ FText FAnimNode_BoneRotationControl::GetValidationVisualWarningMessage() const
 {
 	return FText();
 }
+#endif
 
 void FAnimNode_BoneRotationControl::UpdateInternal(const FAnimationUpdateContext& Context)
 {

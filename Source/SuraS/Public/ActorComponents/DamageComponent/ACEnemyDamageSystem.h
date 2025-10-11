@@ -69,6 +69,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX")
 	UNiagaraSystem* BloodEffect;
 
-	FORCEINLINE void SetImpulsePower(float weak, float normal, float hard);
-	FORCEINLINE void SetPartsHealth(float head, float body, float rArm, float lArm, float lLeg, float rLeg);
+	void SetImpulsePower(float weak, float normal, float hard);
+	void SetPartsHealth(float head, float body, float rArm, float lArm, float lLeg, float rLeg);
 };
