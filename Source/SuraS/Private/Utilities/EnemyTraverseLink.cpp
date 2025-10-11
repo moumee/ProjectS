@@ -33,14 +33,27 @@ void AEnemyTraverseLink::OnReceiveSmartLinkReached(AActor* Agent, const FVector&
 			Enemy->GetAIController()->EndPursueState();
 		//PathPoints.Add(Destination);
 		WorldPathPoints.Empty();
-		for (const FVector& LocalPoint : PathPoints)
+		if (FVector::DistSquared(Destination, GetTransform().TransformPosition(PointLinks[0].Right))
+			> FVector::DistSquared(Destination, GetTransform().TransformPosition(PointLinks[0].Left)))
 		{
-			// 3. 각 로컬 좌표를 월드 좌표로 변환합니다.
-			const FVector WorldPoint = GetActorTransform().TransformPosition(LocalPoint);
-               
-			// 4. 변환된 월드 좌표를 새 배열에 추가합니다.
-			WorldPathPoints.Add(WorldPoint);
+			for (const FVector& LocalPoint : PathPoints)
+			{
+				//각 로컬 좌표를 월드 좌표로 변환
+				const FVector WorldPoint = GetActorTransform().TransformPosition(LocalPoint);
+				WorldPathPoints.Add(WorldPoint);
+			}
 		}
+		else
+		{
+			//거꾸로 불러오기
+			for (auto It = PathPoints.rbegin(); It != PathPoints.rend(); ++It)
+			{
+				//각 로컬 좌표를 월드 좌표로 변환
+				const FVector WorldPoint = GetActorTransform().TransformPosition(*It);
+				WorldPathPoints.Add(WorldPoint);
+			}
+		}
+		
 		WorldPathPoints.Add(Destination);
 		Enemy->FindComponentByClass<UEnemySequentialJumpComponent>()->SetPathPoints(WorldPathPoints);
 		Enemy->GetAIController()->UpdateCurrentState(EEnemyStates::Traverse);

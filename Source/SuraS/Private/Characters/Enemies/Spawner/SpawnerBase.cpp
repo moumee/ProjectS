@@ -23,7 +23,9 @@ void ASpawnerBase::SpawnWrapper()
 {
 	for (int i = 0; i < spawnCount; i++)
 	{
-		Pool->GetPooledObject(GetActorLocation() + FVector(FMath::RandRange(-200, 200), FMath::RandRange(-200, 200), 0), FRotator().ZeroRotator);
+		UE_LOG(LogTemp, Log, TEXT("%s"), *PooledObject->GetName());
+		GetGameInstance()->GetSubsystem<UObjectPoolManager>()->GetPool(PooledObject, GetWorld())
+		->GetPooledObject(GetActorLocation() + FVector(FMath::RandRange(-200, 200), FMath::RandRange(-200, 200), 0), FRotator().ZeroRotator);
 	}
 }
 
