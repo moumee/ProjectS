@@ -285,7 +285,7 @@ void UInventoryWidget::UpdateWeaponUI(FString WeaponNameStr)
             // 이미지 설정
             if (WeaponUI.WeaponImage)
             {
-                WeaponUI.WeaponImage->SetBrushFromTexture(WeaponData->WeaponImage);
+                WeaponUI.WeaponImage->SetBrushFromTexture(WeaponData->WeaponImage_Inventory);
 
                 // 무기 소유 여부에 따른 색상 조정
                 if (WeaponData->bIsWeaponOwned)

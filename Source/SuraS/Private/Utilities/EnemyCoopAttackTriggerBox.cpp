@@ -101,12 +101,9 @@ void AEnemyCoopAttackTriggerBox::OnEnemyOverlapEnd(UPrimitiveComponent* Overlapp
 	if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(OtherActor))
 	{
 		EnemiesForCoopAttack.Remove(Enemy);
-
-		if (Enemy->GetAIController()->GetBrainComponent()->IsPaused())
-		{
-			Enemy->GetAIController()->GetBrainComponent()->RestartLogic();
-			Enemy->GetAIController()->SetStateToChaseOrPursue(Enemy);
-		}
+		
+		Enemy->GetAIController()->GetBrainComponent()->RestartLogic();
+		Enemy->GetAIController()->SetStateToChaseOrPursue(Enemy);
 	}
 }
 

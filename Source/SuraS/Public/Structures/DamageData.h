@@ -34,4 +34,7 @@ struct SURAS_API FDamageData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TEnumAsByte<EPhysicalSurface> SurfaceType = SurfaceType1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector ImpactPoint = FVector::ZeroVector;
 };

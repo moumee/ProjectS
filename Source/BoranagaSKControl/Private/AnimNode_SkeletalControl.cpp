@@ -29,7 +29,7 @@ DEFINE_LOG_CATEGORY(LogCustomSkeletalControl);
 
 void FAnimNode_SkeletalControl::Initialize_AnyThread(const FAnimationInitializeContext& Context)
 {
-	//Unreal enigneÀÇ profiling macro -> ÀÌ ÇÔ¼ö°¡ ½ÇÇàµÇ´Â µ¿¾È ¼º´ÉÀ» ÃøÁ¤ÇÏ±â À§ÇØ »ç¿ëÇÔ
+	//Unreal enigneï¿½ï¿½ profiling macro -> ï¿½ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
 	DECLARE_SCOPE_HIERARCHICAL_COUNTER_ANIMNODE(Initialize_AnyThread)
 
 	FAnimNode_Base::Initialize_AnyThread(Context);
@@ -178,6 +178,7 @@ void FAnimNode_SkeletalControl::EvaluateComponentSpace_AnyThread(FComponentSpace
 	}
 }
 
+#if WITH_EDITOR
 void FAnimNode_SkeletalControl::ClearValidationVisualWarnings()
 {
 	ValidationVisualWarningMessage = FText::GetEmpty();
@@ -187,6 +188,7 @@ FText FAnimNode_SkeletalControl::GetValidationVisualWarningMessage() const
 {
 	return FText();
 }
+#endif
 
 void FAnimNode_SkeletalControl::UpdateInternal(const FAnimationUpdateContext& Context)
 {

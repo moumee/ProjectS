@@ -23,6 +23,7 @@ EBTNodeResult::Type UBTT_GetYeeted::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 	if (CachedEnemy)
 	{
 		CachedEnemy->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &UBTT_GetYeeted::OnHit);
+		CachedEnemy->GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &UBTT_GetYeeted::OnOverlapBegin);
 	}
 
 	bIsDoneGettingYeeted = false;
@@ -65,7 +66,8 @@ void UBTT_GetYeeted::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemo
 			UAnimInstance* const EnemyAnimInstance = CachedEnemy->GetMesh()->GetAnimInstance();
 			EnemyAnimInstance->Montage_Stop(0.2f);
 			CachedEnemy->GetCapsuleComponent()->OnComponentHit.RemoveDynamic(this, &UBTT_GetYeeted::OnHit);
-			CachedEnemy->SetActorRotation(CachedEnemy->GetAIController()->GetBlackboardComponent()->GetValueAsRotator("TargetRotation"));
+			FRotator TargetRotation = CachedEnemy->GetAIController()->GetBlackboardComponent()->GetValueAsRotator("TargetRotation");
+			CachedEnemy->SetActorRotation(FRotator(0, TargetRotation.Yaw, 0));
 
 			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 		}
@@ -98,13 +100,35 @@ void UBTT_GetYeeted::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 
 		bIsDoneGettingYeeted = true;
 	}
-	else
+	else if (OtherComp && OtherComp->GetCollisionObjectType() == ECollisionChannel::ECC_WorldStatic)
 	{
+		CachedEnemy->GetCapsuleComponent()->OnComponentHit.RemoveDynamic(this, &UBTT_GetYeeted::OnHit);
+		
 		bIsDoneGettingYeeted = true;
 
 		if (CachedEnemy->GetAIController()->GetBrainComponent()->IsPaused())
 		{
-			UE_LOG(LogTemp, Error, TEXT("AI Paused"));
+			// UE_LOG(LogTemp, Error, TEXT("AI Paused"));
+			CachedEnemy->GetAIController()->GetBrainComponent()->RestartLogic();
+			CachedEnemy->GetAIController()->SetStateToChaseOrPursue(CachedEnemy);
+		}
+	}
+}
+
+void UBTT_GetYeeted::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherComp && OtherComp->GetCollisionObjectType() == ECollisionChannel::ECC_WorldStatic)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s"), *OtherActor->GetName());
+
+		CachedEnemy->GetCapsuleComponent()->OnComponentHit.RemoveDynamic(this, &UBTT_GetYeeted::OnHit);
+	
+		bIsDoneGettingYeeted = true;
+
+		if (CachedEnemy->GetAIController()->GetBrainComponent()->IsPaused())
+		{
+			// UE_LOG(LogTemp, Error, TEXT("AI Paused"));
 			CachedEnemy->GetAIController()->GetBrainComponent()->RestartLogic();
 			CachedEnemy->GetAIController()->SetStateToChaseOrPursue(CachedEnemy);
 		}

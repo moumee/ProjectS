@@ -143,7 +143,7 @@ void UACInventoryManager::OnConfirmWeaponEquip()
 void UACInventoryManager::UpdateWeaponAttributeUI(AWeapon* Weapon)
 {
 	//if (!Weapon || !Weapon->WeaponDataTableHandle.GetRow<FWeaponData>("") || !Weapon->WeaponDataTableHandle.GetRow<FWeaponData>("")->WeaponImage || !InventoryWidget)
-	if (!Weapon || !Weapon->WeaponDataTable || !Weapon->WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(Weapon->WeaponRowName, TEXT("LoadWeaponData"))->WeaponImage || !InventoryWidget)
+	if (!Weapon || !Weapon->WeaponDataTable || !Weapon->WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(Weapon->WeaponRowName, TEXT("LoadWeaponData"))->WeaponImage_Inventory || !InventoryWidget)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Weapon 또는 WeaponData 또는 WeaponImage 또는 InventoryWidget이 nullptr입니다."));
 		return;
@@ -151,7 +151,7 @@ void UACInventoryManager::UpdateWeaponAttributeUI(AWeapon* Weapon)
 
 	// 무기 이미지 표시
 	//InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(Weapon->WeaponDataTableHandle.GetRow<FWeaponData>("")->WeaponImage);
-	InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(Weapon->WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(Weapon->WeaponRowName, TEXT("LoadWeaponData"))->WeaponImage);
+	InventoryWidget->CurrentWeaponImage->SetBrushFromTexture(Weapon->WeaponDataTable.LoadSynchronous()->FindRow<FWeaponData>(Weapon->WeaponRowName, TEXT("LoadWeaponData"))->WeaponImage_Inventory);
 	InventoryWidget->CurrentWeaponImage->SetOpacity(1.0f);
 
 	// Magazine

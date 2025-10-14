@@ -25,6 +25,12 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	/** Called when the actor falls out of the world 'safely' (below KillZ and such) */
+	virtual void FellOutOfWorld(const class UDamageType& dmgType) override;
+
+	/** Called when the Actor is outside the hard limit on world bounds */
+	virtual void OutsideWorldBounds() override;
+
 protected:
 	UPROPERTY(EditAnywhere)
 	UCapsuleComponent* CapsuleComponent;
