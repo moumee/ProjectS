@@ -69,11 +69,17 @@ protected:
 
 	UPROPERTY(VisibleDefaultsOnly)
 	TObjectPtr<UTimelineComponent> HitColorTimeline;
-
 	FOnTimelineFloat OnHitColorTimelineFloat;
+
+	UPROPERTY(VisibleDefaultsOnly)
+	TObjectPtr<UTimelineComponent> DissolveTimeline;
+	FOnTimelineFloat OnDissolveColorTimelineFloat;
 
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UCurveFloat> HitColorCurve;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UCurveFloat> DissolveColorCurve;
 
 	float AttackDamageAmount;
 	float AttackRate;
@@ -108,6 +114,9 @@ protected:
 
 	UFUNCTION()
 	void UpdateHitColor(float Alpha);
+
+	UFUNCTION()
+	void UpdateDissolveColor(float Alpha);
 
 public:
 	ASuraCharacterEnemyBase();
