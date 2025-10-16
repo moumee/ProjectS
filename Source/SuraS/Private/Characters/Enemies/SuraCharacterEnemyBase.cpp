@@ -58,6 +58,8 @@ ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 
 	HitColorTimeline = CreateDefaultSubobject<UTimelineComponent>("HitColorTimeline");
 
+	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>("DissolveColorTimeline");
+
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel8, ECollisionResponse::ECR_Block); // <JaeHyeong>
 
 }
@@ -73,6 +75,12 @@ void ASuraCharacterEnemyBase::BeginPlay()
 	{
 		OnHitColorTimelineFloat.BindUFunction(this, FName("UpdateHitColor"));
 		HitColorTimeline->AddInterpFloat(HitColorCurve, OnHitColorTimelineFloat);
+	}
+
+	if (DissolveColorCurve)
+	{
+		OnDissolveColorTimelineFloat.BindUFunction(this, FName("UpdateDissolveColor"));
+		DissolveTimeline->AddInterpFloat(DissolveColorCurve, OnDissolveColorTimelineFloat);
 	}
 	
 	BindKillLogOnDeath();
@@ -169,6 +177,8 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 {
 	UpdateHealthBarValue();
 
+	DissolveTimeline->PlayFromStart();
+
 	float DeathAnimDuration = 3.f;
 	
 	if (!DeathAnimations.IsEmpty())
@@ -251,6 +261,11 @@ void ASuraCharacterEnemyBase::UpdateHitColor(float Alpha)
 {
 	
 	GetMesh()->SetScalarParameterValueOnMaterials("HitColorAlpha", Alpha);
+}
+
+void ASuraCharacterEnemyBase::UpdateDissolveColor(float Alpha)
+{
+	GetMesh()->SetScalarParameterValueOnMaterials("DissolveAlpha", Alpha);
 }
 
 void ASuraCharacterEnemyBase::LungeToTarget(float LungeForce = 1000.f)
