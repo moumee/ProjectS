@@ -3,11 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SuraBossStates.h"
+#include "SuraBoss_DataAsset.h"
 #include "BehaviorTree/BehaviorTreeTypes.h"
 #include "Characters/Enemies/Boss/SuraCharacterBossBase.h"
 #include "Components/TimelineComponent.h"
 #include "SuraCharacterBossProto.generated.h"
 
+class USuraBoss_DataAsset;
 class UBlackboardComponent;
 enum class EBossState : uint8;
 class ASuraBossAttackArea;
@@ -16,6 +19,18 @@ class UTimelineComponent;
  * 
  */
 
+USTRUCT(BlueprintType)
+struct FBossMeleeInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TObjectPtr<UAnimMontage> AttackMontage;
+	UPROPERTY()
+	float Cooldown;
+	
+};
+
 UCLASS()
 class SURAS_API ASuraCharacterBossProto : public ASuraCharacterBossBase
 {
@@ -23,7 +38,8 @@ class SURAS_API ASuraCharacterBossProto : public ASuraCharacterBossBase
 
 public:
 	ASuraCharacterBossProto();
-	virtual void BeginPlay() override;
+	
+	virtual void Tick(float DeltaTime) override;
 
 	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser) override;
 
@@ -31,10 +47,21 @@ public:
 
 	EBossState GetCurrentState() const { return CurrentState; }
 
+	void SetCurrentArmState(EBossArmState NewState);
+
+	EBossArmState GetCurrentArmState() const { return CurrentArmState; }
+
 	void GetAttackAreasByTag(FName Tag, TArray<ASuraBossAttackArea*>& OutAreas);
+
+	FBossMeleeInfo GetMeleeAttackMontageAndCooldownByTag(FName Tag);
 
 	
 protected:
+
+	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<USuraBoss_DataAsset> BossDataAsset;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UPhysicsAsset> LeftArmPhysicsAsset;
@@ -70,7 +97,7 @@ protected:
 	TObjectPtr<UBlackboardComponent> BlackboardComp;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EBossState CurrentState;
+	EBossState CurrentState = EBossState::Idle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<USkeletalMeshComponent> HeadMesh;
@@ -79,6 +106,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<USkeletalMeshComponent> RightArmMesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EBossArmState CurrentArmState = EBossArmState::HasBothArms;
 	
 	UPROPERTY()
 	TObjectPtr<UTimelineComponent> HeadHitColorTimeline;
@@ -109,6 +138,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UCurveFloat> HitColorCurve;
 
-	
-	
+	UPROPERTY(VisibleAnywhere)
+	TArray<FBossMeleeAttack> MeleeAttacks;
 };

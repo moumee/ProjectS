@@ -4,29 +4,32 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "BTT_BossAttack.generated.h"
+#include "Characters/Enemies/Boss/SuraBoss_DataAsset.h"
+#include "BTT_BossMeleeAttack.generated.h"
 
 class ASuraCharacterBossProto;
 /**
  * 
  */
 UCLASS()
-class SURAS_API UBTT_BossAttack : public UBTTaskNode
+class SURAS_API UBTT_BossMeleeAttack : public UBTTaskNode
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<UAnimMontage> AttackMontage;
+	FBlackboardKeySelector AttackAreaKey;
+	UPROPERTY(EditAnywhere)
+	FBlackboardKeySelector MeleeCooldownKey;
 
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<ASuraCharacterBossProto> BossRef;
+	UPROPERTY()
+	TWeakObjectPtr<ASuraCharacterBossProto> BossRef;
 
 	FOnMontageEnded OnMontageEndedDelegate;
 
 	void OnMontageEnded(UAnimMontage* AnimMontage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp);
 
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-
+	
 	
 	
 	

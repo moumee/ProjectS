@@ -3,6 +3,7 @@
 
 #include "ActorComponents/DamageComponent/ACBossDamageSystem.h"
 
+#include "Characters/Enemies/Boss/SuraBoss_DataAsset.h"
 #include "Structures/DamageData.h"
 
 #define SURFACE_HEAD SurfaceType6
@@ -12,17 +13,31 @@
 
 UACBossDamageSystem::UACBossDamageSystem()
 {
-	MaxHeadHealth = 200.f;
+	MaxHeadHealth = 1000.f;
 	HeadHealth = MaxHeadHealth;
-	MaxBodyHealth = 200.f;
+	MaxBodyHealth = 1000.f;
 	BodyHealth = MaxBodyHealth;
-	MaxLeftArmHealth = 200.f;
+	MaxLeftArmHealth = 500.f;
 	LeftArmHealth = MaxLeftArmHealth;
-	MaxRightArmHealth = 200.f;
+	MaxRightArmHealth = 500.f;
 	RightArmHealth = MaxRightArmHealth;
 	
-	MaxHealth = MaxHeadHealth + MaxBodyHealth + MaxLeftArmHealth + MaxRightArmHealth;
+	MaxHealth = 1000.f;
 	Health = MaxHealth;
+}
+
+void UACBossDamageSystem::InitializeHealth(const FBossHealth& BossHealth)
+{
+	MaxHealth = BossHealth.TotalHealth;
+	Health = MaxHealth;
+	MaxBodyHealth = BossHealth.BodyHealth;
+	BodyHealth = MaxBodyHealth;
+	MaxHeadHealth = BossHealth.HeadHealth;
+	HeadHealth = MaxHeadHealth;
+	MaxLeftArmHealth = BossHealth.LeftArmHealth;
+	LeftArmHealth = MaxLeftArmHealth;
+	MaxRightArmHealth = BossHealth.RightArmHealth;
+	RightArmHealth = MaxRightArmHealth;
 }
 
 bool UACBossDamageSystem::TakeDamage(const FDamageData& DamageData, AActor* DamageCauser)
@@ -32,7 +47,7 @@ bool UACBossDamageSystem::TakeDamage(const FDamageData& DamageData, AActor* Dama
 	{
 		case SURFACE_HEAD:
 			{
-				float ClampedHealth = FMath::Clamp(HeadHealth - DamageData.DamageAmount, 0, MaxHeadHealth);
+				float ClampedHealth = FMath::Max(HeadHealth - DamageData.DamageAmount, 0);
 				CalculatedDamageAmount = HeadHealth - ClampedHealth;
 				HeadHealth = ClampedHealth;
 				
@@ -40,14 +55,14 @@ bool UACBossDamageSystem::TakeDamage(const FDamageData& DamageData, AActor* Dama
 			break;
 		case SURFACE_BODY:
 			{
-				float ClampedHealth = FMath::Clamp(BodyHealth - DamageData.DamageAmount, 0, MaxBodyHealth);
+				float ClampedHealth = FMath::Max(BodyHealth - DamageData.DamageAmount, 0);
 				CalculatedDamageAmount = BodyHealth - ClampedHealth;
 				BodyHealth = ClampedHealth;
 			}
 			break;
 		case SURFACE_LEFT_ARM:
 			{
-				float ClampedHealth = FMath::Clamp(LeftArmHealth - DamageData.DamageAmount, 0, LeftArmHealth);
+				float ClampedHealth = FMath::Max(LeftArmHealth - DamageData.DamageAmount, 0);
 				CalculatedDamageAmount = LeftArmHealth - ClampedHealth;
 				LeftArmHealth = ClampedHealth;
 				if (LeftArmHealth <= 0 && !bLeftArmDead)
@@ -59,7 +74,7 @@ bool UACBossDamageSystem::TakeDamage(const FDamageData& DamageData, AActor* Dama
 			break;
 		case SURFACE_RIGHT_ARM:
 			{
-				float ClampedHealth = FMath::Clamp(RightArmHealth - DamageData.DamageAmount, 0, RightArmHealth);
+				float ClampedHealth = FMath::Max(RightArmHealth - DamageData.DamageAmount, 0);
 				CalculatedDamageAmount = RightArmHealth - ClampedHealth;
 				RightArmHealth = ClampedHealth;
 				if (RightArmHealth <= 0 && !bRightArmDead)

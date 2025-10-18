@@ -133,6 +133,7 @@ void USuraPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTic
 		}
 	}
 	
+	UpdateComponentVelocity();
 	
 }
 
@@ -1791,6 +1792,10 @@ void USuraPlayerMovementComponent::NotifyMovementKeyHoldModification(const TArra
 void USuraPlayerMovementComponent::NotifyResetModification()
 {
 	bMovementModificationResetRequested = true;
+}
+
+void USuraPlayerMovementComponent::NotifyDeath()
+{
 }
 
 
