@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BaseUIWidget.h"
+#include "ActorComponents/WeaponSystem/WeaponName.h"
 #include "InventoryWidget.generated.h"
 
 
@@ -107,7 +108,8 @@ public:
 	// DTWeapon 포인터 변수
 	UDataTable* DTWeapon;
 	
-	void UpdateWeaponUI(FString WeaponNameStr);
+	// void UpdateWeaponUI(FString WeaponNameStr);
+	void UpdateWeaponUI(EWeaponName WeaponName); // <JaeHyeong>
 
 	// // 모든 무기 소유 불값을 false로 만드는 함수
 	// void AllWeaponDiscard();
@@ -122,7 +124,7 @@ public:
 	void RequestChangeWeaponByName(const char* Str);
 	
 	/** 총기 UI 요소 맵 */
-	TMap<FString, FWeaponUI> WeaponUIElements;
+	TMap<EWeaponName, FWeaponUI> WeaponUIElements; // <JaeHyeong> FString -> EWeaponName 수정
 
 	/** 총기 button 바인딩 **/
 	UPROPERTY(meta = (BindWidget)) UButton* BtnRifle;
@@ -158,7 +160,7 @@ public:
 	UPROPERTY(meta = (BindWidget)) UTextBlock* CurrentWeaponRecoilText;
 	
 	UFUNCTION()
-	void OnWeaponPickedUp(FName WeaponName);
+	void OnWeaponPickedUp(EWeaponName WeaponName); // <JaeHyeong> FName -> EWeaponName 수정
 
 private:
 	bool bIsInitialized = false;

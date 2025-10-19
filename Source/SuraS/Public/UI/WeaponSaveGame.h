@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
+#include "ActorComponents/WeaponSystem/WeaponName.h"
 #include "WeaponSaveGame.generated.h"
 
 /**
@@ -16,6 +17,5 @@ class SURAS_API UWeaponSaveGame : public USaveGame
 
 public:
 	UPROPERTY()
-	TMap<FName, bool> OwnedWeapons; // 무기 소유 상태 저장
-	
+	TMap<EWeaponName, bool> OwnedWeapons; // 무기 소유 상태 저장 //<JaeHyeong> FName -> EWeaponName 수정	
 };

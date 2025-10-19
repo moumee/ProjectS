@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UI/BaseUIWidget.h"
+#include "ActorComponents/WeaponSystem/WeaponName.h"
 #include "PlayerHUD.generated.h"
 
 /**
@@ -133,7 +134,7 @@ public:
 	void InitializeHUD() const;
 	
 	UFUNCTION()
-	void UpdatePickup(FName WeaponName);
+	void UpdatePickup(EWeaponName WeaponName); // <JaeHyeong> FName -> EWeaponName 수정
 
 	int32 GetWeaponCount() const;
 	void HandleWeaponSlotUIUpdate(int32 PrevIndex, int32 NewIndex);
