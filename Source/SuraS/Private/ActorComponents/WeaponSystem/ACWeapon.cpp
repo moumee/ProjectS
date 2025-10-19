@@ -819,7 +819,7 @@ void AWeapon::FireSingleProjectile(FWeaponFireData* FireData, int32 NumPenetrabl
 		}
 	}
 
-	if (FireData->ProjectileClass != nullptr)
+	if (FireData->ProjectileClass != nullptr) //TODO: 여기서 자꾸 런타임 에러나서 터짐
 	{
 		UWorld* const World = GetWorld();
 		if (World)

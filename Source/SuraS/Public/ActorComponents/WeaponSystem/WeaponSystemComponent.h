@@ -10,7 +10,7 @@
 #include "WeaponSystemComponent.generated.h"
 
 // delegate about inventory widget (writted by suhyeon)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponPickedUp, FName, WeaponName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponPickedUp, EWeaponName, WeaponName);
 // delegate about ammocounter widget (writted by suhyeon)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponSwitched, int32, PrevIndex, int32, NewIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillWeaponEquipped, class AWeapon*, NewSkillWeapon);
@@ -224,6 +224,8 @@ public:
 
 	void WeaponInventoryClear();
 	/** suhyeon**/
+
+	void AddNewWeaponToInventory(AWeapon* NewWeapon);
 #pragma endregion
 	
 #pragma region Control

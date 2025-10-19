@@ -145,13 +145,13 @@ void UPlayerHUD::InitializeHUD() const
 	}
 
 	UACPlayerHealthComponent* HealthComp = SuraPawnPlayer->FindComponentByClass<UACPlayerHealthComponent>();
-	if (HealthComp)
+	if (HealthComp && !HealthComp->OnHealthChanged.IsAlreadyBound(this, &UPlayerHUD::OnHealthUpdated)) // <JaeHyeong> 중복 바인딩 방지
 	{
 		HealthComp->OnHealthChanged.AddDynamic(this, &UPlayerHUD::OnHealthUpdated);
 	}
 }
 
-void UPlayerHUD::UpdatePickup(FName WeaponName)
+void UPlayerHUD::UpdatePickup(EWeaponName WeaponName)
 {
 	InitializeHUD();
 	

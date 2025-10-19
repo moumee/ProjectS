@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "ActorComponents/WeaponSystem/WeaponName.h"
 #include "CustomGameInstance.generated.h"
 
 /**
@@ -22,14 +23,11 @@ public:
 	void SaveWeaponData();
 	void LoadWeaponData();
 
-	// 무기 데이터 테이블 (DT_Weapon)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	UDataTable* DTWeapon;
+	//// 무기 데이터 테이블 (DT_Weapon)
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	//UDataTable* DTWeapon;
 	
 	// 무기 소유 상태를 저장하는 TMap
 	UPROPERTY()
-	TMap<FName, bool> OwnedWeapons;
-
-	
-	
+	TMap<EWeaponName, bool> OwnedWeapons;
 };
