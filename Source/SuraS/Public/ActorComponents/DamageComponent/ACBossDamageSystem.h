@@ -39,6 +39,8 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	bool bRightArmDead = false;
 
+	UPROPERTY(VisibleAnywhere)
+	float HeadDamageMultiplier = 1.5f;;
 	
 public:
 
@@ -46,6 +48,8 @@ public:
 
 	FOnBodyPartDestroyed OnBodyPartDestroyed;
 	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser) override;
+
+	void SetHeadDamageMultiplier(float Value) { HeadDamageMultiplier = Value; };
 
 	float GetLeftArmHealth() { return LeftArmHealth; }
 	float GetRightArmHealth() { return RightArmHealth; }

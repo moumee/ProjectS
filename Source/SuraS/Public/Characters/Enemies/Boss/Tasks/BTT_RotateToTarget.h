@@ -4,29 +4,43 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "BTT_BossRangedAttack.generated.h"
+#include "BTT_RotateToTarget.generated.h"
 
-class ASuraCharacterBossProto;
-
-
-struct FBossRangedAttackMemory
+struct FRotateToTargetMemory
 {
-	TWeakObjectPtr<ASuraCharacterBossProto> Boss;
+	float YawRateDegPerSec = 0.f;
+	
 	TWeakObjectPtr<AActor> TargetActor;
+	
+	TWeakObjectPtr<APawn> OwningPawn;
+
+	bool IsValid() const
+	{
+		return TargetActor.IsValid() && OwningPawn.IsValid();
+	}
+
+	void Reset()
+	{
+		TargetActor.Reset();
+		OwningPawn.Reset();
+	}
 };
+
 /**
  * 
  */
 UCLASS()
-class SURAS_API UBTT_BossRangedAttack : public UBTTaskNode
+class SURAS_API UBTT_RotateToTarget : public UBTTaskNode
 {
 	GENERATED_BODY()
 
 public:
-
-	UBTT_BossRangedAttack();
+	UBTT_RotateToTarget();
 
 private:
+
+	UPROPERTY(EditAnywhere)
+	float MaxYawRate = 360.f;
 
 	UPROPERTY(EditAnywhere)
 	FBlackboardKeySelector TargetKey;
@@ -36,6 +50,6 @@ private:
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
 	virtual uint16 GetInstanceMemorySize() const override;
-	
+
 	virtual void InitializeFromAsset(UBehaviorTree& Asset) override;
 };

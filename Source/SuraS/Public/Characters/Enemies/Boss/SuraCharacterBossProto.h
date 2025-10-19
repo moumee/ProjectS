@@ -55,6 +55,17 @@ public:
 
 	FBossMeleeInfo GetMeleeAttackMontageAndCooldownByTag(FName Tag);
 
+	bool GetIsMeleeAttackOnCooldown() const { return bIsMeleeAttackOnCooldown; }
+	bool GetIsRangedAttackOnCooldown() const { return bIsRangedAttackOnCooldown; }
+
+	void StartMeleeAttackCooldown(float Duration);
+	void StartRangedAttackCooldown(float Duration);
+
+	void AddAttackAreaTag(FName InTag);
+
+	void RemoveAttackAreaTag(FName InTag);
+
+	FName GetCurrentAttackAreaTag() const;
 	
 protected:
 
@@ -140,4 +151,15 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<FBossMeleeAttack> MeleeAttacks;
+
+	UPROPERTY(VisibleAnywhere, Category="Cooldown")
+	float MeleeAttackCooldown = 0.f;
+	UPROPERTY(VisibleAnywhere, Category="Cooldown")
+	bool bIsMeleeAttackOnCooldown = false;
+	UPROPERTY(VisibleAnywhere, Category="Cooldown")
+	float RangedAttackCooldown = 0.f;
+	UPROPERTY(VisibleAnywhere, Category="Cooldown")
+	bool bIsRangedAttackOnCooldown = false;
+
+	TSet<FName> AttackAreaTags;
 };

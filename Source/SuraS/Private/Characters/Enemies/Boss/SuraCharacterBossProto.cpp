@@ -4,7 +4,6 @@
 #include "Characters/Enemies/Boss/SuraCharacterBossProto.h"
 
 #include "AIController.h"
-#include "MotionWarpingComponent.h"
 #include "ActorComponents/DamageComponent/ACBossDamageSystem.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/Animations/SuraBossAnimInstanceProto.h"
@@ -40,7 +39,58 @@ ASuraCharacterBossProto::ASuraCharacterBossProto()
 void ASuraCharacterBossProto::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	if (bIsMeleeAttackOnCooldown)
+	{
+		MeleeAttackCooldown = FMath::Max(MeleeAttackCooldown - DeltaTime, 0.f);
+		if (MeleeAttackCooldown <= 0.f)
+		{
+			bIsMeleeAttackOnCooldown = false;
+		}
+	}
+
+	if (bIsRangedAttackOnCooldown)
+	{
+		RangedAttackCooldown = FMath::Max(RangedAttackCooldown - DeltaTime, 0.f);
+		if (RangedAttackCooldown <= 0.f)
+		{
+			bIsRangedAttackOnCooldown = false;
+		}
+	}
 }
+
+void ASuraCharacterBossProto::StartMeleeAttackCooldown(float Duration)
+{
+	MeleeAttackCooldown = Duration;
+	bIsMeleeAttackOnCooldown = true;
+}
+
+void ASuraCharacterBossProto::StartRangedAttackCooldown(float Duration)
+{
+	RangedAttackCooldown = Duration;
+	bIsRangedAttackOnCooldown = true;
+}
+
+void ASuraCharacterBossProto::AddAttackAreaTag(FName InTag)
+{
+	AttackAreaTags.Add(InTag);
+}
+
+void ASuraCharacterBossProto::RemoveAttackAreaTag(FName InTag)
+{
+	AttackAreaTags.Remove(InTag);
+}
+
+FName ASuraCharacterBossProto::GetCurrentAttackAreaTag() const
+{
+	if (AttackAreaTags.IsEmpty())
+	{
+		return NAME_None;
+	}
+
+	return AttackAreaTags.Array()[0];
+}
+
 
 void ASuraCharacterBossProto::BeginPlay()
 {
@@ -51,11 +101,13 @@ void ASuraCharacterBossProto::BeginPlay()
 	if (ensure(BossDataAsset))
 	{
 		GetDamageSystemComp()->InitializeHealth(BossDataAsset->BossHealth);
+		GetDamageSystemComp()->SetHeadDamageMultiplier(BossDataAsset->HeadDamageMultiplier);
 	}
 	GetDamageSystemComp()->OnBodyPartDestroyed.AddUniqueDynamic(this, &ThisClass::OnBossPartDestroyed);
 	GetDamageSystemComp()->OnDeath.AddUObject(this, &ThisClass::OnBossDeath);
 
 	MeleeAttacks = BossDataAsset->BossMeleeAttacks;
+	
 
 	InitializeHitColorTimelines();
 
@@ -140,7 +192,6 @@ void ASuraCharacterBossProto::GetAttackAreasByTag(FName Tag, TArray<ASuraBossAtt
 	OutAreas.Reset();
 	for (const TWeakObjectPtr<AActor>& Weak : AttackAreas)
 	{
-		
 		if (!Weak.IsValid()) continue;
 
 		if (ASuraBossAttackArea* Area = Cast<ASuraBossAttackArea>(Weak.Get()))

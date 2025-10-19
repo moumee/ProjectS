@@ -47,7 +47,7 @@ bool UACBossDamageSystem::TakeDamage(const FDamageData& DamageData, AActor* Dama
 	{
 		case SURFACE_HEAD:
 			{
-				float ClampedHealth = FMath::Max(HeadHealth - DamageData.DamageAmount, 0);
+				float ClampedHealth = FMath::Max(HeadHealth - DamageData.DamageAmount * HeadDamageMultiplier, 0);
 				CalculatedDamageAmount = HeadHealth - ClampedHealth;
 				HeadHealth = ClampedHealth;
 				

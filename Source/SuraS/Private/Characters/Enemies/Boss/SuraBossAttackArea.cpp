@@ -5,6 +5,7 @@
 
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Characters/Enemies/Boss/SuraCharacterBossProto.h"
 #include "Components/BillboardComponent.h"
 #include "Components/BoxComponent.h"
 #include "Interfaces/PlayerInterface.h"
@@ -44,9 +45,9 @@ void ASuraBossAttackArea::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedCompo
 {
 	if (Cast<IPlayerInterface>(OtherActor) && !Tags.IsEmpty())
 	{
-		if (UBlackboardComponent* BlackboardComponent = Cast<APawn>(GetOwner())->GetController<AAIController>()->GetBlackboardComponent())
+		if (ASuraCharacterBossProto* Boss = Cast<ASuraCharacterBossProto>(GetOwner()))
 		{
-			BlackboardComponent->SetValueAsName("AttackAreaTag", Tags[0]);
+			Boss->AddAttackAreaTag(Tags[0]);
 		}
 	}
 }
@@ -56,9 +57,9 @@ void ASuraBossAttackArea::OnBoxEndOverlap(UPrimitiveComponent* OverlappedCompone
 {
 	if (Cast<IPlayerInterface>(OtherActor) && !Tags.IsEmpty())
 	{
-		if (UBlackboardComponent* BlackboardComponent = Cast<APawn>(GetOwner())->GetController<AAIController>()->GetBlackboardComponent())
+		if (ASuraCharacterBossProto* Boss = Cast<ASuraCharacterBossProto>(GetOwner()))
 		{
-			BlackboardComponent->SetValueAsName("AttackAreaTag", NAME_None);
+			Boss->RemoveAttackAreaTag(Tags[0]);
 		}
 	}
 }

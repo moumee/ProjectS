@@ -10,19 +10,26 @@
 #include "Characters/Enemies/Boss/SuraCharacterBossProto.h"
 #include "GameFramework/Character.h"
 
-
+UBTT_BossMeleeAttack::UBTT_BossMeleeAttack()
+{
+	NodeName = "Boss Melee Attack";
+	
+	INIT_TASK_NODE_NOTIFY_FLAGS();
+}
 
 EBTNodeResult::Type UBTT_BossMeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	AAIController* AIController = OwnerComp.GetAIOwner();
-	if (!AIController) return EBTNodeResult::Failed;
-	APawn* Pawn = AIController->GetPawn();
-	if (!Pawn) return EBTNodeResult::Failed;
+	APawn* OwningPawn = OwnerComp.GetAIOwner()->GetPawn();
+	if (!OwningPawn) return EBTNodeResult::Failed;
 
-	BossRef = Cast<ASuraCharacterBossProto>(Pawn);
-	if (!BossRef.IsValid()) return EBTNodeResult::Failed;
+	ASuraCharacterBossProto* Boss = Cast<ASuraCharacterBossProto>(OwningPawn);
 
-	ASuraCharacterBossProto* Boss = BossRef.Get();
+	FBossMeleeAttackMemory* Memory = CastInstanceNodeMemory<FBossMeleeAttackMemory>(NodeMemory);
+	check(Memory);
+	Memory->Boss = Boss;
+
+	if (!Memory->Boss.IsValid()) return EBTNodeResult::Failed;
+	
 	Boss->SetCurrentState(EBossState::Attack);
 
 	FName AttackAreaTag = OwnerComp.GetBlackboardComponent()->GetValueAsName(AttackAreaKey.SelectedKeyName);
@@ -31,9 +38,8 @@ EBTNodeResult::Type UBTT_BossMeleeAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 	Boss->GetAttackAreasByTag(AttackAreaTag, AttackAreas);
 	if (AttackAreas.IsEmpty()) return EBTNodeResult::Failed;
 	
-	
 	FBossMeleeInfo MeleeInfo = Boss->GetMeleeAttackMontageAndCooldownByTag(AttackAreaTag);
-	OwnerComp.GetBlackboardComponent()->SetValueAsFloat(MeleeCooldownKey.SelectedKeyName, MeleeInfo.Cooldown);
+	Boss->StartMeleeAttackCooldown(MeleeInfo.Cooldown);
 	
 	UAnimInstance* AnimInstance = Boss->GetMesh()->GetAnimInstance();
 	if (!AnimInstance) return EBTNodeResult::Failed;
@@ -45,16 +51,42 @@ EBTNodeResult::Type UBTT_BossMeleeAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 	return EBTNodeResult::InProgress;
 }
 
-
-void UBTT_BossMeleeAttack::OnMontageEnded(UAnimMontage* AnimMontage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp)
+void UBTT_BossMeleeAttack::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
+	EBTNodeResult::Type TaskResult)
 {
-	if (BossRef.IsValid())
+	FBossMeleeAttackMemory* Memory = CastInstanceNodeMemory<FBossMeleeAttackMemory>(NodeMemory);
+
+	if (Memory->Boss.IsValid())
 	{
-		ASuraCharacterBossProto* Boss = BossRef.Get();
-		if (!bInterrupted && Boss->GetCurrentState() != EBossState::Dead)
+		ASuraCharacterBossProto* Boss = Memory->Boss.Get();
+		if (TaskResult == EBTNodeResult::Succeeded && Boss->GetCurrentState() != EBossState::Dead)
 		{
 			Boss->SetCurrentState(EBossState::Idle);
 		}
 	}
+
+	Memory->Boss.Reset();
+}
+
+uint16 UBTT_BossMeleeAttack::GetInstanceMemorySize() const
+{
+	return sizeof(FBossMeleeAttackMemory);
+}
+
+void UBTT_BossMeleeAttack::InitializeFromAsset(UBehaviorTree& Asset)
+{
+	Super::InitializeFromAsset(Asset);
+
+	if (UBlackboardData* BBAsset = GetBlackboardAsset())
+	{
+		AttackAreaKey.ResolveSelectedKey(*BBAsset);
+	}
+}
+
+
+
+
+void UBTT_BossMeleeAttack::OnMontageEnded(UAnimMontage* AnimMontage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp)
+{
 	FinishLatentTask(*OwnerComp, bInterrupted ? EBTNodeResult::Failed : EBTNodeResult::Succeeded);
 }

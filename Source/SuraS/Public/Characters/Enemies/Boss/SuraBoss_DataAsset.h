@@ -26,6 +26,18 @@ struct FBossMeleeAttack
 };
 
 USTRUCT()
+struct FBossRangedAttack
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category="Animation")
+	TObjectPtr<UAnimMontage> RangedAttackMontage;
+
+	UPROPERTY(EditAnywhere, Category="Cooldown")
+	float Cooldown = 5.f;
+};
+
+USTRUCT()
 struct FBossHealth
 {
 	GENERATED_BODY()
@@ -55,6 +67,12 @@ public:
 	UPROPERTY(EditAnywhere, Category="Melee Attack")
 	TArray<FBossMeleeAttack> BossMeleeAttacks;
 
+	UPROPERTY(EditAnywhere, Category="Ranged Attack")
+	FBossRangedAttack BossRangedAttack;
+
 	UPROPERTY(EditAnywhere, Category="Boss Health")
 	FBossHealth BossHealth;
+
+	UPROPERTY(EditAnywhere, Category="Damage", meta=(ToolTip="머리 치명타 데미지 배율"))
+	float HeadDamageMultiplier = 1.5f;
 };
