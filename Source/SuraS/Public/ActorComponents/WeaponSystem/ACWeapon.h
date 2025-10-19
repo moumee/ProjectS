@@ -148,10 +148,8 @@ public:
 protected:
 	UPROPERTY() UDataTable* LoadedWeaponTable = nullptr;
 	UPROPERTY(Transient) bool bWeaponAssetsReady = false;
-
 public:
 	void LoadWeaponData();
-	void LoadWeaponData_Upgrade();
 	void SetMeshVisibility(bool bflag);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
@@ -234,18 +232,6 @@ public:
 	UFUNCTION()
 	USuraWeaponBaseState* GetCurrentState() const { return CurrentState; }
 	void ChangeState(USuraWeaponBaseState* NewState);
-
-#pragma region suhyeon
-	void SetWeaponData(FWeaponData* InWeaponData);
-
-	void SetWeaponName(EWeaponName InWeaponName)
-	{
-		WeaponName = InWeaponName;
-	}
-
-	// 캐릭터 설정 함수
-	void SetCharacter(class ASuraCharacterPlayerWeapon* InCharacter);
-#pragma endregion
 	
 protected:
 	/** The Character holding this weapon*/

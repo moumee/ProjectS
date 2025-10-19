@@ -40,59 +40,50 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	EWeaponAction SkillAction = EWeaponAction::WeaponAction_None;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
-	TSoftClassPtr<class ASuraProjectile> LeftProjectileClass;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
-	TSoftClassPtr<class ASuraProjectile> RightProjectileClass;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
-	TSoftClassPtr<class ASuraProjectile> SkillProjectileClass;
-	//-----------------------------------------------------------------
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	TSoftObjectPtr<UNiagaraSystem> FireEffect_L = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	TSoftObjectPtr<UNiagaraSystem> FireEffect_R = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	TSoftObjectPtr<UNiagaraSystem> FireEffect_Skill = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	TSoftObjectPtr<UNiagaraSystem> ChargeEffect = nullptr;
+	TSoftClassPtr<class ASuraProjectile> LeftProjectileClass; //TODO: 삭제
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+	//TSoftClassPtr<class ASuraProjectile> RightProjectileClass;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+	//TSoftClassPtr<class ASuraProjectile> SkillProjectileClass;
+	////-----------------------------------------------------------------
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	//TSoftObjectPtr<UNiagaraSystem> FireEffect_L = nullptr;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	//TSoftObjectPtr<UNiagaraSystem> FireEffect_R = nullptr;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	//TSoftObjectPtr<UNiagaraSystem> FireEffect_Skill = nullptr;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	//TSoftObjectPtr<UNiagaraSystem> ChargeEffect = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	FVector ChargeEffectLocation = FVector();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	FRotator ChargeEffectRotation = FRotator();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	FVector ChargeEffenctScale = { 1.f, 1.f, 1.f };
-	//-----------------------------------------------------------------
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	TSoftObjectPtr<USoundBase> FireSound_L = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	TSoftObjectPtr<USoundBase> FireSound_R = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	TSoftObjectPtr<USoundBase> FireSound_Skill = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	TSoftObjectPtr<USoundBase> ChargeSound = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	TSoftObjectPtr<USoundBase> TargetSearchLoopSound = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	TSoftObjectPtr<USoundBase> TargetLockedSound = nullptr;
+	////-----------------------------------------------------------------
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	//TSoftObjectPtr<USoundBase> FireSound_L = nullptr;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	//TSoftObjectPtr<USoundBase> FireSound_R = nullptr;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	//TSoftObjectPtr<USoundBase> FireSound_Skill = nullptr;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	//TSoftObjectPtr<USoundBase> ChargeSound = nullptr;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	//TSoftObjectPtr<USoundBase> TargetSearchLoopSound = nullptr;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	//TSoftObjectPtr<USoundBase> TargetLockedSound = nullptr;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IK")
 	FTransform RightHandOffset = FTransform();
 	//-----------------------------------------------------------------
-
 	/** Start Suhyeon  **/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UTexture2D* WeaponImage_HUD = nullptr; // HUD에 표시할 총기 이미지
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UTexture2D* WeaponImage_Inventory = nullptr; // 인벤토리에 표시할 총기 이미지
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//bool bIsWeaponOwned = false; // 총기 소유 불값
-	
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//TSoftClassPtr<class AWeapon> WeaponClass; // weaponinventory 동기화 위해서
-	
+	UTexture2D* WeaponImage_Inventory = nullptr; // 인벤토리에 표시할 총기 이미지	
 	/** End Suhyeon **/
-
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
 	float ReloadingTime = 2.5f;
