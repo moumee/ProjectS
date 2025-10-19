@@ -12,3 +12,12 @@ enum class EBossState : uint8
 	ArmDismember UMETA(DisplayName = "Arm Dismember"),
 	Dead UMETA(DisplayName = "Dead"),
 };
+
+UENUM(BlueprintType)
+enum class EBossArmState : uint8
+{
+	HasBothArms UMETA(DisplayName = "Has Both Arms"),
+	LeftArmDestroyed UMETA(DisplayName = "Left Arm Destroyed"),
+	RightArmDestroyed UMETA(DisplayName = "Right Arm Destroyed"),
+	BothDestroyed UMETA(DisplayName = "Both Arms Destroyed"),
+};

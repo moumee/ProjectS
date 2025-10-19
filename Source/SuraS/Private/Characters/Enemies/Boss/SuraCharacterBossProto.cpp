@@ -36,20 +36,88 @@ ASuraCharacterBossProto::ASuraCharacterBossProto()
 	
 }
 
+void ASuraCharacterBossProto::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	
+	if (bIsMeleeAttackOnCooldown)
+	{
+		MeleeAttackCooldown = FMath::Max(MeleeAttackCooldown - DeltaTime, 0.f);
+		if (MeleeAttackCooldown <= 0.f)
+		{
+			bIsMeleeAttackOnCooldown = false;
+		}
+	}
+
+	if (bIsRangedAttackOnCooldown)
+	{
+		RangedAttackCooldown = FMath::Max(RangedAttackCooldown - DeltaTime, 0.f);
+		if (RangedAttackCooldown <= 0.f)
+		{
+			bIsRangedAttackOnCooldown = false;
+		}
+	}
+}
+
+void ASuraCharacterBossProto::StartMeleeAttackCooldown(float Duration)
+{
+	MeleeAttackCooldown = Duration;
+	bIsMeleeAttackOnCooldown = true;
+}
+
+void ASuraCharacterBossProto::StartRangedAttackCooldown(float Duration)
+{
+	RangedAttackCooldown = Duration;
+	bIsRangedAttackOnCooldown = true;
+}
+
+void ASuraCharacterBossProto::AddAttackAreaTag(FName InTag)
+{
+	AttackAreaTags.Add(InTag);
+}
+
+void ASuraCharacterBossProto::RemoveAttackAreaTag(FName InTag)
+{
+	AttackAreaTags.Remove(InTag);
+}
+
+FName ASuraCharacterBossProto::GetCurrentAttackAreaTag() const
+{
+	if (AttackAreaTags.IsEmpty())
+	{
+		return NAME_None;
+	}
+
+	return AttackAreaTags.Array()[0];
+}
+
+
 void ASuraCharacterBossProto::BeginPlay()
 {
 	Super::BeginPlay();
 
+	BlackboardComp = GetController<AAIController>()->GetBlackboardComponent();
+	
+	if (ensure(BossDataAsset))
+	{
+		GetDamageSystemComp()->InitializeHealth(BossDataAsset->BossHealth);
+		GetDamageSystemComp()->SetHeadDamageMultiplier(BossDataAsset->HeadDamageMultiplier);
+	}
 	GetDamageSystemComp()->OnBodyPartDestroyed.AddUniqueDynamic(this, &ThisClass::OnBossPartDestroyed);
-
 	GetDamageSystemComp()->OnDeath.AddUObject(this, &ThisClass::OnBossDeath);
+
+	MeleeAttacks = BossDataAsset->BossMeleeAttacks;
+	
 
 	InitializeHitColorTimelines();
 
-	BlackboardComp = GetController<AAIController>()->GetBlackboardComponent();
 
 	
 	UGameplayStatics::GetAllActorsOfClass(this, ASuraBossAttackArea::StaticClass(), AttackAreas);
+	for (auto AttackArea : AttackAreas)
+	{
+		AttackArea->SetOwner(this);
+	}
 	
 }
 
@@ -102,15 +170,31 @@ void ASuraCharacterBossProto::SetCurrentState(EBossState NewState)
 	BlackboardComp->SetValueAsEnum("CurrentState", static_cast<uint8>(NewState));
 }
 
+void ASuraCharacterBossProto::SetCurrentArmState(EBossArmState NewState)
+{
+	if (NewState == CurrentArmState) return;
+	
+	switch (NewState)
+	{
+		case EBossArmState::LeftArmDestroyed:
+		case EBossArmState::RightArmDestroyed:
+			{
+				CurrentArmState = (CurrentArmState == EBossArmState::HasBothArms) ? NewState : EBossArmState::BothDestroyed;
+				break;
+			}
+		default:
+			break;
+	}
+}
+
 void ASuraCharacterBossProto::GetAttackAreasByTag(FName Tag, TArray<ASuraBossAttackArea*>& OutAreas)
 {
 	OutAreas.Reset();
 	for (const TWeakObjectPtr<AActor>& Weak : AttackAreas)
 	{
-		AActor* Actor = Weak.Get();
-		if (!IsValid(Actor)) continue;
+		if (!Weak.IsValid()) continue;
 
-		if (ASuraBossAttackArea* Area = Cast<ASuraBossAttackArea>(Actor))
+		if (ASuraBossAttackArea* Area = Cast<ASuraBossAttackArea>(Weak.Get()))
 		{
 			if (Area->ActorHasTag(Tag))
 			{
@@ -118,6 +202,35 @@ void ASuraCharacterBossProto::GetAttackAreasByTag(FName Tag, TArray<ASuraBossAtt
 			}
 		}
 	}
+}
+
+FBossMeleeInfo ASuraCharacterBossProto::GetMeleeAttackMontageAndCooldownByTag(FName Tag)
+{
+	for (auto MeleeAttack : MeleeAttacks)
+	{
+		if (Tag == MeleeAttack.AttackAreaTag)
+		{
+			FBossMeleeInfo ReturnInfo;
+			ReturnInfo.Cooldown = MeleeAttack.Cooldown;
+			switch (CurrentArmState)
+			{
+				case EBossArmState::HasBothArms:
+					ReturnInfo.AttackMontage = MeleeAttack.BothArmsMontage;
+					break;
+				case EBossArmState::LeftArmDestroyed:
+					ReturnInfo.AttackMontage = MeleeAttack.LeftArmDestroyedMontage;
+					break;
+				case EBossArmState::RightArmDestroyed:
+					ReturnInfo.AttackMontage = MeleeAttack.RightArmDestroyedMontage;
+					break;
+				default:
+					break;
+			}
+			return ReturnInfo;
+		}
+	}
+	
+	return FBossMeleeInfo();
 }
 
 void ASuraCharacterBossProto::OnArmDismemberMontageEnded(UAnimMontage* Montage, bool bInterrupted)
@@ -183,11 +296,13 @@ void ASuraCharacterBossProto::OnBossPartDestroyed(TEnumAsByte<EPhysicalSurface> 
 	{
 		case SURFACE_LEFT_ARM:
 			SetCurrentState(EBossState::ArmDismember);
+			SetCurrentArmState(EBossArmState::LeftArmDestroyed);
 			PlayArmDismemberMontage("LeftArm");
 			DismemberArm(LeftArmMesh, GetMesh(), "upperarm_l");
 			break;
 		case SURFACE_RIGHT_ARM:
 			SetCurrentState(EBossState::ArmDismember);
+			SetCurrentArmState(EBossArmState::RightArmDestroyed);
 			PlayArmDismemberMontage("RightArm");
 			DismemberArm(RightArmMesh, GetMesh(), "upperarm_r");
 			break;
@@ -242,7 +357,7 @@ void ASuraCharacterBossProto::UpdateRightArmHitColor(float Alpha)
 
 void ASuraCharacterBossProto::InitializeHitColorTimelines()
 {
-	if (HitColorCurve)
+	if (ensureAlways(HitColorCurve))
 	{
 		OnHeadHitColorTimelineFloat.BindUFunction(this, FName("UpdateHeadHitColor"));
 		HeadHitColorTimeline->AddInterpFloat(HitColorCurve, OnHeadHitColorTimelineFloat);
