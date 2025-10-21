@@ -3,6 +3,8 @@
 
 #include "Characters/Enemies/SuraCharacterEnemyTurret.h"
 
+#include "GameFramework/CharacterMovementComponent.h"
+
 
 // Sets default values
 ASuraCharacterEnemyTurret::ASuraCharacterEnemyTurret()
@@ -14,4 +16,6 @@ ASuraCharacterEnemyTurret::ASuraCharacterEnemyTurret()
 void ASuraCharacterEnemyTurret::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 }

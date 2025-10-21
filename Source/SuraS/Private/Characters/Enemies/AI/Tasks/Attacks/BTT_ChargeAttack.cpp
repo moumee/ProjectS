@@ -13,9 +13,7 @@
 UBTT_ChargeAttack::UBTT_ChargeAttack(FObjectInitializer const& ObjectInitializer)
 {
 	NodeName = "Charge Attack";
-	bNotifyTick = true;
-
-	bCreateNodeInstance = true;
+	INIT_TASK_NODE_NOTIFY_FLAGS();
 }
 
 EBTNodeResult::Type UBTT_ChargeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -32,10 +30,12 @@ EBTNodeResult::Type UBTT_ChargeAttack::ExecuteTask(UBehaviorTreeComponent& Owner
 		float AttackReadyAnimDuration = CachedCharger->PlayAnimMontage(AttackReadyAnimation);
 
 		FTimerHandle AnimCompleteHandle;
-		GetWorld()->GetTimerManager().SetTimer(AnimCompleteHandle, [this]()
-		{
-			OnAttackReadyEnded();
-		}, AttackReadyAnimDuration,false);
+		GetWorld()->GetTimerManager().SetTimer(
+			AnimCompleteHandle,
+			FTimerDelegate::CreateWeakLambda(this, [this]() { OnAttackReadyEnded(); }),
+		AttackReadyAnimDuration,
+		false
+		);
 
 		return EBTNodeResult::InProgress;
 	}
@@ -101,7 +101,7 @@ void UBTT_ChargeAttack::EndTask()
 	float RoarAnimDuration = CachedCharger->PlayAnimMontage(RoarAnimation);
 	
 	FTimerHandle AnimCompleteHandle;
-	CachedCharger->GetWorldTimerManager().SetTimer(
+	GetWorld()->GetTimerManager().SetTimer(
 		AnimCompleteHandle,
 		FTimerDelegate::CreateWeakLambda(this, [this]() { OnRoarEnded(); }),
 		RoarAnimDuration,
@@ -162,10 +162,12 @@ void UBTT_ChargeAttack::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 			float StunAnimDuration = CachedCharger->PlayAnimMontage(StunAnimation);
 
 			FTimerHandle AnimCompleteHandle;
-			GetWorld()->GetTimerManager().SetTimer(AnimCompleteHandle, [this]()
-			{
-				EndTask();
-			}, StunAnimDuration,false);
+			GetWorld()->GetTimerManager().SetTimer(
+				AnimCompleteHandle,
+				FTimerDelegate::CreateWeakLambda(this, [this]() { EndTask(); }),
+			StunAnimDuration,
+			false
+			);
 		}
 		/*else
 		{

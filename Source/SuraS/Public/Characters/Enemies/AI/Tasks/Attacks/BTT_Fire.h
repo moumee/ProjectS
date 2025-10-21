@@ -19,6 +19,6 @@ class SURAS_API UBTT_Fire : public UBTTask_BlackboardBase
 	void OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp);
 	
 public:
-	explicit UBTT_Fire(FObjectInitializer const& ObjectInitializer);
+	explicit UBTT_Fire();
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };

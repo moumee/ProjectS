@@ -8,10 +8,9 @@
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
-UBTT_MeleeAttack::UBTT_MeleeAttack(FObjectInitializer const& ObjectInitializer)
+UBTT_MeleeAttack::UBTT_MeleeAttack()
 {
 	NodeName = "Melee Attack";
-	bCreateNodeInstance = true;
 }
 
 EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

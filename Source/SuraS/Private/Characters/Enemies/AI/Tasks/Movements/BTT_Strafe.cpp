@@ -6,20 +6,26 @@
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 
+uint16 UBTT_Strafe::GetInstanceMemorySize() const
+{
+	return sizeof(FBTTStrafeTaskMemory);
+}
+
 UBTT_Strafe::UBTT_Strafe(FObjectInitializer const& ObjectInitializer)
 {
 	NodeName = "Strafe";
-	bNotifyTick = true;
-
-	bCreateNodeInstance = true; // prevent all AI sharing the same instance with the same StrafeDirection value
+	INIT_TASK_NODE_NOTIFY_FLAGS();
 }
 
 EBTNodeResult::Type UBTT_Strafe::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
+	FBTTStrafeTaskMemory* Mem = CastInstanceNodeMemory<FBTTStrafeTaskMemory>(NodeMemory);
+	check(Mem);
+	
 	if (FMath::RandRange(0, 1))
-		StrafeDirection = 1;
+		Mem->StrafeDirection = 1;
 	else
-		StrafeDirection = -1;
+		Mem->StrafeDirection = -1;
 
 	StrafeDuration += FMath::RandRange(-StrafeDurationDeviation, StrafeDurationDeviation);
 
@@ -34,14 +40,16 @@ void UBTT_Strafe::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
 {
 	Super::TickTask(OwnerComp, NodeMemory, DeltaSeconds);
 
-	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(OwnerComp.GetAIOwner()->GetCharacter()))
-		Enemy->AddMovementInput(StrafeDirection * Enemy->GetActorRightVector(), 0.2f);
+	FBTTStrafeTaskMemory* Mem = CastInstanceNodeMemory<FBTTStrafeTaskMemory>(NodeMemory);
 
-	DeltaTime += DeltaSeconds;
+	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(OwnerComp.GetAIOwner()->GetCharacter()))
+		Enemy->AddMovementInput(Mem->StrafeDirection * Enemy->GetActorRightVector(), 0.2f);
+
+	Mem->DeltaTime += DeltaSeconds;
 	
-	if (DeltaTime >= StrafeDuration)
+	if (Mem->DeltaTime >= StrafeDuration)
 	{
-		DeltaTime = 0.f;
+		Mem->DeltaTime = 0.f;
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 	}
 }
