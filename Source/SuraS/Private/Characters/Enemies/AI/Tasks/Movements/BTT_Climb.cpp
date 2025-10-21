@@ -3,15 +3,11 @@
 
 #include "Characters/Enemies/AI/Tasks/Movements/BTT_Climb.h"
 
-#include "KismetTraceUtils.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "Components/CapsuleComponent.h"
-#include "Concepts/Iterable.h"
-#include "Evaluation/IMovieSceneEvaluationHook.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Widgets/Text/STextScroller.h"
 
 #define WALL_TRACE_CHANNEL ECC_GameTraceChannel2
 #define ENEMY_TRACE_CHANNEL ECC_GameTraceChannel6
@@ -19,30 +15,32 @@
 UBTT_Climb::UBTT_Climb(FObjectInitializer const& ObjectInitializer)
 {
 	NodeName = "Climb";
-	bNotifyTick = true;
-	bCreateNodeInstance = true;
+	INIT_TASK_NODE_NOTIFY_FLAGS();
 }
 
 EBTNodeResult::Type UBTT_Climb::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	check(Cast<ASuraCharacterEnemyBase>(OwnerComp.GetAIOwner()->GetCharacter()))
+
+	FBTTClimbTaskMemory* Mem = CastInstanceNodeMemory<FBTTClimbTaskMemory>(NodeMemory);
+	check(Mem);
 	
 	if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(OwnerComp.GetAIOwner()->GetCharacter()))
 	{
 		// Enemy->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay);
 
-		CachedEnemy = Enemy;
+		Mem->CachedEnemy = Enemy;
 
-		UAnimMontage* ClimbAnimation = CachedEnemy->GetClimbMontage();
-		CachedEnemy->PlayAnimMontage(ClimbAnimation);
+		UAnimMontage* ClimbAnimation = Enemy->GetClimbMontage();
+		Enemy->PlayAnimMontage(ClimbAnimation);
 		
-		CachedEnemy->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+		Enemy->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 
-		bHasLedgeDetected = false;
-		bIsDoneClimbing = false;
+		Mem->bHasLedgeDetected = false;
+		Mem->bIsDoneClimbing = false;
 		
 		FRotator Rotation = OwnerComp.GetBlackboardComponent()->GetValueAsRotator("TargetRotation");
-		CachedEnemy->SetActorRotation(Rotation);
+		Enemy->SetActorRotation(Rotation);
 		
 		FinishLatentTask(OwnerComp, EBTNodeResult::InProgress);
 		return EBTNodeResult::InProgress;
@@ -51,25 +49,27 @@ EBTNodeResult::Type UBTT_Climb::ExecuteTask(UBehaviorTreeComponent& OwnerComp, u
 	return EBTNodeResult::Failed;
 }
 
-void UBTT_Climb::TraceGroundAndWall()
+void UBTT_Climb::TraceGroundAndWall(uint8* NodeMemory)
 {
-	float EnemyHalfHeight = CachedEnemy->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	FBTTClimbTaskMemory* Mem = CastInstanceNodeMemory<FBTTClimbTaskMemory>(NodeMemory);
+	
+	float EnemyHalfHeight = Mem->CachedEnemy.Get()->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 
 	// Trace to the ledge above
 	FHitResult WallHit;
 	FCollisionQueryParams ClimbLedgeParams;
 	FCollisionResponseParams ClimbResponseParams;
-	ClimbLedgeParams.AddIgnoredActor(CachedEnemy.Get());
+	ClimbLedgeParams.AddIgnoredActor(Mem->CachedEnemy.Get());
 	ClimbResponseParams.CollisionResponse.SetResponse(ENEMY_TRACE_CHANNEL, ECR_Ignore);
-	FVector ClimbLedgeSweepEnd = CachedEnemy->GetActorLocation() + CachedEnemy->GetActorForwardVector() * CachedEnemy->GetCapsuleComponent()->GetCollisionShape().GetCapsuleRadius();
+	FVector ClimbLedgeSweepEnd = Mem->CachedEnemy.Get()->GetActorLocation() + Mem->CachedEnemy.Get()->GetActorForwardVector() * Mem->CachedEnemy.Get()->GetCapsuleComponent()->GetCollisionShape().GetCapsuleRadius();
 
 	bool bIsWallAhead = GetWorld()->SweepSingleByChannel(
 		WallHit,
-		CachedEnemy->GetActorLocation(),
+		Mem->CachedEnemy.Get()->GetActorLocation(),
 		ClimbLedgeSweepEnd,
-		CachedEnemy->GetActorQuat(),
+		Mem->CachedEnemy.Get()->GetActorQuat(),
 		WALL_TRACE_CHANNEL,
-		CachedEnemy->GetCapsuleComponent()->GetCollisionShape(),
+		Mem->CachedEnemy.Get()->GetCapsuleComponent()->GetCollisionShape(),
 		ClimbLedgeParams,
 		ClimbResponseParams
 	);
@@ -80,16 +80,16 @@ void UBTT_Climb::TraceGroundAndWall()
 	{
 		// DrawDebugLine(GetWorld(), Start, HitRightAhead.Location, FColor::Red);
 
-		FVector LedgeHitStart = FVector(WallHit.ImpactPoint.X, WallHit.ImpactPoint.Y, CachedEnemy->GetActorLocation().Z + 100.f);
+		FVector LedgeHitStart = FVector(WallHit.ImpactPoint.X, WallHit.ImpactPoint.Y, Mem->CachedEnemy.Get()->GetActorLocation().Z + 100.f);
 		FVector LedgeHitEnd = LedgeHitStart - FVector(0, 0, EnemyHalfHeight + 110.f);
 		
 		bool bLedgeFloorHit = GetWorld()->SweepSingleByChannel(
 			WallHit,
 			LedgeHitStart,
 			LedgeHitEnd,
-			CachedEnemy->GetActorQuat(),
+			Mem->CachedEnemy.Get()->GetActorQuat(),
 			ECC_WorldStatic,
-			CachedEnemy->GetCapsuleComponent()->GetCollisionShape(),
+			Mem->CachedEnemy.Get()->GetCapsuleComponent()->GetCollisionShape(),
 			ClimbLedgeParams,
 			ClimbResponseParams
 		);
@@ -99,31 +99,31 @@ void UBTT_Climb::TraceGroundAndWall()
 		if (bLedgeFloorHit && WallHit.IsValidBlockingHit() && WallHit.ImpactNormal.Z >= FMath::Cos(FMath::DegreesToRadians(50.f)))
 		{
 			// UE_LOG(LogTemp, Warning, TEXT("climb: MoveUpTheLedge"));
-			bHasLedgeDetected = true;
-			MoveUpTheLedge(WallHit.ImpactNormal);
+			Mem->bHasLedgeDetected = true;
+			MoveUpTheLedge(NodeMemory, WallHit.ImpactNormal);
 		}
 		else
 		{
 			// UE_LOG(LogTemp, Warning, TEXT("climb: no ledge yet"));
-			TargetVelocity = CachedEnemy->GetActorUpVector() * 600.f; // has not reached ledge yet
+			Mem->TargetVelocity = Mem->CachedEnemy.Get()->GetActorUpVector() * 600.f; // has not reached ledge yet
 		}
 
 		FMatrix RotationMatrix(
-			 CachedEnemy->GetMesh()->GetForwardVector(),
-			FVector::CrossProduct(WallHit.Normal, CachedEnemy->GetMesh()->GetForwardVector()),
+			 Mem->CachedEnemy.Get()->GetMesh()->GetForwardVector(),
+			FVector::CrossProduct(WallHit.Normal, Mem->CachedEnemy.Get()->GetMesh()->GetForwardVector()),
 			WallHit.Normal,
 			FVector::ZeroVector
 		);
 
-		TargetRotation = FRotator(RotationMatrix.Rotator().Pitch, -90, RotationMatrix.Rotator().Roll);
+		Mem->TargetRotation = FRotator(RotationMatrix.Rotator().Pitch, -90, RotationMatrix.Rotator().Roll);
 	}
 	else
 	{
 		// UE_LOG(LogTemp, Warning, TEXT("climb: Forward vector"));
 		
-		if (!bHasLedgeDetected)
+		if (!Mem->bHasLedgeDetected)
 		{
-			TargetVelocity = CachedEnemy->GetActorForwardVector() * 600.f; // has not reached wall yet
+			Mem->TargetVelocity = Mem->CachedEnemy.Get()->GetActorForwardVector() * 600.f; // has not reached wall yet
 		}
 		else // time to walk on the ledge floor if ledge has been climbed up
 		{
@@ -132,8 +132,8 @@ void UBTT_Climb::TraceGroundAndWall()
 			FHitResult GroundHit;
 			bool bIsGroundBelow = GetWorld()->LineTraceSingleByChannel(
 				GroundHit,
-				CachedEnemy->GetActorLocation(),
-				CachedEnemy->GetActorLocation() + FVector::DownVector * 500,
+				Mem->CachedEnemy.Get()->GetActorLocation(),
+				Mem->CachedEnemy.Get()->GetActorLocation() + FVector::DownVector * 500,
 				WALL_TRACE_CHANNEL,
 				ClimbLedgeParams,
 				ClimbResponseParams
@@ -142,35 +142,37 @@ void UBTT_Climb::TraceGroundAndWall()
 			if (bIsGroundBelow)
 			{
 				// DrawDebugLine(GetWorld(), CachedEnemy->GetActorLocation(), GroundHit.Location, FColor::Red, true);
-				bIsDoneClimbing = true;
+				Mem->bIsDoneClimbing = true;
 			}
 			else
 			{
-				TargetVelocity = CachedEnemy->GetActorUpVector() * 600.f;
-				TargetVelocity += CachedEnemy->GetActorForwardVector() * 600.f;
+				Mem->TargetVelocity = Mem->CachedEnemy.Get()->GetActorUpVector() * 600.f;
+				Mem->TargetVelocity += Mem->CachedEnemy.Get()->GetActorForwardVector() * 600.f;
 			}
 		}
 	}
 }
 
-void UBTT_Climb::MoveUpTheLedge(FVector ImpactNormal)
+void UBTT_Climb::MoveUpTheLedge(uint8* NodeMemory, FVector ImpactNormal)
 {
-	FVector LedgeFloorSlope = FVector::VectorPlaneProject(CachedEnemy->GetActorForwardVector(), ImpactNormal).GetSafeNormal();
+	FBTTClimbTaskMemory* Mem = CastInstanceNodeMemory<FBTTClimbTaskMemory>(NodeMemory);
+	
+	FVector LedgeFloorSlope = FVector::VectorPlaneProject(Mem->CachedEnemy.Get()->GetActorForwardVector(), ImpactNormal).GetSafeNormal();
 
 	FHitResult LedgeHit;
 	FCollisionQueryParams LedgeParams;
 	FCollisionResponseParams LedgeResponseParams;
-	LedgeParams.AddIgnoredActor(CachedEnemy.Get());
+	LedgeParams.AddIgnoredActor(Mem->CachedEnemy.Get());
 	LedgeResponseParams.CollisionResponse.SetResponse(ENEMY_TRACE_CHANNEL, ECR_Ignore);
-	FVector LedgeSweepEnd = CachedEnemy->GetActorLocation() + LedgeFloorSlope * CachedEnemy->GetCapsuleComponent()->GetCollisionShape().GetCapsuleRadius();
+	FVector LedgeSweepEnd = Mem->CachedEnemy.Get()->GetActorLocation() + LedgeFloorSlope * Mem->CachedEnemy.Get()->GetCapsuleComponent()->GetCollisionShape().GetCapsuleRadius();
 
 	bool bLedgeHit = GetWorld()->SweepSingleByChannel(
 		LedgeHit,
-		CachedEnemy->GetActorLocation(),
+		Mem->CachedEnemy.Get()->GetActorLocation(),
 		LedgeSweepEnd,
-		CachedEnemy->GetActorQuat(),
+		Mem->CachedEnemy.Get()->GetActorQuat(),
 		WALL_TRACE_CHANNEL,
-		CachedEnemy->GetCapsuleComponent()->GetCollisionShape(),
+		Mem->CachedEnemy.Get()->GetCapsuleComponent()->GetCollisionShape(),
 		LedgeParams,
 		LedgeResponseParams
 	);
@@ -178,39 +180,48 @@ void UBTT_Climb::MoveUpTheLedge(FVector ImpactNormal)
 	if (!bLedgeHit)
 	{
 		// UE_LOG(LogTemp, Error, TEXT("LEDGE REACHED"))
-		TargetVelocity = LedgeFloorSlope * 600.f;
+		Mem->TargetVelocity = LedgeFloorSlope * 600.f;
 	}
 	else
 	{
-		TargetVelocity = FVector::VectorPlaneProject(FVector::UpVector, LedgeHit.ImpactNormal).GetSafeNormal() * 600.f;
+		Mem->TargetVelocity = FVector::VectorPlaneProject(FVector::UpVector, LedgeHit.ImpactNormal).GetSafeNormal() * 600.f;
 		// UE_LOG(LogTemp, Warning, TEXT("climb: prj vector %f, %f, %f"), TargetVelocity.X, TargetVelocity.Y, TargetVelocity.Z);
 	}
 }
 
-void UBTT_Climb::Move(UBehaviorTreeComponent& OwnerComp) const
+void UBTT_Climb::Move(uint8* NodeMemory, UBehaviorTreeComponent& OwnerComp) const
 {
-	if (!CachedEnemy.IsValid())
+	FBTTClimbTaskMemory* Mem = CastInstanceNodeMemory<FBTTClimbTaskMemory>(NodeMemory);
+	
+	if (!Mem->CachedEnemy.IsValid())
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 	
-	CachedEnemy->GetMesh()->SetRelativeRotation(FMath::RInterpTo(CachedEnemy->GetMesh()->GetRelativeRotation(), TargetRotation, GetWorld()->GetDeltaSeconds(), 15.f));
+	Mem->CachedEnemy.Get()->GetMesh()->SetRelativeRotation(FMath::RInterpTo(Mem->CachedEnemy.Get()->GetMesh()->GetRelativeRotation(), Mem->TargetRotation, GetWorld()->GetDeltaSeconds(), 15.f));
 
-	CachedEnemy->GetCharacterMovement()->Velocity = TargetVelocity;
+	Mem->CachedEnemy.Get()->GetCharacterMovement()->Velocity = Mem->TargetVelocity;
+}
+
+uint16 UBTT_Climb::GetInstanceMemorySize() const
+{
+	return sizeof(FBTTClimbTaskMemory);
 }
 
 void UBTT_Climb::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	Super::TickTask(OwnerComp, NodeMemory, DeltaSeconds);
-	
-	TraceGroundAndWall();
-	Move(OwnerComp);
 
-	if (bIsDoneClimbing)
+	FBTTClimbTaskMemory* Mem = CastInstanceNodeMemory<FBTTClimbTaskMemory>(NodeMemory);
+	
+	TraceGroundAndWall(NodeMemory);
+	Move(NodeMemory, OwnerComp);
+
+	if (Mem->bIsDoneClimbing)
 	{
-		CachedEnemy->StopAnimMontage();
-		CachedEnemy->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-		TargetRotation = CachedEnemy->GetAIController()->GetBlackboardComponent()->GetValueAsRotator("TargetRotation");
-		CachedEnemy->SetActorRotation(CachedEnemy->GetAIController()->GetBlackboardComponent()->GetValueAsRotator("TargetRotation"));
-		CachedEnemy->GetAIController()->SetStateToChaseOrPursue(CachedEnemy->GetAIController()->GetAttackTarget());
+		Mem->CachedEnemy.Get()->StopAnimMontage();
+		Mem->CachedEnemy.Get()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		Mem->TargetRotation = Mem->CachedEnemy.Get()->GetAIController()->GetBlackboardComponent()->GetValueAsRotator("TargetRotation");
+		Mem->CachedEnemy.Get()->SetActorRotation(Mem->CachedEnemy.Get()->GetAIController()->GetBlackboardComponent()->GetValueAsRotator("TargetRotation"));
+		Mem->CachedEnemy.Get()->GetAIController()->SetStateToChaseOrPursue(Mem->CachedEnemy.Get()->GetAIController()->GetAttackTarget());
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 	}
 }

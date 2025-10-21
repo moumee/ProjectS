@@ -10,16 +10,18 @@ class ASuraCharacterEnemyBase;
 /**
  * 
  */
+struct FBTTGetYeetedTaskMemory
+{
+	bool bIsFalling = false;
+	bool bIsDoneGettingYeeted =false;
+	
+	TWeakObjectPtr<ASuraCharacterEnemyBase> CachedEnemy;
+};
+
 UCLASS()
 class SURAS_API UBTT_GetYeeted : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
-
-	UPROPERTY()
-	ASuraCharacterEnemyBase* CachedEnemy;
-
-	bool bIsFalling = false;
-	bool bIsDoneGettingYeeted =false;
 
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
@@ -27,6 +29,9 @@ class SURAS_API UBTT_GetYeeted : public UBTTask_BlackboardBase
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+protected:
+	virtual uint16 GetInstanceMemorySize() const override;
+	
 public:
 	explicit UBTT_GetYeeted(FObjectInitializer const& ObjectInitializer);
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;

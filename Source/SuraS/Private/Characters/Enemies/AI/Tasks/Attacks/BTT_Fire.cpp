@@ -4,14 +4,12 @@
 #include "Characters/Enemies/AI/Tasks/Attacks/BTT_Fire.h"
 
 #include "AIController.h"
-#include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
-UBTT_Fire::UBTT_Fire(FObjectInitializer const& ObjectInitializer)
+UBTT_Fire::UBTT_Fire()
 {
 	NodeName = "Fire";
-	bCreateNodeInstance = true;
 }
 
 EBTNodeResult::Type UBTT_Fire::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

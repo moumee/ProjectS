@@ -28,3 +28,11 @@ EBTNodeResult::Type UBTT_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Owner
 
 	return EBTNodeResult::Succeeded;
 }
+
+void UBTT_MoveToTarget::InitializeFromAsset(UBehaviorTree& Asset)
+{
+	Super::InitializeFromAsset(Asset);
+
+	if (UBlackboardData* BBAsset = GetBlackboardAsset())
+		TargetLocationKey.ResolveSelectedKey(*BBAsset);
+}

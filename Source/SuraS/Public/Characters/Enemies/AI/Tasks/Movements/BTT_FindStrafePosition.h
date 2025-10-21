@@ -9,6 +9,14 @@
 /**
  * 
  */
+struct FBTTFindStrafePositionTaskMemory
+{
+	FVector CurrentLocation = FVector::ZeroVector;
+	FVector TargetActorLocation = FVector::ZeroVector;
+	FVector TargetLocation = FVector::ZeroVector;
+	float Distance = 0.f;
+};
+
 UCLASS()
 class SURAS_API UBTT_FindStrafePosition : public UBTTask_BlackboardBase
 {
@@ -19,6 +27,9 @@ class SURAS_API UBTT_FindStrafePosition : public UBTTask_BlackboardBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Strafe", meta = (AllowPrivateAccess = "true"))
 	float LocationSearchRadius = 0.f;
+
+protected:
+	virtual uint16 GetInstanceMemorySize() const override;
 
 public:
 	explicit UBTT_FindStrafePosition(FObjectInitializer const& ObjectInitializer);

@@ -13,25 +13,26 @@
 UBTT_CoopAttack::UBTT_CoopAttack(FObjectInitializer const& ObjectInitializer)
 {
 	NodeName = "Coop Attack";
-	bNotifyTick = true;
-	
-	bCreateNodeInstance = true;
+	INIT_TASK_NODE_NOTIFY_FLAGS();
 }
 
 EBTNodeResult::Type UBTT_CoopAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
+	FBTTCoopAttackTaskMemory* Mem = CastInstanceNodeMemory<FBTTCoopAttackTaskMemory>(NodeMemory);
+	check(Mem);
+	
 	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(OwnerComp.GetAIOwner()->GetCharacter()))
 	{
-		CachedEnemy = Enemy;
+		Mem->CachedEnemy = Enemy;
 
-		CachedEnemyAlly = Cast<ASuraCharacterEnemyBase>(CachedEnemy->GetAIController()->GetBlackboardComponent()->GetValueAsObject("CoopAlly"));
+		Mem->CachedEnemyAlly = Cast<ASuraCharacterEnemyBase>(Enemy->GetAIController()->GetBlackboardComponent()->GetValueAsObject("CoopAlly"));
 
-		if (CachedEnemyAlly && CachedEnemyAlly->GetAIController()->GetCurrentState() != EEnemyStates::CoopAttacking)
+		if (Mem->CachedEnemyAlly.IsValid() && Mem->CachedEnemyAlly.Get()->GetAIController()->GetCurrentState() != EEnemyStates::CoopAttacking)
 		{
-			CachedEnemyAlly->GetAIController()->SetStateToCoopAttack(CachedEnemy, false);
-			CachedEnemyAlly->GetAIController()->GetBlackboardComponent()->SetValueAsRotator(
+			Mem->CachedEnemyAlly.Get()->GetAIController()->SetStateToCoopAttack(Enemy, false);
+			Mem->CachedEnemyAlly.Get()->GetAIController()->GetBlackboardComponent()->SetValueAsRotator(
 			"TargetRotation",
-			FRotator(0, CachedEnemyAlly->GetActorRotation().Yaw, 0)
+			FRotator(0, Mem->CachedEnemyAlly.Get()->GetActorRotation().Yaw, 0)
 			);
 		}
 		
@@ -46,7 +47,7 @@ EBTNodeResult::Type UBTT_CoopAttack::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 
 	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
 	{
-		CachedPlayer = Player;
+		Mem->CachedPlayer = Player;
 	}
 
 	return EBTNodeResult::InProgress;
@@ -56,13 +57,15 @@ void UBTT_CoopAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMem
 {
 	Super::TickTask(OwnerComp, NodeMemory, DeltaSeconds);
 
-	if (CachedEnemy && CachedEnemyAlly && CachedPlayer)
+	FBTTCoopAttackTaskMemory* Mem = CastInstanceNodeMemory<FBTTCoopAttackTaskMemory>(NodeMemory);
+
+	if (Mem->CachedEnemy.IsValid() && Mem->CachedEnemyAlly.IsValid() && Mem->CachedPlayer.IsValid())
 	{
-		FRotator FaceEnemyAllyRotation = (CachedEnemyAlly->GetActorLocation() - CachedEnemy->GetActorLocation()).GetSafeNormal2D().Rotation();
-		CachedEnemy->GetMotionWarpingComponent()->AddOrUpdateWarpTargetFromLocationAndRotation("EnemyAllyToGrab", CachedEnemy->GetActorLocation(), FaceEnemyAllyRotation);
+		FRotator FaceEnemyAllyRotation = (Mem->CachedEnemyAlly.Get()->GetActorLocation() - Mem->CachedEnemy.Get()->GetActorLocation()).GetSafeNormal2D().Rotation();
+		Mem->CachedEnemy.Get()->GetMotionWarpingComponent()->AddOrUpdateWarpTargetFromLocationAndRotation("EnemyAllyToGrab", Mem->CachedEnemy.Get()->GetActorLocation(), FaceEnemyAllyRotation);
 		
-		FRotator FacePlayerRotation = (CachedPlayer->GetActorLocation() - CachedEnemy->GetActorLocation()).GetSafeNormal2D().Rotation() + FRotator(0.0f, 110.0f, 0.0f);
-		CachedEnemy->GetMotionWarpingComponent()->AddOrUpdateWarpTargetFromLocationAndRotation("AttackTargetToFace", CachedEnemy->GetActorLocation(), FacePlayerRotation);
+		FRotator FacePlayerRotation = (Mem->CachedPlayer.Get()->GetActorLocation() - Mem->CachedEnemy.Get()->GetActorLocation()).GetSafeNormal2D().Rotation() + FRotator(0.0f, 110.0f, 0.0f);
+		Mem->CachedEnemy.Get()->GetMotionWarpingComponent()->AddOrUpdateWarpTargetFromLocationAndRotation("AttackTargetToFace", Mem->CachedEnemy.Get()->GetActorLocation(), FacePlayerRotation);
 		
 		// CachedEnemy->GetMotionWarpingComponent()->AddOrUpdateWarpTargetFromComponent()
 	}
@@ -70,7 +73,14 @@ void UBTT_CoopAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMem
 
 void UBTT_CoopAttack::OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp)
 {
-	CachedEnemy->GetAIController()->GetBlackboardComponent()->SetValueAsBool("IsCoopThrower", false);
+	FBTTCoopAttackTaskMemory* Mem = CastInstanceNodeMemory<FBTTCoopAttackTaskMemory>(OwnerComp->GetNodeMemory(this, OwnerComp->FindInstanceContainingNode(this)));
+	
+	Mem->CachedEnemy.Get()->GetAIController()->GetBlackboardComponent()->SetValueAsBool("IsCoopThrower", false);
 	
 	FinishLatentTask(*OwnerComp, EBTNodeResult::Succeeded);
+}
+
+uint16 UBTT_CoopAttack::GetInstanceMemorySize() const
+{
+	return sizeof(FBTTCoopAttackTaskMemory);
 }
