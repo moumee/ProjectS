@@ -3,8 +3,12 @@
 
 #include "Characters/Enemies/Boss/SuraBossAttackArea.h"
 
+#include "AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "Characters/Enemies/Boss/SuraCharacterBossProto.h"
 #include "Components/BillboardComponent.h"
 #include "Components/BoxComponent.h"
+#include "Interfaces/PlayerInterface.h"
 
 #define PLAYER_TRACE_CHANNEL ECC_GameTraceChannel4
 
@@ -19,24 +23,45 @@ ASuraBossAttackArea::ASuraBossAttackArea()
 	RootComponent = AttackBox;
 	AttackBox->SetCollisionResponseToAllChannels(ECR_Ignore);
 	AttackBox->SetCollisionResponseToChannel(PLAYER_TRACE_CHANNEL, ECR_Overlap);
-	AttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	
+	AttackBox->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
 
 	IconBillboard = CreateDefaultSubobject<UBillboardComponent>("IconBillboard");
 	IconBillboard->SetupAttachment(GetRootComponent());
 	IconBillboard->SetHiddenInGame(true);
 }
 
-void ASuraBossAttackArea::SetAttackBoxCollision(ECollisionEnabled::Type CollisionEnabled)
-{
-	AttackBox->SetCollisionEnabled(CollisionEnabled);
-}
-
 // Called when the game starts or when spawned
 void ASuraBossAttackArea::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AttackBox->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnBoxBeginOverlap);
+	AttackBox->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnBoxEndOverlap);
 	
+}
+
+void ASuraBossAttackArea::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (Cast<IPlayerInterface>(OtherActor) && !Tags.IsEmpty())
+	{
+		if (ASuraCharacterBossProto* Boss = Cast<ASuraCharacterBossProto>(GetOwner()))
+		{
+			Boss->AddAttackAreaTag(Tags[0]);
+		}
+	}
+}
+
+void ASuraBossAttackArea::OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (Cast<IPlayerInterface>(OtherActor) && !Tags.IsEmpty())
+	{
+		if (ASuraCharacterBossProto* Boss = Cast<ASuraCharacterBossProto>(GetOwner()))
+		{
+			Boss->RemoveAttackAreaTag(Tags[0]);
+		}
+	}
 }
 
 

@@ -460,6 +460,9 @@ public:
 	bool AddAmmo(int32 NumAmmo);
 	void AutoReload();
 	virtual void ReloadingEnd() override;
+
+	int32 GetLeftAmmoInCurrentMag() { return LeftAmmoInCurrentMag; }
+	int32 GetMaxAmmoPerMag() { return MaxAmmoPerMag; }
 #pragma endregion
 
 #pragma region UI

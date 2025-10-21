@@ -45,7 +45,7 @@ void UWeaponSystemComponent::BeginPlay()
 void UWeaponSystemComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	SearchWeapon();
+	SearchWeapon(); //TODO: 굳이 Tick으로 할 이유가 없을 듯. 필요시에 트리거로 작동하도록 해야함
 	//CalculateScreenCenterWorldPositionAndDirection(ScreenCenterWorldLocation, ScreenCenterWorldDirection);
 	CalculateTargetRightHandPosition();
 }
@@ -319,19 +319,10 @@ void UWeaponSystemComponent::PickUpWeapon()
 			else
 			{
 				ObtainNewWeapon(OverlappedWeapon);
-
-				/** suhyeon **/
-				// WeaponName을 FName으로 변환
-				FName WeaponNameAsFName = FName(*UEnum::GetValueAsString(OverlappedWeapon->GetWeaponName()));
-				//
-				// 델리게이트 호출
-				OnWeaponPickedUp.Broadcast(WeaponNameAsFName);
-				/** suhyeon **/
 			}
 		}
 	}
 }
-
 bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 {
 	if (!NewWeaponPickUp || !PlayerOwner)
@@ -386,6 +377,10 @@ bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 			CurrentWeapon->SwitchWeapon(PlayerOwner, true);
 		}
 	}
+
+	//FName WeaponNameAsFName = FName(*UEnum::GetValueAsString(NewWeaponPickUp->GetWeaponName()));
+	OnWeaponPickedUp.Broadcast(NewWeaponPickUp->GetWeaponName()); /** suhyeon **/
+
 	return true;
 }
 
@@ -424,7 +419,7 @@ void UWeaponSystemComponent::ZoomIn(bool bZoomIn)
 {
 	bIsZoomIn = bZoomIn;
 
-	UE_LOG(LogTemp, Warning, TEXT("ZOOM Toggled!!!"));
+	//UE_LOG(LogTemp, Warning, TEXT("ZOOM Toggled!!!"));
 }
 
 bool UWeaponSystemComponent::IsWeaponModifyingCamFov()
@@ -582,7 +577,7 @@ void UWeaponSystemComponent::ChangeWeapon(int32 WeaponIndex)
 #pragma endregion
 
 
-void UWeaponSystemComponent::EquipFirstWeapon()
+void UWeaponSystemComponent::EquipFirstWeapon() //TODO: 함수명 수정
 {
 	if (WeaponInventory.IsValidIndex(0))
 	{
@@ -596,6 +591,31 @@ void UWeaponSystemComponent::EquipFirstWeapon()
 		FirstWeapon->SwitchWeapon(PlayerOwner, true);
 		CurrentWeapon = FirstWeapon;
 		CurrentWeaponIndex = 0;
+	}
+}
+
+void UWeaponSystemComponent::AddNewWeaponToInventory(AWeapon* NewWeapon)
+{
+	if (!NewWeapon) { return; }
+	if (NewWeapon->IsSkillWeapon())
+	{
+		SkillWeaponInventory.AddUnique(NewWeapon);
+		if (!CurrentSkillWeapon)
+		{
+			CurrentSkillWeapon = NewWeapon;
+			CurrentSkillWeapon->EquipWeapon(PlayerOwner, true);
+		}
+		// 스킬 무기 장착 후 skillweapon획득 델리게이트를 브로드캐스트
+		OnSkillWeaponEquipped.Broadcast(CurrentSkillWeapon);
+	}
+	else
+	{
+		WeaponInventory.AddUnique(NewWeapon);
+		if (!CurrentWeapon)
+		{
+			CurrentWeapon = NewWeapon;
+			CurrentWeapon->SwitchWeapon(PlayerOwner, true);
+		}
 	}
 }
 

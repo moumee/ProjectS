@@ -15,48 +15,72 @@ void UCustomGameInstance::Init()
 
 void UCustomGameInstance::Shutdown()
 {
-	Super::Shutdown();
 	SaveWeaponData();  // 게임 종료 시 자동 저장
+	Super::Shutdown();
 }
 
 void UCustomGameInstance::SaveWeaponData()
 {
-	UWeaponSaveGame* SaveGameInstance = Cast<UWeaponSaveGame>(UGameplayStatics::CreateSaveGameObject(UWeaponSaveGame::StaticClass()));
+	//// <Old Version>
+	//UWeaponSaveGame* SaveGameInstance = Cast<UWeaponSaveGame>(UGameplayStatics::CreateSaveGameObject(UWeaponSaveGame::StaticClass()));
 
+	//if (SaveGameInstance)
+	//{
+	//	for (const auto& Row : DTWeapon->GetRowMap())
+	//	{
+	//		FWeaponData* WeaponData  = (FWeaponData*)Row.Value;
+	//		if (WeaponData)
+	//		{
+	//			SaveGameInstance->OwnedWeapons.Add(Row.Key, WeaponData->bIsWeaponOwned);
+	//		}
+	//	}
+
+	//	UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("WeaponSaveSlot"), 0);
+	//}
+
+	//----------------------------------------------
+	//<New Version>
+	UWeaponSaveGame* SaveGameInstance = Cast<UWeaponSaveGame>(UGameplayStatics::CreateSaveGameObject(UWeaponSaveGame::StaticClass()));
 	if (SaveGameInstance)
 	{
-		for (const auto& Row : DTWeapon->GetRowMap())
+		for (const auto& Elem : OwnedWeapons)
 		{
-			FWeaponData* WeaponData  = (FWeaponData*)Row.Value;
-			if (WeaponData)
-			{
-				SaveGameInstance->OwnedWeapons.Add(Row.Key, WeaponData->bIsWeaponOwned);
-			}
+			SaveGameInstance->OwnedWeapons.Add(Elem.Key, Elem.Value);
 		}
-
 		UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("WeaponSaveSlot"), 0);
 	}
 }
 
 void UCustomGameInstance::LoadWeaponData()
 {
+	//// <Old Version>
+	//if (UGameplayStatics::DoesSaveGameExist(TEXT("WeaponSaveSlot"), 0))
+	//{
+	//	UWeaponSaveGame* LoadGameInstance = Cast<UWeaponSaveGame>(UGameplayStatics::LoadGameFromSlot(TEXT("WeaponSaveSlot"), 0));
+	//	if (LoadGameInstance)
+	//	{
+	//		for (const auto& Row : DTWeapon->GetRowMap())
+	//		{
+	//			FWeaponData* WeaponData = (FWeaponData*)Row.Value;
+	//			if (WeaponData)
+	//			{
+	//				if (LoadGameInstance->OwnedWeapons.Contains(Row.Key))
+	//				{
+	//					WeaponData->bIsWeaponOwned = LoadGameInstance->OwnedWeapons[Row.Key];
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+
+	//---------------------------------------------
+	// <New Version>
 	if (UGameplayStatics::DoesSaveGameExist(TEXT("WeaponSaveSlot"), 0))
 	{
 		UWeaponSaveGame* LoadGameInstance = Cast<UWeaponSaveGame>(UGameplayStatics::LoadGameFromSlot(TEXT("WeaponSaveSlot"), 0));
-
 		if (LoadGameInstance)
 		{
-			for (const auto& Row : DTWeapon->GetRowMap())
-			{
-				FWeaponData* WeaponData = (FWeaponData*)Row.Value;
-				if (WeaponData)
-				{
-					if (LoadGameInstance->OwnedWeapons.Contains(Row.Key))
-					{
-						WeaponData->bIsWeaponOwned = LoadGameInstance->OwnedWeapons[Row.Key];
-					}
-				}
-			}
+			OwnedWeapons = LoadGameInstance->OwnedWeapons;
 		}
 	}
 }

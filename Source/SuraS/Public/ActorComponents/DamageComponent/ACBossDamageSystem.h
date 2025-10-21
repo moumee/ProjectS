@@ -6,6 +6,7 @@
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "ACBossDamageSystem.generated.h"
 
+struct FBossHealth;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBodyPartDestroyed, TEnumAsByte<EPhysicalSurface>, BodyPart);
 
 /**
@@ -38,11 +39,17 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	bool bRightArmDead = false;
 
+	UPROPERTY(VisibleAnywhere)
+	float HeadDamageMultiplier = 1.5f;;
 	
 public:
 
+	void InitializeHealth(const FBossHealth& BossHealth);
+
 	FOnBodyPartDestroyed OnBodyPartDestroyed;
 	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser) override;
+
+	void SetHeadDamageMultiplier(float Value) { HeadDamageMultiplier = Value; };
 
 	float GetLeftArmHealth() { return LeftArmHealth; }
 	float GetRightArmHealth() { return RightArmHealth; }

@@ -295,7 +295,7 @@ protected:
 
 #pragma region Move
 
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
 	bool bIsRunning = false;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement")

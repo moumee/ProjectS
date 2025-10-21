@@ -3,6 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "ActorComponents/WeaponSystem/WeaponData.h"
+#include "ActorComponents/WeaponSystem/WeaponSystemComponentData.h"
 #include "Components/ActorComponent.h"
 #include "ACInventoryManager.generated.h"
 
@@ -10,6 +11,7 @@ class UInventoryWidget;
 class UWeaponSystemComponent;
 class UACUIMangerComponent;
 class AWeapon;
+class UCustomGameInstance;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class SURAS_API UACInventoryManager : public UActorComponent
@@ -29,6 +31,7 @@ public:
 	void SetUIManager(UACUIMangerComponent* UIMangerComponent);
 	
 	UDataTable* GetWeaponDataTable() const;
+	UDataTable* GetWSCDataTable() const; // <JaeHyeong>
 	//UDataTable* GetProjectileDataTable() const;
 	
 	void SetPendingWeaponIndex(int32 Index);
@@ -46,10 +49,10 @@ public:
 	void ChangeWeaponByName(const FString& WeaponNameStr);
 
 	// 무기 해금
-	void UnlockWeapon(FName WeaponName);
+	void UnlockWeapon(EWeaponName WeaponName);
 
-	// 무기 액터 스폰해서 weaponinventory에 넣기 위한 함수
-	void CreateAndAddWeaponFromData(FWeaponData* WeaponData);
+	//// 무기 액터 스폰해서 weaponinventory에 넣기 위한 함수
+	//void CreateAndAddWeaponFromData(FWeaponData* WeaponData); //TODO: 사용 안함. 삭제 요망
 
 	// DT_Weapon에서 소유중인 무기를 weapon inventory에 동기화
 	void InitializeOwnedWeaponsFromDT();
@@ -70,9 +73,12 @@ private:
 
 	// DTWeapon 포인터 변수
 	UDataTable* DTWeapon;
+	UDataTable* DTWSC; // <JaeHyeong>
 
 	// DTProjectile 포인터 변수
 	//UDataTable* DTProjectile;
 	
-	
+protected:
+	UPROPERTY(VisibleAnywhere)
+	UCustomGameInstance* GameInstance; // <JaeHyeong>
 };

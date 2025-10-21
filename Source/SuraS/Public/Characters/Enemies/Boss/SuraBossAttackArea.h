@@ -22,7 +22,6 @@ public:
 
 	UBoxComponent* GetAttackBox() const { return AttackBox; }
 
-	void SetAttackBoxCollision(ECollisionEnabled::Type CollisionEnabled);
 
 protected:
 	// Called when the game starts or when spawned
@@ -33,4 +32,10 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UBillboardComponent> IconBillboard;
+
+	UFUNCTION()
+	void OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult);
+	UFUNCTION()
+	void OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
 };

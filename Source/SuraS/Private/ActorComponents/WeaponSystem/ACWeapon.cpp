@@ -22,6 +22,7 @@
 #include "ActorComponents/WeaponSystem/WeaponAimUIWidget.h"
 #include "ActorComponents/WeaponSystem/TargetingSkillWidget.h"
 #include "ActorComponents/WeaponSystem/ProjectileShell.h"
+#include "ActorComponents/WeaponSystem/PlayerWeaponPrimaryDataAsset.h"
 
 
 #include "GameFramework/PlayerController.h"
@@ -109,7 +110,7 @@ void AWeapon::InitializeWeapon(ASuraPawnPlayer* NewCharacter)
 			{
 				if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(MeshComp))
 				{
-					UE_LOG(LogTemp, Error, TEXT("Weapon Mesh"));
+					//UE_LOG(LogTemp, Error, TEXT("Weapon Mesh"));
 					Character->GetSceneCaptureComponent()->ShowOnlyComponent(PrimComp);
 					PrimComp->SetVisibleInSceneCaptureOnly(true);
 				}
@@ -173,226 +174,6 @@ void AWeapon::InitializeUI()
 }
 
 void AWeapon::LoadWeaponData()
-{
-	//FWeaponData* WeaponData = WeaponDataTableHandle.GetRow<FWeaponData>("");
-
-	if (WeaponDataTable.IsNull() || WeaponRowName.IsNone()) return;
-
-	UDataTable* Table = WeaponDataTable.LoadSynchronous();
-	if (!Table) return;
-
-	FWeaponData* WeaponData = Table->FindRow<FWeaponData>(WeaponRowName, TEXT("LoadWeaponData"));
-
-	if (WeaponData)
-	{
-		FWeaponData* WeaponAsset = WeaponData;
-
-		TArray<FSoftObjectPath> Paths;
-		auto Push = [&Paths](const FSoftObjectPath& P) {if (P.IsValid()) Paths.Add(P); };
-
-		// <Classes>
-		Push(WeaponData->LeftProjectileClass.ToSoftObjectPath());
-		Push(WeaponData->RightProjectileClass.ToSoftObjectPath());
-		Push(WeaponData->SkillProjectileClass.ToSoftObjectPath());
-
-		// <Effects>
-		Push(WeaponData->FireEffect_L.ToSoftObjectPath());
-		Push(WeaponData->FireEffect_R.ToSoftObjectPath());
-		Push(WeaponData->FireEffect_Skill.ToSoftObjectPath());
-		Push(WeaponData->ChargeEffect.ToSoftObjectPath());
-
-		// <Sound>
-		Push(WeaponData->FireSound_L.ToSoftObjectPath());
-		Push(WeaponData->FireSound_R.ToSoftObjectPath());
-		Push(WeaponData->FireSound_Skill.ToSoftObjectPath());
-		Push(WeaponData->ChargeSound.ToSoftObjectPath());
-		Push(WeaponData->TargetSearchLoopSound.ToSoftObjectPath());
-		Push(WeaponData->TargetLockedSound.ToSoftObjectPath());
-
-		if (Paths.Num() == 0) return;
-
-		auto& SM = UAssetManager::GetStreamableManager();
-		TWeakObjectPtr<AWeapon> WeakThis(this);
-
-		WeaponAssetsHandle = SM.RequestAsyncLoad(
-			Paths,
-			FStreamableDelegate::CreateWeakLambda(this, [this, WeakThis, WeaponAsset]() {
-					if (!WeakThis.IsValid()) return;
-
-					// 로드 완료 and 하드 포인터로 캐시
-					FireData_L.ProjectileClass = WeaponAsset->LeftProjectileClass.Get();
-					FireData_R.ProjectileClass = WeaponAsset->RightProjectileClass.Get();
-					FireData_Skill.ProjectileClass = WeaponAsset->SkillProjectileClass.Get();
-
-					FireData_L.MuzzleFireEffect = WeaponAsset->FireEffect_L.Get();
-					FireData_R.MuzzleFireEffect = WeaponAsset->FireEffect_R.Get();
-					FireData_Skill.MuzzleFireEffect = WeaponAsset->FireEffect_Skill.Get();
-					ChargeEffect = WeaponAsset->ChargeEffect.Get();
-
-					FireData_L.FireSound = WeaponAsset->FireSound_L.Get();
-					FireData_R.FireSound = WeaponAsset->FireSound_R.Get();
-					FireData_Skill.FireSound = WeaponAsset->FireSound_Skill.Get();
-
-					ChargeSound = WeaponAsset->ChargeSound.Get();
-					TargetSearchLoopSound = WeaponAsset->TargetSearchLoopSound.Get();
-					TargetLockedSound = WeaponAsset->TargetLockedSound.Get();
-
-					WeaponAssetsHandle.Reset();
-				}));
-
-		//-------------------------------------
-
-		// <WeaponSocket>
-		WeaponSocketName = WeaponData->WeaponSocket;
-
-		// <Skill>
-		bIsSkillWeapon = WeaponData->bIsSkillWeapon;
-		bAllowNormalFireForSkillWeapon = WeaponData->bAllowNormalFireForSkillWeapon;
-
-		// <Action>
-		LeftMouseAction = WeaponData->LeftMouseAction;
-		RightMouseAction = WeaponData->RightMouseAction;
-		SkillAction = WeaponData->SkillAction;
-
-		// <Projectile Class>
-		//FireData_L.ProjectileClass = WeaponData->LeftProjectileClass;
-		//FireData_R.ProjectileClass = WeaponData->RightProjectileClass;
-		//FireData_Skill.ProjectileClass = WeaponData->SkillProjectileClass;
-
-		//// <Sound>
-		//ChargeSound = WeaponData->ChargeSound;
-
-		//FireData_L.FireSound = WeaponData->FireSound_L;
-		//FireData_R.FireSound = WeaponData->FireSound_R;
-		//FireData_Skill.FireSound = WeaponData->FireSound_Skill;
-
-		//TargetSearchLoopSound = WeaponData->TargetSearchLoopSound;
-		//TargetLockedSound = WeaponData->TargetLockedSound;
-
-		// <Effect>
-		//ChargeEffect = WeaponData->ChargeEffect;
-		ChargeEffectLocation = WeaponData->ChargeEffectLocation;
-		ChargeEffectRotation = WeaponData->ChargeEffectRotation;
-		ChargeEffenctScale = WeaponData->ChargeEffenctScale;
-
-		//FireData_L.MuzzleFireEffect = WeaponData->FireEffect_L;
-		//FireData_R.MuzzleFireEffect = WeaponData->FireEffect_R;
-		//FireData_Skill.MuzzleFireEffect = WeaponData->FireEffect_Skill;
-
-		// <Reload>
-		ReloadingTime = WeaponData->ReloadingTime;
-		PumpReloadingTime_Start = WeaponData->PumpReloadingTime_Start;
-		PumpReloadingTime_Loop = WeaponData->PumpReloadingTime_Loop;
-		PumpReloadingTime_End = WeaponData->PumpReloadingTime_End;
-		PumpReloadingTime_StartAndEnd = WeaponData->PumpReloadingTime_StartAndEnd;
-		PumpReloadingTime_LoopToFire = WeaponData->PumpReloadingTime_LoopToFire;
-		MaxTotalAmmo = WeaponData->MaxTotalAmmo;
-		TotalAmmo = MaxTotalAmmo;
-		MaxAmmoPerMag = WeaponData->MaxAmmoPerMag;
-		LeftAmmoInCurrentMag = MaxAmmoPerMag;
-		FireData_L.AmmoCost = WeaponData->AmmoConsumedPerShot_Left;
-		FireData_R.AmmoCost = WeaponData->AmmoConsumedPerShot_Right;
-		FireData_Skill.AmmoCost = WeaponData->AmmoCost_Skill;
-		FireData_L.bAllowFireWithInsufficientAmmo = WeaponData->bAllowFireWithInsufficientAmmo_L;
-		FireData_R.bAllowFireWithInsufficientAmmo = WeaponData->bAllowFireWithInsufficientAmmo_R;
-		FireData_Skill.bAllowFireWithInsufficientAmmo = WeaponData->bAllowFireWithInsufficientAmmo_Skill;
-		bActivePumpActionReload = WeaponData->bActivePumpActionReload;
-
-		// <HitScan>
-		bIsHitScan_L = WeaponData->bIsHitScan_Left;
-		bIsHitScan_R = WeaponData->bIsHitScan_Right;
-
-		// <SingleShot>
-		SingleShotDelay = WeaponData->SingleShotDelay;
-
-		// <BurstShot>
-		BurstShotDelay = WeaponData->BurstShotDelay;
-		BurstShotFireRate = WeaponData->BurstShotFireRate;
-		BurstShotCount = WeaponData->BurstShotCount;
-
-		// <FullAutoShot>
-		FullAutoShotFireRate = WeaponData->FullAutoShotFireRate;
-
-		// <ProjectileSpread>
-		DefaultSpread = WeaponData->DefaultSpread;
-		ZoomSpread = WeaponData->ZoomSpread;
-
-		// <MultiProjectileSpread>
-		bEnableMultiProjectile_L = WeaponData->bEnableMultiProjectile_Left;
-		bEnableMultiProjectile_R = WeaponData->bEnableMultiProjectile_Right;
-		FireData_L.MaxAngleOfMultiProjectileSpread = WeaponData->MaxAngleOfMultiProjectileSpread_L;
-		FireData_R.MaxAngleOfMultiProjectileSpread = WeaponData->MaxAngleOfMultiProjectileSpread_R;
-		FireData_L.PelletsNum = WeaponData->PelletsNum_L;
-		FireData_R.PelletsNum = WeaponData->PelletsNum_R;
-
-		// <Recoil>
-		ZoomRecoil = WeaponData->ZoomRecoil;
-
-		FireData_L.Recoil = WeaponData->DefaultRecoil_L;
-		FireData_R.Recoil = WeaponData->DefaultRecoil_R;
-		FireData_Skill.Recoil = WeaponData->DefaultRecoil_Skill;
-
-		// <ArmRecoil Animation>
-		FireData_L.Armrecoil = WeaponData->ArmRecoil_L;
-		FireData_R.Armrecoil = WeaponData->ArmRecoil_R;
-		FireData_Skill.Armrecoil = WeaponData->ArmRecoil_Skill;
-		ArmRecoil_Hand = WeaponData->ArmRecoil_Hand;
-		ArmRecoil_UpperArm = WeaponData->ArmRecoil_UpperArm;
-		ArmRecoil_LowerArm = WeaponData->ArmRecoil_LowerArm;
-
-		// <Animation>
-		RightHandSocketTransform = WeaponData->RightHandSocketTransform;
-		RightHandSocketTransform_Crouch = WeaponData->RightHandSocketTransform_Crouch;
-		RightHandSocketTransform_Targeting = WeaponData->RightHandSocketTransform_Targeting;
-		RightHandSocketTransform_Targeting_Crouch = WeaponData->RightHandSocketTransform_Targeting_Crouch;
-		SkillWeaponSocketTransform_Active = WeaponData->SkillWeaponSocketTransform_Active;
-		SkillWeaponSocketTransform_Inactive = WeaponData->SkillWeaponSocketTransform_Inactive;
-
-		// <Camera Shake>
-		ZoomCameraShakeClass = WeaponData->ZoomCameraShakeClass;
-		ChargingCameraShakeClass = WeaponData->ChargingCameraShakeClass;
-
-		FireData_L.CamShake = WeaponData->DefaultCameraShakeClass_L;
-		FireData_R.CamShake = WeaponData->DefaultCameraShakeClass_R;
-		FireData_Skill.CamShake = WeaponData->DefaultCameraShakeClass_Skill;
-
-		// <Targeting(Homing)>
-		MissileLaunchDelay = WeaponData->MissileLaunchDelay;
-		MaxTargetNum = WeaponData->MaxTargetNum;
-		MaxTargetDetectionRadius = WeaponData->MaxTargetDetectionRadius;
-		MaxTargetDetectionAngle = WeaponData->MaxTargetDetectionAngle;
-		MaxTargetDetectionTime = WeaponData->MaxTargetDetectionTime;
-		TimeToReachMaxTargetDetectionRange = WeaponData->TimeToReachMaxTargetDetectionRange;
-		TargetingGlobalTimeScale = WeaponData->TargetingGlobalTimeScale;
-		TargetingGlobalTimeDilationSpeed_In = WeaponData->TargetingGlobalTimeDilationSpeed_In;
-		TargetingGlobalTimeDilationSpeed_Out = WeaponData->TargetingGlobalTimeDilationSpeed_Out;
-		TargetingSkillCoolDown = WeaponData->TargetingSkillCoolDown;
-		MaxTargetingTime = WeaponData->MaxTargetingTime;
-
-		// <Charging>
-		bAutoFireAtMaxChargeTime = WeaponData->bAutoFireAtMaxChargeTime;
-		ChargeTimeThreshold = WeaponData->ChargeTimeThreshold;
-		MaxChargeTime = WeaponData->MaxChargeTime;
-		ChargingAdditionalDamageBase = WeaponData->ChargingAdditionalDamageBase;
-		ChargingAdditionalRecoilAmountPitchBase = WeaponData->ChargingAdditionalRecoilAmountPitchBase;
-		ChargingAdditionalRecoilAmountYawBase = WeaponData->ChargingAdditionalRecoilAmountYawBase;
-		ChargingAdditionalProjectileRadiusBase = WeaponData->ChargingAdditionalProjectileRadiusBase;
-		ChargingAdditionalPelletMaxNum = WeaponData->ChargingAdditionalPelletMaxNum;
-
-		// <Penetration>
-		MaxPenetrableObjectsNum_Left = WeaponData->MaxPenetrableObjectsNum_Left;
-		MaxPenetrableObjectsNum_Right = WeaponData->MaxPenetrableObjectsNum_Right;
-
-		// <IK>
-		RightHandOffset = WeaponData->RightHandOffset;
-
-		// <AutoAim>
-		bIsAirborneAutoAimActive = WeaponData->bIsAirborneAutoAimActive;
-		AutoAimRadius = WeaponData->AutoAimRadius;
-	}
-}
-
-void AWeapon::LoadWeaponData_Upgrade()
 {
 	//FWeaponData* WeaponData = WeaponDataTableHandle.GetRow<FWeaponData>("");
 
@@ -622,6 +403,209 @@ void AWeapon::LoadWeaponData_Upgrade()
 	}
 }
 
+void AWeapon::LoadWeaponData_Upgrade()
+{
+	if (WeaponDataTable.IsNull() || WeaponRowName.IsNone()) return;
+	LoadedWeaponTable = WeaponDataTable.LoadSynchronous();
+	if (!LoadedWeaponTable) return;
+
+	FWeaponData* WeaponData = LoadedWeaponTable->FindRow<FWeaponData>(WeaponRowName, TEXT("LoadWeaponData"));
+	if (!WeaponData) return;
+	if (!WeaponData->WeaponPDA.IsValid()) return;
+
+	UAssetManager& AM = UAssetManager::Get();
+	AM.LoadPrimaryAsset(WeaponData->WeaponPDA, {}, FStreamableDelegate::CreateWeakLambda(this, [this, Id = WeaponData->WeaponPDA]()
+		{
+			auto* Obj = UAssetManager::Get().GetPrimaryAssetObject(Id);
+			UPlayerWeaponPrimaryDataAsset* Def = Cast<UPlayerWeaponPrimaryDataAsset>(Obj);
+			if (!Def) return;
+
+			FireData_L.ProjectileClass = Def->LeftProjectileClass.LoadSynchronous();
+			FireData_R.ProjectileClass = Def->RightProjectileClass.LoadSynchronous();
+			FireData_Skill.ProjectileClass = Def->SkillProjectileClass.LoadSynchronous();
+
+			TArray<FSoftObjectPath> Paths;
+			auto Push = [&Paths](const FSoftObjectPath& P) {if (P.IsValid()) Paths.Add(P); };
+
+			// <Effects>
+			Push(Def->FireEffect_L.ToSoftObjectPath());
+			Push(Def->FireEffect_R.ToSoftObjectPath());
+			Push(Def->FireEffect_Skill.ToSoftObjectPath());
+			Push(Def->ChargeEffect.ToSoftObjectPath());
+
+			// <Sound>
+			Push(Def->FireSound_L.ToSoftObjectPath());
+			Push(Def->FireSound_R.ToSoftObjectPath());
+			Push(Def->FireSound_Skill.ToSoftObjectPath());
+			Push(Def->ChargeSound.ToSoftObjectPath());
+			Push(Def->TargetSearchLoopSound.ToSoftObjectPath());
+			Push(Def->TargetLockedSound.ToSoftObjectPath());
+
+			if (Paths.Num() > 0)
+			{
+				auto& SM = UAssetManager::GetStreamableManager();
+				TWeakObjectPtr<AWeapon> WeakThis(this);
+
+				WeaponAssetsHandle = SM.RequestAsyncLoad(
+					Paths,
+					FStreamableDelegate::CreateWeakLambda(this, [this, WeakThis, Def]() {
+						if (!WeakThis.IsValid()) return;
+
+						FireData_L.MuzzleFireEffect = Def->FireEffect_L.Get();
+						FireData_R.MuzzleFireEffect = Def->FireEffect_R.Get();
+						FireData_Skill.MuzzleFireEffect = Def->FireEffect_Skill.Get();
+						ChargeEffect = Def->ChargeEffect.Get();
+
+						FireData_L.FireSound = Def->FireSound_L.Get();
+						FireData_R.FireSound = Def->FireSound_R.Get();
+						FireData_Skill.FireSound = Def->FireSound_Skill.Get();
+
+						ChargeSound = Def->ChargeSound.Get();
+						TargetSearchLoopSound = Def->TargetSearchLoopSound.Get();
+						TargetLockedSound = Def->TargetLockedSound.Get();
+
+						bWeaponAssetsReady = true;
+						//UE_LOG(LogTemp, Warning, TEXT("AsyncLoad Weapon Data Complete!"));
+						WeaponAssetsHandle.Reset();
+						}));
+			}
+			else
+			{
+				bWeaponAssetsReady = true;
+			}
+		}));
+	//-------------------------------------
+
+	// <WeaponSocket>
+	WeaponSocketName = WeaponData->WeaponSocket;
+
+	// <Skill>
+	bIsSkillWeapon = WeaponData->bIsSkillWeapon;
+	bAllowNormalFireForSkillWeapon = WeaponData->bAllowNormalFireForSkillWeapon;
+
+	// <Action>
+	LeftMouseAction = WeaponData->LeftMouseAction;
+	RightMouseAction = WeaponData->RightMouseAction;
+	SkillAction = WeaponData->SkillAction;
+
+	// <Effect>
+	//ChargeEffect = WeaponData->ChargeEffect;
+	ChargeEffectLocation = WeaponData->ChargeEffectLocation;
+	ChargeEffectRotation = WeaponData->ChargeEffectRotation;
+	ChargeEffenctScale = WeaponData->ChargeEffenctScale;
+
+	// <Reload>
+	ReloadingTime = WeaponData->ReloadingTime;
+	PumpReloadingTime_Start = WeaponData->PumpReloadingTime_Start;
+	PumpReloadingTime_Loop = WeaponData->PumpReloadingTime_Loop;
+	PumpReloadingTime_End = WeaponData->PumpReloadingTime_End;
+	PumpReloadingTime_StartAndEnd = WeaponData->PumpReloadingTime_StartAndEnd;
+	PumpReloadingTime_LoopToFire = WeaponData->PumpReloadingTime_LoopToFire;
+	MaxTotalAmmo = WeaponData->MaxTotalAmmo;
+	TotalAmmo = MaxTotalAmmo;
+	MaxAmmoPerMag = WeaponData->MaxAmmoPerMag;
+	LeftAmmoInCurrentMag = MaxAmmoPerMag;
+	FireData_L.AmmoCost = WeaponData->AmmoConsumedPerShot_Left;
+	FireData_R.AmmoCost = WeaponData->AmmoConsumedPerShot_Right;
+	FireData_Skill.AmmoCost = WeaponData->AmmoCost_Skill;
+	FireData_L.bAllowFireWithInsufficientAmmo = WeaponData->bAllowFireWithInsufficientAmmo_L;
+	FireData_R.bAllowFireWithInsufficientAmmo = WeaponData->bAllowFireWithInsufficientAmmo_R;
+	FireData_Skill.bAllowFireWithInsufficientAmmo = WeaponData->bAllowFireWithInsufficientAmmo_Skill;
+	bActivePumpActionReload = WeaponData->bActivePumpActionReload;
+
+	// <HitScan>
+	bIsHitScan_L = WeaponData->bIsHitScan_Left;
+	bIsHitScan_R = WeaponData->bIsHitScan_Right;
+
+	// <SingleShot>
+	SingleShotDelay = WeaponData->SingleShotDelay;
+
+	// <BurstShot>
+	BurstShotDelay = WeaponData->BurstShotDelay;
+	BurstShotFireRate = WeaponData->BurstShotFireRate;
+	BurstShotCount = WeaponData->BurstShotCount;
+
+	// <FullAutoShot>
+	FullAutoShotFireRate = WeaponData->FullAutoShotFireRate;
+
+	// <ProjectileSpread>
+	DefaultSpread = WeaponData->DefaultSpread;
+	ZoomSpread = WeaponData->ZoomSpread;
+
+	// <MultiProjectileSpread>
+	bEnableMultiProjectile_L = WeaponData->bEnableMultiProjectile_Left;
+	bEnableMultiProjectile_R = WeaponData->bEnableMultiProjectile_Right;
+	FireData_L.MaxAngleOfMultiProjectileSpread = WeaponData->MaxAngleOfMultiProjectileSpread_L;
+	FireData_R.MaxAngleOfMultiProjectileSpread = WeaponData->MaxAngleOfMultiProjectileSpread_R;
+	FireData_L.PelletsNum = WeaponData->PelletsNum_L;
+	FireData_R.PelletsNum = WeaponData->PelletsNum_R;
+
+	// <Recoil>
+	ZoomRecoil = WeaponData->ZoomRecoil;
+
+	FireData_L.Recoil = WeaponData->DefaultRecoil_L;
+	FireData_R.Recoil = WeaponData->DefaultRecoil_R;
+	FireData_Skill.Recoil = WeaponData->DefaultRecoil_Skill;
+
+	// <ArmRecoil Animation>
+	FireData_L.Armrecoil = WeaponData->ArmRecoil_L;
+	FireData_R.Armrecoil = WeaponData->ArmRecoil_R;
+	FireData_Skill.Armrecoil = WeaponData->ArmRecoil_Skill;
+	ArmRecoil_Hand = WeaponData->ArmRecoil_Hand;
+	ArmRecoil_UpperArm = WeaponData->ArmRecoil_UpperArm;
+	ArmRecoil_LowerArm = WeaponData->ArmRecoil_LowerArm;
+
+	// <Animation>
+	RightHandSocketTransform = WeaponData->RightHandSocketTransform;
+	RightHandSocketTransform_Crouch = WeaponData->RightHandSocketTransform_Crouch;
+	RightHandSocketTransform_Targeting = WeaponData->RightHandSocketTransform_Targeting;
+	RightHandSocketTransform_Targeting_Crouch = WeaponData->RightHandSocketTransform_Targeting_Crouch;
+	SkillWeaponSocketTransform_Active = WeaponData->SkillWeaponSocketTransform_Active;
+	SkillWeaponSocketTransform_Inactive = WeaponData->SkillWeaponSocketTransform_Inactive;
+
+	// <Camera Shake>
+	ZoomCameraShakeClass = WeaponData->ZoomCameraShakeClass;
+	ChargingCameraShakeClass = WeaponData->ChargingCameraShakeClass;
+
+	FireData_L.CamShake = WeaponData->DefaultCameraShakeClass_L;
+	FireData_R.CamShake = WeaponData->DefaultCameraShakeClass_R;
+	FireData_Skill.CamShake = WeaponData->DefaultCameraShakeClass_Skill;
+
+	// <Targeting(Homing)>
+	MissileLaunchDelay = WeaponData->MissileLaunchDelay;
+	MaxTargetNum = WeaponData->MaxTargetNum;
+	MaxTargetDetectionRadius = WeaponData->MaxTargetDetectionRadius;
+	MaxTargetDetectionAngle = WeaponData->MaxTargetDetectionAngle;
+	MaxTargetDetectionTime = WeaponData->MaxTargetDetectionTime;
+	TimeToReachMaxTargetDetectionRange = WeaponData->TimeToReachMaxTargetDetectionRange;
+	TargetingGlobalTimeScale = WeaponData->TargetingGlobalTimeScale;
+	TargetingGlobalTimeDilationSpeed_In = WeaponData->TargetingGlobalTimeDilationSpeed_In;
+	TargetingGlobalTimeDilationSpeed_Out = WeaponData->TargetingGlobalTimeDilationSpeed_Out;
+	TargetingSkillCoolDown = WeaponData->TargetingSkillCoolDown;
+	MaxTargetingTime = WeaponData->MaxTargetingTime;
+
+	// <Charging>
+	bAutoFireAtMaxChargeTime = WeaponData->bAutoFireAtMaxChargeTime;
+	ChargeTimeThreshold = WeaponData->ChargeTimeThreshold;
+	MaxChargeTime = WeaponData->MaxChargeTime;
+	ChargingAdditionalDamageBase = WeaponData->ChargingAdditionalDamageBase;
+	ChargingAdditionalRecoilAmountPitchBase = WeaponData->ChargingAdditionalRecoilAmountPitchBase;
+	ChargingAdditionalRecoilAmountYawBase = WeaponData->ChargingAdditionalRecoilAmountYawBase;
+	ChargingAdditionalProjectileRadiusBase = WeaponData->ChargingAdditionalProjectileRadiusBase;
+	ChargingAdditionalPelletMaxNum = WeaponData->ChargingAdditionalPelletMaxNum;
+
+	// <Penetration>
+	MaxPenetrableObjectsNum_Left = WeaponData->MaxPenetrableObjectsNum_Left;
+	MaxPenetrableObjectsNum_Right = WeaponData->MaxPenetrableObjectsNum_Right;
+
+	// <IK>
+	RightHandOffset = WeaponData->RightHandOffset;
+
+	// <AutoAim>
+	bIsAirborneAutoAimActive = WeaponData->bIsAirborneAutoAimActive;
+	AutoAimRadius = WeaponData->AutoAimRadius;
+}
+
 void AWeapon::SetMeshVisibility(bool bflag)
 {
 	TInlineComponentArray<USceneComponent*> MeshComponents;
@@ -835,7 +819,7 @@ void AWeapon::FireSingleProjectile(FWeaponFireData* FireData, int32 NumPenetrabl
 		}
 	}
 
-	if (FireData->ProjectileClass != nullptr)
+	if (FireData->ProjectileClass != nullptr) //TODO: 여기서 자꾸 런타임 에러나서 터짐
 	{
 		UWorld* const World = GetWorld();
 		if (World)
@@ -1238,7 +1222,7 @@ void AWeapon::ZoomToggle()
 {
 	if (CurrentState == IdleState || CurrentState == FiringState)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Zoom!!!"));
+		//UE_LOG(LogTemp, Warning, TEXT("Zoom!!!"));
 
 		if (bIsZoomIn)
 		{
@@ -1295,7 +1279,7 @@ void AWeapon::StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMont
 {
 	if (CharacterAnimInstance != nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Fire Character Animation!!!"));
+		//UE_LOG(LogTemp, Warning, TEXT("Fire Character Animation!!!"));
 
 		if (!CharacterAnimInstance->Montage_IsPlaying(CharacterFireAnimation))
 		{
@@ -1305,7 +1289,7 @@ void AWeapon::StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMont
 
 	if (WeaponAnimInstance != nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Fire Weapon Animation!!!"));
+		//UE_LOG(LogTemp, Warning, TEXT("Fire Weapon Animation!!!"));
 		//WeaponAnimInstance->Montage_Play(WeaponFireAnimation, 1.f);
 		if (!WeaponMesh->GetAnimInstance()->Montage_IsPlaying(WeaponFireAnimation))
 		{
@@ -1444,7 +1428,7 @@ void AWeapon::InitProjectileShells() //TODO: need to be called in Weapon Init
 	}
 
 	int32 numofshell = ProjectileShells.Num();
-	UE_LOG(LogTemp, Warning, TEXT("Num of Shell: %d"), numofshell);
+	//UE_LOG(LogTemp, Warning, TEXT("Num of Shell: %d"), numofshell);
 }
 void AWeapon::EjectProjectileShell()
 {
@@ -1613,7 +1597,7 @@ bool AWeapon::PerformSphereTrace_new(FVector StartLocation, FVector TraceDirecti
 	{
 		FVector TraceEndedPoint = Start + TraceDirection * FVector::Distance(Start, End) * HitResult.Time;
 		HitLocation = TraceEndedPoint;
-		UE_LOG(LogTemp, Error, TEXT("Hit actor: %s"), *GetNameSafe(HitResult.GetActor()));
+		//UE_LOG(LogTemp, Error, TEXT("Hit actor: %s"), *GetNameSafe(HitResult.GetActor()));
 
 		//---------------
 		AActor* HitActor = HitResult.GetActor();
@@ -2053,7 +2037,7 @@ void AWeapon::CancelReload()
 }
 void AWeapon::StartReload()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Start Reload!!!"));
+	//UE_LOG(LogTemp, Warning, TEXT("Start Reload!!!"));
 
 	if (bIsZoomIn)
 	{
@@ -2157,8 +2141,8 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 			{
 				float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("Start")));
 
-				UE_LOG(LogTemp, Error, TEXT("SectionTime_Start: %f"), SectionTime);
-				UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_Start: %f"), PumpReloadingTime_Start);
+				//UE_LOG(LogTemp, Error, TEXT("SectionTime_Start: %f"), SectionTime);
+				//UE_LOG(LogTemp, Error, TEXT("PumpReloadingTime_Start: %f"), PumpReloadingTime_Start);
 
 				CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_Start);
 				CharacterAnimInstance->Montage_JumpToSection(FName("Start"), AM_Reload_Character);
@@ -2279,7 +2263,7 @@ void AWeapon::InterruptReloadAndFire()
 	}
 	else if (bFireInputDuringReload)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Why1?"));
+		//UE_LOG(LogTemp, Error, TEXT("Why1?"));
 		bFireInputDuringReload = false;
 		ChangeState(IdleState);
 	}
@@ -2399,7 +2383,7 @@ void AWeapon::AutoReload()
 }
 void AWeapon::ReloadingEnd()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
+	//UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
 
 	if (LeftAmmoInCurrentMag < MaxAmmoPerMag)
 	{
@@ -2424,7 +2408,7 @@ void AWeapon::ReloadingEnd()
 
 					CharacterAnimInstance->Montage_Stop(0.f, AM_Reload_Character);
 
-					UE_LOG(LogTemp, Error, TEXT("Stop Reloading Animation!!!!"));
+					//UE_LOG(LogTemp, Error, TEXT("Stop Reloading Animation!!!!"));
 
 					//float SectionTime = AM_Reload_Character->GetSectionLength(AM_Reload_Character->GetSectionIndex(FName("LoopEnd")));
 					PumpReloadingTotalTime += CurrPumpActionReloadSectionTime;
@@ -2432,7 +2416,7 @@ void AWeapon::ReloadingEnd()
 				WeaponMesh->GetAnimInstance()->Montage_Play(AM_Reload_Weapon, PumpReloadingTotalTime / CurrPumpActionReloadTime);
 				//WeaponMesh->GetAnimInstance()->Montage_Play(AM_Reload_Weapon, 1.f);
 
-				UE_LOG(LogTemp, Error, TEXT("Pump Action Reload Sliding!!!!"));
+				//UE_LOG(LogTemp, Error, TEXT("Pump Action Reload Sliding!!!!"));
 			}
 		}
 	}
@@ -2512,7 +2496,7 @@ void AWeapon::HandleSingleFire(bool bIsLeftInput, bool bSingleProjectile, int32 
 	}
 	else if (CurrentState == PumpActionReloadingState)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Fire input buffered during reload"));
+		//UE_LOG(LogTemp, Error, TEXT("Fire input buffered during reload"));
 		BufferedFireRequest = FBufferedFireRequest(EWeaponAction::WeaponAction_SingleShot, bIsLeftInput, bSingleProjectile, NumPenetrable);
 	}
 }
@@ -2525,7 +2509,7 @@ void AWeapon::HandleBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 N
 	}
 	else if (CurrentState == PumpActionReloadingState)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Fire input buffered during reload"));
+		//UE_LOG(LogTemp, Error, TEXT("Fire input buffered during reload"));
 		BufferedFireRequest = FBufferedFireRequest(EWeaponAction::WeaponAction_BurstShot, bIsLeftInput, bSingleProjectile, NumPenetrable);
 	}
 }
@@ -2727,7 +2711,7 @@ void AWeapon::StartTargetDetection()
 {
 	if (CurrentState == IdleState)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Start Target Detection!!!"));
+		//UE_LOG(LogTemp, Warning, TEXT("Start Target Detection!!!"));
 
 		ChangeState(TargetingState);
 		PlayWeaponSound(TargetSearchLoopSound);
@@ -2806,7 +2790,7 @@ void AWeapon::StopTargetDetection(FWeaponFireData* FireData)
 {
 	if (CurrentState == TargetingState)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Stop Target Detection!!!"));
+		//UE_LOG(LogTemp, Warning, TEXT("Stop Target Detection!!!"));
 
 		GetWorld()->GetTimerManager().ClearTimer(TargetDetectionTimer);
 
@@ -3146,7 +3130,7 @@ void AWeapon::StopCharge()
 			AdditionalProjectileRadius = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalProjectileRadiusBase;
 			PenetrableObjectsNum = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * MaxPenetrableObjectsNum_Left; //TODO: ������ ���� �޸� �ؾ���
 			AdditionalPelletNum = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalPelletMaxNum;
-			UE_LOG(LogTemp, Error, TEXT("Penetrable Num: %d"), PenetrableObjectsNum);
+			//UE_LOG(LogTemp, Error, TEXT("Penetrable Num: %d"), PenetrableObjectsNum);
 			//UE_LOG(LogTemp, Error, TEXT("Pellet Num: %d"), AdditionalPelletNum);
 		}
 
@@ -3443,7 +3427,7 @@ void AWeapon::UpdateGlobalTimeDiation(float DeltaTime)
 
 		if (FMath::IsNearlyEqual(New, TargetGlobalTimeScale, 0.1f))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Global Time Scale is Stabilized!!!"));
+			//UE_LOG(LogTemp, Warning, TEXT("Global Time Scale is Stabilized!!!"));
 			bIsGlobalTimeScaleChanging = false;
 			UGameplayStatics::SetGlobalTimeDilation(GetWorld(), TargetGlobalTimeScale);
 		}
@@ -3545,7 +3529,7 @@ void AWeapon::RecoverRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct)
 	if (FMath::Abs(CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch) < KINDA_SMALL_NUMBER
 		&& FMath::Abs(CulmulatedRecoilValueYaw - RecoveredRecoilValueYaw) < KINDA_SMALL_NUMBER)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Recoil has been perfectly Recovered!!!"));
+		//UE_LOG(LogTemp, Warning, TEXT("Recoil has been perfectly Recovered!!!"));
 
 		TotalTargetRecoilValuePitch = 0.f;
 		TotalTargetRecoilValueYaw = 0.f;
@@ -3639,7 +3623,7 @@ void AWeapon::RecoverOverheat(float DeltaTime)
 
 	if (FMath::Abs(CurrentOverheatVaule) < 0.1f)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Overheat has been perfectly Recovered!!!"));
+		//UE_LOG(LogTemp, Error, TEXT("Overheat has been perfectly Recovered!!!"));
 
 		TotalTargetOverheatValue = 0.f;
 		CurrentOverheatVaule = 0.f;
@@ -3701,7 +3685,7 @@ void AWeapon::RecoverSpread(float DeltaTime, FProjectileSpreadValue* SpreadValue
 
 	if (FMath::Abs(CurrentSpreadVaule) < 0.1f)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Spread has been perfectly Recovered!!!"));
+		//UE_LOG(LogTemp, Error, TEXT("Spread has been perfectly Recovered!!!"));
 
 		TotalTargetSpreadValue = 0.f;
 		CurrentSpreadVaule = 0.f;
@@ -3814,7 +3798,7 @@ void AWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSe
 void AWeapon::StopCameraSettingChange()
 {
 	bIsUsingPlayerCamFov = false;
-	UE_LOG(LogTemp, Error, TEXT("Modifying Cam Setting is Completed!!!"));
+	//UE_LOG(LogTemp, Error, TEXT("Modifying Cam Setting is Completed!!!"));
 }
 void AWeapon::ForceStopCamModification()
 {

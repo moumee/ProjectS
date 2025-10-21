@@ -21,6 +21,9 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Name")
 	EWeaponName WeaponName = EWeaponName::WeaponName_Rifle;
 	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Primary Data Asset") 
+	FPrimaryAssetId WeaponPDA;
+	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Socket")
 	FName WeaponSocket = FName();
 	//-----------------------------------------------------------------
@@ -82,11 +85,11 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UTexture2D* WeaponImage_Inventory = nullptr; // 인벤토리에 표시할 총기 이미지
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bIsWeaponOwned = false; // 총기 소유 불값
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//bool bIsWeaponOwned = false; // 총기 소유 불값
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSoftClassPtr<class AWeapon> WeaponClass; // weaponinventory 동기화 위해서
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//TSoftClassPtr<class AWeapon> WeaponClass; // weaponinventory 동기화 위해서
 	
 	/** End Suhyeon **/
 
