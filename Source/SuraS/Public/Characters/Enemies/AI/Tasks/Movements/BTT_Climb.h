@@ -10,23 +10,28 @@ class ASuraCharacterEnemyBase;
 /**
  * 
  */
-UCLASS()
-class SURAS_API UBTT_Climb : public UBTTask_BlackboardBase
+struct FBTTClimbTaskMemory
 {
-	GENERATED_BODY()
-
 	bool bHasLedgeDetected = false;
 	bool bIsDoneClimbing = false;
 	
 	FVector TargetVelocity = FVector::ZeroVector;
 	FRotator TargetRotation = FRotator::ZeroRotator;
 
-	UPROPERTY()
 	TWeakObjectPtr<ASuraCharacterEnemyBase> CachedEnemy = nullptr;
+};
+
+UCLASS()
+class SURAS_API UBTT_Climb : public UBTTask_BlackboardBase
+{
+	GENERATED_BODY()
 	
-	void TraceGroundAndWall();
-	void MoveUpTheLedge(FVector ImpactNormal);
-	void Move(UBehaviorTreeComponent& OwnerComp) const;
+	void TraceGroundAndWall(uint8* NodeMemory);
+	void MoveUpTheLedge(uint8* NodeMemory, FVector ImpactNormal);
+	void Move(uint8* NodeMemory, UBehaviorTreeComponent& OwnerComp) const;
+
+protected:
+	virtual uint16 GetInstanceMemorySize() const override;
 
 public:
 	explicit UBTT_Climb(FObjectInitializer const& ObjectInitializer);

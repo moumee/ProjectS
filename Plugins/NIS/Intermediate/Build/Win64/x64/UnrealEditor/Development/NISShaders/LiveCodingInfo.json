@@ -1,0 +1,9 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.NISShaders.cpp.obj": [
+			"PerModuleInline.gen.cpp.obj",
+			"NISShaders.cpp.obj"
+		]
+	}
+}

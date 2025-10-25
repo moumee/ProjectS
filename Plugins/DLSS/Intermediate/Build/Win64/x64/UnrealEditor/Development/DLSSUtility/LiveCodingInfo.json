@@ -1,0 +1,12 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.DLSSUtility.cpp.obj": [
+			"PerModuleInline.gen.cpp.obj",
+			"BiasCurrentColorPass.cpp.obj",
+			"DLSSUtility.cpp.obj",
+			"GBufferResolvePass.cpp.obj",
+			"VelocityCombinePass.cpp.obj"
+		]
+	}
+}

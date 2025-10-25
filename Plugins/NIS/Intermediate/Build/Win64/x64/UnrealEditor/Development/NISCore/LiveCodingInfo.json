@@ -1,0 +1,10 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.NISCore.cpp.obj": [
+			"PerModuleInline.gen.cpp.obj",
+			"NISCore.cpp.obj",
+			"NISUpscaler.cpp.obj"
+		]
+	}
+}

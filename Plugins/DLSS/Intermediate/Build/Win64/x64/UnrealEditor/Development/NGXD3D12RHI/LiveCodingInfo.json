@@ -1,0 +1,9 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.NGXD3D12RHI.cpp.obj": [
+			"PerModuleInline.gen.cpp.obj",
+			"NGXD3D12RHI.cpp.obj"
+		]
+	}
+}

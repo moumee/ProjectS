@@ -9,20 +9,25 @@
 /**
  * 
  */
+struct FBTTStrafeTaskMemory
+{
+	int32 StrafeDirection = 1;
+	float DeltaTime = 0.f;
+};
+
 UCLASS()
 class SURAS_API UBTT_Strafe : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
-
-	int StrafeDirection;
-	
-	float DeltaTime = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Strafe", meta = (AllowPrivateAccess = "true"))
 	float StrafeDuration = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Strafe", meta = (AllowPrivateAccess = "true"))
 	float StrafeDurationDeviation = 0.f;
+
+protected:
+	virtual uint16 GetInstanceMemorySize() const override;
 
 public:
 	explicit UBTT_Strafe(FObjectInitializer const& ObjectInitializer);

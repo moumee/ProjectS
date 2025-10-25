@@ -1,0 +1,9 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.NGXVulkanRHIPreInit.cpp.obj": [
+			"PerModuleInline.gen.cpp.obj",
+			"NGXVulkanRHIPreInit.cpp.obj"
+		]
+	}
+}

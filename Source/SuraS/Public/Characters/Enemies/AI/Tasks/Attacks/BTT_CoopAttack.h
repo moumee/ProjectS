@@ -11,6 +11,13 @@ class ASuraPawnPlayer;
 /**
  * 
  */
+struct FBTTCoopAttackTaskMemory
+{
+	TWeakObjectPtr<ASuraCharacterEnemyBase> CachedEnemy;
+	TWeakObjectPtr<ASuraCharacterEnemyBase> CachedEnemyAlly;
+	TWeakObjectPtr<ASuraPawnPlayer> CachedPlayer;
+};
+
 UCLASS()
 class SURAS_API UBTT_CoopAttack : public UBTTask_BlackboardBase
 {
@@ -18,16 +25,10 @@ class SURAS_API UBTT_CoopAttack : public UBTTask_BlackboardBase
 
 	FOnMontageEnded OnAttackMontageEnded;
 
-	UPROPERTY()
-	ASuraCharacterEnemyBase* CachedEnemy;
-
-	UPROPERTY()
-	ASuraCharacterEnemyBase* CachedEnemyAlly;
-
-	UPROPERTY()
-	ASuraPawnPlayer* CachedPlayer;
-
 	void OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp);
+
+protected:
+	virtual uint16 GetInstanceMemorySize() const override;
 	
 public:
 	explicit UBTT_CoopAttack(FObjectInitializer const& ObjectInitializer);

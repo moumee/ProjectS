@@ -1,0 +1,19 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\github\\suras\\plugins\\dlssmoviepipelinesupport\\intermediate\\build\\win64\\unrealeditor\\inc\\dlssmps\\uht\\moviepipelinedlsssetting.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\github\\suras\\intermediate\\build\\win64\\x64\\suraseditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "c:\\github\\suras\\plugins\\dlssmoviepipelinesupport\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\dlssmps\\definitions.dlssmps.h",
+            "c:\\github\\suras\\plugins\\dlssmoviepipelinesupport\\source\\dlssmoviepipelinesupport\\public\\moviepipelinedlsssetting.h",
+            "c:\\program files\\epic games\\ue_5.5\\engine\\plugins\\moviescene\\movierenderpipeline\\source\\movierenderpipelinecore\\public\\moviepipelineviewfamilysetting.h",
+            "c:\\program files\\epic games\\ue_5.5\\engine\\plugins\\moviescene\\movierenderpipeline\\source\\movierenderpipelinecore\\public\\moviepipelinesetting.h",
+            "c:\\program files\\epic games\\ue_5.5\\engine\\plugins\\moviescene\\movierenderpipeline\\intermediate\\build\\win64\\unrealeditor\\inc\\movierenderpipelinecore\\uht\\moviepipelinesetting.generated.h",
+            "c:\\program files\\epic games\\ue_5.5\\engine\\plugins\\moviescene\\movierenderpipeline\\intermediate\\build\\win64\\unrealeditor\\inc\\movierenderpipelinecore\\uht\\moviepipelineviewfamilysetting.generated.h",
+            "c:\\github\\suras\\plugins\\dlssmoviepipelinesupport\\intermediate\\build\\win64\\unrealeditor\\inc\\dlssmps\\uht\\moviepipelinedlsssetting.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

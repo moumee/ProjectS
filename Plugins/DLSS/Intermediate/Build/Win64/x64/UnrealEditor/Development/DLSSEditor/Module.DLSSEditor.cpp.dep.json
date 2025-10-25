@@ -1,0 +1,35 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\github\\suras\\plugins\\dlss\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\dlsseditor\\module.dlsseditor.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\github\\suras\\intermediate\\build\\win64\\x64\\suraseditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "c:\\github\\suras\\plugins\\dlss\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\dlsseditor\\definitions.dlsseditor.h",
+            "c:\\github\\suras\\plugins\\dlss\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\dlsseditor\\permoduleinline.gen.cpp",
+            "c:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\core\\public\\hal\\permoduleinline.inl",
+            "c:\\github\\suras\\plugins\\dlss\\source\\dlsseditor\\private\\dlsseditor.cpp",
+            "c:\\github\\suras\\plugins\\dlss\\source\\dlsseditor\\public\\dlsseditor.h",
+            "c:\\github\\suras\\plugins\\dlss\\source\\dlss\\public\\dlssupscaler.h",
+            "c:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\rendercore\\public\\customresourcepool.h",
+            "c:\\github\\suras\\plugins\\dlss\\source\\dlss\\public\\dlss.h",
+            "c:\\github\\suras\\plugins\\dlss\\source\\dlss\\public\\dlsssettings.h",
+            "c:\\github\\suras\\plugins\\dlss\\intermediate\\build\\win64\\unrealeditor\\inc\\dlss\\uht\\dlsssettings.generated.h",
+            "c:\\github\\suras\\plugins\\dlss\\source\\ngxrhi\\public\\ngxrhi.h",
+            "c:\\github\\suras\\plugins\\dlss\\source\\thirdparty\\ngx\\include\\nvsdk_ngx_params.h",
+            "c:\\github\\suras\\plugins\\dlss\\source\\thirdparty\\ngx\\include\\nvsdk_ngx_defs.h",
+            "c:\\github\\suras\\plugins\\dlss\\source\\thirdparty\\ngx\\include\\nvsdk_ngx_helpers_dlssd.h",
+            "c:\\github\\suras\\plugins\\dlss\\source\\thirdparty\\ngx\\include\\nvsdk_ngx_helpers.h",
+            "c:\\github\\suras\\plugins\\dlss\\source\\thirdparty\\ngx\\include\\nvsdk_ngx.h",
+            "c:\\github\\suras\\plugins\\dlss\\source\\thirdparty\\ngx\\include\\nvsdk_ngx_defs_dlssd.h",
+            "c:\\github\\suras\\plugins\\dlss\\source\\thirdparty\\ngx\\include\\nvsdk_ngx_params_dlssd.h",
+            "c:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\engine\\public\\scenetexturesconfig.h",
+            "c:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\rendercore\\public\\gbufferinfo.h",
+            "c:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\core\\public\\misc\\engineversioncomparison.h",
+            "c:\\program files\\epic games\\ue_5.5\\engine\\source\\developer\\settings\\public\\isettingsmodule.h",
+            "c:\\program files\\epic games\\ue_5.5\\engine\\source\\developer\\settings\\public\\isettingssection.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

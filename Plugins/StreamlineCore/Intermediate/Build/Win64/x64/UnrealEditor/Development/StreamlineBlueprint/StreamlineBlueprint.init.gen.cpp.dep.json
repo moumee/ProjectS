@@ -1,0 +1,13 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\github\\suras\\plugins\\streamlinecore\\intermediate\\build\\win64\\unrealeditor\\inc\\streamlineblueprint\\uht\\streamlineblueprint.init.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\github\\suras\\intermediate\\build\\win64\\x64\\suraseditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "c:\\github\\suras\\plugins\\streamlinecore\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\streamlineblueprint\\definitions.streamlineblueprint.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
