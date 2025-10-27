@@ -4,6 +4,7 @@
 #include "Characters/Enemies/Boss/SuraCharacterBossProto.h"
 
 #include "AIController.h"
+#include "NiagaraComponent.h"
 #include "ActorComponents/DamageComponent/ACBossDamageSystem.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/Animations/SuraBossAnimInstanceProto.h"
@@ -33,6 +34,10 @@ ASuraCharacterBossProto::ASuraCharacterBossProto()
 	BodyHitColorTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("BodyHitColorTimeline"));
 	LeftArmHitColorTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("LeftArmHitColorTimeline"));
 	RightArmHitColorTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("RightArmHitColorTimeline"));
+
+	LaserNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("LaserNiagaraComponent"));
+	LaserNiagaraComponent->SetupAttachment(GetMesh(), "Muzzle");
+	LaserNiagaraComponent->bAutoActivate = false;
 	
 }
 
@@ -65,9 +70,9 @@ void ASuraCharacterBossProto::StartMeleeAttackCooldown(float Duration)
 	bIsMeleeAttackOnCooldown = true;
 }
 
-void ASuraCharacterBossProto::StartRangedAttackCooldown(float Duration)
+void ASuraCharacterBossProto::StartRangedAttackCooldown()
 {
-	RangedAttackCooldown = Duration;
+	RangedAttackCooldown = RangedAttack.Cooldown;
 	bIsRangedAttackOnCooldown = true;
 }
 
@@ -96,6 +101,11 @@ void ASuraCharacterBossProto::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (LaserNiagaraSystem)
+	{
+		LaserNiagaraComponent->SetAsset(LaserNiagaraSystem);
+	}
+
 	BlackboardComp = GetController<AAIController>()->GetBlackboardComponent();
 	
 	if (ensure(BossDataAsset))
@@ -107,7 +117,7 @@ void ASuraCharacterBossProto::BeginPlay()
 	GetDamageSystemComp()->OnDeath.AddUObject(this, &ThisClass::OnBossDeath);
 
 	MeleeAttacks = BossDataAsset->BossMeleeAttacks;
-	
+	RangedAttack = BossDataAsset->BossRangedAttack;
 
 	InitializeHitColorTimelines();
 
@@ -162,6 +172,11 @@ bool ASuraCharacterBossProto::TakeDamage(const FDamageData& DamageData, AActor* 
 	}
 	
 	return Super::TakeDamage(DamageData, DamageCauser);
+}
+
+void ASuraCharacterBossProto::SetLaserFireEnd(const FVector& EndLocation)
+{
+	LaserFireEnd = EndLocation;
 }
 
 void ASuraCharacterBossProto::SetCurrentState(EBossState NewState)
