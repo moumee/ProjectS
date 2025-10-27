@@ -29,9 +29,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	FBlackboardKeySelector AttackAreaKey;
 
-	FOnMontageEnded OnMontageEndedDelegate;
-
-	void OnMontageEnded(UAnimMontage* AnimMontage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp);
+	void OnMontageEnded(UAnimMontage* AnimMontage, bool bInterrupted, TWeakObjectPtr<UBehaviorTreeComponent> OwnerComp);
 
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 

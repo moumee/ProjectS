@@ -10,6 +10,8 @@
 #include "Components/TimelineComponent.h"
 #include "SuraCharacterBossProto.generated.h"
 
+class UNiagaraSystem;
+class UNiagaraComponent;
 class USuraBoss_DataAsset;
 class UBlackboardComponent;
 enum class EBossState : uint8;
@@ -43,6 +45,10 @@ public:
 
 	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser) override;
 
+	void SetLaserFireEnd(const FVector& EndLocation);
+
+	FVector GetLaserFireEnd() const { return LaserFireEnd; };
+
 	void SetCurrentState(EBossState NewState);
 
 	EBossState GetCurrentState() const { return CurrentState; }
@@ -55,21 +61,33 @@ public:
 
 	FBossMeleeInfo GetMeleeAttackMontageAndCooldownByTag(FName Tag);
 
+	float GetRangedAttackTargetingDuration() const { return RangedAttack.TargetingDuration; }
+
 	bool GetIsMeleeAttackOnCooldown() const { return bIsMeleeAttackOnCooldown; }
 	bool GetIsRangedAttackOnCooldown() const { return bIsRangedAttackOnCooldown; }
 
 	void StartMeleeAttackCooldown(float Duration);
-	void StartRangedAttackCooldown(float Duration);
+	void StartRangedAttackCooldown();
 
 	void AddAttackAreaTag(FName InTag);
 
 	void RemoveAttackAreaTag(FName InTag);
 
 	FName GetCurrentAttackAreaTag() const;
+
+	UNiagaraComponent* GetLaserNiagaraComponent() const { return LaserNiagaraComponent; }
+
+	UAnimMontage* GetRangedAttackMontage() const { return RangedAttack.RangedAttackMontage; }
 	
 protected:
 
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UNiagaraSystem> LaserNiagaraSystem;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UNiagaraComponent> LaserNiagaraComponent;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<USuraBoss_DataAsset> BossDataAsset;
@@ -152,6 +170,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TArray<FBossMeleeAttack> MeleeAttacks;
 
+	UPROPERTY(VisibleAnywhere)
+	FBossRangedAttack RangedAttack;
+
 	UPROPERTY(VisibleAnywhere, Category="Cooldown")
 	float MeleeAttackCooldown = 0.f;
 	UPROPERTY(VisibleAnywhere, Category="Cooldown")
@@ -162,4 +183,6 @@ protected:
 	bool bIsRangedAttackOnCooldown = false;
 
 	TSet<FName> AttackAreaTags;
+
+	FVector LaserFireEnd;
 };

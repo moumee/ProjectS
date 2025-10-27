@@ -9,6 +9,7 @@
 #include "Interfaces/PlayerInterface.h"
 #include "SuraPawnPlayer.generated.h"
 
+class UPlayerSound_DataAsset;
 class UACHitScreenManager;
 class UACPlayerHealthComponent;
 class UNiagaraComponent;
@@ -98,6 +99,9 @@ public:
 
 protected:
 
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UPlayerSound_DataAsset> PlayerSound_DataAsset;
+	
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UCapsuleComponent> CapsuleComponent;
 
