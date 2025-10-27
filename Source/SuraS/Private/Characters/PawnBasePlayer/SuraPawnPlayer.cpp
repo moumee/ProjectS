@@ -315,7 +315,7 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 			{
 				if (ensureAlways(PlayerSound_DataAsset))
 				{
-					USoundBase* HitSound = PlayerSound_DataAsset->DownedHitSound;
+					USoundBase* HitSound = PlayerSound_DataAsset->NormalHitSound;
 					if (!HitSound) break;
 					UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 					break;
