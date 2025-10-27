@@ -55,19 +55,12 @@ void UACKillLogManager::SetUIManager(UACUIMangerComponent* InManager)
 
 void UACKillLogManager::AddKillLog(const FString& Killer, const FString& Victim)
 {
-	// UE_LOG(LogTemp, Warning, TEXT("✅ AddKillLog() 호출됨: %s killed %s"), *Killer, *Victim);
-
-	// if (!KillLogWidget)
-	// {
-	// 	UE_LOG(LogTemp, Error, TEXT("❌ KillLogWidget is null"));
-	// 	return;
-	// }
 
 	// 1. 해골 이미지 추가
 	KillLogWidget->AddSkull();
 
 	// 2. 점수 로그 항목 추가
-	KillLogWidget->AddScoreEntry(TEXT("적 처치"), 100);
+	KillLogWidget->AddScoreEntry(TEXT("Enemy Kill"), 100);
 
 	// 3. 총 점수 업데이트
 	KillLogWidget->UpdateTotalScore(100);

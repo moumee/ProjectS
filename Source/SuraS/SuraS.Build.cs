@@ -30,7 +30,9 @@ public class SuraS : ModuleRules
             "CinematicCamera",
             "LevelSequence", // Added by Yoony for Level Sequence
             "MovieScene", // Added by Yoony for Level Sequence
-            "NiagaraUIRenderer" // Addyd by suhyeon for hitscrren niagara
+            "NiagaraUIRenderer", // Added by suhyeon for hitscrren niagara
+            "Slate", // Added by suhyeon for font register
+            "SlateCore" // Added by suhyeon for font register
         });
 
 
