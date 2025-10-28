@@ -46,10 +46,9 @@ EBTNodeResult::Type UBTT_BossRangedTargeting::ExecuteTask(UBehaviorTreeComponent
 void UBTT_BossRangedTargeting::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	FBossRangedTargetingMemory* Memory = CastInstanceNodeMemory<FBossRangedTargetingMemory>(NodeMemory);
-	if (!Memory->IsValid()) FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
-
 	AActor* PlayerActor = Memory->TargetActor.Get();
 	ASuraCharacterBossProto* Boss = Memory->Boss.Get();
+	if (!PlayerActor || !Boss) FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 
 	UNiagaraComponent* LaserComp = Boss->GetLaserNiagaraComponent();
 	if (!IsValid(LaserComp)) FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
@@ -84,12 +83,13 @@ void UBTT_BossRangedTargeting::OnTaskFinished(UBehaviorTreeComponent& OwnerComp,
 	EBTNodeResult::Type TaskResult)
 {
 	FBossRangedTargetingMemory* Memory = CastInstanceNodeMemory<FBossRangedTargetingMemory>(NodeMemory);
-	if (!Memory->IsValid()) return;
 	
 	if (TaskResult != EBTNodeResult::Succeeded)
 	{
-		ASuraCharacterBossProto* Boss = Memory->Boss.Get();
-		Boss->GetLaserNiagaraComponent()->DeactivateImmediate();
+		if (ASuraCharacterBossProto* Boss = Memory->Boss.Get())
+		{
+			Boss->GetLaserNiagaraComponent()->DeactivateImmediate();
+		}
 	}
 }
 

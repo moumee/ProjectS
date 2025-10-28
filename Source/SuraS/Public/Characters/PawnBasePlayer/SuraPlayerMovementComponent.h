@@ -282,6 +282,8 @@ protected:
 
 protected:
 
+	FVector LastVelocityBeforeLand = FVector::ZeroVector;
+
 	UPROPERTY(VisibleAnywhere, Category = "Input")
 	FCachedInput Input;
 

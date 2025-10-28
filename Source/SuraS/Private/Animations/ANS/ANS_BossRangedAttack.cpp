@@ -32,30 +32,33 @@ void UANS_BossRangedAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 
 	if (bHasHit) return;
-	if (!WeakBoss.IsValid()) return;
-
-	ASuraCharacterBossProto* Boss = WeakBoss.Get();
-	FVector LaserStart = Boss->GetMesh()->GetSocketLocation(FName("Muzzle"));
-	FVector LaserEnd = Boss->GetLaserFireEnd();
-
-	FHitResult LaserHit;
-	bool bHit = UKismetSystemLibrary::SphereTraceSingleByProfile(MeshComp, LaserStart, LaserEnd, 3.f, FName("Player"),
-		false, {}, EDrawDebugTrace::None, LaserHit, true);
-
-	if (bHit)
+	
+	if (ASuraCharacterBossProto* Boss = WeakBoss.Get())
 	{
-		if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(LaserHit.GetActor()))
+		FVector LaserStart = Boss->GetMesh()->GetSocketLocation(FName("Muzzle"));
+		FVector LaserEnd = Boss->GetLaserFireEnd();
+
+		FHitResult LaserHit;
+		bool bHit = UKismetSystemLibrary::SphereTraceSingleByProfile(MeshComp, LaserStart, LaserEnd, 3.f, FName("Player"),
+			false, {}, EDrawDebugTrace::None, LaserHit, true);
+
+		if (bHit)
 		{
-			bHasHit = true;
-			FDamageData DamageData;
-			DamageData.DamageType = EDamageType::Projectile;
-			DamageData.ImpactPoint = LaserHit.ImpactPoint;
-			DamageData.BoneName = LaserHit.BoneName;
-			DamageData.bCanForceDamage = false;
-			DamageData.DamageAmount = DamageAmount; 
-			Player->TakeDamage(DamageData, MeshComp->GetOwner());
+			if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(LaserHit.GetActor()))
+			{
+				bHasHit = true;
+				FDamageData DamageData;
+				DamageData.DamageType = EDamageType::Projectile;
+				DamageData.ImpactPoint = LaserHit.ImpactPoint;
+				DamageData.BoneName = LaserHit.BoneName;
+				DamageData.bCanForceDamage = false;
+				DamageData.DamageAmount = DamageAmount; 
+				Player->TakeDamage(DamageData, MeshComp->GetOwner());
+			}
 		}
 	}
+
+	
 }
 
 void UANS_BossRangedAttack::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
