@@ -219,6 +219,23 @@ void ASuraCharacterBossProto::GetAttackAreasByTag(FName Tag, TArray<ASuraBossAtt
 	}
 }
 
+float ASuraCharacterBossProto::GetMeleeDamageAmountByTag(FName Tag) const
+{
+	for (auto MeleeAttack : MeleeAttacks)
+	{
+		if (MeleeAttack.AttackAreaTag != Tag) continue;
+
+		return MeleeAttack.Damage;
+	}
+
+	return 0.f;
+}
+
+float ASuraCharacterBossProto::GetRangedDamageAmount() const
+{
+	return RangedAttack.Damage;
+}
+
 FBossMeleeInfo ASuraCharacterBossProto::GetMeleeAttackMontageAndCooldownByTag(FName Tag)
 {
 	for (auto MeleeAttack : MeleeAttacks)

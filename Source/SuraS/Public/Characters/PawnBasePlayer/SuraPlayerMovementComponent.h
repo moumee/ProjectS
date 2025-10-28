@@ -72,19 +72,21 @@ struct FWallInfo
 
 
 
-DECLARE_MULTICAST_DELEGATE(FOnMove);
-DECLARE_MULTICAST_DELEGATE(FOnWallRun);
-DECLARE_MULTICAST_DELEGATE(FOnAirborne);
-DECLARE_MULTICAST_DELEGATE(FOnSlide);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMoveSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWallRunSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWallRunEndSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAirborneSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSlideSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSlideEndSignature);
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnLand, float);
-DECLARE_MULTICAST_DELEGATE(FOnPrimaryJump);
-DECLARE_MULTICAST_DELEGATE(FOnDoubleJump);
-DECLARE_MULTICAST_DELEGATE(FOnWallJump);
-DECLARE_MULTICAST_DELEGATE(FOnMantle);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnDash, FVector2D);
-DECLARE_MULTICAST_DELEGATE(FOnDowned);
-DECLARE_MULTICAST_DELEGATE(FOnDashEnd);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLandSignature, float, ZSpeed);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPrimaryJumpSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDoubleJumpSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWallJumpSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMantleSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDashSignature, FVector2D, InputVector);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDownedSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDashEndSignature);
 
 
 
@@ -94,7 +96,7 @@ class SURAS_API USuraPlayerMovementComponent : public UPawnMovementComponent
 	GENERATED_BODY()
 
 public:
-
+	
 	USuraPlayerMovementComponent();
 
 	virtual void BeginPlay() override;
@@ -158,20 +160,21 @@ public:
 
 	void NotifyDeath();
 
-	FOnMove	OnMove;
-	FOnWallRun OnWallRun;
-	FOnAirborne OnAirborne;
-	FOnSlide OnSlide;
+	FOnMoveSignature OnMoveDelegate;
+	FOnWallRunSignature OnWallRunDelegate;
+	FOnWallRunEndSignature OnWallRunEndDelegate;
+	FOnAirborneSignature OnAirborneDelegate;
+	FOnSlideSignature OnSlideDelegate;
+	FOnSlideEndSignature OnSlideEndDelegate;
 	
-	FOnLand OnLand;
-	FOnPrimaryJump OnPrimaryJump;
-	FOnDoubleJump OnDoubleJump;
-	FOnWallJump OnWallJump;
-	FOnMantle OnMantle;
-	FOnDash OnDash;
-	FOnDowned OnDowned;
-
-	FOnDashEnd OnDashEnd;
+	FOnLandSignature OnLandDelegate;
+	FOnPrimaryJumpSignature OnPrimaryJumpDelegate;
+	FOnDoubleJumpSignature OnDoubleJumpDelegate;
+	FOnWallJumpSignature OnWallJumpDelegate;
+	FOnMantleSignature OnMantleDelegate;
+	FOnDashSignature OnDashDelegate;
+	FOnDownedSignature OnDownedDelegate;
+	FOnDashEndSignature OnDashEndDelegate;
 protected:
 	
 	UPROPERTY(EditAnywhere)

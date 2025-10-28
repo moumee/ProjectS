@@ -26,6 +26,8 @@ class SURAS_API UANS_BossAttackArea : public UAnimNotifyState
 
 	bool bHasHit = false;
 
+	float DamageAmount = 0.f;
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName AttackAreaTag;

@@ -17,11 +17,12 @@ void UANS_BossAttackArea::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeq
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
 
-	bHasHit = false;
+	
 	Boss = Cast<ASuraCharacterBossProto>(MeshComp->GetOwner());
 	if (!Boss.IsValid()) return;
 	ASuraCharacterBossProto* HardBoss = Boss.Get();
 	HardBoss->GetAttackAreasByTag(AttackAreaTag, AttackAreas);
+	DamageAmount = HardBoss->GetMeleeDamageAmountByTag(AttackAreaTag);
 }
 
 void UANS_BossAttackArea::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
@@ -60,7 +61,7 @@ void UANS_BossAttackArea::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequ
 					GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Hit"));
 					FDamageData DamageData;
 					DamageData.DamageType = DamageType;
-					DamageData.DamageAmount = 10;
+					DamageData.DamageAmount = DamageAmount;
 
 					if (DamageType == EDamageType::Charge)
 					{
@@ -87,7 +88,9 @@ void UANS_BossAttackArea::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSeque
 	const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
+	bHasHit = false;
 }
+
 
 
 
