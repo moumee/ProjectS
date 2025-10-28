@@ -123,7 +123,6 @@ void ASuraPawnPlayer::BeginPlay()
 	SlideAudioComponent->SetSound(PlayerSound_DataAsset->SlideSound);
 
 	
-	
 	GetDamageSystemComponent()->OnDamaged.AddUObject(CameraMovementComponent, &USuraPlayerCameraComponent::OnDamaged);
 	GetDamageSystemComponent()->OnDamaged.AddUObject(this, &ASuraPawnPlayer::OnDamaged);
 	GetDamageSystemComponent()->OnDeath.AddUObject(this, &ASuraPawnPlayer::OnDeath);
