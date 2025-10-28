@@ -4,27 +4,41 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "BTT_BossRangedAttack.generated.h"
+#include "BTT_BossRangedTargeting.generated.h"
 
 class ASuraCharacterBossProto;
 
 
-struct FBossRangedAttackMemory
+struct FBossRangedTargetingMemory
 {
 	TWeakObjectPtr<ASuraCharacterBossProto> Boss;
 	TWeakObjectPtr<AActor> TargetActor;
+
+	float TargetingDuration = 2.f;
+	float RangedAttackStartTime = 0.f;
+
+	bool IsValid() const
+	{
+		return Boss.IsValid() && TargetActor.IsValid();
+	}
+
+	void Reset()
+	{
+		Boss.Reset();
+		TargetActor.Reset();
+	}
 };
 /**
  * 
  */
 UCLASS()
-class SURAS_API UBTT_BossRangedAttack : public UBTTaskNode
+class SURAS_API UBTT_BossRangedTargeting : public UBTTaskNode
 {
 	GENERATED_BODY()
 
 public:
 
-	UBTT_BossRangedAttack();
+	UBTT_BossRangedTargeting();
 
 private:
 
@@ -38,4 +52,6 @@ private:
 	virtual uint16 GetInstanceMemorySize() const override;
 	
 	virtual void InitializeFromAsset(UBehaviorTree& Asset) override;
+
+	virtual void OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult) override;
 };

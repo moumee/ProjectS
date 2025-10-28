@@ -19,6 +19,7 @@
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
+#include "Characters/PawnBasePlayer/PlayerSound_DataAsset.h"
 #include "GameModes/SuraLevelGameMode.h"
 #include "Instance/SuraCheckpointSubsystem.h"
 #include "Kismet/GameplayStatics.h"
@@ -297,6 +298,30 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 	}
 
 	GetPlayerMovementComponent()->NotifyDamageData(DamageData.DamageType, DamageData.ImpulseDirection, DamageData.ImpulseMagnitude);
+	
+	switch (DamageData.DamageType)
+	{
+		case EDamageType::Charge:
+			{
+				if (ensureAlways(PlayerSound_DataAsset))
+				{
+					USoundBase* HitSound = PlayerSound_DataAsset->DownedHitSound;
+					if (!HitSound) break;
+					UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
+					break;
+				}
+			}
+		default:
+			{
+				if (ensureAlways(PlayerSound_DataAsset))
+				{
+					USoundBase* HitSound = PlayerSound_DataAsset->NormalHitSound;
+					if (!HitSound) break;
+					UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
+					break;
+				}
+			}
+	}
 	
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }

@@ -9,7 +9,6 @@
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/BoxComponent.h"
 #include "Engine/OverlapResult.h"
-#include "Slate/SGameLayerManager.h"
 
 #define PLAYER_TRACE_CHANNEL ECollisionChannel::ECC_GameTraceChannel4
 
@@ -19,9 +18,10 @@ void UANS_BossAttackArea::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeq
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
 
 	bHasHit = false;
-	BossRef = Cast<ASuraCharacterBossProto>(MeshComp->GetOwner());
-	if (!BossRef) return;
-	BossRef->GetAttackAreasByTag(AttackAreaTag, AttackAreas);
+	Boss = Cast<ASuraCharacterBossProto>(MeshComp->GetOwner());
+	if (!Boss.IsValid()) return;
+	ASuraCharacterBossProto* HardBoss = Boss.Get();
+	HardBoss->GetAttackAreasByTag(AttackAreaTag, AttackAreas);
 }
 
 void UANS_BossAttackArea::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
@@ -29,7 +29,7 @@ void UANS_BossAttackArea::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequ
 {
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 
-	if (!BossRef) return;
+	if (!Boss.IsValid()) return;
 	if (AttackAreas.IsEmpty()) return;
 	if (bHasHit) return;
 

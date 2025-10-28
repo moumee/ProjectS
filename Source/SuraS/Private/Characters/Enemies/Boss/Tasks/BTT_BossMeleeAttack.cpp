@@ -20,7 +20,7 @@ UBTT_BossMeleeAttack::UBTT_BossMeleeAttack()
 EBTNodeResult::Type UBTT_BossMeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	APawn* OwningPawn = OwnerComp.GetAIOwner()->GetPawn();
-	if (!OwningPawn) return EBTNodeResult::Failed;
+	if (!IsValid(OwningPawn)) return EBTNodeResult::Failed;
 
 	ASuraCharacterBossProto* Boss = Cast<ASuraCharacterBossProto>(OwningPawn);
 
@@ -43,8 +43,9 @@ EBTNodeResult::Type UBTT_BossMeleeAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 	
 	UAnimInstance* AnimInstance = Boss->GetMesh()->GetAnimInstance();
 	if (!AnimInstance) return EBTNodeResult::Failed;
-	
-	OnMontageEndedDelegate.BindUObject(this, &ThisClass::OnMontageEnded, &OwnerComp);
+
+	FOnMontageEnded OnMontageEndedDelegate;
+	OnMontageEndedDelegate.BindUObject(this, &ThisClass::OnMontageEnded, TWeakObjectPtr(&OwnerComp));
 	AnimInstance->Montage_Play(MeleeInfo.AttackMontage);
 	AnimInstance->Montage_SetEndDelegate(OnMontageEndedDelegate, MeleeInfo.AttackMontage);
 	
@@ -64,8 +65,6 @@ void UBTT_BossMeleeAttack::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uin
 			Boss->SetCurrentState(EBossState::Idle);
 		}
 	}
-
-	Memory->Boss.Reset();
 }
 
 uint16 UBTT_BossMeleeAttack::GetInstanceMemorySize() const
@@ -84,9 +83,12 @@ void UBTT_BossMeleeAttack::InitializeFromAsset(UBehaviorTree& Asset)
 }
 
 
-
-
-void UBTT_BossMeleeAttack::OnMontageEnded(UAnimMontage* AnimMontage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp)
+void UBTT_BossMeleeAttack::OnMontageEnded(UAnimMontage* AnimMontage, bool bInterrupted, TWeakObjectPtr<UBehaviorTreeComponent> OwnerComp)
 {
-	FinishLatentTask(*OwnerComp, bInterrupted ? EBTNodeResult::Failed : EBTNodeResult::Succeeded);
+	if (OwnerComp.IsValid())
+	{
+		UBehaviorTreeComponent* Component = OwnerComp.Get();
+		FinishLatentTask(*Component, bInterrupted ? EBTNodeResult::Failed : EBTNodeResult::Succeeded);
+	}
+	
 }
