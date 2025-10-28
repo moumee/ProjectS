@@ -172,7 +172,9 @@ protected:
 protected:
 	bool bIsHitScan_L = false;
 	bool bIsHitScan_R = false;
+
 	void FireSingleHitScan(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
+	void FireMultiHitScan();
 #pragma endregion
 
 #pragma region AutoAim

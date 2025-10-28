@@ -78,6 +78,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
 	float InitialSpeed = 50000.f;
 
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
+	//float MaxSpeed = 50000.f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
 	float InitialRadius = 10.f;
 
