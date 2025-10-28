@@ -245,12 +245,24 @@ void ASuraPawnPlayer::OnWallJump()
 
 void ASuraPawnPlayer::OnSlide()
 {
-	SlideAudioComponent->Play();
+	float TimeSinceSlideEnd = GetWorld()->GetTimeSeconds() - SlideEndTime;
+	if (TimeSinceSlideEnd > 0.75f)
+	{
+		SlideAudioComponent->SetBoolParameter("SkipStart", false);
+		SlideAudioComponent->Play();
+	}
+	else
+	{
+		SlideAudioComponent->SetBoolParameter("SkipStart", true);
+		SlideAudioComponent->Play();
+	}
+	
 }
 
 void ASuraPawnPlayer::OnSlideEnd()
 {
-	SlideAudioComponent->FadeOut(0.2f, 0.f);
+	SlideAudioComponent->FadeOut(0.4f, 0.f);
+	SlideEndTime = GetWorld()->GetTimeSeconds();
 }
 
 void ASuraPawnPlayer::OnWallRun()
@@ -260,12 +272,16 @@ void ASuraPawnPlayer::OnWallRun()
 
 void ASuraPawnPlayer::OnWallRunEnd()
 {
-	WallRunAudioComponent->FadeOut(0.3f, 0.f);
+	WallRunAudioComponent->FadeOut(0.4f, 0.f);
 }
 
 void ASuraPawnPlayer::OnLand(float ZSpeed)
 {
-	UGameplayStatics::SpawnSoundAttached(PlayerSound_DataAsset->LandSound, GetRootComponent());
+	UE_LOG(LogTemp, Error, TEXT("ZSpeed: %.2f"), ZSpeed);
+	if (ZSpeed < -300.f)
+	{
+		UGameplayStatics::SpawnSoundAttached(PlayerSound_DataAsset->LandSound, GetRootComponent());
+	}
 }
 
 void ASuraPawnPlayer::HandleMoveInput(const FInputActionValue& Value)
@@ -457,26 +473,60 @@ void ASuraPawnPlayer::OnDash(FVector2D MovementInput)
 	if (MovementInput.IsZero())
 	{
 		ForwardDashEffectComponent->Activate();
+
+		if (BackwardDashEffectComponent->IsActive())
+			BackwardDashEffectComponent->Deactivate();
+		if (LeftDashEffectComponent->IsActive())
+			LeftDashEffectComponent->Deactivate();
+		if (RightDashEffectComponent->IsActive())
+			RightDashEffectComponent->Deactivate();
 	}
 	else
 	{
 		if (MovementInput.Y > 0)
 		{
 			ForwardDashEffectComponent->Activate();
+			
+			if (BackwardDashEffectComponent->IsActive())
+				BackwardDashEffectComponent->Deactivate();
+			if (LeftDashEffectComponent->IsActive())
+				LeftDashEffectComponent->Deactivate();
+			if (RightDashEffectComponent->IsActive())
+				RightDashEffectComponent->Deactivate();
 		}
 		else if (MovementInput.Y < 0)
 		{
 			BackwardDashEffectComponent->Activate();
+
+			if (ForwardDashEffectComponent->IsActive())
+				ForwardDashEffectComponent->Deactivate();
+			if (LeftDashEffectComponent->IsActive())
+				LeftDashEffectComponent->Deactivate();
+			if (RightDashEffectComponent->IsActive())
+				RightDashEffectComponent->Deactivate();
 		}
 		else
 		{
 			if (MovementInput.X < 0)
 			{
 				LeftDashEffectComponent->Activate();
+				if (ForwardDashEffectComponent->IsActive())
+					ForwardDashEffectComponent->Deactivate();
+				if (BackwardDashEffectComponent->IsActive())
+					BackwardDashEffectComponent->Deactivate();
+				if (RightDashEffectComponent->IsActive())
+					RightDashEffectComponent->Deactivate();
 			}
 			else if (MovementInput.X > 0)
 			{
 				RightDashEffectComponent->Activate();
+
+				if (ForwardDashEffectComponent->IsActive())
+					ForwardDashEffectComponent->Deactivate();
+				if (BackwardDashEffectComponent->IsActive())
+					BackwardDashEffectComponent->Deactivate();
+				if (LeftDashEffectComponent->IsActive())
+					LeftDashEffectComponent->Deactivate();
 			}
 		}
 	}

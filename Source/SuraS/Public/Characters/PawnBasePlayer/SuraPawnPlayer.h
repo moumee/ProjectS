@@ -226,6 +226,8 @@ protected:
 
 	UFUNCTION()
 	void OnCheckPointLoaded();
+
+	float SlideEndTime = 0.f;
 };
 
 

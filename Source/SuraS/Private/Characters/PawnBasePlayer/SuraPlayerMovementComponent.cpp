@@ -831,8 +831,9 @@ void USuraPlayerMovementComponent::TickAirborne(float DeltaTime)
 			bool bMantleFloorHit = GetWorld()->SweepSingleByChannel(MantleFloorHit, FloorHitStart, FloorHitEnd,
 				SuraPawnPlayer->GetActorQuat(), ECC_WorldStatic, PlayerCapsule, MantleParams);
 
-			DrawDebugCapsuleTraceSingle(GetWorld(), FloorHitStart, FloorHitEnd, PlayerCapsule.GetCapsuleRadius(),
-			PlayerCapsule.GetCapsuleHalfHeight(), EDrawDebugTrace::ForDuration, bMantleFloorHit && MantleFloorHit.IsValidBlockingHit(), MantleFloorHit, FLinearColor::Red, FLinearColor::Green, 1.f);
+			// DrawDebugCapsuleTraceSingle(GetWorld(), FloorHitStart, FloorHitEnd, PlayerCapsule.GetCapsuleRadius(),
+			// PlayerCapsule.GetCapsuleHalfHeight(), EDrawDebugTrace::ForDuration, bMantleFloorHit && MantleFloorHit.IsValidBlockingHit(),
+			// MantleFloorHit, FLinearColor::Red, FLinearColor::Green, 1.f);
 
 			if (bMantleFloorHit && MantleFloorHit.IsValidBlockingHit() && MantleFloorHit.ImpactNormal.Z >= MinWalkableFloorZ)
 			{
@@ -1680,9 +1681,9 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 			break;
 	}
 
-	if (OldState == EMovementState::EMS_Airborne && NewState == EMovementState::EMS_Move)
+	if (OldState == EMovementState::EMS_Airborne && (NewState == EMovementState::EMS_Move || NewState == EMovementState::EMS_Slide))
 	{
-		OnLandDelegate.Broadcast(Velocity.Z);
+		OnLandDelegate.Broadcast(LastVelocityBeforeLand.Z);
 	}
 }
 
@@ -1717,6 +1718,8 @@ bool USuraPlayerMovementComponent::IsGrounded()
 		return false;
 	}
 
+	LastVelocityBeforeLand = Velocity;
+	
 	return true;
 }
 

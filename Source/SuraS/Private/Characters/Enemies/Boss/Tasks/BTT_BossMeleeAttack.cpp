@@ -27,7 +27,6 @@ EBTNodeResult::Type UBTT_BossMeleeAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 	FBossMeleeAttackMemory* Memory = CastInstanceNodeMemory<FBossMeleeAttackMemory>(NodeMemory);
 	check(Memory);
 	Memory->Boss = Boss;
-
 	if (!Memory->Boss.IsValid()) return EBTNodeResult::Failed;
 	
 	Boss->SetCurrentState(EBossState::Attack);
@@ -57,9 +56,8 @@ void UBTT_BossMeleeAttack::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uin
 {
 	FBossMeleeAttackMemory* Memory = CastInstanceNodeMemory<FBossMeleeAttackMemory>(NodeMemory);
 
-	if (Memory->Boss.IsValid())
+	if (ASuraCharacterBossProto* Boss = Memory->Boss.Get())
 	{
-		ASuraCharacterBossProto* Boss = Memory->Boss.Get();
 		if (TaskResult == EBTNodeResult::Succeeded && Boss->GetCurrentState() != EBossState::Dead)
 		{
 			Boss->SetCurrentState(EBossState::Idle);

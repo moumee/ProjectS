@@ -45,13 +45,11 @@ EBTNodeResult::Type UBTT_RotateToTarget::ExecuteTask(UBehaviorTreeComponent& Own
 void UBTT_RotateToTarget::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	FRotateToTargetMemory* Memory = CastInstanceNodeMemory<FRotateToTargetMemory>(NodeMemory);
-	if (!Memory->IsValid())
-	{
-		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
-	}
 
 	APawn* OwningPawn = Memory->OwningPawn.Get();
 	AActor* TargetActor = Memory->TargetActor.Get();
+
+	if (!OwningPawn || !TargetActor) FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 	
 	FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(OwningPawn->GetActorLocation(),
 		TargetActor->GetActorLocation());

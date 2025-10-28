@@ -238,15 +238,15 @@ void USuraPlayerCameraComponent::OnWallJump()
 
 void USuraPlayerCameraComponent::OnLand(float ZVelocity)
 {
-	if (ZVelocity < -300.f)
+	if (ZVelocity < -2800.f)
 	{
 		PlayOneShotCameraShake(StrongLandCameraShake);
 	}
-	else if (ZVelocity < -150.f)
+	else if (ZVelocity < -1800.f)
 	{
 		PlayOneShotCameraShake(MediumLandCameraShake);
 	}
-	else if (ZVelocity <= 0.f)
+	else if (ZVelocity <= -800.f)
 	{
 		PlayOneShotCameraShake(LightLandCameraShake);
 	}
