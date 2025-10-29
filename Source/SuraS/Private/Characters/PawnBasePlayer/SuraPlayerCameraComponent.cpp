@@ -36,18 +36,18 @@ void USuraPlayerCameraComponent::BeginPlay()
 
 	InitCameraShakes();
 
-	MovementComponent->OnMove.AddUObject(this, &USuraPlayerCameraComponent::OnMove);
-	MovementComponent->OnAirborne.AddUObject(this, &USuraPlayerCameraComponent::OnAirborne);
-	MovementComponent->OnSlide.AddUObject(this, &USuraPlayerCameraComponent::OnSlide);
-	MovementComponent->OnWallRun.AddUObject(this, &USuraPlayerCameraComponent::OnWallRun);
+	MovementComponent->OnMoveDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnMove);
+	MovementComponent->OnAirborneDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnAirborne);
+	MovementComponent->OnSlideDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnSlide);
+	MovementComponent->OnWallRunDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnWallRun);
 	
-	MovementComponent->OnLand.AddUObject(this, &USuraPlayerCameraComponent::OnLand);
-	MovementComponent->OnPrimaryJump.AddUObject(this, &USuraPlayerCameraComponent::OnPrimaryJump);
-	MovementComponent->OnDoubleJump.AddUObject(this, &USuraPlayerCameraComponent::OnDoubleJump);
-	MovementComponent->OnWallJump.AddUObject(this, &USuraPlayerCameraComponent::OnWallJump);
-	MovementComponent->OnMantle.AddUObject(this, &USuraPlayerCameraComponent::OnMantle);
-	MovementComponent->OnDash.AddUObject(this, &USuraPlayerCameraComponent::OnDash);
-	MovementComponent->OnDowned.AddUObject(this, &USuraPlayerCameraComponent::OnDowned);
+	MovementComponent->OnLandDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnLand);
+	MovementComponent->OnPrimaryJumpDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnPrimaryJump);
+	MovementComponent->OnDoubleJumpDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnDoubleJump);
+	MovementComponent->OnWallJumpDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnWallJump);
+	MovementComponent->OnMantleDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnMantle);
+	MovementComponent->OnDashDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnDash);
+	MovementComponent->OnDownedDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnDowned);
 	
 	DownedFloorImpactDelegate.BindWeakLambda(this, [&]
 	{
@@ -238,15 +238,15 @@ void USuraPlayerCameraComponent::OnWallJump()
 
 void USuraPlayerCameraComponent::OnLand(float ZVelocity)
 {
-	if (ZVelocity < -300.f)
+	if (ZVelocity < -2800.f)
 	{
 		PlayOneShotCameraShake(StrongLandCameraShake);
 	}
-	else if (ZVelocity < -150.f)
+	else if (ZVelocity < -1800.f)
 	{
 		PlayOneShotCameraShake(MediumLandCameraShake);
 	}
-	else if (ZVelocity <= 0.f)
+	else if (ZVelocity <= -800.f)
 	{
 		PlayOneShotCameraShake(LightLandCameraShake);
 	}

@@ -19,20 +19,18 @@ class SURAS_API UANS_BossAttackArea : public UAnimNotifyState
 {
 	GENERATED_BODY()
 
-private:
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<ASuraCharacterBossProto> BossRef;
-
+	TWeakObjectPtr<ASuraCharacterBossProto> Boss;
+	
 	UPROPERTY()
 	TArray<ASuraBossAttackArea*> AttackAreas;
 
 	bool bHasHit = false;
 
+	float DamageAmount = 0.f;
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName AttackAreaTag;
-
-	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EDamageType DamageType;

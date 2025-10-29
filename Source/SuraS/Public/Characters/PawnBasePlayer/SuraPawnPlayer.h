@@ -9,6 +9,7 @@
 #include "Interfaces/PlayerInterface.h"
 #include "SuraPawnPlayer.generated.h"
 
+class UPlayerSound_DataAsset;
 class UACHitScreenManager;
 class UACPlayerHealthComponent;
 class UNiagaraComponent;
@@ -96,8 +97,19 @@ public:
 
 	virtual void RequestResetModification() override;
 
+	UAudioComponent* GetWallRunAudioComponent() const { return WallRunAudioComponent; }
+	UAudioComponent* GetSlideAudioComponent() const { return SlideAudioComponent; }
+
 protected:
 
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UAudioComponent> WallRunAudioComponent;
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UAudioComponent> SlideAudioComponent;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UPlayerSound_DataAsset> PlayerSound_DataAsset;
+	
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UCapsuleComponent> CapsuleComponent;
 
@@ -176,7 +188,24 @@ protected:
 	FVector2D PlayerLookInputVector2D; // <WeaponSystem>
 
 	FVector DefaultCameraRelativeLocation;
-	
+
+	UFUNCTION()
+	void OnPrimaryJump();
+	UFUNCTION()
+	void OnDoubleJump();
+	UFUNCTION()
+	void OnWallJump();
+	UFUNCTION()
+	void OnSlide();
+	UFUNCTION()
+	void OnSlideEnd();
+	UFUNCTION()
+	void OnWallRun();
+	UFUNCTION()
+	void OnWallRunEnd();
+	UFUNCTION()
+	void OnLand(float ZSpeed);
+
 	
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);
@@ -190,11 +219,15 @@ protected:
 	void OnDamaged();
 	void OnDeath();
 
+	UFUNCTION()
 	void OnDash(FVector2D MovementInput);
+	UFUNCTION()
 	void OnDashEnd();
 
 	UFUNCTION()
 	void OnCheckPointLoaded();
+
+	float SlideEndTime = 0.f;
 };
 
 

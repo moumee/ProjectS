@@ -29,13 +29,20 @@ EBTNodeResult::Type UBTT_ChargeAttack::ExecuteTask(UBehaviorTreeComponent& Owner
 		UAnimMontage* AttackReadyAnimation = CachedCharger->GetChargeReadyAnimation();
 		float AttackReadyAnimDuration = CachedCharger->PlayAnimMontage(AttackReadyAnimation);
 
+		TWeakObjectPtr<ASuraCharacterEnemyCharger> WeakCharger = CachedCharger;
+		TWeakObjectPtr<UBTT_ChargeAttack> WeakThis = this;
 		FTimerHandle AnimCompleteHandle;
-		GetWorld()->GetTimerManager().SetTimer(
-			AnimCompleteHandle,
-			FTimerDelegate::CreateWeakLambda(this, [this]() { OnAttackReadyEnded(); }),
-		AttackReadyAnimDuration,
-		false
-		);
+
+		GetWorld()->GetTimerManager().SetTimer(AnimCompleteHandle, [WeakThis, WeakCharger]()
+		{
+			if (auto Task = WeakThis.Get())
+			{
+				if (auto Charger = WeakCharger.Get())
+				{
+					Task->OnAttackReadyEnded();
+				}
+			}
+		}, AttackReadyAnimDuration, false);
 
 		return EBTNodeResult::InProgress;
 	}
