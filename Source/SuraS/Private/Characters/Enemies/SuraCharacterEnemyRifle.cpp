@@ -4,6 +4,7 @@
 #include "Characters/Enemies/SuraCharacterEnemyRifle.h"
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
 #include "Weapons/Firearms/SuraFirearmRifle.h"
 #include "Weapons/Projectiles/EnemyProjectileRifleBullet.h"
@@ -69,8 +70,38 @@ void ASuraCharacterEnemyRifle::Attack(ASuraPawnPlayer* Player)
 		
 		FVector LaunchVelocity;
 		float TimeToTarget = FVector::Dist(GetActorLocation(), Player->GetActorLocation()) / Projectile->GetProjectileMovement()->InitialSpeed;
-		
-		UGameplayStatics::SuggestProjectileVelocity_MovingTarget(this, LaunchVelocity, Projectile->GetActorLocation(), Player, FVector(0.f, 0.f, 40.f), 0.f, TimeToTarget);
+
+		// rnadom between aim or aimless
+		if (UKismetMathLibrary::RandomIntegerInRange(0, 1))
+		{
+			UGameplayStatics::SuggestProjectileVelocity_MovingTarget(
+				this,
+				LaunchVelocity,
+				Projectile->GetActorLocation(),
+				Player,
+				FVector(0.f, 0.f, 40.f),
+				0.f,
+				TimeToTarget
+				);
+		}
+		else
+		{
+			FVector Offset = FVector(0.f, 0.f, 100.f);
+			FVector TargetLocation = Player->GetActorLocation() - Offset;
+			
+			UGameplayStatics::FSuggestProjectileVelocityParameters ProjectileParams = UGameplayStatics::FSuggestProjectileVelocityParameters(
+				this,
+				GetActorLocation(),
+				TargetLocation,
+				Projectile->GetProjectileMovement()->InitialSpeed
+				);
+			ProjectileParams.TraceOption = ESuggestProjVelocityTraceOption::DoNotTrace;
+			
+			UGameplayStatics::SuggestProjectileVelocity(
+				ProjectileParams,
+				LaunchVelocity
+				);
+		}
 		
 		Projectile->LaunchProjectileWithVelocity(LaunchVelocity);
 	}

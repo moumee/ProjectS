@@ -483,6 +483,11 @@ void ASuraCharacterEnemyBase::BindKillLogOnDeath() const
 					KLM->AddKillLog(Player->GetName(), this->GetName());
 				}
 			}
+
+			if (DeathSound)
+			{
+				UGameplayStatics::PlaySound2D(GetWorld(), DeathSound);
+			}
 		});
 	}
 }

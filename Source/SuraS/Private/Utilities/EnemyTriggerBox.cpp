@@ -4,6 +4,7 @@
 #include "Utilities/EnemyTriggerBox.h"
 
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
+#include "Characters/Enemies/SuraCharacterEnemyTurret.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "Characters/PawnBAsePlayer/SuraPawnPlayer.h"
 
