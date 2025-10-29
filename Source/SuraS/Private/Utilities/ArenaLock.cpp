@@ -5,12 +5,16 @@
 
 #include "ActorComponents/DamageComponent/ACEnemyDamageSystem.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
-#include "Components/BoxComponent.h"
 
 AArenaLock::AArenaLock()
 {
-	ArenaBox = CreateDefaultSubobject<UBoxComponent>(FName("ArenaBox"));
-	RootComponent = ArenaBox;
+	ArenaMesh = CreateDefaultSubobject<UStaticMeshComponent>(FName("ArenaMesh"));
+	RootComponent = ArenaMesh;
+	ArenaMesh->Mobility = EComponentMobility::Static;
+	ArenaMesh->SetSimulatePhysics(false);
+	ArenaMesh->SetCollisionProfileName(TEXT("BlockAll"));
+
+	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>("DissolveColorTimeline");
 }
 
 void AArenaLock::BeginPlay()
@@ -27,6 +31,17 @@ void AArenaLock::BeginPlay()
 			});
 		}
 	}
+
+	if (DissolveColorCurve)
+	{
+		OnDissolveColorTimelineFloat.BindUFunction(this, FName("UpdateDissolveColor"));
+		DissolveTimeline->AddInterpFloat(DissolveColorCurve, OnDissolveColorTimelineFloat);
+	}
+}
+
+void AArenaLock::UpdateDissolveColor(float Alpha)
+{
+	ArenaMesh->SetScalarParameterValueOnMaterials("DissolveAlpha", Alpha);
 }
 
 void AArenaLock::OnEnemyDeath(ASuraCharacterEnemyBase* Enemy)
@@ -36,6 +51,19 @@ void AArenaLock::OnEnemyDeath(ASuraCharacterEnemyBase* Enemy)
 		ArenaEnemies.Remove(Enemy);
 
 		if (ArenaEnemies.IsEmpty())
-			Destroy();
+		{
+			DissolveTimeline->PlayFromStart();
+
+			FTimerHandle DeathHandle;
+			
+			GetWorldTimerManager().SetTimer(
+				DeathHandle,
+				FTimerDelegate::CreateWeakLambda(this, [this]()
+				{
+					Destroy();
+				}),
+			2,
+		false);
+		}
 	}
 }

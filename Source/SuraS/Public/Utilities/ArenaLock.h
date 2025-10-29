@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/TimelineComponent.h"
 #include "GameFramework/Actor.h"
 #include "ArenaLock.generated.h"
 
 class ASuraCharacterEnemyBase;
-class UBoxComponent;
 
 UCLASS()
 class SURAS_API AArenaLock : public AActor
@@ -22,10 +22,20 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	void UpdateDissolveColor(float Alpha);
+
+	UPROPERTY(VisibleDefaultsOnly)
+	TObjectPtr<UTimelineComponent> DissolveTimeline;
+	FOnTimelineFloat OnDissolveColorTimelineFloat;
+
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TriggerEnemies")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ArenaLock")
 	TArray<ASuraCharacterEnemyBase*> ArenaEnemies;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "TriggerEnemies")
-	UBoxComponent* ArenaBox;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "ArenaLock")
+	TObjectPtr<UStaticMeshComponent> ArenaMesh;
+
+	UPROPERTY(EditDefaultsOnly, Category = "ArenaLock")
+	TObjectPtr<UCurveFloat> DissolveColorCurve;
 };
