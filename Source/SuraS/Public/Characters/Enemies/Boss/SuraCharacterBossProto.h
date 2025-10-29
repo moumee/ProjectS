@@ -59,6 +59,10 @@ public:
 
 	void GetAttackAreasByTag(FName Tag, TArray<ASuraBossAttackArea*>& OutAreas);
 
+	float GetMeleeDamageAmountByTag(FName Tag) const;
+
+	float GetRangedDamageAmount() const;
+
 	FBossMeleeInfo GetMeleeAttackMontageAndCooldownByTag(FName Tag);
 
 	float GetRangedAttackTargetingDuration() const { return RangedAttack.TargetingDuration; }
@@ -82,6 +86,7 @@ public:
 protected:
 
 	virtual void BeginPlay() override;
+
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UNiagaraSystem> LaserNiagaraSystem;

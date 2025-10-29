@@ -23,6 +23,9 @@ struct FBossMeleeAttack
 
 	UPROPERTY(EditAnywhere, Category="Cooldown")
 	float Cooldown = 5.f;
+
+	UPROPERTY(EditAnywhere, Category="Damage")
+	float Damage = 10.f;
 };
 
 USTRUCT()
@@ -38,6 +41,9 @@ struct FBossRangedAttack
 
 	UPROPERTY(EditAnywhere, Category="Duration")
 	float TargetingDuration = 2.f;
+
+	UPROPERTY(EditAnywhere, Category="Damage")
+	float Damage = 5.f;
 };
 
 USTRUCT()

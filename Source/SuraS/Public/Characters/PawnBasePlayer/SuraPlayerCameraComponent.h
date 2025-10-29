@@ -21,7 +21,7 @@ class SURAS_API USuraPlayerCameraComponent : public UActorComponent
 public:	
 	USuraPlayerCameraComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	void OnDowned();
+	
 	void PlayOneShotCameraShake(const TSubclassOf<UCameraShakeBase>& InShake);
 	void OnDamaged();
 
@@ -145,19 +145,29 @@ protected:
 
 	void InterpCameraData(const FMovementCameraData& InData, float DeltaTime);
 
+	UFUNCTION()
 	void OnAirborne();
+	UFUNCTION()
 	void OnMove();
+	UFUNCTION()
 	void OnWallRun();
+	UFUNCTION()
 	void OnSlide();
 
-
+	UFUNCTION()
 	void OnLand(float ZVelocity);
+	UFUNCTION()
 	void OnPrimaryJump();
+	UFUNCTION()
 	void OnDoubleJump();
+	UFUNCTION()
 	void OnWallJump();
+	UFUNCTION()
 	void OnMantle();
+	UFUNCTION()
 	void OnDash(FVector2D MovementInput);
-	
+	UFUNCTION()
+	void OnDowned();
 
 	void InitCameraShakes();
 	

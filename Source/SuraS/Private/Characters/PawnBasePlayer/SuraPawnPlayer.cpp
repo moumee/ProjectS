@@ -19,7 +19,9 @@
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
+#include "Characters/Enemies/Boss/SuraCharacterBossProto.h"
 #include "Characters/PawnBasePlayer/PlayerSound_DataAsset.h"
+#include "Components/AudioComponent.h"
 #include "GameModes/SuraLevelGameMode.h"
 #include "Instance/SuraCheckpointSubsystem.h"
 #include "Kismet/GameplayStatics.h"
@@ -95,6 +97,14 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	RightDashEffectComponent = CreateDefaultSubobject<UNiagaraComponent>("Right Dash Effect Component");
 	RightDashEffectComponent->SetupAttachment(Camera);
 	RightDashEffectComponent->SetAutoActivate(false);
+
+	WallRunAudioComponent = CreateDefaultSubobject<UAudioComponent>("WallRunAudioComponent");
+	WallRunAudioComponent->SetupAttachment(RootComponent);
+	WallRunAudioComponent->bAutoActivate = false;
+
+	SlideAudioComponent = CreateDefaultSubobject<UAudioComponent>("SlideAudioComponent");
+	SlideAudioComponent->SetupAttachment(RootComponent);
+	SlideAudioComponent->bAutoActivate = false;
 }
 
 void ASuraPawnPlayer::BeginPlay()
@@ -106,13 +116,27 @@ void ASuraPawnPlayer::BeginPlay()
 		CheckpointSubsystem->OnCheckpointLoadedDelegate.AddDynamic(this, &ThisClass::OnCheckPointLoaded);
 	}
 
+	// Crash the game if there is no data asset assigned
+	checkf(PlayerSound_DataAsset, TEXT("Player sound data asset is not assigned"));
+
+	WallRunAudioComponent->SetSound(PlayerSound_DataAsset->WallRunSound);
+	SlideAudioComponent->SetSound(PlayerSound_DataAsset->SlideSound);
+
 	
 	GetDamageSystemComponent()->OnDamaged.AddUObject(CameraMovementComponent, &USuraPlayerCameraComponent::OnDamaged);
 	GetDamageSystemComponent()->OnDamaged.AddUObject(this, &ASuraPawnPlayer::OnDamaged);
 	GetDamageSystemComponent()->OnDeath.AddUObject(this, &ASuraPawnPlayer::OnDeath);
 
-	GetPlayerMovementComponent()->OnDash.AddUObject(this, &ASuraPawnPlayer::OnDash);
-	GetPlayerMovementComponent()->OnDashEnd.AddUObject(this, &ASuraPawnPlayer::OnDashEnd);
+	GetPlayerMovementComponent()->OnPrimaryJumpDelegate.AddDynamic(this, &ASuraPawnPlayer::OnPrimaryJump);
+	GetPlayerMovementComponent()->OnDoubleJumpDelegate.AddDynamic(this, &ASuraPawnPlayer::OnDoubleJump);
+	GetPlayerMovementComponent()->OnWallJumpDelegate.AddDynamic(this, &ASuraPawnPlayer::OnWallJump);
+	GetPlayerMovementComponent()->OnWallRunDelegate.AddDynamic(this, &ASuraPawnPlayer::OnWallRun);
+	GetPlayerMovementComponent()->OnWallRunEndDelegate.AddDynamic(this, &ASuraPawnPlayer::OnWallRunEnd);
+	GetPlayerMovementComponent()->OnSlideDelegate.AddDynamic(this, &ASuraPawnPlayer::OnSlide);
+	GetPlayerMovementComponent()->OnSlideEndDelegate.AddDynamic(this, &ASuraPawnPlayer::OnSlideEnd);
+	GetPlayerMovementComponent()->OnLandDelegate.AddDynamic(this, &ASuraPawnPlayer::OnLand);
+	GetPlayerMovementComponent()->OnDashDelegate.AddDynamic(this, &ASuraPawnPlayer::OnDash);
+	GetPlayerMovementComponent()->OnDashEndDelegate.AddDynamic(this, &ASuraPawnPlayer::OnDashEnd);
 
 	FTimerDelegate PlayerHealthCheckTimerDelegate;
 	PlayerHealthCheckTimerDelegate.BindUObject(this, &ASuraPawnPlayer::CheckPlayerHealth);
@@ -201,6 +225,62 @@ void ASuraPawnPlayer::CheckPlayerHealth()
 		// Restore the number of max tokens
 		AttackTokensComponent->SetMaxEnemyAttackTokens(8);
 		AttackTokensComponent->SetMaxEnemyPursuitTokens(6);
+	}
+}
+
+void ASuraPawnPlayer::OnPrimaryJump()
+{
+	UGameplayStatics::SpawnSoundAttached(PlayerSound_DataAsset->PrimaryJumpSound, GetRootComponent());
+}
+
+void ASuraPawnPlayer::OnDoubleJump()
+{
+	UGameplayStatics::SpawnSoundAttached(PlayerSound_DataAsset->DoubleJumpSound, GetRootComponent());
+}
+
+void ASuraPawnPlayer::OnWallJump()
+{
+	UGameplayStatics::SpawnSoundAttached(PlayerSound_DataAsset->PrimaryJumpSound, GetRootComponent());
+}
+
+void ASuraPawnPlayer::OnSlide()
+{
+	float TimeSinceSlideEnd = GetWorld()->GetTimeSeconds() - SlideEndTime;
+	if (TimeSinceSlideEnd > 0.75f)
+	{
+		SlideAudioComponent->SetBoolParameter("SkipStart", false);
+		SlideAudioComponent->Play();
+	}
+	else
+	{
+		SlideAudioComponent->SetBoolParameter("SkipStart", true);
+		SlideAudioComponent->Play();
+	}
+	
+}
+
+void ASuraPawnPlayer::OnSlideEnd()
+{
+	SlideAudioComponent->FadeOut(0.4f, 0.f);
+	SlideEndTime = GetWorld()->GetTimeSeconds();
+}
+
+void ASuraPawnPlayer::OnWallRun()
+{
+	WallRunAudioComponent->Play();
+}
+
+void ASuraPawnPlayer::OnWallRunEnd()
+{
+	WallRunAudioComponent->FadeOut(0.4f, 0.f);
+}
+
+void ASuraPawnPlayer::OnLand(float ZSpeed)
+{
+	UE_LOG(LogTemp, Error, TEXT("ZSpeed: %.2f"), ZSpeed);
+	if (ZSpeed < -300.f)
+	{
+		UGameplayStatics::SpawnSoundAttached(PlayerSound_DataAsset->LandSound, GetRootComponent());
 	}
 }
 
@@ -298,30 +378,50 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 	}
 
 	GetPlayerMovementComponent()->NotifyDamageData(DamageData.DamageType, DamageData.ImpulseDirection, DamageData.ImpulseMagnitude);
-	
-	switch (DamageData.DamageType)
+
+	if (DamageCauser)
 	{
-		case EDamageType::Charge:
+		USoundBase* HitSound = nullptr;
+		if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(DamageCauser))
+		{
+			FName EnemyType = Enemy->GetEnemyType();
+			if (EnemyType == "Melee")
 			{
-				if (ensureAlways(PlayerSound_DataAsset))
-				{
-					USoundBase* HitSound = PlayerSound_DataAsset->DownedHitSound;
-					if (!HitSound) break;
-					UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
-					break;
-				}
+				HitSound = PlayerSound_DataAsset->MeleeEnemyHitSound;
 			}
-		default:
+			else if (EnemyType == "Rifle")
 			{
-				if (ensureAlways(PlayerSound_DataAsset))
-				{
-					USoundBase* HitSound = PlayerSound_DataAsset->NormalHitSound;
-					if (!HitSound) break;
-					UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
-					break;
-				}
+				HitSound = PlayerSound_DataAsset->RifleEnemyHitSound;
 			}
+			else if (EnemyType == "Charger")
+			{
+				HitSound = PlayerSound_DataAsset->ChargerEnemyHitSound;
+			}
+			else if (EnemyType == "Turret")
+			{
+				HitSound = PlayerSound_DataAsset->TurretEnemyHitSound;
+			}
+		}
+		else if (ASuraCharacterBossProto* Boss = Cast<ASuraCharacterBossProto>(DamageCauser))
+		{
+			switch (DamageData.DamageType)
+			{
+				case EDamageType::Charge:
+					HitSound = PlayerSound_DataAsset->BossDownedHitSound;
+					break;
+				default:
+					HitSound = PlayerSound_DataAsset->BossNormalHitSound;
+					break;
+			}
+		}
+
+		if (HitSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, GetActorLocation());
+		}
 	}
+	
+	
 	
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }
@@ -373,26 +473,60 @@ void ASuraPawnPlayer::OnDash(FVector2D MovementInput)
 	if (MovementInput.IsZero())
 	{
 		ForwardDashEffectComponent->Activate();
+
+		if (BackwardDashEffectComponent->IsActive())
+			BackwardDashEffectComponent->Deactivate();
+		if (LeftDashEffectComponent->IsActive())
+			LeftDashEffectComponent->Deactivate();
+		if (RightDashEffectComponent->IsActive())
+			RightDashEffectComponent->Deactivate();
 	}
 	else
 	{
 		if (MovementInput.Y > 0)
 		{
 			ForwardDashEffectComponent->Activate();
+			
+			if (BackwardDashEffectComponent->IsActive())
+				BackwardDashEffectComponent->Deactivate();
+			if (LeftDashEffectComponent->IsActive())
+				LeftDashEffectComponent->Deactivate();
+			if (RightDashEffectComponent->IsActive())
+				RightDashEffectComponent->Deactivate();
 		}
 		else if (MovementInput.Y < 0)
 		{
 			BackwardDashEffectComponent->Activate();
+
+			if (ForwardDashEffectComponent->IsActive())
+				ForwardDashEffectComponent->Deactivate();
+			if (LeftDashEffectComponent->IsActive())
+				LeftDashEffectComponent->Deactivate();
+			if (RightDashEffectComponent->IsActive())
+				RightDashEffectComponent->Deactivate();
 		}
 		else
 		{
 			if (MovementInput.X < 0)
 			{
 				LeftDashEffectComponent->Activate();
+				if (ForwardDashEffectComponent->IsActive())
+					ForwardDashEffectComponent->Deactivate();
+				if (BackwardDashEffectComponent->IsActive())
+					BackwardDashEffectComponent->Deactivate();
+				if (RightDashEffectComponent->IsActive())
+					RightDashEffectComponent->Deactivate();
 			}
 			else if (MovementInput.X > 0)
 			{
 				RightDashEffectComponent->Activate();
+
+				if (ForwardDashEffectComponent->IsActive())
+					ForwardDashEffectComponent->Deactivate();
+				if (BackwardDashEffectComponent->IsActive())
+					BackwardDashEffectComponent->Deactivate();
+				if (LeftDashEffectComponent->IsActive())
+					LeftDashEffectComponent->Deactivate();
 			}
 		}
 	}
