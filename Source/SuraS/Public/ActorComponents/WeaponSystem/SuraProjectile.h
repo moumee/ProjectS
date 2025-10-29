@@ -122,10 +122,12 @@ protected:
 
 public:	
 	ASuraProjectile();
-	void InitializeProjectile(AActor* Owner, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0, bool HitScan = false, bool AutoAim = false);
+	void InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0, bool HitScan = false, bool AutoAim = false);
+	void InitProjectile_Pool(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0, bool HitScan = false, bool AutoAim = false);
 	void InitPhysicsProjectile();
 	void InitHitScan();
 	void LoadProjectileData();
+	void LoadProjectileData_Pool();
 	void SetHomingTarget(bool bIsHoming, AActor* Target);
 	void LaunchProjectile();
 
@@ -280,11 +282,6 @@ public:
 
 protected:
 	void UpdateProjectileMovement(float DeltaTime);
-
-
-
-
-
 #pragma endregion
 
 };

@@ -53,28 +53,30 @@ void UANS_BossAttackArea::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequ
 			for (const FOverlapResult& Result : Hits)
 			{
 				TWeakObjectPtr<AActor> WeakHitActor = Result.GetActor();
-				if (!WeakHitActor.IsValid()) continue;
-				AActor* HitActor = WeakHitActor.Get();
-				if (IPlayerInterface* PlayerInterface = Cast<IPlayerInterface>(HitActor))
+				if (AActor* HitActor = WeakHitActor.Get())
 				{
-					bHasHit = true;
-					GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Hit"));
-					FDamageData DamageData;
-					DamageData.DamageType = DamageType;
-					DamageData.DamageAmount = DamageAmount;
-
-					if (DamageType == EDamageType::Charge)
+					if (IPlayerInterface* PlayerInterface = Cast<IPlayerInterface>(HitActor))
 					{
-						GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Charge Hit"));
-						DamageData.ImpulseMagnitude = 1000.f;
-						DamageData.ImpulseDirection = (HitActor->GetActorLocation() - MeshComp->GetOwner()->GetActorLocation()).GetSafeNormal2D();
-					}
+						bHasHit = true;
+						GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Hit"));
+						FDamageData DamageData;
+						DamageData.DamageType = DamageType;
+						DamageData.DamageAmount = DamageAmount;
 
-					if (IDamageable* Damageable = Cast<IDamageable>(HitActor))
-					{
-						Damageable->TakeDamage(DamageData, MeshComp->GetOwner());
+						if (DamageType == EDamageType::Charge)
+						{
+							GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Charge Hit"));
+							DamageData.ImpulseMagnitude = 1000.f;
+							DamageData.ImpulseDirection = (HitActor->GetActorLocation() - MeshComp->GetOwner()->GetActorLocation()).GetSafeNormal2D();
+						}
+
+						if (IDamageable* Damageable = Cast<IDamageable>(HitActor))
+						{
+							Damageable->TakeDamage(DamageData, MeshComp->GetOwner());
+						}
 					}
 				}
+				
 			}
 		}
 	}

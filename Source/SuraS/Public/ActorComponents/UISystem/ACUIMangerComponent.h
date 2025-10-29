@@ -87,10 +87,10 @@ public:
 		return DTWeapon;	
 	}
 
-	UDataTable* GetWSCDataTable() const // <JaeHyeong>
-	{
-		return DTWeaponSystemComponent;
-	}
+	//UDataTable* GetWSCDataTable() const // <JaeHyeong>
+	//{
+	//	return DTWeaponSystemComponent;
+	//}
 
 	UDataTable* GetUIDataTable() const
 	{
@@ -112,8 +112,8 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
 	UDataTable* DTWeapon;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Data") // <JaeHyeong>
-	UDataTable* DTWeaponSystemComponent;
+	//UPROPERTY(EditDefaultsOnly, Category = "Data") // <JaeHyeong>
+	//UDataTable* DTWeaponSystemComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
 	UDataTable* DTUISetting;

@@ -78,7 +78,7 @@ ASuraProjectile::ASuraProjectile()
 
 	ProjectileMesh->SetCastShadow(false);
 
-	InitialLifeSpan = 10.0f;
+	InitialLifeSpan = 10.0f; //MEMO: Pooling을 위해 제거
 }
 
 void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable, bool HitScan, bool AutoAim)
@@ -161,6 +161,76 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 	}
 }
 
+void ASuraProjectile::InitProjectile_Pool(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable, bool HitScan, bool AutoAim)
+{
+	//TODO: LifeSpan 적용해야 할 듯 함
+
+
+	if (IsValid(OwnerWeapon))
+	{
+		Weapon = OwnerWeapon;
+	}
+
+	if (IsValid(OwnerOfProjectile))
+	{
+		ProjectileOwner = OwnerOfProjectile;
+
+		LoadProjectileData();
+		SpawnTrailEffect();
+	}
+
+	if (AutoAim)
+	{
+		bIsHitScan = false;
+		NumPenetrableObjects = 0; //TODO: ???
+	}
+	else
+	{
+		if (HitScan)
+		{
+			bIsHitScan = HitScan;
+			NumPenetrableObjects = NumPenetrable;
+			InitHitScan();
+		}
+		else
+		{
+			if (NumPenetrable > 0 || bCanPenetrate)
+			{
+				InitPhysicsProjectile();
+				NumPenetrableObjects = NumPenetrable;
+			}
+			else
+			{
+				CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
+			}
+		}
+	}
+
+	if (bCanSimpleBounce)
+	{
+		// MEMO: Test
+		ProjectileMovement->bShouldBounce = true;
+		ProjectileMovement->Bounciness = 0.6f;    //(0~1)
+		ProjectileMovement->Friction = 0.2f;
+		ProjectileMovement->BounceVelocityStopSimulatingThreshold = 10.0f;
+		ProjectileMovement->bRotationFollowsVelocity = true;
+	}
+
+	AdditionalDamage = additonalDamage;
+
+	if (AdditionalRadius > 0.f)
+	{
+		ProjectileRadius = InitialRadius + AdditionalRadius;
+		CollisionComp->SetSphereRadius(InitialRadius + AdditionalRadius);
+	}
+
+	//TODO: Set Damage Decay Timer
+	if (DamageDecayTime > 0)
+	{
+		GetWorld()->GetTimerManager().SetTimer(DamageDecayTimer, this, &ASuraProjectile::ApplyDamageDecay, DamageDecayTime, false);
+	}
+}
+
 void ASuraProjectile::InitPhysicsProjectile()
 {
 	CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
@@ -187,8 +257,74 @@ void ASuraProjectile::LoadProjectileData()
 		ExplosionEffect = ProjectileData->ExplosionEffect;
 		DecalMaterial = ProjectileData->HoleDecal;
 
-		InitialLifeSpan = ProjectileData->InitialLifeSpan; //TODO �̷��Դ� ������ �ȵ�. ���� ���
-		SetLifeSpan(ProjectileData->InitialLifeSpan);
+		InitialLifeSpan = ProjectileData->InitialLifeSpan;
+		SetLifeSpan(ProjectileData->InitialLifeSpan); //TODO: Pool 버전에서는 LifeSpan용 함수 따로 만들어서 Deactive 시켜야 할 듯 함
+
+		// <Sound>
+		HitSound_Default = ProjectileData->HitSound_Default;
+		HitSound_Metal = ProjectileData->HitSound_Metal;
+		HitSound_Glass = ProjectileData->HitSound_Glass;
+		HitSound_Enemy = ProjectileData->HitSound_Enemy;
+		HitSound_Energy = ProjectileData->HitSound_Energy;
+
+		// <Damage>
+		DefaultDamage = ProjectileData->DefaultDamage;
+		HeadShotAdditionalDamage = ProjectileData->HeadShotAdditionalDamage;
+
+		// <Explosive>
+		bIsExplosive = ProjectileData->bIsExplosive;
+		bVisualizeExplosionRadius = ProjectileData->bVisualizeExplosionRadius;
+		MaxExplosiveDamage = ProjectileData->MaxExplosiveDamage;
+		MaxExplosionRadius = ProjectileData->MaxExplosionRadius;
+
+		// <Homing>
+		HomingAccelerationMagnitude = ProjectileData->HomingAccelerationMagnitude;
+
+		// <Velocity>
+		ProjectileMovement->InitialSpeed = ProjectileData->InitialSpeed;
+		ProjectileMovement->MaxSpeed = ProjectileData->MaxSpeed;
+		PM_Vel = ProjectileData->MaxSpeed;
+		HitScanProjectileVelocity = ProjectileData->InitialSpeed;
+
+		InitialRadius = ProjectileData->InitialRadius;
+		CollisionComp->SetSphereRadius(InitialRadius);
+
+		// <Penetration>
+		bCanPenetrate = ProjectileData->bCanPenetrate; //legacy
+
+		// <Impulse>
+		bCanApplyImpulseToEnemy = ProjectileData->bCanApplyImpulseToEnemy;
+		HitImpulseToEnemy = ProjectileData->HitImpulseToEnemy;
+
+		// <Ricochet>
+		bCanSimpleBounce = ProjectileData->bCanSimpleBounce;
+		MaxRicochetCount = ProjectileData->MaxRicochetCount;
+		MinIncidenceAngle = ProjectileData->MinIncidenceAngle;
+
+		// <HitScan>
+		bDebugHitScan = ProjectileData->bDebugHitScan;
+
+		// <DamageDecay>
+		DamageDecayTime = ProjectileData->DamageDecayTime;
+		DamageDecayRate = ProjectileData->DamageDecayRate;
+
+		// <CustomProjectileMovement>
+		PM_Cam_To_d_Len = ProjectileData->PM_Cam_To_d_Len;
+	}
+}
+
+void ASuraProjectile::LoadProjectileData_Pool()
+{
+	ProjectileData = ProjectileDataTableHandle.GetRow<FProjectileData>("");
+	if (ProjectileData)
+	{
+		// <Effect>
+		TrailEffect = ProjectileData->TrailEffect;
+		ImpactEffect = ProjectileData->ImpactEffect;
+		ExplosionEffect = ProjectileData->ExplosionEffect;
+		DecalMaterial = ProjectileData->HoleDecal;
+
+		InitialLifeSpan = ProjectileData->InitialLifeSpan;
 
 		// <Sound>
 		HitSound_Default = ProjectileData->HitSound_Default;
@@ -460,6 +596,7 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 				
 				if (HeadShotAdditionalDamage > 0.f && CheckHeadOvelap(OtherActor, SweepResult))
 				{
+					SpawnImpactEffect(SweepResult.ImpactPoint, SweepResult.ImpactNormal.Rotation());
 					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(SweepResult.PhysMaterial.Get()), SweepResult.ImpactNormal, SweepResult.ImpactPoint);
 
 					if (OnHeadShot.IsBound())
@@ -469,6 +606,7 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 				}
 				else
 				{
+					SpawnImpactEffect(SweepResult.ImpactPoint, SweepResult.ImpactNormal.Rotation());
 					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, SweepResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(SweepResult.PhysMaterial.Get()), SweepResult.ImpactNormal, SweepResult.ImpactPoint);
 					//UE_LOG(LogTemp, Error, TEXT("Projectile Overlapped!!!"));
 					if (Cast<ACharacter>(OtherActor))
@@ -811,6 +949,7 @@ void ASuraProjectile::PerformHitScan_Upgrade(FVector StartLocation, FVector Trac
 
 						if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(HitResult))
 						{
+							SpawnImpactEffect(HitResult.ImpactPoint, (-HitResult.ImpactNormal).Rotation());
 							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
 								EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
 
@@ -821,6 +960,7 @@ void ASuraProjectile::PerformHitScan_Upgrade(FVector StartLocation, FVector Trac
 						}
 						else
 						{
+							SpawnImpactEffect(HitResult.ImpactPoint, (-HitResult.ImpactNormal).Rotation());
 							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
 							//UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
 							if (OnBodyShot.IsBound())
@@ -852,6 +992,7 @@ void ASuraProjectile::PerformHitScan_Upgrade(FVector StartLocation, FVector Trac
 					{
 						RicochetCount = MaxRicochetCount + 1;
 					}
+					SpawnImpactEffect(HitResult.ImpactPoint, (-HitResult.ImpactNormal).Rotation());
 					bIsBlockedByWorldStatic = true;
 					break;
 				}

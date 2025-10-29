@@ -49,9 +49,9 @@ void UBTT_BossRangedFire::InitializeFromAsset(UBehaviorTree& Asset)
 
 void UBTT_BossRangedFire::OnFireMontageEnded(UAnimMontage* AnimMontage, bool bInterrupted, TWeakObjectPtr<UBehaviorTreeComponent> OwnerComp)
 {
-	if (!OwnerComp.IsValid()) return;
-	
 	UBehaviorTreeComponent* Component = OwnerComp.Get();
+	if (!Component) return;
+	
 	if (APawn* BossPawn = Component->GetAIOwner()->GetPawn())
 	{
 		if (ASuraCharacterBossProto* Boss = Cast<ASuraCharacterBossProto>(BossPawn))
@@ -78,9 +78,8 @@ void UBTT_BossRangedFire::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint
 {
 	FBossRangedFireMemory* Memory = CastInstanceNodeMemory<FBossRangedFireMemory>(NodeMemory);
 
-	if (Memory->Boss.IsValid())
+	if (ASuraCharacterBossProto* Boss = Memory->Boss.Get())
 	{
-		ASuraCharacterBossProto* Boss = Memory->Boss.Get();
 		if (TaskResult == EBTNodeResult::Succeeded && Boss->GetCurrentState() != EBossState::Dead)
 		{
 			Boss->SetCurrentState(EBossState::Idle);

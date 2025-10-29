@@ -11,27 +11,33 @@ class ASuraPawnPlayer;
 /**
  * 
  */
-struct FBTTCoopAttackTaskMemory
+/*struct FBTTCoopAttackTaskMemory
 {
 	TWeakObjectPtr<ASuraCharacterEnemyBase> CachedEnemy;
 	TWeakObjectPtr<ASuraCharacterEnemyBase> CachedEnemyAlly;
 	TWeakObjectPtr<ASuraPawnPlayer> CachedPlayer;
-};
+};*/
 
 UCLASS()
 class SURAS_API UBTT_CoopAttack : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
 
+	TWeakObjectPtr<ASuraCharacterEnemyBase> CachedEnemy;
+	
+	TWeakObjectPtr<ASuraCharacterEnemyBase> CachedEnemyAlly;
+	
+	TWeakObjectPtr<ASuraPawnPlayer> CachedPlayer;
+
 	FOnMontageEnded OnAttackMontageEnded;
 
 	void OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp);
 
 protected:
-	virtual uint16 GetInstanceMemorySize() const override;
+	// virtual uint16 GetInstanceMemorySize() const override;
 	
 public:
-	explicit UBTT_CoopAttack(FObjectInitializer const& ObjectInitializer);
+	explicit UBTT_CoopAttack();
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 };
