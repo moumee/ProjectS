@@ -159,8 +159,9 @@ public:
 	void DetachWeaponFromPlayer();
 
 	void FireSingleProjectile(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireSingleProjectile_Pool(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 	void FireMultiProjectile(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
-
+	void FireMultiProjectile_Pool(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 
 #pragma region Socket
 protected:
@@ -174,7 +175,7 @@ protected:
 	bool bIsHitScan_R = false;
 
 	void FireSingleHitScan(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
-	void FireMultiHitScan();
+	void FireSingleHitScan_Pool(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 #pragma endregion
 
 #pragma region AutoAim
@@ -183,6 +184,7 @@ protected:
 	float AutoAimRadius = 100.f;
 
 	void FireSingleAutoAim(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
+	void FireSingleAutoAim_Pool(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 #pragma endregion
 
 public:
@@ -736,6 +738,22 @@ protected:
 	void ApplyOverheat(float DeltaTime);
 	void RecoverOverheat(float DeltaTime);
 	void UpdateOverheat(float DeltaTime);
+#pragma endregion
+
+#pragma region Projectile
+protected:
+	UPROPERTY()
+	TArray<ASuraProjectile*> Projectiles_L;
+	UPROPERTY()
+	TArray<ASuraProjectile*> Projectiles_R;
+
+	int32 NumProjectile_L = 10;
+	int32 NumProjectile_R = 5;
+
+	int32 CurrProjectileIdx_L = 0;
+	int32 CurrProjectileIdx_R = 0;
+public:
+	void InitProjectiles();
 #pragma endregion
 
 #pragma region Projectile/SingleProjectileSpread
