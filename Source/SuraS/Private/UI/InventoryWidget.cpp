@@ -173,7 +173,6 @@ void UInventoryWidget::SetActiveTab(EInventoryTab NewTab)
 
     // 활성화된 탭에 해당하는 콘텐츠를 표시
     ShowTabContent();
-    
 }
 
 void UInventoryWidget::SwitchToWeaponTab()
@@ -206,7 +205,6 @@ void UInventoryWidget::ShowTabContent() const
             UGameplayStatics::PlaySound2D(this, SwitchSound);
         }
     }
-   
 }
 
 void UInventoryWidget::OpenUI()
@@ -227,7 +225,7 @@ void UInventoryWidget::CloseUI()
     // }
 }
 
-void UInventoryWidget::InitializeInventory() //TODO: 이 함수의 역할 분석하기
+void UInventoryWidget::InitializeInventory()
 {
     //// <Old Version>
     //if (!DTWeapon)
@@ -267,15 +265,12 @@ void UInventoryWidget::InitializeInventory() //TODO: 이 함수의 역할 분석
         UE_LOG(LogTemp, Warning, TEXT("DT_Weapon이 설정되지 않았습니다!"));
         return;
     }
-
     static const FString ContextString(TEXT("Weapon Data Context"));
     TArray<FName> RowNames = DTWeapon->GetRowNames();
 
-    // 이미지와 텍스트를 같이 저장
     WeaponUIElements.Add(EWeaponName::WeaponName_Rifle, FWeaponUI(Rifle, RifleName));
     WeaponUIElements.Add(EWeaponName::WeaponName_ShotGun, FWeaponUI(ShotGun, ShotGunName));
     WeaponUIElements.Add(EWeaponName::WeaponName_MissileLauncher, FWeaponUI(MissileLauncher, MissileLauncherName));
-    //WeaponUIElements.Add(TEXT("RailGun"), FWeaponUI(RailGun, RailGunName));
 
     for (FName RowName : RowNames)
     {
@@ -298,7 +293,7 @@ void UInventoryWidget::SwitchPage(int32 PageIndex)
     }
 }
 
-void UInventoryWidget::UpdateWeaponUI(EWeaponName WeaponName) //TODO: 여기서 Tab키 눌렀을 때 나오는 이미지 출력 조절 하는 것 같음
+void UInventoryWidget::UpdateWeaponUI(EWeaponName WeaponName)
 {
     //// <Old Version>
     //if (!DTWeapon) return;
@@ -359,11 +354,9 @@ void UInventoryWidget::UpdateWeaponUI(EWeaponName WeaponName) //TODO: 여기서 
     if (WeaponUIElements.Contains(WeaponName))
     {
         FWeaponUI& WeaponUI = WeaponUIElements[WeaponName];
-        // 이미지 설정
         if (WeaponUI.WeaponImage)
         {
             WeaponUI.WeaponImage->SetBrushFromTexture(WeaponData->WeaponImage_Inventory);
-            // 무기 소유 여부에 따른 색상 조정
             if (GameInstance->OwnedWeapons.Contains(WeaponName) && GameInstance->OwnedWeapons[WeaponName])
             {
                 WeaponUI.WeaponImage->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f));
@@ -373,7 +366,6 @@ void UInventoryWidget::UpdateWeaponUI(EWeaponName WeaponName) //TODO: 여기서 
                 WeaponUI.WeaponImage->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f));
             }
         }
-        // 텍스트 설정
         if (WeaponUI.WeaponText)
         {
             if (GameInstance->OwnedWeapons.Contains(WeaponName) && GameInstance->OwnedWeapons[WeaponName])

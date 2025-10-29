@@ -108,8 +108,7 @@ public:
 	// DTWeapon 포인터 변수
 	UDataTable* DTWeapon;
 	
-	// void UpdateWeaponUI(FString WeaponNameStr);
-	void UpdateWeaponUI(EWeaponName WeaponName); // <JaeHyeong>
+	void UpdateWeaponUI(EWeaponName WeaponName); // <JaeHyeong> FString -> EWeaponName 수정
 
 	// // 모든 무기 소유 불값을 false로 만드는 함수
 	// void AllWeaponDiscard();

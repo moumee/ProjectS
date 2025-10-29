@@ -15,18 +15,14 @@ struct SURAS_API FWeaponSystemComponentData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	EWeaponName StartingWeaponName = EWeaponName::WeaponName_Rifle;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	TSubclassOf<class AWeapon> StartingWeaponClass;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	//TSubclassOf<class AWeapon> StartingWeaponClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rendering")
 	bool bUseSceneCapture = false;
 	
-	//-----------------------
-	//TODO: 각 무기별 소유 여부 판단하는 변수 필요
-	// Map Enum 혹은 FName 과 Bool 매핑
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TMap<EWeaponName, bool> WeaponOwnerShipMap;
-		
-	//TODO: Set TMap<EWeaponName, WeaponClass>
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TMap<EWeaponName, TSubclassOf<AWeapon>> WeaponClasses;
 
