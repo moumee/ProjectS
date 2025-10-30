@@ -9,6 +9,7 @@
 #include "Interfaces/PlayerInterface.h"
 #include "SuraPawnPlayer.generated.h"
 
+struct FPlayerSoundData;
 class UPlayerSound_DataAsset;
 class UACHitScreenManager;
 class UACPlayerHealthComponent;
@@ -206,6 +207,12 @@ protected:
 	UFUNCTION()
 	void OnLand(float ZSpeed);
 
+	UFUNCTION()
+	void HandleWallRunAudioPlayback(const USoundWave* PlayingSoundWave, const float PlaybackPercent);
+
+	UFUNCTION()
+	void HandleSlideAudioPlayback(const USoundWave* PlayingSoundWave, const float PlaybackPercent);
+	
 	
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);
@@ -213,7 +220,8 @@ protected:
 	void StartShiftInput();
 	void StartCrouchInput();
 	void StopCrouchInput();
-	
+	void CalculateMappedSoundValue(const FPlayerSoundData& Data, float Speed, float& OutVolumeMultiplier,
+	                               float& OutPitchMultiplier);
 
 	// Damage Comp Event Delegate Functions
 	void OnDamaged();

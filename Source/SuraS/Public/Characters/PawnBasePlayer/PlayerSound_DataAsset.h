@@ -6,6 +6,33 @@
 #include "Engine/DataAsset.h"
 #include "PlayerSound_DataAsset.generated.h"
 
+USTRUCT(BlueprintType)
+struct FPlayerSoundData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<USoundBase> Sound;
+	
+	UPROPERTY(EditAnywhere)
+	bool bDebug = false;
+	UPROPERTY(EditAnywhere, meta=(EditCondition="bDebug"))
+	float DebugDisplayDuration = 3.f;
+
+	UPROPERTY(EditAnywhere)
+	bool bMapVolume = true;
+	UPROPERTY(EditAnywhere, meta=(EditCondition="bMapVolume"))
+	FFloatInterval VolumeRange = FFloatInterval(0.f, 1.f);
+	UPROPERTY(EditAnywhere, meta=(EditCondition="bMapVolume"))
+	FFloatInterval VolumeSpeedRange = FFloatInterval(0.f, 1000.f);
+	UPROPERTY(EditAnywhere)
+	bool bMapPitch = true;
+	UPROPERTY(EditAnywhere, meta=(EditCondition="bMapPitch"))
+	FFloatInterval PitchRange = FFloatInterval(0.f, 1.f);
+	UPROPERTY(EditAnywhere, meta=(EditCondition="bMapPitch"))
+	FFloatInterval PitchSpeedRange = FFloatInterval(0.f, 1000.f);
+};
+
 /**
  * 
  */
@@ -34,16 +61,16 @@ public:
 	UPROPERTY(EditAnywhere, Category="Hit|Turret")
 	TObjectPtr<USoundBase> TurretEnemyHitSound;
 
-	UPROPERTY(EditAnywhere, Category="Movement")
-	TObjectPtr<USoundBase> PrimaryJumpSound;
-	UPROPERTY(EditAnywhere, Category="Movement")
-	TObjectPtr<USoundBase> DoubleJumpSound;
-	UPROPERTY(EditAnywhere, Category="Movement")
-	TObjectPtr<USoundBase> WallRunSound;
-	UPROPERTY(EditAnywhere, Category="Movement")
-	TObjectPtr<USoundBase> SlideSound;
-	UPROPERTY(EditAnywhere, Category="Movement")
-	TObjectPtr<USoundBase> LandSound;
+	UPROPERTY(EditAnywhere, Category="Movement|Jump")
+	FPlayerSoundData PrimaryJumpSound;
+	UPROPERTY(EditAnywhere, Category="Movement|Jump")
+	FPlayerSoundData DoubleJumpSound;
+	UPROPERTY(EditAnywhere, Category="Movement|WallRun")
+	FPlayerSoundData WallRunSound;
+	UPROPERTY(EditAnywhere, Category="Movement|Slide")
+	FPlayerSoundData SlideSound;
+	UPROPERTY(EditAnywhere, Category="Movement|Land")
+	FPlayerSoundData LandSound;
 
 	
 };
