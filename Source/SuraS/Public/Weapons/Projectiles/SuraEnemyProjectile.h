@@ -49,6 +49,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (RowType = "/Script/SuraS.EnemyProjectileAttributesData"))
 	FDataTableRowHandle EnemyProjectileAttributesDT;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	TObjectPtr<USoundBase> ProjectileSound;
+
 	void InitializeProjectile();
 
 	virtual void SetOwner(AActor* TheOwner) override;

@@ -81,6 +81,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UCurveFloat> DissolveColorCurve;
 
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<USoundBase> DeathSound;
+
 	float AttackDamageAmount;
 	float AttackRate;
 	float MeleeAttackRange;

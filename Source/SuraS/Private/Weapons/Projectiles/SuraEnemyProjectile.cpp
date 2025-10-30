@@ -8,6 +8,7 @@
 #include "Interfaces/Damageable.h"
 #include "Structures/DamageData.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
+#include "Kismet/GameplayStatics.h"
 #include "Structures/Enemies/EnemyProjectileAttributesData.h"
 
 #define PROJECTILE_COLLISION ECC_EngineTraceChannel1
@@ -206,6 +207,22 @@ void ASuraEnemyProjectile::LaunchProjectileWithVelocity(const FVector& Velocity)
 {
 	ProjectileMovement->Velocity = Velocity;
 	ProjectileMovement->Activate();
+
+	if (ProjectileSound && GetRootComponent())
+	{
+		UAudioComponent* AudioComp = UGameplayStatics::SpawnSoundAttached(
+			ProjectileSound,
+			GetRootComponent(),
+			NAME_None,
+			FVector::ZeroVector,
+			FRotator::ZeroRotator,
+			EAttachLocation::KeepRelativeOffset,
+			true,
+			1.0f,
+			1.0f,
+			0.0f
+			);
+	}
 
 	FTimerHandle DestroyHandle;
 	
