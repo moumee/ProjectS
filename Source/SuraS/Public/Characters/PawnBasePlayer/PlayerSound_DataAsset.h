@@ -43,34 +43,36 @@ class SURAS_API UPlayerSound_DataAsset : public UDataAsset
 
 public:
 
-	UPROPERTY(EditAnywhere, Category="Hit|Boss")
+	UPROPERTY(EditAnywhere, Category="Hit")
 	TObjectPtr<USoundBase> BossNormalHitSound;
 
-	UPROPERTY(EditAnywhere, Category="Hit|Boss")
+	UPROPERTY(EditAnywhere, Category="Hit")
 	TObjectPtr<USoundBase> BossDownedHitSound;
 
-	UPROPERTY(EditAnywhere, Category="Hit|Melee")
+	UPROPERTY(EditAnywhere, Category="Hit")
 	TObjectPtr<USoundBase> MeleeEnemyHitSound;
 
-	UPROPERTY(EditAnywhere, Category="Hit|Rifle")
+	UPROPERTY(EditAnywhere, Category="Hit")
 	TObjectPtr<USoundBase> RifleEnemyHitSound;
 
-	UPROPERTY(EditAnywhere, Category="Hit|Charger")
+	UPROPERTY(EditAnywhere, Category="Hit")
 	TObjectPtr<USoundBase> ChargerEnemyHitSound;
 
-	UPROPERTY(EditAnywhere, Category="Hit|Turret")
+	UPROPERTY(EditAnywhere, Category="Hit")
 	TObjectPtr<USoundBase> TurretEnemyHitSound;
 
-	UPROPERTY(EditAnywhere, Category="Movement|Jump")
+	UPROPERTY(EditAnywhere, Category="Movement")
 	FPlayerSoundData PrimaryJumpSound;
-	UPROPERTY(EditAnywhere, Category="Movement|Jump")
+	UPROPERTY(EditAnywhere, Category="Movement")
 	FPlayerSoundData DoubleJumpSound;
-	UPROPERTY(EditAnywhere, Category="Movement|WallRun")
+	UPROPERTY(EditAnywhere, Category="Movement")
 	FPlayerSoundData WallRunSound;
-	UPROPERTY(EditAnywhere, Category="Movement|Slide")
+	UPROPERTY(EditAnywhere, Category="Movement")
 	FPlayerSoundData SlideSound;
-	UPROPERTY(EditAnywhere, Category="Movement|Land")
+	UPROPERTY(EditAnywhere, Category="Movement")
 	FPlayerSoundData LandSound;
+	UPROPERTY(EditAnywhere, Category="Movement")
+	FPlayerSoundData DashSound;
 
 	
 };

@@ -246,7 +246,7 @@ void ASuraPawnPlayer::OnPrimaryJump()
 
 	if (Data.bDebug)
 	{
-		GEngine->AddOnScreenDebugMessage(11111, Data.DebugDisplayDuration, FColor::Green,
+		GEngine->AddOnScreenDebugMessage(1256, Data.DebugDisplayDuration, FColor::Green,
 			FString::Printf(TEXT("Primary Jump Sound Evaluation Speed: %.0f, "
 						"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
 	}
@@ -266,7 +266,7 @@ void ASuraPawnPlayer::OnDoubleJump()
 	if (Data.bDebug)
 	{
 		if (!GEngine) return;
-		GEngine->AddOnScreenDebugMessage(22222, Data.DebugDisplayDuration, FColor::Green,
+		GEngine->AddOnScreenDebugMessage(1257, Data.DebugDisplayDuration, FColor::Green,
 			FString::Printf(TEXT("Double Jump Sound Evaluation Speed: %.0f, "
 						"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
 	}
@@ -288,7 +288,7 @@ void ASuraPawnPlayer::OnWallJump()
 	if (Data.bDebug)
 	{
 		if (!GEngine) return;
-		GEngine->AddOnScreenDebugMessage(33333, Data.DebugDisplayDuration, FColor::Green,
+		GEngine->AddOnScreenDebugMessage(1258, Data.DebugDisplayDuration, FColor::Green,
 			FString::Printf(TEXT("Primary Jump Sound Evaluation Speed: %.0f, "
 						"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
 	}
@@ -307,7 +307,7 @@ void ASuraPawnPlayer::OnSlide()
 	if (Data.bDebug)
 	{
 		if (!GEngine) return;
-		GEngine->AddOnScreenDebugMessage(66666, Data.DebugDisplayDuration, FColor::Green,
+		GEngine->AddOnScreenDebugMessage(1259, Data.DebugDisplayDuration, FColor::Green,
 			FString::Printf(TEXT("Slide Sound Evaluation Speed: %.0f, "
 				"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
 	}
@@ -345,7 +345,7 @@ void ASuraPawnPlayer::OnWallRun()
 	if (Data.bDebug)
 	{
 		if (!GEngine) return;
-		GEngine->AddOnScreenDebugMessage(55555, Data.DebugDisplayDuration, FColor::Green,
+		GEngine->AddOnScreenDebugMessage(1260, Data.DebugDisplayDuration, FColor::Green,
 			FString::Printf(TEXT("Wall Run Sound Evaluation Speed: %.0f, "
 				"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
 	}
@@ -376,7 +376,7 @@ void ASuraPawnPlayer::OnLand(float ZSpeed)
 	if (Data.bDebug)
 	{
 		if (!GEngine) return;
-		GEngine->AddOnScreenDebugMessage(44444, Data.DebugDisplayDuration, FColor::Green,
+		GEngine->AddOnScreenDebugMessage(1261, Data.DebugDisplayDuration, FColor::Green,
 			FString::Printf(TEXT("Land Sound Evaluation Speed: %.0f, "
 						"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
 	}
@@ -395,7 +395,7 @@ void ASuraPawnPlayer::HandleWallRunAudioPlayback(const USoundWave* PlayingSoundW
 	if (Data.bDebug)
 	{
 		if (!GEngine) return;
-		GEngine->AddOnScreenDebugMessage(55555, Data.DebugDisplayDuration, FColor::Green,
+		GEngine->AddOnScreenDebugMessage(1262, Data.DebugDisplayDuration, FColor::Green,
 			FString::Printf(TEXT("Wall Run Sound Evaluation Speed: %.0f, "
 				"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
 	}
@@ -414,7 +414,7 @@ void ASuraPawnPlayer::HandleSlideAudioPlayback(const USoundWave* PlayingSoundWav
 	if (Data.bDebug)
 	{
 		if (!GEngine) return;
-		GEngine->AddOnScreenDebugMessage(66666, Data.DebugDisplayDuration, FColor::Green,
+		GEngine->AddOnScreenDebugMessage(1263, Data.DebugDisplayDuration, FColor::Green,
 			FString::Printf(TEXT("Slide Sound Evaluation Speed: %.0f, "
 				"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
 	}
@@ -632,6 +632,26 @@ void ASuraPawnPlayer::OnDeath()
 
 void ASuraPawnPlayer::OnDash(FVector2D MovementInput)
 {
+	const FPlayerSoundData& Data = PlayerSound_DataAsset->DashSound;
+	float VolumeMultiplier, PitchMultiplier;
+
+	float Speed = GetPlayerMovementComponent()->Velocity.Size();
+	
+	CalculateMappedSoundValue(Data, Speed, VolumeMultiplier, PitchMultiplier);
+
+	UGameplayStatics::SpawnSoundAttached(Data.Sound, GetRootComponent(), NAME_None,
+		FVector(ForceInit), FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset,
+		false, VolumeMultiplier, PitchMultiplier);
+
+	if (Data.bDebug)
+	{
+		if (!GEngine) return;
+		GEngine->AddOnScreenDebugMessage(77777, Data.DebugDisplayDuration, FColor::Green,
+			FString::Printf(TEXT("Dash Sound Evaluation Speed: %.0f, "
+						"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
+	}	
+
+	
 	if (MovementInput.IsZero())
 	{
 		ForwardDashEffectComponent->Activate();
