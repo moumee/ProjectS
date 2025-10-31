@@ -31,7 +31,6 @@ public:
 	void SetUIManager(UACUIMangerComponent* UIMangerComponent);
 	
 	UDataTable* GetWeaponDataTable() const;
-	UDataTable* GetWSCDataTable() const; // <JaeHyeong>
 	//UDataTable* GetProjectileDataTable() const;
 	
 	void SetPendingWeaponIndex(int32 Index);
@@ -54,8 +53,8 @@ public:
 	//// 무기 액터 스폰해서 weaponinventory에 넣기 위한 함수
 	//void CreateAndAddWeaponFromData(FWeaponData* WeaponData); //TODO: 사용 안함. 삭제 요망
 
-	// DT_Weapon에서 소유중인 무기를 weapon inventory에 동기화
-	void InitializeOwnedWeaponsFromDT();
+	//// DT_Weapon에서 소유중인 무기를 weapon inventory에 동기화
+	//void InitializeOwnedWeaponsFromDT();
 	
 
 private:
@@ -73,8 +72,6 @@ private:
 
 	// DTWeapon 포인터 변수
 	UDataTable* DTWeapon;
-	UDataTable* DTWSC; // <JaeHyeong>
-
 	// DTProjectile 포인터 변수
 	//UDataTable* DTProjectile;
 	

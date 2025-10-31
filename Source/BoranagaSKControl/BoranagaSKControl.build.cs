@@ -9,7 +9,7 @@ public class BoranagaSKControl : ModuleRules
                 "Core", 
                 "CoreUObject", 
                 "Engine",
-                "AnimationCore"
+                "AnimationCore",
             }
         );
 

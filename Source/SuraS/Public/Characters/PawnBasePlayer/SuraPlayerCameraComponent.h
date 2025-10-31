@@ -9,6 +9,7 @@
 #include "SuraPlayerCameraComponent.generated.h"
 
 
+class ASuraPawnPlayer;
 class UTimelineComponent;
 class UCameraComponent;
 class USuraPlayerMovementComponent;
@@ -21,18 +22,23 @@ class SURAS_API USuraPlayerCameraComponent : public UActorComponent
 public:	
 	USuraPlayerCameraComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	void OnDowned();
+	
 	void PlayOneShotCameraShake(const TSubclassOf<UCameraShakeBase>& InShake);
 	void OnDamaged();
 
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	// Move state means that the player is grounded and not sliding
 	bool bIsMoveState = false;
 
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UDataTable> CameraDataTable;
+
+	UPROPERTY(VisibleDefaultsOnly)
+	TObjectPtr<ASuraPawnPlayer> PlayerRef;
 
 	UPROPERTY(VisibleDefaultsOnly)
     TObjectPtr<USuraPlayerMovementComponent> MovementComponent;
@@ -135,6 +141,11 @@ protected:
 	
 	FTimerDelegate DownedFloorImpactDelegate;
 	FTimerDelegate DownedGoingUpShakeDelegate;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Death")
+	TSubclassOf<UCameraShakeBase> DeathStartCameraShake;
+	UPROPERTY(EditDefaultsOnly, Category="Death")
+	TSubclassOf<UCameraShakeBase> DeathFloorHitCameraShake;
 
 	void ChangeCameraLoopShake(const TSubclassOf<UCameraShakeBase>& InShake);
 	
@@ -145,19 +156,31 @@ protected:
 
 	void InterpCameraData(const FMovementCameraData& InData, float DeltaTime);
 
+	UFUNCTION()
 	void OnAirborne();
+	UFUNCTION()
 	void OnMove();
+	UFUNCTION()
 	void OnWallRun();
+	UFUNCTION()
 	void OnSlide();
 
-
+	UFUNCTION()
 	void OnLand(float ZVelocity);
+	UFUNCTION()
 	void OnPrimaryJump();
+	UFUNCTION()
 	void OnDoubleJump();
+	UFUNCTION()
 	void OnWallJump();
+	UFUNCTION()
 	void OnMantle();
+	UFUNCTION()
 	void OnDash(FVector2D MovementInput);
-	
+	UFUNCTION()
+	void OnDowned();
+
+	void OnDeath();
 
 	void InitCameraShakes();
 	

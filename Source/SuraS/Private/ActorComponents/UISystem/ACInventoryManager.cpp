@@ -33,10 +33,9 @@ void UACInventoryManager::BeginPlay()
 
 	GameInstance = Cast<UCustomGameInstance>(GetWorld()->GetGameInstance()); // <JaeHyeong>
 	DTWeapon = GetWeaponDataTable();
-	DTWSC = GetWSCDataTable();  // <JaeHyeong>
 	// DTProjectile = GetProjectileDataTable();
 
-	InitializeOwnedWeaponsFromDT(); // dt_weapon에서 소유한 무기들을 weapon inventory에 동기화
+	//InitializeOwnedWeaponsFromDT(); // dt_weapon에서 소유한 무기들을 weapon inventory에 동기화
 }
 
 void UACInventoryManager::SetInventoryWidget(UInventoryWidget* InWidget)
@@ -54,16 +53,10 @@ UDataTable* UACInventoryManager::GetWeaponDataTable() const
 	return UIManager ? UIManager->GetWeaponDataTable() : nullptr;
 }
 
-UDataTable* UACInventoryManager::GetWSCDataTable() const // <JaeHyeong>
-{
-	return UIManager ? UIManager->GetWSCDataTable() : nullptr;
-}
-
 // UDataTable* UACInventoryManager::GetProjectileDataTable() const
 // {
 // 	return UIManager ? UIManager->GetProjectileDataTable() : nullptr;
 // }
-
 
 void UACInventoryManager::SetPendingWeaponIndex(const int32 Index)
 {
@@ -145,7 +138,7 @@ void UACInventoryManager::OnConfirmWeaponEquip()
 	PendingWeaponIndex = -1;
 }
 
-void UACInventoryManager::UpdateWeaponAttributeUI(AWeapon* Weapon) // <JaeHyeong> 전체적으로 수정
+void UACInventoryManager::UpdateWeaponAttributeUI(AWeapon* Weapon) // <JaeHyeong> 전체적으로 수정하는 중
 {
 	if (!Weapon || !InventoryWidget) return;
 	UDataTable* Table = Weapon->WeaponDataTable ? Weapon->WeaponDataTable.LoadSynchronous() : nullptr;
@@ -172,7 +165,7 @@ void UACInventoryManager::UpdateWeaponAttributeUI(AWeapon* Weapon) // <JaeHyeong
 	}
 
 	// Projectile
-	if (Row->LeftProjectileClass)
+	if (Row->LeftProjectileClass) //TODO: Weapon의 Default FireData에서 ProjectileClass 정보 가져오도록
 	{
 		const ASuraProjectile* ProjectileCDO = Row->LeftProjectileClass->GetDefaultObject<ASuraProjectile>();
 		if (ProjectileCDO)
@@ -361,11 +354,7 @@ void UACInventoryManager::AllWeaponDiscard()
 	if (!GameInstance) return;
 	for (auto& Elem : GameInstance->OwnedWeapons)
 	{
-		//Elem.Value = false;
-		//FString WeaponNameStr = FName(*UEnum::GetValueAsString(Elem.Key)).ToString().RightChop(24);  // "EWeaponName::WeaponName_"을 제거
-		//InventoryWidget->UpdateWeaponUI(WeaponNameStr);
-
-		Elem.Value = false;
+		GameInstance->OwnedWeapons[Elem.Key] = false;
 		InventoryWidget->UpdateWeaponUI(Elem.Key);
 	}
 }
@@ -505,79 +494,79 @@ void UACInventoryManager::UnlockWeapon(EWeaponName WeaponName)
 //	pWeaponSystemComponent->GetWeaponInventory().Add(NewWeapon);
 //}
 
-void UACInventoryManager::InitializeOwnedWeaponsFromDT()
-{
-	//// <Old Version>
-	//if (!DTWeapon) return;
-
-	//const TMap<FName, uint8*>& RowMap = DTWeapon->GetRowMap();
-
-	//for (const auto& Pair : RowMap)
-	//{
-	//	FWeaponData* WeaponData = reinterpret_cast<FWeaponData*>(Pair.Value);
-	//	if (WeaponData && WeaponData->bIsWeaponOwned) //TODO: DT_Weapon 말고 DT_WSC에서 무기 소유정보 받아오도록 수정하기
-	//	{
-	//		CreateAndAddWeaponFromData(WeaponData);
-	//	}
-	//}
-
-	//// 자동 장착
-	//if (pWeaponSystemComponent && pWeaponSystemComponent->GetWeaponInventory().Num() > 0)
-	//{
-	//	pWeaponSystemComponent->EquipFirstWeapon();
-	//}
-
-	//-----------------------------------------------------
-	// <New Version>
-	if (!DTWSC) return;
-	const TMap<FName, uint8*>& RowMap = DTWSC->GetRowMap();
-	for (const auto& Pair : RowMap)
-	{
-		FWeaponSystemComponentData* WSCData = reinterpret_cast<FWeaponSystemComponentData*>(Pair.Value);
-		if (!WSCData) return;
-		const TMap<EWeaponName, bool> WeaponOwnerShipMap = WSCData->WeaponOwnerShipMap;
-		const TMap<EWeaponName, TSubclassOf<AWeapon>> WeaponClasses = WSCData->WeaponClasses;
-		for (auto& Elem : WeaponOwnerShipMap)
-		{
-			bool bDoesGameInstanceHasWeapon = false;
-			if (GameInstance)
-			{
-				if (GameInstance->OwnedWeapons.Contains(Elem.Key))
-				{
-					if (GameInstance->OwnedWeapons[Elem.Key])
-					{
-						bDoesGameInstanceHasWeapon = true;
-					}
-				}
-			}
-
-			if (Elem.Value || bDoesGameInstanceHasWeapon)
-			{
-				UWorld* World = GetWorld();
-				if (!World) return;
-				if (!WeaponClasses.Find(Elem.Key)) continue;
-				FActorSpawnParameters ActorSpawnParams;
-				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-				AWeapon* NewWeapon = World->SpawnActor<AWeapon>(WeaponClasses.Find(Elem.Key)->Get(), FTransform(), ActorSpawnParams);
-				if (!NewWeapon) continue;
-				NewWeapon->InitializeWeapon(Cast<ASuraPawnPlayer>(GetOwner()));
-				if (!pWeaponSystemComponent) return;
-				pWeaponSystemComponent->AddNewWeaponToInventory(NewWeapon);
-
-
-				if (!GameInstance) return;
-				if (GameInstance->OwnedWeapons.Contains(Elem.Key))
-				{
-					GameInstance->OwnedWeapons[Elem.Key] = true;
-				}
-				else
-				{
-					GameInstance->OwnedWeapons.Emplace(Elem.Key, true);
-				}
-			}
-		}
-	}
-}
+//void UACInventoryManager::InitializeOwnedWeaponsFromDT()
+//{
+//	//// <Old Version>
+//	//if (!DTWeapon) return;
+//
+//	//const TMap<FName, uint8*>& RowMap = DTWeapon->GetRowMap();
+//
+//	//for (const auto& Pair : RowMap)
+//	//{
+//	//	FWeaponData* WeaponData = reinterpret_cast<FWeaponData*>(Pair.Value);
+//	//	if (WeaponData && WeaponData->bIsWeaponOwned)
+//	//	{
+//	//		CreateAndAddWeaponFromData(WeaponData);
+//	//	}
+//	//}
+//
+//	//// 자동 장착
+//	//if (pWeaponSystemComponent && pWeaponSystemComponent->GetWeaponInventory().Num() > 0)
+//	//{
+//	//	pWeaponSystemComponent->EquipFirstWeapon();
+//	//}
+//
+//	//-----------------------------------------------------
+//	// <New Version>
+//	if (!DTWSC) return;
+//	const TMap<FName, uint8*>& RowMap = DTWSC->GetRowMap();
+//	for (const auto& Pair : RowMap)
+//	{
+//		FWeaponSystemComponentData* WSCData = reinterpret_cast<FWeaponSystemComponentData*>(Pair.Value);
+//		if (!WSCData) return;
+//		const TMap<EWeaponName, bool> WeaponOwnerShipMap = WSCData->WeaponOwnerShipMap;
+//		const TMap<EWeaponName, TSubclassOf<AWeapon>> WeaponClasses = WSCData->WeaponClasses;
+//		for (auto& Elem : WeaponOwnerShipMap)
+//		{
+//			bool bDoesGameInstanceHasWeapon = false;
+//			if (GameInstance)
+//			{
+//				if (GameInstance->OwnedWeapons.Contains(Elem.Key))
+//				{
+//					if (GameInstance->OwnedWeapons[Elem.Key])
+//					{
+//						bDoesGameInstanceHasWeapon = true;
+//					}
+//				}
+//			}
+//
+//			if (Elem.Value || bDoesGameInstanceHasWeapon)
+//			{
+//				UWorld* World = GetWorld();
+//				if (!World) return;
+//				if (!WeaponClasses.Find(Elem.Key)) continue;
+//				FActorSpawnParameters ActorSpawnParams;
+//				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+//				AWeapon* NewWeapon = World->SpawnActor<AWeapon>(WeaponClasses.Find(Elem.Key)->Get(), FTransform(), ActorSpawnParams);
+//				if (!NewWeapon) continue;
+//				NewWeapon->InitializeWeapon(Cast<ASuraPawnPlayer>(GetOwner()));
+//				if (!pWeaponSystemComponent) return;
+//				pWeaponSystemComponent->AddNewWeaponToInventory(NewWeapon);
+//
+//
+//				if (!GameInstance) return;
+//				if (GameInstance->OwnedWeapons.Contains(Elem.Key))
+//				{
+//					GameInstance->OwnedWeapons[Elem.Key] = true;
+//				}
+//				else
+//				{
+//					GameInstance->OwnedWeapons.Emplace(Elem.Key, true);
+//				}
+//			}
+//		}
+//	}
+//}
 
 
 

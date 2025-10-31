@@ -9,6 +9,8 @@
 #include "Interfaces/PlayerInterface.h"
 #include "SuraPawnPlayer.generated.h"
 
+struct FPlayerSoundData;
+class UPlayerSound_DataAsset;
 class UCustomGameInstance;
 class UACHitScreenManager;
 class UACPlayerHealthComponent;
@@ -50,6 +52,8 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 	
 	virtual void BeginPlay() override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UCapsuleComponent* GetCapsuleComponent();
 
@@ -93,8 +97,19 @@ public:
 
 	virtual void RequestResetModification() override;
 
+	UAudioComponent* GetWallRunAudioComponent() const { return WallRunAudioComponent; }
+	UAudioComponent* GetSlideAudioComponent() const { return SlideAudioComponent; }
+
 protected:
 
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UAudioComponent> WallRunAudioComponent;
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UAudioComponent> SlideAudioComponent;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UPlayerSound_DataAsset> PlayerSound_DataAsset;
+	
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UCapsuleComponent> CapsuleComponent;
 
@@ -163,6 +178,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> CrouchAction;
+
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
+	TObjectPtr<UInputAction> TeleportToLastCheckpointAction;
 	
 
 	FTimerHandle PlayerHealthCheckTimer;
@@ -176,6 +194,29 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UCustomGameInstance> CachedGameInstance; // suhyeon
+
+	UFUNCTION()
+	void OnPrimaryJump();
+	UFUNCTION()
+	void OnDoubleJump();
+	UFUNCTION()
+	void OnWallJump();
+	UFUNCTION()
+	void OnSlide();
+	UFUNCTION()
+	void OnSlideEnd();
+	UFUNCTION()
+	void OnWallRun();
+	UFUNCTION()
+	void OnWallRunEnd();
+	UFUNCTION()
+	void OnLand(float ZSpeed);
+
+	UFUNCTION()
+	void HandleWallRunAudioPlayback(const USoundWave* PlayingSoundWave, const float PlaybackPercent);
+
+	UFUNCTION()
+	void HandleSlideAudioPlayback(const USoundWave* PlayingSoundWave, const float PlaybackPercent);
 	
 	
 	void HandleMoveInput(const FInputActionValue& Value);
@@ -184,17 +225,23 @@ protected:
 	void StartShiftInput();
 	void StartCrouchInput();
 	void StopCrouchInput();
-	
+	void StartTeleportToLastCheckpointInput();
+	void CalculateMappedSoundValue(const FPlayerSoundData& Data, float Speed, float& OutVolumeMultiplier,
+	                               float& OutPitchMultiplier);
 
 	// Damage Comp Event Delegate Functions
 	void OnDamaged();
 	void OnDeath();
 
+	UFUNCTION()
 	void OnDash(FVector2D MovementInput);
+	UFUNCTION()
 	void OnDashEnd();
 
 	UFUNCTION()
 	void OnCheckPointLoaded();
+
+	float SlideEndTime = 0.f;
 };
 
 

@@ -19,9 +19,13 @@
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
+#include "Characters/Enemies/Boss/SuraCharacterBossProto.h"
+#include "Characters/PawnBasePlayer/PlayerSound_DataAsset.h"
+#include "Components/AudioComponent.h"
 #include "GameModes/SuraLevelGameMode.h"
 #include "Instance/SuraCheckpointSubsystem.h"
 #include "Kismet/GameplayStatics.h"
+#include "Math/UnitConversion.h"
 #include "SaveGame/SuraSaveGame.h"
 #include "Slate/SGameLayerManager.h"
 #include "UI/CustomGameInstance.h"
@@ -95,6 +99,14 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	RightDashEffectComponent = CreateDefaultSubobject<UNiagaraComponent>("Right Dash Effect Component");
 	RightDashEffectComponent->SetupAttachment(Camera);
 	RightDashEffectComponent->SetAutoActivate(false);
+
+	WallRunAudioComponent = CreateDefaultSubobject<UAudioComponent>("WallRunAudioComponent");
+	WallRunAudioComponent->SetupAttachment(RootComponent);
+	WallRunAudioComponent->bAutoActivate = false;
+
+	SlideAudioComponent = CreateDefaultSubobject<UAudioComponent>("SlideAudioComponent");
+	SlideAudioComponent->SetupAttachment(RootComponent);
+	SlideAudioComponent->bAutoActivate = false;
 }
 
 void ASuraPawnPlayer::BeginPlay()
@@ -106,13 +118,29 @@ void ASuraPawnPlayer::BeginPlay()
 		CheckpointSubsystem->OnCheckpointLoadedDelegate.AddDynamic(this, &ThisClass::OnCheckPointLoaded);
 	}
 
+	// Crash the game if there is no data asset assigned
+	checkf(PlayerSound_DataAsset, TEXT("Player sound data asset is not assigned"));
+
+	WallRunAudioComponent->SetSound(PlayerSound_DataAsset->WallRunSound.Sound);
+	WallRunAudioComponent->OnAudioPlaybackPercent.AddDynamic(this, &ASuraPawnPlayer::HandleWallRunAudioPlayback);
+	SlideAudioComponent->SetSound(PlayerSound_DataAsset->SlideSound.Sound);
+	SlideAudioComponent->OnAudioPlaybackPercent.AddDynamic(this, &ThisClass::HandleSlideAudioPlayback);
+
 	
 	GetDamageSystemComponent()->OnDamaged.AddUObject(CameraMovementComponent, &USuraPlayerCameraComponent::OnDamaged);
 	GetDamageSystemComponent()->OnDamaged.AddUObject(this, &ASuraPawnPlayer::OnDamaged);
 	GetDamageSystemComponent()->OnDeath.AddUObject(this, &ASuraPawnPlayer::OnDeath);
 
-	GetPlayerMovementComponent()->OnDash.AddUObject(this, &ASuraPawnPlayer::OnDash);
-	GetPlayerMovementComponent()->OnDashEnd.AddUObject(this, &ASuraPawnPlayer::OnDashEnd);
+	GetPlayerMovementComponent()->OnPrimaryJumpDelegate.AddDynamic(this, &ASuraPawnPlayer::OnPrimaryJump);
+	GetPlayerMovementComponent()->OnDoubleJumpDelegate.AddDynamic(this, &ASuraPawnPlayer::OnDoubleJump);
+	GetPlayerMovementComponent()->OnWallJumpDelegate.AddDynamic(this, &ASuraPawnPlayer::OnWallJump);
+	GetPlayerMovementComponent()->OnWallRunDelegate.AddDynamic(this, &ASuraPawnPlayer::OnWallRun);
+	GetPlayerMovementComponent()->OnWallRunEndDelegate.AddDynamic(this, &ASuraPawnPlayer::OnWallRunEnd);
+	GetPlayerMovementComponent()->OnSlideDelegate.AddDynamic(this, &ASuraPawnPlayer::OnSlide);
+	GetPlayerMovementComponent()->OnSlideEndDelegate.AddDynamic(this, &ASuraPawnPlayer::OnSlideEnd);
+	GetPlayerMovementComponent()->OnLandDelegate.AddDynamic(this, &ASuraPawnPlayer::OnLand);
+	GetPlayerMovementComponent()->OnDashDelegate.AddDynamic(this, &ASuraPawnPlayer::OnDash);
+	GetPlayerMovementComponent()->OnDashEndDelegate.AddDynamic(this, &ASuraPawnPlayer::OnDashEnd);
 
 	FTimerDelegate PlayerHealthCheckTimerDelegate;
 	PlayerHealthCheckTimerDelegate.BindUObject(this, &ASuraPawnPlayer::CheckPlayerHealth);
@@ -126,6 +154,14 @@ void ASuraPawnPlayer::BeginPlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("ASuraPawnPlayer::BeginPlay - CachedGameInstance is invalid!!"));
 	}
+}
+
+void ASuraPawnPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	GetDamageSystemComponent()->OnDeath.RemoveAll(this);
+	
 }
 
 UCapsuleComponent* ASuraPawnPlayer::GetCapsuleComponent()
@@ -173,6 +209,9 @@ void ASuraPawnPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartCrouchInput);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopCrouchInput);
 
+		// Developer Action
+		EnhancedInputComponent->BindAction(TeleportToLastCheckpointAction, ETriggerEvent::Started, this, &ThisClass::StartTeleportToLastCheckpointInput);
+
 		// <WeaponSystem>
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::UpdateLookInputVector2D);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::None, this, &ASuraPawnPlayer::SetLookInputVector2DZero);
@@ -207,6 +246,195 @@ void ASuraPawnPlayer::CheckPlayerHealth()
 		// Restore the number of max tokens
 		AttackTokensComponent->SetMaxEnemyAttackTokens(8);
 		AttackTokensComponent->SetMaxEnemyPursuitTokens(6);
+	}
+}
+
+void ASuraPawnPlayer::OnPrimaryJump()
+{
+	const FPlayerSoundData& Data = PlayerSound_DataAsset->PrimaryJumpSound;
+	float VolumeMultiplier, PitchMultiplier;
+
+	float Speed = GetPlayerMovementComponent()->Velocity.Size();
+	
+	CalculateMappedSoundValue(Data, Speed, VolumeMultiplier, PitchMultiplier);
+
+	UGameplayStatics::SpawnSoundAttached(Data.Sound, GetRootComponent(), NAME_None,
+		FVector(ForceInit), FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset,
+		false, VolumeMultiplier, PitchMultiplier);
+
+	if (Data.bDebug)
+	{
+		GEngine->AddOnScreenDebugMessage(1256, Data.DebugDisplayDuration, FColor::Green,
+			FString::Printf(TEXT("Primary Jump Sound Evaluation Speed: %.0f, "
+						"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
+	}
+}
+
+void ASuraPawnPlayer::OnDoubleJump()
+{
+	const FPlayerSoundData& Data = PlayerSound_DataAsset->DoubleJumpSound;
+	float VolumeMultiplier, PitchMultiplier;
+	float Speed = GetPlayerMovementComponent()->Velocity.Size();
+	CalculateMappedSoundValue(Data, GetPlayerMovementComponent()->Velocity.Size(), VolumeMultiplier, PitchMultiplier);
+	
+	UGameplayStatics::SpawnSoundAttached(PlayerSound_DataAsset->DoubleJumpSound.Sound, GetRootComponent(), NAME_None,
+		FVector(ForceInit), FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset,
+		false, VolumeMultiplier, PitchMultiplier);
+
+	if (Data.bDebug)
+	{
+		if (!GEngine) return;
+		GEngine->AddOnScreenDebugMessage(1257, Data.DebugDisplayDuration, FColor::Green,
+			FString::Printf(TEXT("Double Jump Sound Evaluation Speed: %.0f, "
+						"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
+	}
+}
+
+void ASuraPawnPlayer::OnWallJump()
+{
+	const FPlayerSoundData& Data = PlayerSound_DataAsset->PrimaryJumpSound;
+	float VolumeMultiplier, PitchMultiplier;
+
+	float Speed = GetPlayerMovementComponent()->Velocity.Size();
+	
+	CalculateMappedSoundValue(Data, Speed, VolumeMultiplier, PitchMultiplier);
+
+	UGameplayStatics::SpawnSoundAttached(Data.Sound, GetRootComponent(), NAME_None,
+		FVector(ForceInit), FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset,
+		false, VolumeMultiplier, PitchMultiplier);
+
+	if (Data.bDebug)
+	{
+		if (!GEngine) return;
+		GEngine->AddOnScreenDebugMessage(1258, Data.DebugDisplayDuration, FColor::Green,
+			FString::Printf(TEXT("Primary Jump Sound Evaluation Speed: %.0f, "
+						"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
+	}
+}
+
+void ASuraPawnPlayer::OnSlide()
+{
+	const FPlayerSoundData& Data = PlayerSound_DataAsset->SlideSound;
+	float VolumeMultiplier, PitchMultiplier;
+	float Speed = GetPlayerMovementComponent()->Velocity.Size();
+	CalculateMappedSoundValue(Data, Speed, VolumeMultiplier, PitchMultiplier);
+
+	SlideAudioComponent->VolumeMultiplier = VolumeMultiplier;
+	SlideAudioComponent->PitchMultiplier = PitchMultiplier;
+
+	if (Data.bDebug)
+	{
+		if (!GEngine) return;
+		GEngine->AddOnScreenDebugMessage(1259, Data.DebugDisplayDuration, FColor::Green,
+			FString::Printf(TEXT("Slide Sound Evaluation Speed: %.0f, "
+				"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
+	}
+
+	float TimeSinceSlideEnd = GetWorld()->GetTimeSeconds() - SlideEndTime;
+	if (TimeSinceSlideEnd > 0.75f)
+	{
+		SlideAudioComponent->SetBoolParameter("SkipStart", false);
+		SlideAudioComponent->Play();
+	}
+	else
+	{
+		SlideAudioComponent->SetBoolParameter("SkipStart", true);
+		SlideAudioComponent->Play();
+	}
+	
+}
+
+void ASuraPawnPlayer::OnSlideEnd()
+{
+	SlideAudioComponent->FadeOut(0.4f, 0.f);
+	SlideEndTime = GetWorld()->GetTimeSeconds();
+}
+
+void ASuraPawnPlayer::OnWallRun()
+{
+	const FPlayerSoundData& Data = PlayerSound_DataAsset->WallRunSound;
+	float VolumeMultiplier, PitchMultiplier;
+	float Speed = GetPlayerMovementComponent()->Velocity.Size();
+	CalculateMappedSoundValue(Data, Speed, VolumeMultiplier, PitchMultiplier);
+
+	WallRunAudioComponent->VolumeMultiplier = VolumeMultiplier;
+	WallRunAudioComponent->PitchMultiplier = PitchMultiplier;
+
+	if (Data.bDebug)
+	{
+		if (!GEngine) return;
+		GEngine->AddOnScreenDebugMessage(1260, Data.DebugDisplayDuration, FColor::Green,
+			FString::Printf(TEXT("Wall Run Sound Evaluation Speed: %.0f, "
+				"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
+	}
+	
+	WallRunAudioComponent->Play();
+
+	
+}
+
+void ASuraPawnPlayer::OnWallRunEnd()
+{
+	WallRunAudioComponent->FadeOut(0.4f, 0.f);
+}
+
+void ASuraPawnPlayer::OnLand(float ZSpeed)
+{
+	const FPlayerSoundData& Data = PlayerSound_DataAsset->LandSound;
+	float VolumeMultiplier, PitchMultiplier;
+
+	float Speed = FMath::Abs(ZSpeed);
+	
+	CalculateMappedSoundValue(Data, Speed, VolumeMultiplier, PitchMultiplier);
+
+	UGameplayStatics::SpawnSoundAttached(Data.Sound, GetRootComponent(), NAME_None,
+		FVector(ForceInit), FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset,
+		false, VolumeMultiplier, PitchMultiplier);
+
+	if (Data.bDebug)
+	{
+		if (!GEngine) return;
+		GEngine->AddOnScreenDebugMessage(1261, Data.DebugDisplayDuration, FColor::Green,
+			FString::Printf(TEXT("Land Sound Evaluation Speed: %.0f, "
+						"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
+	}
+}
+
+void ASuraPawnPlayer::HandleWallRunAudioPlayback(const USoundWave* PlayingSoundWave, const float PlaybackPercent)
+{
+	const FPlayerSoundData& Data = PlayerSound_DataAsset->WallRunSound;
+	float VolumeMultiplier, PitchMultiplier;
+	float Speed = GetPlayerMovementComponent()->Velocity.Size();
+	CalculateMappedSoundValue(Data, Speed, VolumeMultiplier, PitchMultiplier);
+
+	WallRunAudioComponent->VolumeMultiplier = VolumeMultiplier;
+	WallRunAudioComponent->PitchMultiplier = PitchMultiplier;
+
+	if (Data.bDebug)
+	{
+		if (!GEngine) return;
+		GEngine->AddOnScreenDebugMessage(1262, Data.DebugDisplayDuration, FColor::Green,
+			FString::Printf(TEXT("Wall Run Sound Evaluation Speed: %.0f, "
+				"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
+	}
+}
+
+void ASuraPawnPlayer::HandleSlideAudioPlayback(const USoundWave* PlayingSoundWave, const float PlaybackPercent)
+{
+	const FPlayerSoundData& Data = PlayerSound_DataAsset->SlideSound;
+	float VolumeMultiplier, PitchMultiplier;
+	float Speed = GetPlayerMovementComponent()->Velocity.Size();
+	CalculateMappedSoundValue(Data, Speed, VolumeMultiplier, PitchMultiplier);
+
+	SlideAudioComponent->VolumeMultiplier = VolumeMultiplier;
+	SlideAudioComponent->PitchMultiplier = PitchMultiplier;
+
+	if (Data.bDebug)
+	{
+		if (!GEngine) return;
+		GEngine->AddOnScreenDebugMessage(1263, Data.DebugDisplayDuration, FColor::Green,
+			FString::Printf(TEXT("Slide Sound Evaluation Speed: %.0f, "
+				"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
 	}
 }
 
@@ -298,6 +526,40 @@ void ASuraPawnPlayer::StopCrouchInput()
 	MovementComponent->SetCrouchPressed(false);
 }
 
+void ASuraPawnPlayer::StartTeleportToLastCheckpointInput()
+{
+	if (ASuraLevelGameMode* LevelGameMode = Cast<ASuraLevelGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		LevelGameMode->TeleportToLastCheckpoint();
+	}
+}
+
+void ASuraPawnPlayer::CalculateMappedSoundValue(const FPlayerSoundData& Data, float Speed,
+                                                float& OutVolumeMultiplier, float& OutPitchMultiplier)
+{
+	if (Data.bMapVolume)
+	{
+		TRange<float> VolumeSpeedRange = TRange<float>(Data.VolumeSpeedRange.Min, Data.VolumeSpeedRange.Max);
+		TRange<float> VolumeRange = TRange<float>(Data.VolumeRange.Min, Data.VolumeRange.Max);
+		OutVolumeMultiplier =  FMath::GetMappedRangeValueClamped(VolumeSpeedRange, VolumeRange, Speed);
+	}
+	else
+	{
+		OutVolumeMultiplier = 1.f;
+	}
+
+	if (Data.bMapPitch)
+	{
+		TRange<float> PitchSpeedRange = TRange<float>(Data.PitchSpeedRange.Min, Data.PitchSpeedRange.Max);
+		TRange<float> PitchRange = TRange<float>(Data.PitchRange.Min, Data.PitchRange.Max);
+		OutPitchMultiplier = FMath::GetMappedRangeValueClamped(PitchSpeedRange, PitchRange, Speed);
+	}
+	else
+	{
+		OutPitchMultiplier = 1.f;
+	}
+}
+
 bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCauser)
 {
 	if (MovementComponent->GetIsInvincible())
@@ -312,6 +574,50 @@ bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 	}
 
 	GetPlayerMovementComponent()->NotifyDamageData(DamageData.DamageType, DamageData.ImpulseDirection, DamageData.ImpulseMagnitude);
+
+	if (DamageCauser)
+	{
+		USoundBase* HitSound = nullptr;
+		if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(DamageCauser))
+		{
+			FName EnemyType = Enemy->GetEnemyType();
+			if (EnemyType == "Melee")
+			{
+				HitSound = PlayerSound_DataAsset->MeleeEnemyHitSound;
+			}
+			else if (EnemyType == "Rifle")
+			{
+				HitSound = PlayerSound_DataAsset->RifleEnemyHitSound;
+			}
+			else if (EnemyType == "Charger")
+			{
+				HitSound = PlayerSound_DataAsset->ChargerEnemyHitSound;
+			}
+			else if (EnemyType == "Turret")
+			{
+				HitSound = PlayerSound_DataAsset->TurretEnemyHitSound;
+			}
+		}
+		else if (ASuraCharacterBossProto* Boss = Cast<ASuraCharacterBossProto>(DamageCauser))
+		{
+			switch (DamageData.DamageType)
+			{
+				case EDamageType::Charge:
+					HitSound = PlayerSound_DataAsset->BossDownedHitSound;
+					break;
+				default:
+					HitSound = PlayerSound_DataAsset->BossNormalHitSound;
+					break;
+			}
+		}
+
+		if (HitSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, GetActorLocation());
+		}
+	}
+	
+	
 	
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }
@@ -352,37 +658,93 @@ void ASuraPawnPlayer::OnDamaged()
 void ASuraPawnPlayer::OnDeath()
 {
 	GEngine->AddOnScreenDebugMessage(10, 15.0f, FColor::Yellow, TEXT("Player Dead"));
-	if (ASuraLevelGameMode* GameMode = Cast<ASuraLevelGameMode>(UGameplayStatics::GetGameMode(this)))
-	{
-		GameMode->OnPlayerDeath(this);
-	}
+	GetPlayerMovementComponent()->NotifyDeath();
+	
+	// if (ASuraLevelGameMode* GameMode = Cast<ASuraLevelGameMode>(UGameplayStatics::GetGameMode(this)))
+	// {
+	// 	GameMode->OnPlayerDeath(this);
+	// }
 }
 
 void ASuraPawnPlayer::OnDash(FVector2D MovementInput)
 {
+	const FPlayerSoundData& Data = PlayerSound_DataAsset->DashSound;
+	float VolumeMultiplier, PitchMultiplier;
+
+	float Speed = GetPlayerMovementComponent()->Velocity.Size();
+	
+	CalculateMappedSoundValue(Data, Speed, VolumeMultiplier, PitchMultiplier);
+
+	UGameplayStatics::SpawnSoundAttached(Data.Sound, GetRootComponent(), NAME_None,
+		FVector(ForceInit), FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset,
+		false, VolumeMultiplier, PitchMultiplier);
+
+	if (Data.bDebug)
+	{
+		if (!GEngine) return;
+		GEngine->AddOnScreenDebugMessage(77777, Data.DebugDisplayDuration, FColor::Green,
+			FString::Printf(TEXT("Dash Sound Evaluation Speed: %.0f, "
+						"Mapped Volume Multiplier: %.3f, Mapped Pitch Multiplier: %.3f"), Speed, VolumeMultiplier, PitchMultiplier));
+	}	
+
+	
 	if (MovementInput.IsZero())
 	{
 		ForwardDashEffectComponent->Activate();
+
+		if (BackwardDashEffectComponent->IsActive())
+			BackwardDashEffectComponent->Deactivate();
+		if (LeftDashEffectComponent->IsActive())
+			LeftDashEffectComponent->Deactivate();
+		if (RightDashEffectComponent->IsActive())
+			RightDashEffectComponent->Deactivate();
 	}
 	else
 	{
 		if (MovementInput.Y > 0)
 		{
 			ForwardDashEffectComponent->Activate();
+			
+			if (BackwardDashEffectComponent->IsActive())
+				BackwardDashEffectComponent->Deactivate();
+			if (LeftDashEffectComponent->IsActive())
+				LeftDashEffectComponent->Deactivate();
+			if (RightDashEffectComponent->IsActive())
+				RightDashEffectComponent->Deactivate();
 		}
 		else if (MovementInput.Y < 0)
 		{
 			BackwardDashEffectComponent->Activate();
+
+			if (ForwardDashEffectComponent->IsActive())
+				ForwardDashEffectComponent->Deactivate();
+			if (LeftDashEffectComponent->IsActive())
+				LeftDashEffectComponent->Deactivate();
+			if (RightDashEffectComponent->IsActive())
+				RightDashEffectComponent->Deactivate();
 		}
 		else
 		{
 			if (MovementInput.X < 0)
 			{
 				LeftDashEffectComponent->Activate();
+				if (ForwardDashEffectComponent->IsActive())
+					ForwardDashEffectComponent->Deactivate();
+				if (BackwardDashEffectComponent->IsActive())
+					BackwardDashEffectComponent->Deactivate();
+				if (RightDashEffectComponent->IsActive())
+					RightDashEffectComponent->Deactivate();
 			}
 			else if (MovementInput.X > 0)
 			{
 				RightDashEffectComponent->Activate();
+
+				if (ForwardDashEffectComponent->IsActive())
+					ForwardDashEffectComponent->Deactivate();
+				if (BackwardDashEffectComponent->IsActive())
+					BackwardDashEffectComponent->Deactivate();
+				if (LeftDashEffectComponent->IsActive())
+					LeftDashEffectComponent->Deactivate();
 			}
 		}
 	}

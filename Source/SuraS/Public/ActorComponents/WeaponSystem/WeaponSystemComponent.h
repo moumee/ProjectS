@@ -95,14 +95,10 @@ public:
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon)
 	FDataTableRowHandle WSCDataTableHandle;
-	FWeaponSystemComponentData* WSCData;
-
+	FWeaponSystemComponentData* DTWSC;
 protected:
-	EWeaponName StartingWeaponName;
-	TSubclassOf<class AWeapon> StartingWeaponClass;
-
 	void LoadWSCData();
-	void InitializeStartingWeapon();
+	void InitStartingWeapons();
 	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "TargetingSystem|PlayerReference", Meta = (AllowPrivateAccess = "true"))
 	//class APlayerCameraManager* PlayerCameraManager;
 #pragma endregion
@@ -177,10 +173,6 @@ public:
 	FVector CalculateTargetRightHandPosition();
 
 	FTransform GetWeaponAimSocketRelativeTransform();
-
-	//TODO: World Space�� location�� rotation�� bonespace�� ������ ��ȯ�ϴ� �Լ� �ϼ��ϱ�
-	//FVector ConvertTargetToBoneSpace(const FVector& TargetWorldLocation, const FName& BoneName) const;
-
 #pragma endregion
 
 #pragma region SwitchWeapon
@@ -217,12 +209,7 @@ public:
 	/** suhyeon **/
 	UFUNCTION(BlueprintCallable, Category = "Weapons")
 	TArray<AWeapon*>& GetWeaponInventory() {return WeaponInventory; }
-
 	int32 GetCurrentWeaponIndex() const {return CurrentWeaponIndex; }
-
-	void EquipFirstWeapon();
-
-	void WeaponInventoryClear();
 	/** suhyeon**/
 
 	void AddNewWeaponToInventory(AWeapon* NewWeapon);
@@ -234,6 +221,5 @@ protected:
 public:
 	bool TryTakeControl(AWeapon* NewWeapon);
 	void ReleaseControl();
-
 #pragma endregion
 };

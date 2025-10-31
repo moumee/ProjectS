@@ -20,6 +20,8 @@
 #include "ActorComponents/WeaponSystem/SuraWeaponChargingState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponWaitingState.h"
 
+#include "UI/CustomGameInstance.h"
+
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -39,7 +41,7 @@ void UWeaponSystemComponent::BeginPlay()
 	Super::BeginPlay();
 	InitializePlayerReference();
 	LoadWSCData();
-	InitializeStartingWeapon();
+	InitStartingWeapons();
 }
 
 void UWeaponSystemComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -91,12 +93,10 @@ bool UWeaponSystemComponent::IsSceneCaptureActive()
 }
 void UWeaponSystemComponent::LoadWSCData()
 {
-	WSCData = WSCDataTableHandle.GetRow<FWeaponSystemComponentData>("");
-	if (WSCData)
+	DTWSC = WSCDataTableHandle.GetRow<FWeaponSystemComponentData>("");
+	if (DTWSC)
 	{
-		StartingWeaponName = WSCData->StartingWeaponName;
-		StartingWeaponClass = WSCData->StartingWeaponClass;
-		bUseSceneCapture = WSCData->bUseSceneCapture;
+		bUseSceneCapture = DTWSC->bUseSceneCapture;
 	}
 
 	if (bUseSceneCapture)
@@ -114,49 +114,99 @@ void UWeaponSystemComponent::LoadWSCData()
 		if (FPHUD) { FPHUD->AddToViewport(); }
 	}
 }
-void UWeaponSystemComponent::InitializeStartingWeapon() //TODO: 뭔가 이상함
+void UWeaponSystemComponent::InitStartingWeapons()
 {
+	if (!DTWSC) return;
+	const TMap<EWeaponName, bool> WeaponOwnerShipMap = DTWSC->WeaponOwnerShipMap;
+	const TMap<EWeaponName, TSubclassOf<AWeapon>> WeaponClasses = DTWSC->WeaponClasses;
+
+	UCustomGameInstance* GameInstance = Cast<UCustomGameInstance>(GetWorld()->GetGameInstance());
+
+	for (auto& Elem : WeaponOwnerShipMap)
+	{
+		bool bDoesGameInstanceHasWeapon = false;
+		if (GameInstance)
+		{
+			if (GameInstance->OwnedWeapons.Contains(Elem.Key))
+			{
+				if (GameInstance->OwnedWeapons[Elem.Key])
+				{
+					bDoesGameInstanceHasWeapon = true;
+				}
+			}
+		}
+
+		if (Elem.Value || bDoesGameInstanceHasWeapon)
+		{
+			UWorld* World = GetWorld();
+			if (!World) return;
+			if (!WeaponClasses.Find(Elem.Key)) continue;
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			AWeapon* NewWeapon = World->SpawnActor<AWeapon>(WeaponClasses.Find(Elem.Key)->Get(), FTransform(), ActorSpawnParams);
+			if (!NewWeapon) continue;
+			NewWeapon->InitializeWeapon(Cast<ASuraPawnPlayer>(GetOwner()));
+
+			AddNewWeaponToInventory(NewWeapon);
+
+			if (!GameInstance) return;
+			if (GameInstance->OwnedWeapons.Contains(Elem.Key))
+			{
+				GameInstance->OwnedWeapons[Elem.Key] = true;
+			}
+			else
+			{
+				GameInstance->OwnedWeapons.Emplace(Elem.Key, true);
+			}
+		}
+	}
+
 	for (int32 i = 0; i < WeaponInventory.Num(); i++)
 	{
-		if (WeaponInventory[i]->GetWeaponName() == StartingWeaponName)
+		if (WeaponInventory[i]->GetWeaponName() == DTWSC->StartingWeaponName)
 		{
-			//TODO: 이 경우에는 해당 무기로 변경
+			//CurrentWeaponIndex = i;
+			//ChangeWeapon(CurrentWeaponIndex);
+			//CurrentWeaponIndex = 0;
+			//SwitchToIndex(i);
 
+			int32 PrevIdx = CurrentWeaponIndex;
 			CurrentWeaponIndex = i;
-			ChangeWeapon(CurrentWeaponIndex);
+			CurrentWeapon = WeaponInventory[i];
+			CurrentWeapon->SwitchWeapon(PlayerOwner, true);
+			OnWeaponSwitched.Broadcast(PrevIdx, CurrentWeaponIndex);
 
 			return;
 		}
 	}
 
-	//TODO: 여기서는 그냥 Spawn 해도 됨
-
 	AWeapon* NewWeapon;
 
-	if (StartingWeaponClass != nullptr)
+	if (DTWSC->WeaponClasses.Contains(DTWSC->StartingWeaponName))
 	{
 		UWorld* const World = GetWorld();
 		if (World != nullptr && PlayerOwner != nullptr)
 		{
 			FActorSpawnParameters ActorSpawnParams;
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			NewWeapon = GetWorld()->SpawnActor<AWeapon>(StartingWeaponClass, PlayerOwner->GetActorTransform(), ActorSpawnParams);
+			NewWeapon = GetWorld()->SpawnActor<AWeapon>(DTWSC->WeaponClasses[DTWSC->StartingWeaponName], PlayerOwner->GetActorTransform(), ActorSpawnParams);
 			NewWeapon->InitializeWeapon(PlayerOwner);
 		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("NO Starting Weapon!!!!!"));
-		return;
 	}
 
 	WeaponInventory.AddUnique(NewWeapon);
 
 	if (CurrentWeapon == nullptr)
 	{
+		//CurrentWeapon = NewWeapon;
+		//CurrentWeapon->SwitchWeapon(PlayerOwner, true);
+
+		int32 PrevIdx = CurrentWeaponIndex;
+		CurrentWeaponIndex = WeaponInventory.Num() - 1;
 		CurrentWeapon = NewWeapon;
 		CurrentWeapon->SwitchWeapon(PlayerOwner, true);
-	}	
+		OnWeaponSwitched.Broadcast(PrevIdx, CurrentWeaponIndex);
+	}
 }
 #pragma endregion
 
@@ -486,25 +536,6 @@ FTransform UWeaponSystemComponent::GetWeaponAimSocketRelativeTransform()
 {
 	return FTransform();
 }
-
-
-//TODO: �Ʒ� �Լ� �ϼ��ϱ�
-//FVector UWeaponSystemComponent::ConvertTargetToBoneSpace(const FVector& TargetWorldLocation, const FName& BoneName) const
-//{
-//	// ĳ������ ���̷�Ż �޽� ������Ʈ ��������
-//	USkeletalMeshComponent* SkeletalMesh = PlayerOwner->GetMesh();
-//	if (!SkeletalMesh)
-//	{
-//		return FVector::ZeroVector;
-//	}
-//
-//	// ���� ��ġ�� �� �����̽��� ��ȯ
-//	//TODO: ConvertWorldLocationToBoneSpace �Լ��� �������� ����
-//	SkeletalMesh->TransformToBoneSpace(BoneName, );
-//
-//	FVector BoneSpaceLocation = SkeletalMesh->ConvertWorldLocationToBoneSpace(BoneName, TargetWorldPosition, EBoneSpaces::WorldSpace);
-//	return BoneSpaceLocation;
-//}
 #pragma endregion
 
 
@@ -576,24 +607,6 @@ void UWeaponSystemComponent::ChangeWeapon(int32 WeaponIndex)
 }
 #pragma endregion
 
-
-void UWeaponSystemComponent::EquipFirstWeapon() //TODO: 함수명 수정
-{
-	if (WeaponInventory.IsValidIndex(0))
-	{
-		AWeapon* FirstWeapon = WeaponInventory[0];
-
-		if (IsValid(CurrentWeapon))
-		{
-			CurrentWeapon->SwitchWeapon(PlayerOwner, false);
-		}
-
-		FirstWeapon->SwitchWeapon(PlayerOwner, true);
-		CurrentWeapon = FirstWeapon;
-		CurrentWeaponIndex = 0;
-	}
-}
-
 void UWeaponSystemComponent::AddNewWeaponToInventory(AWeapon* NewWeapon)
 {
 	if (!NewWeapon) { return; }
@@ -602,6 +615,7 @@ void UWeaponSystemComponent::AddNewWeaponToInventory(AWeapon* NewWeapon)
 		SkillWeaponInventory.AddUnique(NewWeapon);
 		if (!CurrentSkillWeapon)
 		{
+			CurrentSkillWeaponIndex = SkillWeaponInventory.Num() - 1;
 			CurrentSkillWeapon = NewWeapon;
 			CurrentSkillWeapon->EquipWeapon(PlayerOwner, true);
 		}
@@ -611,11 +625,14 @@ void UWeaponSystemComponent::AddNewWeaponToInventory(AWeapon* NewWeapon)
 	else
 	{
 		WeaponInventory.AddUnique(NewWeapon);
-		if (!CurrentWeapon)
-		{
-			CurrentWeapon = NewWeapon;
-			CurrentWeapon->SwitchWeapon(PlayerOwner, true);
-		}
+		//if (!CurrentWeapon)
+		//{
+		//	int32 PrevIdx = CurrentWeaponIndex;
+		//	CurrentWeaponIndex = WeaponInventory.Num() - 1;
+		//	CurrentWeapon = NewWeapon;
+		//	CurrentWeapon->SwitchWeapon(PlayerOwner, true);
+		//	OnWeaponSwitched.Broadcast(PrevIdx, CurrentWeaponIndex);
+		//}
 	}
 }
 

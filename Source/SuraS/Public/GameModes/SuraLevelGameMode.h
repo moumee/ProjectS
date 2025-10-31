@@ -23,14 +23,19 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	float PlayerMinimumRespawnHealth = 20.f;
+	
 public:
 
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 	
 	virtual void BeginPlay() override;
 	
-	void OnPlayerDeath(ASuraPawnPlayer* Player);
+	void RespawnToLastCheckpoint(ASuraPawnPlayer* Player);
 
 	void OnPlayerFellOutOfWorld(ASuraPawnPlayer* Player);
+
+	void TeleportToLastCheckpoint();
+
+	
 	
 };

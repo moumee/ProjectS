@@ -3,9 +3,12 @@
 
 #include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
 
-#include "CameraAnimationSequence.h"
+
+#include "Subsystems/WorldSubsystem.h"
+#include "CameraAnimationCameraModifier.h"
+#include "Engine/World.h"
+#include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "Camera/PlayerCameraManager.h"
-#include "Camera/CameraModifier.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/PlayerCameraMovementRow.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
@@ -29,6 +32,7 @@ void USuraPlayerCameraComponent::BeginPlay()
 
 	if (ASuraPawnPlayer* Player = GetOwner<ASuraPawnPlayer>())
 	{
+		PlayerRef = Player;
 		MovementComponent = Player->GetPlayerMovementComponent();
 		PlayerCamera = Player->GetCameraComponent();
 		PlayerController = Player->GetController<APlayerController>();
@@ -36,18 +40,20 @@ void USuraPlayerCameraComponent::BeginPlay()
 
 	InitCameraShakes();
 
-	MovementComponent->OnMove.AddUObject(this, &USuraPlayerCameraComponent::OnMove);
-	MovementComponent->OnAirborne.AddUObject(this, &USuraPlayerCameraComponent::OnAirborne);
-	MovementComponent->OnSlide.AddUObject(this, &USuraPlayerCameraComponent::OnSlide);
-	MovementComponent->OnWallRun.AddUObject(this, &USuraPlayerCameraComponent::OnWallRun);
+	PlayerRef->GetDamageSystemComponent()->OnDeath.AddUObject(this, &ThisClass::OnDeath);
+
+	MovementComponent->OnMoveDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnMove);
+	MovementComponent->OnAirborneDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnAirborne);
+	MovementComponent->OnSlideDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnSlide);
+	MovementComponent->OnWallRunDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnWallRun);
 	
-	MovementComponent->OnLand.AddUObject(this, &USuraPlayerCameraComponent::OnLand);
-	MovementComponent->OnPrimaryJump.AddUObject(this, &USuraPlayerCameraComponent::OnPrimaryJump);
-	MovementComponent->OnDoubleJump.AddUObject(this, &USuraPlayerCameraComponent::OnDoubleJump);
-	MovementComponent->OnWallJump.AddUObject(this, &USuraPlayerCameraComponent::OnWallJump);
-	MovementComponent->OnMantle.AddUObject(this, &USuraPlayerCameraComponent::OnMantle);
-	MovementComponent->OnDash.AddUObject(this, &USuraPlayerCameraComponent::OnDash);
-	MovementComponent->OnDowned.AddUObject(this, &USuraPlayerCameraComponent::OnDowned);
+	MovementComponent->OnLandDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnLand);
+	MovementComponent->OnPrimaryJumpDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnPrimaryJump);
+	MovementComponent->OnDoubleJumpDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnDoubleJump);
+	MovementComponent->OnWallJumpDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnWallJump);
+	MovementComponent->OnMantleDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnMantle);
+	MovementComponent->OnDashDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnDash);
+	MovementComponent->OnDownedDelegate.AddDynamic(this, &USuraPlayerCameraComponent::OnDowned);
 	
 	DownedFloorImpactDelegate.BindWeakLambda(this, [&]
 	{
@@ -61,6 +67,14 @@ void USuraPlayerCameraComponent::BeginPlay()
 	});
 	
 }
+
+void USuraPlayerCameraComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	PlayerRef->GetDamageSystemComponent()->OnDeath.RemoveAll(this);
+}
+
 
 void USuraPlayerCameraComponent::ChangeCameraLoopShake(const TSubclassOf<UCameraShakeBase>& InShake)
 {
@@ -238,15 +252,15 @@ void USuraPlayerCameraComponent::OnWallJump()
 
 void USuraPlayerCameraComponent::OnLand(float ZVelocity)
 {
-	if (ZVelocity < -300.f)
+	if (ZVelocity < -2800.f)
 	{
 		PlayOneShotCameraShake(StrongLandCameraShake);
 	}
-	else if (ZVelocity < -150.f)
+	else if (ZVelocity < -1800.f)
 	{
 		PlayOneShotCameraShake(MediumLandCameraShake);
 	}
-	else if (ZVelocity <= 0.f)
+	else if (ZVelocity <= -800.f)
 	{
 		PlayOneShotCameraShake(LightLandCameraShake);
 	}
@@ -316,6 +330,36 @@ void USuraPlayerCameraComponent::OnDowned()
 
 	GetWorld()->GetTimerManager().SetTimer(DownFloorImpactTimerHandle, DownedFloorImpactDelegate, 0.4f, false);
 	GetWorld()->GetTimerManager().SetTimer(DownGoingUpTimerHandle, DownedGoingUpShakeDelegate, 1.2f, false);
+	
+}
+
+void USuraPlayerCameraComponent::OnDeath()
+{
+	PlayOneShotCameraShake(DeathStartCameraShake);
+
+	TWeakObjectPtr WeakThis = this;
+	
+	FTimerHandle DeathFloorHitTimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(DeathFloorHitTimerHandle, [WeakThis]()
+	{
+		if (USuraPlayerCameraComponent* Comp = WeakThis.Get())
+		{
+			Comp->PlayOneShotCameraShake(Comp->DeathFloorHitCameraShake);
+		}
+	}, 0.5, false);
+
+	FTimerHandle DeathFadeTimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(DeathFadeTimerHandle, [WeakThis]()
+	{
+		if (auto Comp = WeakThis.Get())
+		{
+			Comp->PlayerController->PlayerCameraManager->StartCameraFade(0.f, 1.f, 0.5f, FColor::Black, true,
+				true);
+		}
+	}, 0.7, false);
+	
+	
+
 	
 }
 
