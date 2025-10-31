@@ -68,6 +68,11 @@ void UACUIMangerComponent::SetupInput()
 		if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PC->InputComponent))
 		{
 			EnhancedInput->BindAction(OpenInventoryAction, ETriggerEvent::Started, this, &UACUIMangerComponent::OpenUI, EUIType::Inventory);
+			EnhancedInput->BindAction(OpenPauseMenuAction, ETriggerEvent::Started, this, &UACUIMangerComponent::TogglePauseMenu);
+			// ETriggerEvent::Started -> 키가 눌렸을 때
+			EnhancedInput->BindAction(ShowTabMenuAction, ETriggerEvent::Started, this, &UACUIMangerComponent::OnShowTabMenuStarted);
+			// ETriggerEvent::Completed -> 키가 떼어졌을 때
+			EnhancedInput->BindAction(ShowTabMenuAction, ETriggerEvent::Completed, this, &UACUIMangerComponent::OnShowTabMenuCompleted);
 		}
 	}
 }
@@ -198,6 +203,52 @@ void UACUIMangerComponent::ShowDamageIndicator(AActor* DamageCauser)
 	}
 }
 
+void UACUIMangerComponent::OnShowTabMenuStarted(const FInputActionValue& Value)
+{
+	// 위젯 클래스가 유효하고, 아직 위젯이 생성되지 않았다면
+	if (TabMenuWidgetClass && !TabMenuWidgetInstance)
+	{
+		// 1. 이 컴포넌트의 소유자(Owner)를 가져옵니다.
+		//    (이 컴포넌트가 플레이어 캐릭터에 붙어있다고 가정)
+		APawn* OwnerPawn = Cast<APawn>(GetOwner());
+		if (!OwnerPawn)
+		{
+			// 소유자가 Pawn이 아니면 컨트롤러를 가져올 수 없습니다.
+			return; 
+		}
+
+		// 2. 소유자인 Pawn에서 컨트롤러를 가져옵니다.
+		APlayerController* PC = Cast<APlayerController>(OwnerPawn->GetController());
+		if (!PC) 
+		{
+			// 컨트롤러가 유효하지 않으면(예: AI에 의해 조종되는 Pawn) 중단합니다.
+			return; 
+		}
+
+		// 이제 PC 변수가 유효하므로 위젯을 생성할 수 있습니다.
+		TabMenuWidgetInstance = CreateWidget<UUserWidget>(PC, TabMenuWidgetClass);
+
+		if (TabMenuWidgetInstance)
+		{
+			// 뷰포트에 추가
+			TabMenuWidgetInstance->AddToViewport();
+		}
+	}
+}
+
+void UACUIMangerComponent::OnShowTabMenuCompleted(const FInputActionValue& Value)
+{
+	// 위젯 인스턴스가 유효하다면 (즉, 화면에 떠 있다면)
+	if (TabMenuWidgetInstance)
+	{
+		TabMenuWidgetInstance->RemoveFromParent();
+		TabMenuWidgetInstance = nullptr; // 참조 제거
+
+		// *** 중요 ***
+		// 여기서도 입력 모드를 건드리지 않습니다.
+	}
+}
+
 UDamageIndicatorWidget* UACUIMangerComponent::GetAvailableDamageIndicatorFromPool()
 {
 	for (UDamageIndicatorWidget* Indicator : DamageIndicatorPool)
@@ -211,3 +262,46 @@ UDamageIndicatorWidget* UACUIMangerComponent::GetAvailableDamageIndicatorFromPoo
 	return nullptr;
 }
 
+void UACUIMangerComponent::TogglePauseMenu()
+{
+	UE_LOG(LogTemp, Warning, TEXT("TogglePauseMenu 함수가 호출되었습니다!"));
+	
+	
+	APlayerController* PC = Cast<APlayerController>(GetOwner()->GetInstigatorController());
+	if (!PC || !GetWorld()) return;
+
+	if (UGameplayStatics::IsGamePaused(GetWorld()))
+	{
+		// --- 닫기 로직 ---
+		if (PauseMenuInstance && PauseMenuInstance->IsInViewport())
+		{
+			PauseMenuInstance->RemoveFromParent(); 
+			PauseMenuInstance = nullptr; 
+		}
+		UGameplayStatics::SetGamePaused(GetWorld(), false);
+		FInputModeGameOnly InputMode;
+		PC->SetInputMode(InputMode);
+		PC->SetShowMouseCursor(false);
+	}
+	else
+	{
+		// --- 열기 로직 ---
+		if (PauseMenuWidgetClass)
+		{
+			PauseMenuInstance = CreateWidget<UUserWidget>(PC, PauseMenuWidgetClass);
+
+			if (PauseMenuInstance)
+			{
+				PauseMenuInstance->AddToViewport(); 
+				UGameplayStatics::SetGamePaused(GetWorld(), true);
+				
+
+				PauseMenuInstance->SetKeyboardFocus();
+				
+				PC->SetInputMode(FInputModeUIOnly());
+				PC->SetShowMouseCursor(true);
+				
+			}
+		}
+	}
+}

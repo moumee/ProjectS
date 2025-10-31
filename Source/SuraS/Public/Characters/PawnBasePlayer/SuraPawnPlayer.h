@@ -11,6 +11,7 @@
 
 struct FPlayerSoundData;
 class UPlayerSound_DataAsset;
+class UCustomGameInstance;
 class UACHitScreenManager;
 class UACPlayerHealthComponent;
 class UNiagaraComponent;
@@ -83,10 +84,6 @@ public:
 	UACDamageSystem* GetDamageSystemComponent() const { return DamageSystemComponent; }
 	UACPlayerAttackTokens* GetAttackTokensComponent() const { return AttackTokensComponent; }
 	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser) override;
-
-	// SuraPawnPlayer.h - suhyeon
-	// UFUNCTION(BlueprintCallable)
-	// UPlayerHitWidget* GetPlayerHitWidget() const {return HitEffectWidget;}
 
 	FOnPlayerHealthHalved OnPlayerHealthHalved;
 
@@ -194,6 +191,9 @@ protected:
 	FVector2D PlayerLookInputVector2D; // <WeaponSystem>
 
 	FVector DefaultCameraRelativeLocation;
+
+	UPROPERTY()
+	TObjectPtr<UCustomGameInstance> CachedGameInstance; // suhyeon
 
 	UFUNCTION()
 	void OnPrimaryJump();

@@ -136,112 +136,112 @@ void UKillLogWidget::AddSkull()
 	}, FadeOutInterval, true, DelayBeforeFadeOut);
 }
 
-void UKillLogWidget::AddScoreEntry(const FString& Reason, int32 Value)
-{
-	if (!ScoreBox) return;
-
-	// [1] 텍스트 생성
-	FString EntryText = FString::Printf(TEXT("%s +%d"), *Reason, Value);
-	UTextBlock* ScoreText = NewObject<UTextBlock>(this);
-	ScoreText->SetText(FText::FromString(EntryText));
-	ScoreText->SetColorAndOpacity(FSlateColor(FLinearColor::Yellow));
-	ScoreText->SetRenderOpacity(1.f); // 최근 항목은 항상 1.0
-
-	// [2] 생성 시 Y 오프셋 적용 (위에서 아래로 떨어지는 느낌)
-	ScoreText->SetRenderTransform(FWidgetTransform(FVector2D(0, -20), FVector2D(1, 1), FVector2D(0.5f, 0.5f), 0.f));
-
-	// [3] ScoreBox에 추가 (맨 아래)
-	ScoreBox->AddChildToVerticalBox(ScoreText);
-
-	// [4] 기존 항목들 투명도 조정 (최대 3개)
-	const int32 Count = ScoreBox->GetChildrenCount();
-	for (int32 i = 0; i < Count; ++i)
-	{
-		if (UTextBlock* ChildText = Cast<UTextBlock>(ScoreBox->GetChildAt(i)))
-		{
-			float Alpha = FMath::Clamp(1.0f - 0.4f * i, 0.3f, 1.0f); // 예: 1.0, 0.6, 0.3
-			ChildText->SetRenderOpacity(Alpha);
-		}
-	}
-
-	// [5] 내려오는 애니메이션 (0.2초 동안 Y 오프셋 -20 → 0)
-	const float SlideDuration = 0.2f;
-	const float SlideInterval = 0.02f;
-	const int32 SlideSteps = SlideDuration / SlideInterval;
-
-	TWeakObjectPtr<UTextBlock> WeakScoreText = ScoreText;
-
-	FTimerHandle SlideTimer;
-	GetWorld()->GetTimerManager().SetTimer(SlideTimer, [WeakScoreText, StepCounter = 0, SlideSteps]() mutable
-	{
-		if (!WeakScoreText.IsValid()) return;
-
-		float Progress = FMath::Clamp((float)StepCounter / SlideSteps, 0.f, 1.f);
-		float YOffset = FMath::Lerp(-20.f, 0.f, Progress);
-		WeakScoreText->SetRenderTransform(FWidgetTransform(FVector2D(0.f, YOffset), FVector2D(1.f, 1.f), FVector2D(0.5f, 0.5f), 0.f));
-
-		StepCounter++;
-	}, SlideInterval, true);
-
-	// [6] 최대 3개 유지
-	if (ScoreBox->GetChildrenCount() > 3)
-	{
-		ScoreBox->RemoveChildAt(0); // 가장 오래된 항목 제거
-	}
-
-	// [7] 5.0초 뒤 → 자연스럽게 제거
-	FTimerHandle FadeTimer;
-	GetWorld()->GetTimerManager().SetTimer(FadeTimer, [this, WeakScoreText]()
-	{
-		if (!WeakScoreText.IsValid()) return;
-
-		WeakScoreText->SetRenderOpacity(0.f);
-		if (ScoreBox->HasChild(WeakScoreText.Get()))
-		{
-			ScoreBox->RemoveChild(WeakScoreText.Get());
-		}
-	}, 5.0f, false);
-	
-}
-
-
-void UKillLogWidget::UpdateTotalScore(int32 AddedScore)
-{
-	TotalScore += AddedScore;
-
-	if (TotalScoreText)
-	{
-		FString ScoreText = FString::Printf(TEXT("%d"), TotalScore);
-		TotalScoreText->SetText(FText::FromString(ScoreText));
-		TotalScoreText->SetRenderOpacity(1.0f); // 점수 갱신 시 항상 보이도록
-
-		// 기존 Fade 타이머 초기화 후 다시 설정
-		if (FadeTotalScoreTimerHandle.IsValid())
-		{
-			GetWorld()->GetTimerManager().ClearTimer(FadeTotalScoreTimerHandle);
-		}
-
-		const float DelayBeforeFadeOut = 5.0f;
-		const float FadeDuration = 0.5f;
-		const float FadeInterval = 0.02f;
-		const int32 FadeSteps = FadeDuration / FadeInterval;
-
-		TWeakObjectPtr<UTextBlock> WeakTotalScore = TotalScoreText;
-
-		GetWorld()->GetTimerManager().SetTimer(FadeTotalScoreTimerHandle, [WeakTotalScore, StepCounter = 0, FadeSteps]() mutable
-		{
-			if (!WeakTotalScore.IsValid()) return;
-
-			float Progress = FMath::Clamp(static_cast<float>(StepCounter) / FadeSteps, 0.f, 1.f);
-			float NewOpacity = FMath::Lerp(1.f, 0.f, Progress);
-
-			WeakTotalScore->SetRenderOpacity(NewOpacity);
-
-			StepCounter++;
-		}, FadeInterval, true, DelayBeforeFadeOut);
-	}
-	
-}
+// void UKillLogWidget::AddScoreEntry(const FString& Reason, int32 Value)
+// {
+// 	if (!ScoreBox) return;
+//
+// 	// [1] 텍스트 생성
+// 	FString EntryText = FString::Printf(TEXT("%s +%d"), *Reason, Value);
+// 	UTextBlock* ScoreText = NewObject<UTextBlock>(this);
+// 	ScoreText->SetText(FText::FromString(EntryText));
+// 	ScoreText->SetColorAndOpacity(FSlateColor(FLinearColor::Yellow));
+// 	ScoreText->SetRenderOpacity(1.f); // 최근 항목은 항상 1.0
+//
+// 	// [2] 생성 시 Y 오프셋 적용 (위에서 아래로 떨어지는 느낌)
+// 	ScoreText->SetRenderTransform(FWidgetTransform(FVector2D(0, -20), FVector2D(1, 1), FVector2D(0.5f, 0.5f), 0.f));
+//
+// 	// [3] ScoreBox에 추가 (맨 아래)
+// 	ScoreBox->AddChildToVerticalBox(ScoreText);
+//
+// 	// [4] 기존 항목들 투명도 조정 (최대 3개)
+// 	const int32 Count = ScoreBox->GetChildrenCount();
+// 	for (int32 i = 0; i < Count; ++i)
+// 	{
+// 		if (UTextBlock* ChildText = Cast<UTextBlock>(ScoreBox->GetChildAt(i)))
+// 		{
+// 			float Alpha = FMath::Clamp(1.0f - 0.4f * i, 0.3f, 1.0f); // 예: 1.0, 0.6, 0.3
+// 			ChildText->SetRenderOpacity(Alpha);
+// 		}
+// 	}
+//
+// 	// [5] 내려오는 애니메이션 (0.2초 동안 Y 오프셋 -20 → 0)
+// 	const float SlideDuration = 0.2f;
+// 	const float SlideInterval = 0.02f;
+// 	const int32 SlideSteps = SlideDuration / SlideInterval;
+//
+// 	TWeakObjectPtr<UTextBlock> WeakScoreText = ScoreText;
+//
+// 	FTimerHandle SlideTimer;
+// 	GetWorld()->GetTimerManager().SetTimer(SlideTimer, [WeakScoreText, StepCounter = 0, SlideSteps]() mutable
+// 	{
+// 		if (!WeakScoreText.IsValid()) return;
+//
+// 		float Progress = FMath::Clamp((float)StepCounter / SlideSteps, 0.f, 1.f);
+// 		float YOffset = FMath::Lerp(-20.f, 0.f, Progress);
+// 		WeakScoreText->SetRenderTransform(FWidgetTransform(FVector2D(0.f, YOffset), FVector2D(1.f, 1.f), FVector2D(0.5f, 0.5f), 0.f));
+//
+// 		StepCounter++;
+// 	}, SlideInterval, true);
+//
+// 	// [6] 최대 3개 유지
+// 	if (ScoreBox->GetChildrenCount() > 3)
+// 	{
+// 		ScoreBox->RemoveChildAt(0); // 가장 오래된 항목 제거
+// 	}
+//
+// 	// [7] 5.0초 뒤 → 자연스럽게 제거
+// 	FTimerHandle FadeTimer;
+// 	GetWorld()->GetTimerManager().SetTimer(FadeTimer, [this, WeakScoreText]()
+// 	{
+// 		if (!WeakScoreText.IsValid()) return;
+//
+// 		WeakScoreText->SetRenderOpacity(0.f);
+// 		if (ScoreBox->HasChild(WeakScoreText.Get()))
+// 		{
+// 			ScoreBox->RemoveChild(WeakScoreText.Get());
+// 		}
+// 	}, 5.0f, false);
+// 	
+// }
+//
+//
+// void UKillLogWidget::UpdateTotalScore(int32 AddedScore)
+// {
+// 	TotalScore += AddedScore;
+//
+// 	if (TotalScoreText)
+// 	{
+// 		FString ScoreText = FString::Printf(TEXT("%d"), TotalScore);
+// 		TotalScoreText->SetText(FText::FromString(ScoreText));
+// 		TotalScoreText->SetRenderOpacity(1.0f); // 점수 갱신 시 항상 보이도록
+//
+// 		// 기존 Fade 타이머 초기화 후 다시 설정
+// 		if (FadeTotalScoreTimerHandle.IsValid())
+// 		{
+// 			GetWorld()->GetTimerManager().ClearTimer(FadeTotalScoreTimerHandle);
+// 		}
+//
+// 		const float DelayBeforeFadeOut = 5.0f;
+// 		const float FadeDuration = 0.5f;
+// 		const float FadeInterval = 0.02f;
+// 		const int32 FadeSteps = FadeDuration / FadeInterval;
+//
+// 		TWeakObjectPtr<UTextBlock> WeakTotalScore = TotalScoreText;
+//
+// 		GetWorld()->GetTimerManager().SetTimer(FadeTotalScoreTimerHandle, [WeakTotalScore, StepCounter = 0, FadeSteps]() mutable
+// 		{
+// 			if (!WeakTotalScore.IsValid()) return;
+//
+// 			float Progress = FMath::Clamp(static_cast<float>(StepCounter) / FadeSteps, 0.f, 1.f);
+// 			float NewOpacity = FMath::Lerp(1.f, 0.f, Progress);
+//
+// 			WeakTotalScore->SetRenderOpacity(NewOpacity);
+//
+// 			StepCounter++;
+// 		}, FadeInterval, true, DelayBeforeFadeOut);
+// 	}
+// 	
+// }
 
 void UKillLogWidget::NativeConstruct()
 {

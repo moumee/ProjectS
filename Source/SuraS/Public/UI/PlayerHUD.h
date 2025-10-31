@@ -74,32 +74,32 @@ private:
 	UOverlay* WeaponSlot_0;
 	UPROPERTY(meta = (BindWidget))
 	UOverlay* WeaponSlot_1;
-	UPROPERTY(meta = (BindWidget))
-	UOverlay* WeaponSlot_2;
+	// UPROPERTY(meta = (BindWidget))
+	// UOverlay* WeaponSlot_2;
 
 	UPROPERTY(meta = (BindWidget))
 	UImage* Image_0;
 	UPROPERTY(meta = (BindWidget))
 	UImage* Image_1;
-	UPROPERTY(meta = (BindWidget))
-	UImage* Image_2;
+	// UPROPERTY(meta = (BindWidget))
+	// UImage* Image_2;
 
-	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
-	UWidgetAnimation* Slot0_CenterToBottom;
-	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
-	UWidgetAnimation* Slot0_BottomToTop;
+	// UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
+	// UWidgetAnimation* Slot0_CenterToBottom;
+	// UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
+	// UWidgetAnimation* Slot0_BottomToTop;
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
 	UWidgetAnimation* Slot0_TopToCenter;
-	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
-	UWidgetAnimation* Slot1_CenterToBottom;
-	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
-	UWidgetAnimation* Slot1_BottomToTop;
+	// UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
+	// UWidgetAnimation* Slot1_CenterToBottom;
+	// UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
+	// UWidgetAnimation* Slot1_BottomToTop;
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
 	UWidgetAnimation* Slot1_TopToCenter;
-	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
-	UWidgetAnimation* Slot2_CenterToBottom;
-	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
-	UWidgetAnimation* Slot2_BottomToTop;
+	// UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
+	// UWidgetAnimation* Slot2_CenterToBottom;
+	// UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
+	// UWidgetAnimation* Slot2_BottomToTop;
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
 	UWidgetAnimation* Slot2_TopToCenter;
 
