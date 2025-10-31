@@ -40,16 +40,16 @@ void UPlayerHUD::NativeConstruct()
 
 	// 애니메이션 등록 (키 값은 UMG 애니메이션 변수명과 동일하게 작성)
 	AnimationMap.Add(TEXT("Slot0_TopToCenter"), Slot0_TopToCenter);
-	AnimationMap.Add(TEXT("Slot0_CenterToBottom"), Slot0_CenterToBottom);
-	AnimationMap.Add(TEXT("Slot0_BottomToTop"), Slot0_BottomToTop);
+	// AnimationMap.Add(TEXT("Slot0_CenterToBottom"), Slot0_CenterToBottom);
+	// AnimationMap.Add(TEXT("Slot0_BottomToTop"), Slot0_BottomToTop);
 
 	AnimationMap.Add(TEXT("Slot1_TopToCenter"), Slot1_TopToCenter);
-	AnimationMap.Add(TEXT("Slot1_CenterToBottom"), Slot1_CenterToBottom);
-	AnimationMap.Add(TEXT("Slot1_BottomToTop"), Slot1_BottomToTop);
+	// AnimationMap.Add(TEXT("Slot1_CenterToBottom"), Slot1_CenterToBottom);
+	// AnimationMap.Add(TEXT("Slot1_BottomToTop"), Slot1_BottomToTop);
 
 	AnimationMap.Add(TEXT("Slot2_TopToCenter"), Slot2_TopToCenter);
-	AnimationMap.Add(TEXT("Slot2_CenterToBottom"), Slot2_CenterToBottom);
-	AnimationMap.Add(TEXT("Slot2_BottomToTop"), Slot2_BottomToTop);
+	// AnimationMap.Add(TEXT("Slot2_CenterToBottom"), Slot2_CenterToBottom);
+	// AnimationMap.Add(TEXT("Slot2_BottomToTop"), Slot2_BottomToTop);
 	
 }
 
@@ -84,11 +84,15 @@ void UPlayerHUD::UpdateWeaponIcons()
 
 	const TArray<AWeapon*>& Inventory = WeaponSystemComponent->GetWeaponInventory();
 
-	// 최대 3개만 처리
-	for (int32 i = 0; i < FMath::Min(3, Inventory.Num()); ++i)
+	// 최대 2개만 처리
+	for (int32 i = 0; i < FMath::Min(2, Inventory.Num()); ++i)
 	{
 		AWeapon* Weapon = Inventory[i];
-		if (!Weapon) continue;
+		if (!Weapon) 
+		{
+			UE_LOG(LogTemp, Error, TEXT("UpdateWeaponIcons: Weapon at index %d is NULL!"), i);
+			continue; 
+		}
 
 		UTexture2D* Icon = Weapon->GetWeaponImage();
 		if (!Icon) continue;
@@ -97,7 +101,7 @@ void UPlayerHUD::UpdateWeaponIcons()
 		{
 			case 0: Image_0->SetBrushFromTexture(Icon); break;
 			case 1: Image_1->SetBrushFromTexture(Icon); break;
-			case 2: Image_2->SetBrushFromTexture(Icon); break;
+			//case 2: Image_2->SetBrushFromTexture(Icon); break;
 		}
 	}
 
@@ -128,7 +132,7 @@ void UPlayerHUD::InitializeHUD() const
 	// 모든 슬롯을 먼저 숨김 처리
 	if (WeaponSlot_0) WeaponSlot_0->SetVisibility(ESlateVisibility::Collapsed);
 	if (WeaponSlot_1) WeaponSlot_1->SetVisibility(ESlateVisibility::Collapsed);
-	if (WeaponSlot_2) WeaponSlot_2->SetVisibility(ESlateVisibility::Collapsed);
+	//if (WeaponSlot_2) WeaponSlot_2->SetVisibility(ESlateVisibility::Collapsed);
 
 	// 인벤토리 수에 따라 슬롯을 보여줌
 	if (WeaponCount >= 1 && WeaponSlot_0)
@@ -139,10 +143,10 @@ void UPlayerHUD::InitializeHUD() const
 	{
 		WeaponSlot_1->SetVisibility(ESlateVisibility::Visible);
 	}
-	if (WeaponCount >= 3 && WeaponSlot_2)
-	{
-		WeaponSlot_2->SetVisibility(ESlateVisibility::Visible);
-	}
+	// if (WeaponCount >= 3 && WeaponSlot_2)
+	// {
+	// 	WeaponSlot_2->SetVisibility(ESlateVisibility::Visible);
+	// }
 
 	UACPlayerHealthComponent* HealthComp = SuraPawnPlayer->FindComponentByClass<UACPlayerHealthComponent>();
 	if (HealthComp && !HealthComp->OnHealthChanged.IsAlreadyBound(this, &UPlayerHUD::OnHealthUpdated)) // <JaeHyeong> 중복 바인딩 방지
@@ -159,8 +163,8 @@ void UPlayerHUD::UpdatePickup(EWeaponName WeaponName)
 
 	static int32 PreviousWeaponCount = 0;
 
-	// 무기 개수가 3개 이상이고, 이전에도 3개 이상이면 업데이트하지 않음
-	if (WeaponCount >= 3 && PreviousWeaponCount >= 3)
+	// 무기 개수가 2개이고, 이전에도 2개이면 업데이트하지 않음
+	if (WeaponCount >= 2 && PreviousWeaponCount >= 2)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("무기 이미 3개 이상 - UI 업데이트 생략"));
 		return;
@@ -186,11 +190,18 @@ void UPlayerHUD::HandleWeaponSlotUIUpdate(int32 PrevIndex, int32 NewIndex)
 	{
 		return;
 	}
+	// NumWeapons >= 4 인 경우 방지 (무기 슬롯은 2개로 제한됨)
+	if (NumWeapons > 2) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("HandleWeaponSlotUIUpdate called with NumWeapons > 2. Capping at 2 slots."));
+		// NumWeapons를 2로 제한하거나 에러 처리 필요
+		// 현재는 아래 로직에서 NumWeapons == 2만 처리하므로 3개 이상일 때 애니메이션은 발생하지 않음
+	}
 
 	// 위치 문자열 상수 정의
 	static const FString Pos_Center = TEXT("Center");
 	static const FString Pos_Top    = TEXT("Top");
-	static const FString Pos_Bottom = TEXT("Bottom");
+	static const FString Pos_Bottom = TEXT("Bottom"); // 2개일 때는 사용되지 않음
 
 	TMap<int32, FString> PrevPosMap;
 	TMap<int32, FString> NewPosMap;
@@ -201,28 +212,29 @@ void UPlayerHUD::HandleWeaponSlotUIUpdate(int32 PrevIndex, int32 NewIndex)
 
 	if (NumWeapons == 2)
 	{
-		// 나머지 하나는 Top으로 취급
-		int32 OtherPrev = (PrevIndex + 1) % 2;
-		int32 OtherNew = (NewIndex + 1) % 2;
-
-		PrevPosMap.Add(OtherPrev, Pos_Top);
-		NewPosMap.Add(OtherNew, Pos_Top);
+		// 나머지 하나는 Top으로 취급 (0과 1만 존재하므로 % 2 사용)
+		int32 OtherIndex = (NewIndex == 0) ? 1 : 0;
+       
+		PrevPosMap.Add((PrevIndex == 0) ? 1 : 0, Pos_Top);
+		NewPosMap.Add(OtherIndex, Pos_Top);
 	}
+	/* [주석 대비] 기획 변경으로 3개 무기를 지원하게 될 경우
 	else if (NumWeapons == 3)
 	{
-		// Top, Bottom 계산
-		int32 PrevTop    = (PrevIndex + 1) % 3;
-		int32 PrevBottom = (PrevIndex + 2) % 3;
+	   // Top, Bottom 계산
+	   int32 PrevTop    = (PrevIndex + 1) % 3;
+	   int32 PrevBottom = (PrevIndex + 2) % 3;
 
-		int32 NewTop     = (NewIndex + 1) % 3;
-		int32 NewBottom  = (NewIndex + 2) % 3;
+	   int32 NewTop     = (NewIndex + 1) % 3;
+	   int32 NewBottom  = (NewIndex + 2) % 3;
 
-		PrevPosMap.Add(PrevTop, Pos_Top);
-		PrevPosMap.Add(PrevBottom, Pos_Bottom);
+	   PrevPosMap.Add(PrevTop, Pos_Top);
+	   PrevPosMap.Add(PrevBottom, Pos_Bottom);
 
-		NewPosMap.Add(NewTop, Pos_Top);
-		NewPosMap.Add(NewBottom, Pos_Bottom);
+	   NewPosMap.Add(NewTop, Pos_Top);
+	   NewPosMap.Add(NewBottom, Pos_Bottom);
 	}
+	*/
 
 	// 애니메이션 재생
 	for (int32 SlotIndex = 0; SlotIndex < NumWeapons; ++SlotIndex)
@@ -260,7 +272,12 @@ void UPlayerHUD::UpdateWeaponSlotUIByInventoryOrder()
 {
 	const int32 NumWeapons = WeaponSystemComponent->GetWeaponInventory().Num();
 	const int32 CurrentIndex = WeaponSystemComponent->GetCurrentWeaponIndex();
-
+	
+	if (NumWeapons > 2) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UpdateWeaponSlotUIByInventoryOrder called with NumWeapons > 2. Capping visible slots to 2."));
+	}
+	
 	if (NumWeapons < 2)
 		return;
 
@@ -269,19 +286,43 @@ void UPlayerHUD::UpdateWeaponSlotUIByInventoryOrder()
 
 	// 목표 UI 위치 구성: Center 기준으로 순환큐 만들기
 	TMap<int32, FString> FinalPosMap;
-	for (int32 Offset = 0; Offset < NumWeapons && Offset < 3; ++Offset)
+	// 무기 개수가 2개일 때만 처리
+	if (NumWeapons == 2)
 	{
-		int32 Index = (CurrentIndex + Offset) % NumWeapons;
-
-		FString Pos;
-		switch (Offset)
+		for (int32 Offset = 0; Offset < 2; ++Offset)
 		{
-		case 0: Pos = "Center"; break;
-		case 1: Pos = "Top"; break;
-		case 2: Pos = "Bottom"; break;
+			int32 Index = (CurrentIndex + Offset) % 2; // 2개이므로 % 2
+           
+			FString Pos;
+			switch (Offset)
+			{
+			case 0: Pos = "Center"; break; // 현재 무기
+			case 1: Pos = "Top"; break;    // 다음 무기
+				/* [주석 대비] 3개일 경우
+				case 2: Pos = "Bottom"; break; 
+				*/
+			}
+			FinalPosMap.Add(Index, Pos);
 		}
-		FinalPosMap.Add(Index, Pos);
 	}
+	/* [주석 대비] 기획 변경으로 3개 무기를 지원하게 될 경우
+	else if (NumWeapons == 3)
+	{
+		for (int32 Offset = 0; Offset < 3; ++Offset)
+		{
+		   int32 Index = (CurrentIndex + Offset) % 3;
+
+		   FString Pos;
+		   switch (Offset)
+		   {
+		   case 0: Pos = "Center"; break;
+		   case 1: Pos = "Top"; break;
+		   case 2: Pos = "Bottom"; break;
+		   }
+		   FinalPosMap.Add(Index, Pos);
+		}
+	}
+	*/
 
 	// 디버깅용 출력
 	UE_LOG(LogTemp, Warning, TEXT("Final Position Mapping:"));
