@@ -24,6 +24,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "SaveGame/SuraSaveGame.h"
 #include "Slate/SGameLayerManager.h"
+#include "UI/CustomGameInstance.h"
 
 ASuraPawnPlayer::ASuraPawnPlayer()
 {
@@ -119,6 +120,12 @@ void ASuraPawnPlayer::BeginPlay()
 		CorrectionSystemCheckTime, true);
 
 	DefaultCameraRelativeLocation = Camera->GetRelativeLocation();
+
+	CachedGameInstance = Cast<UCustomGameInstance>(GetGameInstance());
+	if (!CachedGameInstance)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASuraPawnPlayer::BeginPlay - CachedGameInstance is invalid!!"));
+	}
 }
 
 UCapsuleComponent* ASuraPawnPlayer::GetCapsuleComponent()
@@ -232,8 +239,16 @@ void ASuraPawnPlayer::HandleLookInput(const FInputActionValue& Value)
 	
 	FVector2D InputVector = Value.Get<FVector2D>();
 
-	AddControllerYawInput(InputVector.X);
-	AddControllerPitchInput(InputVector.Y);
+	if (CachedGameInstance) 
+	{
+		AddControllerYawInput(InputVector.X * CachedGameInstance->MouseSensitivity);
+		AddControllerPitchInput(InputVector.Y * CachedGameInstance->MouseSensitivity);
+	}
+	else
+	{
+		AddControllerYawInput(InputVector.X * 1.0f);
+		AddControllerPitchInput(InputVector.Y * 1.0f);
+	}
 }
 
 

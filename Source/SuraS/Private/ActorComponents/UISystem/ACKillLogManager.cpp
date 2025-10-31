@@ -60,8 +60,8 @@ void UACKillLogManager::AddKillLog(const FString& Killer, const FString& Victim)
 	KillLogWidget->AddSkull();
 
 	// 2. 점수 로그 항목 추가
-	KillLogWidget->AddScoreEntry(TEXT("Enemy Kill"), 100);
+	//KillLogWidget->AddScoreEntry(TEXT("Enemy Kill"), 100);
 
 	// 3. 총 점수 업데이트
-	KillLogWidget->UpdateTotalScore(100);
+	//KillLogWidget->UpdateTotalScore(100);
 }
