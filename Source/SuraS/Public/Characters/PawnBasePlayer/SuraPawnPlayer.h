@@ -52,6 +52,8 @@ public:
 	
 	virtual void BeginPlay() override;
 
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	UCapsuleComponent* GetCapsuleComponent();
 
 	UCameraComponent* GetCameraComponent() const { return Camera; };
@@ -179,6 +181,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> CrouchAction;
+
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
+	TObjectPtr<UInputAction> TeleportToLastCheckpointAction;
 	
 
 	FTimerHandle PlayerHealthCheckTimer;
@@ -220,6 +225,7 @@ protected:
 	void StartShiftInput();
 	void StartCrouchInput();
 	void StopCrouchInput();
+	void StartTeleportToLastCheckpointInput();
 	void CalculateMappedSoundValue(const FPlayerSoundData& Data, float Speed, float& OutVolumeMultiplier,
 	                               float& OutPitchMultiplier);
 

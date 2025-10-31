@@ -149,6 +149,14 @@ void ASuraPawnPlayer::BeginPlay()
 	DefaultCameraRelativeLocation = Camera->GetRelativeLocation();
 }
 
+void ASuraPawnPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	GetDamageSystemComponent()->OnDeath.RemoveAll(this);
+	
+}
+
 UCapsuleComponent* ASuraPawnPlayer::GetCapsuleComponent()
 {
 	return CapsuleComponent;
@@ -193,6 +201,9 @@ void ASuraPawnPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(ShiftAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartShiftInput);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraPawnPlayer::StartCrouchInput);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASuraPawnPlayer::StopCrouchInput);
+
+		// Developer Action
+		EnhancedInputComponent->BindAction(TeleportToLastCheckpointAction, ETriggerEvent::Started, this, &ThisClass::StartTeleportToLastCheckpointInput);
 
 		// <WeaponSystem>
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraPawnPlayer::UpdateLookInputVector2D);
@@ -500,8 +511,16 @@ void ASuraPawnPlayer::StopCrouchInput()
 	MovementComponent->SetCrouchPressed(false);
 }
 
+void ASuraPawnPlayer::StartTeleportToLastCheckpointInput()
+{
+	if (ASuraLevelGameMode* LevelGameMode = Cast<ASuraLevelGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		LevelGameMode->TeleportToLastCheckpoint();
+	}
+}
+
 void ASuraPawnPlayer::CalculateMappedSoundValue(const FPlayerSoundData& Data, float Speed,
-	float& OutVolumeMultiplier, float& OutPitchMultiplier)
+                                                float& OutVolumeMultiplier, float& OutPitchMultiplier)
 {
 	if (Data.bMapVolume)
 	{
@@ -624,10 +643,12 @@ void ASuraPawnPlayer::OnDamaged()
 void ASuraPawnPlayer::OnDeath()
 {
 	GEngine->AddOnScreenDebugMessage(10, 15.0f, FColor::Yellow, TEXT("Player Dead"));
-	if (ASuraLevelGameMode* GameMode = Cast<ASuraLevelGameMode>(UGameplayStatics::GetGameMode(this)))
-	{
-		GameMode->OnPlayerDeath(this);
-	}
+	GetPlayerMovementComponent()->NotifyDeath();
+	
+	// if (ASuraLevelGameMode* GameMode = Cast<ASuraLevelGameMode>(UGameplayStatics::GetGameMode(this)))
+	// {
+	// 	GameMode->OnPlayerDeath(this);
+	// }
 }
 
 void ASuraPawnPlayer::OnDash(FVector2D MovementInput)

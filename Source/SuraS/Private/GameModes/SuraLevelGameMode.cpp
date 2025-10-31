@@ -46,13 +46,14 @@ void ASuraLevelGameMode::BeginPlay()
 	}
 }
 
-void ASuraLevelGameMode::OnPlayerDeath(ASuraPawnPlayer* Player)
+void ASuraLevelGameMode::RespawnToLastCheckpoint(ASuraPawnPlayer* Player)
 {
 	USuraCheckpointSubsystem* Subsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
 	ensure(Subsystem);
 
 	float MaxHealth = Player->GetDamageSystemComponent()->GetMaxHealth();
 	Player->GetDamageSystemComponent()->SetHealth(MaxHealth);
+	Player->GetDamageSystemComponent()->SetIsDead(false);
 
 	FTransform SpawnTransform = Subsystem->GetCurrentSave()->SpawnTransform;
 	Player->TeleportTo(SpawnTransform.GetLocation(), SpawnTransform.Rotator());
@@ -74,4 +75,19 @@ void ASuraLevelGameMode::OnPlayerFellOutOfWorld(ASuraPawnPlayer* Player)
 	FTransform SpawnTransform = Subsystem->GetCurrentSave()->SpawnTransform;
 	Player->TeleportTo(SpawnTransform.GetLocation(), SpawnTransform.Rotator());
 }
+
+void ASuraLevelGameMode::TeleportToLastCheckpoint()
+{
+	USuraCheckpointSubsystem* Subsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
+	ensure(Subsystem);
+
+	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+	if (!IsValid(PlayerPawn)) return;
+	FTransform SpawnTransform = Subsystem->GetCurrentSave()->SpawnTransform;
+	PlayerPawn->TeleportTo(SpawnTransform.GetLocation(), SpawnTransform.Rotator());
+}
+
+
+
+
 

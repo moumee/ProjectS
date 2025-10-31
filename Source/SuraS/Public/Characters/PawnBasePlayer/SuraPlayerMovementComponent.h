@@ -481,6 +481,17 @@ protected:
 	bool bDeadRequested = false;
 
 	void ConsumeDeadRequest();
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UCurveVector> DeathCameraLocationCurve;
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UCurveVector> DeathCameraRotationCurve;
+
+	const float DeathCameraAnimDuration = 0.7667f;
+
+	FRotator DeathStartControlRotation;
+
+	float DeathStartTime = 0.f;
 	
 #pragma endregion Dead
 
