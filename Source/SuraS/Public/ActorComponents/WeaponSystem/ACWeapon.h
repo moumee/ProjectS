@@ -242,8 +242,11 @@ protected:
 
 #pragma region FireData
 protected:
+	UPROPERTY()
 	FWeaponFireData FireData_L;
+	UPROPERTY()
 	FWeaponFireData FireData_R;
+	UPROPERTY()
 	FWeaponFireData FireData_Skill;
 #pragma endregion
 
