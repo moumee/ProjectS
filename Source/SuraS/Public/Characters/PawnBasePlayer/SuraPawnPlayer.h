@@ -9,7 +9,9 @@
 #include "Interfaces/PlayerInterface.h"
 #include "SuraPawnPlayer.generated.h"
 
+struct FPlayerSoundData;
 class UPlayerSound_DataAsset;
+class UCustomGameInstance;
 class UACHitScreenManager;
 class UACPlayerHealthComponent;
 class UNiagaraComponent;
@@ -51,6 +53,8 @@ public:
 	
 	virtual void BeginPlay() override;
 
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	UCapsuleComponent* GetCapsuleComponent();
 
 	UCameraComponent* GetCameraComponent() const { return Camera; };
@@ -80,10 +84,6 @@ public:
 	UACDamageSystem* GetDamageSystemComponent() const { return DamageSystemComponent; }
 	UACPlayerAttackTokens* GetAttackTokensComponent() const { return AttackTokensComponent; }
 	virtual bool TakeDamage(const FDamageData& DamageData, AActor* DamageCauser) override;
-
-	// SuraPawnPlayer.h - suhyeon
-	// UFUNCTION(BlueprintCallable)
-	// UPlayerHitWidget* GetPlayerHitWidget() const {return HitEffectWidget;}
 
 	FOnPlayerHealthHalved OnPlayerHealthHalved;
 
@@ -178,6 +178,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> CrouchAction;
+
+	UPROPERTY(EditAnywhere, Category = "Editor Assign")
+	TObjectPtr<UInputAction> TeleportToLastCheckpointAction;
 	
 
 	FTimerHandle PlayerHealthCheckTimer;
@@ -188,6 +191,9 @@ protected:
 	FVector2D PlayerLookInputVector2D; // <WeaponSystem>
 
 	FVector DefaultCameraRelativeLocation;
+
+	UPROPERTY()
+	TObjectPtr<UCustomGameInstance> CachedGameInstance; // suhyeon
 
 	UFUNCTION()
 	void OnPrimaryJump();
@@ -206,6 +212,12 @@ protected:
 	UFUNCTION()
 	void OnLand(float ZSpeed);
 
+	UFUNCTION()
+	void HandleWallRunAudioPlayback(const USoundWave* PlayingSoundWave, const float PlaybackPercent);
+
+	UFUNCTION()
+	void HandleSlideAudioPlayback(const USoundWave* PlayingSoundWave, const float PlaybackPercent);
+	
 	
 	void HandleMoveInput(const FInputActionValue& Value);
 	void HandleLookInput(const FInputActionValue& Value);
@@ -213,7 +225,9 @@ protected:
 	void StartShiftInput();
 	void StartCrouchInput();
 	void StopCrouchInput();
-	
+	void StartTeleportToLastCheckpointInput();
+	void CalculateMappedSoundValue(const FPlayerSoundData& Data, float Speed, float& OutVolumeMultiplier,
+	                               float& OutPitchMultiplier);
 
 	// Damage Comp Event Delegate Functions
 	void OnDamaged();

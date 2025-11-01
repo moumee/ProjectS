@@ -29,6 +29,7 @@ enum class EUIType : uint8
 	Skill UMETA(DisplayName = "Skill"),
 };
 
+struct FInputActionValue;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SURAS_API UACUIMangerComponent : public UActorComponent
@@ -61,6 +62,15 @@ protected:
 	UPROPERTY()
 	UWeaponSystemComponent* WeaponSystemComponent;
 
+	/** Pause 메뉴 위젯 블루프린트 클래스 (UUserWidget 또는 UBaseUIWidget일 수 있음) */
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> PauseMenuWidgetClass; // UUserWidget으로 선언하는 것이 안전
+
+	/** 현재 뷰포트에 표시 중인 Pause 메뉴 인스턴스 */
+	UPROPERTY()
+	TObjectPtr<UUserWidget> PauseMenuInstance;
+
+	
 	
 
 public:	
@@ -79,8 +89,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UACKillLogManager* GetKillLogManager() const { return KillLogManager; }
 
-	UFUNCTION(BlueprintCallable)
-	UACPlayerHUDManager* GetPlayerHudManger() const { return PlayerHUDManager; }
+	// UFUNCTION(BlueprintCallable)
+	// UACPlayerHUDManager* GetPlayerHudManger() const { return PlayerHUDManager; }
 
 	UDataTable* GetWeaponDataTable() const
 	{
@@ -102,12 +112,19 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ShowDamageIndicator(AActor* DamageCauser);
 
+	UFUNCTION(BlueprintCallable, Category = "UI|Input")
+	void TogglePauseMenu();
+
+
 private:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* OpenInventoryAction;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* OpenPauseMenuAction;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* ShowTabMenuAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
 	UDataTable* DTWeapon;
@@ -120,6 +137,24 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TMap<EUIType, TSubclassOf<UBaseUIWidget>> UIWidgetClasses; // 위젯 블루프린트 클래스
+
+	// --- UI ---
+
+	/** 블루프린트에서 설정할 Tab 메뉴 위젯 클래스 */
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> TabMenuWidgetClass;
+
+	/** 현재 생성된 Tab 메뉴 위젯 인스턴스 (메모리 관리를 위해 UPROPERTY 사용) */
+	UPROPERTY()
+	UUserWidget* TabMenuWidgetInstance;
+
+	// --- 입력 핸들러 ---
+	
+	/** ShowTabMenuAction이 시작되었을 때 (Tab 누름) */
+	void OnShowTabMenuStarted(const FInputActionValue& Value);
+
+	/** ShowTabMenuAction이 완료/취소되었을 때 (Tab 뗌) */
+	void OnShowTabMenuCompleted(const FInputActionValue& Value);
 
 	/** 생성된 UI 위젯 관리 **/
 	UPROPERTY()
@@ -139,3 +174,5 @@ private:
 	// get available widget from pool
 	UDamageIndicatorWidget* GetAvailableDamageIndicatorFromPool();
 };
+
+

@@ -25,8 +25,8 @@ public:
 	void SetKillLogManager(UACKillLogManager* InManager);
 
 	void AddSkull();
-	void AddScoreEntry(const FString& Reason, int32 Value);
-	void UpdateTotalScore(int32 AddedScore);
+	//void AddScoreEntry(const FString& Reason, int32 Value);
+	//void UpdateTotalScore(int32 AddedScore);
 	void SetSkullTexture(UTexture2D* InTexture);
 
 protected:
@@ -36,20 +36,20 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	UHorizontalBox* SkullBox;
 
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* TotalScoreText;
+	// UPROPERTY(meta = (BindWidget))
+	// UTextBlock* TotalScoreText;
+	//
+	// UPROPERTY(meta = (BindWidget))
+	// UVerticalBox* ScoreBox;
+	//
+	// UPROPERTY(meta = (BindWidget))
+	// UVerticalBox* KillLogBox;
 
-	UPROPERTY(meta = (BindWidget))
-	UVerticalBox* ScoreBox;
-
-	UPROPERTY(meta = (BindWidget))
-	UVerticalBox* KillLogBox;
-
-	FTimerHandle AutoHideTimer;
-	
-	FTimerHandle TotalScoreFadeOutTimer;
-	
-	FTimerHandle FadeTotalScoreTimerHandle;
+	// FTimerHandle AutoHideTimer;
+	//
+	// FTimerHandle TotalScoreFadeOutTimer;
+	//
+	// FTimerHandle FadeTotalScoreTimerHandle;
 
 
 	
@@ -60,7 +60,7 @@ private:
 	UPROPERTY()
 	UTexture2D* SkullTexture;
 
-	int32 TotalScore = 0;
+	//int32 TotalScore = 0;
 	
 	
 };

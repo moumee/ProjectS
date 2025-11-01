@@ -15,7 +15,7 @@ public class BoranagaSKControlEditor : ModuleRules
                 "Slate", 
                 "SlateCore",
                 "BlueprintGraph",
-                "AnimGraph"
+                "AnimGraph",
             }
         );
 
@@ -51,5 +51,6 @@ public class BoranagaSKControlEditor : ModuleRules
                 "AnimationBlueprintEditor",
             }
         );
+        
     }
 }

@@ -426,10 +426,11 @@ bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 			CurrentWeapon = NewWeapon;
 			CurrentWeapon->SwitchWeapon(PlayerOwner, true);
 		}
+		OnWeaponPickedUp.Broadcast(NewWeaponPickUp->GetWeaponName()); /** suhyeon **/
 	}
 
 	//FName WeaponNameAsFName = FName(*UEnum::GetValueAsString(NewWeaponPickUp->GetWeaponName()));
-	OnWeaponPickedUp.Broadcast(NewWeaponPickUp->GetWeaponName()); /** suhyeon **/
+	
 
 	return true;
 }

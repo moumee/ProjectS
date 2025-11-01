@@ -193,11 +193,11 @@ void UDamageIndicatorWidget::InitializeIndicator(AActor* DamageCauser)
     if (IsValid(Enemy))
     {
        FName EnemyType = Enemy->GetEnemyType();
-       if (EnemyType == "Rifle" || EnemyType == "Bombard")
+       if (EnemyType == "Rifle" || EnemyType == "Bombard" || EnemyType == "Turret")
        {
           LastPlayerHitEnemyRange = EEnemyRange::ER_Ranged;
        }
-       else if (EnemyType == "Melee")
+       else if (EnemyType == "Melee" || EnemyType == "Charger")
        {
           LastPlayerHitEnemyRange = EEnemyRange::ER_Melee;
        }

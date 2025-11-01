@@ -2,17 +2,20 @@
 
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 
+#include "EngineCamerasSubsystem.h"
 #include "KismetTraceUtils.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponBaseState.h"
 #include "ActorComponents/WeaponSystem/WeaponAimUIWidget.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
+#include "Animations/CameraAnimationCameraModifier.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/PawnPlayerMovmentRow.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Characters/PawnBasePlayer/SuraPlayerController.h"
 #include "Components/CapsuleComponent.h"
 #include "Curves/CurveVector.h"
+#include "GameModes/SuraLevelGameMode.h"
 
 #define WALL_TRACE_CHANNEL ECC_GameTraceChannel2
 #define ENEMY_TRACE_CHANNEL ECC_GameTraceChannel6
@@ -1387,9 +1390,8 @@ void USuraPlayerMovementComponent::TickDowned(float DeltaTime)
 {
 	const float ElapsedTime = GetWorld()->GetTimeSeconds() - DownedStartTime;
 	
-	if (ElapsedTime > DownedDuration)
+	if (ElapsedTime >= DownedDuration)
 	{
-		OnMoveDelegate.Broadcast();
 		SetMovementState(EMovementState::EMS_Move);
 		return;
 	}
@@ -1447,7 +1449,74 @@ void USuraPlayerMovementComponent::TickDowned(float DeltaTime)
 void USuraPlayerMovementComponent::TickDead(float DeltaTime)
 {
 	// 1. Play death animation
-	// 2. Go to main menu
+	float ElapsedTime = GetWorld()->GetTimeSeconds() - DeathStartTime;
+	if (ElapsedTime >= DeathCameraAnimDuration + 0.7f)
+	{
+		ASuraLevelGameMode* LevelGameMode = Cast<ASuraLevelGameMode>(GetWorld()->GetAuthGameMode());
+		if (ensure(LevelGameMode))
+		{
+			LevelGameMode->RespawnToLastCheckpoint(SuraPawnPlayer);
+		}
+		SuraPawnPlayer->GetCameraComponent()->SetRelativeLocation(SuraPawnPlayer->GetDefaultCameraRelativeLocation());
+		SuraPlayerController->SetControlRotation(SuraPawnPlayer->GetActorRotation());
+		SetMovementState(EMovementState::EMS_Move);
+		return;
+	}
+
+	FVector DefaultCameraRelativeLocation = SuraPawnPlayer->GetDefaultCameraRelativeLocation();
+	FVector TargetCameraLocation = DefaultCameraRelativeLocation + DeathCameraLocationCurve->GetVectorValue(ElapsedTime);
+	SuraPawnPlayer->GetCameraComponent()->SetRelativeLocation(TargetCameraLocation);
+
+	FVector DeathRotationVector = DeathCameraRotationCurve->GetVectorValue(ElapsedTime);
+	FRotator TargetControlRotation = DeathStartControlRotation + FRotator(DeathRotationVector.Y, DeathRotationVector.Z, DeathRotationVector.X);
+	if (FRotator::NormalizeAxis(TargetControlRotation.Pitch) < -90.f)
+	{
+		TargetControlRotation.Pitch = -90.f;
+	}
+	else if (FRotator::NormalizeAxis(TargetControlRotation.Pitch) > 90.f)
+	{
+		TargetControlRotation.Pitch = 90.f;
+	}
+	GetController()->SetControlRotation(TargetControlRotation);
+
+	if (!IsGrounded())
+	{
+		float MaxHorizontalSpeed = bIsRunning ? RunSpeed : WalkSpeed;
+		if (bWallJumpAirBoost)
+		{
+			MaxHorizontalSpeed = WallRunJumpAirSpeed2D;
+		}
+		else
+		{
+			if (bHasDashedInAir && bShouldKeepSlideSpeed)
+			{
+				MaxHorizontalSpeed = FMath::Max(DashEndSpeed, LastSlideSpeedBeforeAirborne.Size2D());
+			}
+			else if (bHasDashedInAir && !bShouldKeepSlideSpeed)
+			{
+				MaxHorizontalSpeed = DashEndSpeed;
+			}
+			else if (!bHasDashedInAir && bShouldKeepSlideSpeed)
+			{
+				MaxHorizontalSpeed = LastSlideSpeedBeforeAirborne.Size2D();
+			}
+			
+		}
+		
+		
+		if (Velocity.Size2D() > MaxHorizontalSpeed)
+		{
+			Velocity.X = Velocity.GetSafeNormal2D().X * MaxHorizontalSpeed;
+			Velocity.Y = Velocity.GetSafeNormal2D().Y * MaxHorizontalSpeed;
+		}
+		
+		Velocity.Z = FMath::Max(Velocity.Z - GravityScale * DeltaTime, -MaxFallVerticalSpeed);
+	}
+	else
+	{
+		Velocity = FMath::VInterpTo(Velocity, FVector::ZeroVector, DeltaTime, 3.f);
+	}
+	
 }
 
 bool USuraPlayerMovementComponent::CanWallRun()
@@ -1558,50 +1627,53 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 	switch (OldState)
 	{
 		case EMovementState::EMS_Move:
-			{
-				SlideResetTimer = 0.f;
-			}
+		{
+			SlideResetTimer = 0.f;
 			break;
+		}
+		
 		case EMovementState::EMS_Airborne:
-			{
-				bHasDashedInAir = false;
-				bWallJumpAirBoost = false;
-				bShouldKeepSlideSpeed = false;
-				bAirborneFromGravityLauncher = false;
-				ElapsedTimeFromSurface = 0.f;
-				CurrentJumpCount = 0;
+		{
+			bHasDashedInAir = false;
+			bWallJumpAirBoost = false;
+			bShouldKeepSlideSpeed = false;
+			bAirborneFromGravityLauncher = false;
+			ElapsedTimeFromSurface = 0.f;
+			CurrentJumpCount = 0;
 
-				bCoyoteTimeActivated = false;
-			}
+			bCoyoteTimeActivated = false;
 			break;
+		}
+		
 		case EMovementState::EMS_WallRun:
+		{
+			OnWallRunEndDelegate.Broadcast();
+			WallRunElapsedTime = 0.f;
+			bIsDeceleratingZ = false;
+			bTiltRecovering = false;
+
+			CooldownWalls.Add({CurrentWallHit, GetWorld()->GetTimeSeconds()});
+
+			if (NewState == EMovementState::EMS_Airborne)
 			{
-				OnWallRunEndDelegate.Broadcast();
-				WallRunElapsedTime = 0.f;
-				bIsDeceleratingZ = false;
-				bTiltRecovering = false;
-
-				CooldownWalls.Add({CurrentWallHit, GetWorld()->GetTimeSeconds()});
-
-				if (NewState == EMovementState::EMS_Airborne)
-				{
-					bWallJumpAirBoost = true;
-				}
-				else
-				{
-					bControllerTilting = false;
-				}
+				bWallJumpAirBoost = true;
+			}
+			else
+			{
+				bControllerTilting = false;
 			}
 			break;
+		}
+		
 		case EMovementState::EMS_Mantle:
 			break;
 		case EMovementState::EMS_Slide:
-			{
-				OnSlideEndDelegate.Broadcast();
-				// This is for slide direction.
-				SlideStateElapsedTime = 0.f;
-			}
-			break;
+		{
+			OnSlideEndDelegate.Broadcast();
+			// This is for slide direction.
+			SlideStateElapsedTime = 0.f;
+		}
+		break;
 		case EMovementState::EMS_Downed:
 			break;
 		case EMovementState::EMS_Dead:
@@ -1613,70 +1685,80 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 	switch (NewState)
 	{
 		case EMovementState::EMS_Move:
-			{
-				OnMoveDelegate.Broadcast();
-				break;
-			}
+		{
+			OnMoveDelegate.Broadcast();
+			break;
+		}
 		case EMovementState::EMS_Airborne:
-			{
-				OnAirborneDelegate.Broadcast();
-				break;
-			}
+		{
+			OnAirborneDelegate.Broadcast();
+			break;
+		}
 		case EMovementState::EMS_WallRun:
-			{
-				OnWallRunDelegate.Broadcast();
-				bHasRecentlySlid = false;
-				SlideElapsedTime = 0.f; 
-		
-				Velocity.X = Velocity.GetSafeNormal2D().X * WallRunEnterSpeed2D;
-				Velocity.Y = Velocity.GetSafeNormal2D().Y * WallRunEnterSpeed2D;
+		{
+			OnWallRunDelegate.Broadcast();
+			bHasRecentlySlid = false;
+			SlideElapsedTime = 0.f;
 
-				if (WallRunEnterMode == EWallRunEnter::EWRE_Upward)
-				{
-					bIsDeceleratingZ = true;
-					Velocity.Z = 700.f;
-				}
-				else if (WallRunEnterMode == EWallRunEnter::EWRE_Downward)
-				{
-					bIsDeceleratingZ = true;
-					Velocity.Z = -700.f;
-				}
-				else if (WallRunEnterMode == EWallRunEnter::EWRE_Neutral)
-				{
-					bIsDeceleratingZ = false;
-					Velocity.Z = 0.f;
-				}
+			Velocity.X = Velocity.GetSafeNormal2D().X * WallRunEnterSpeed2D;
+			Velocity.Y = Velocity.GetSafeNormal2D().Y * WallRunEnterSpeed2D;
+
+			if (WallRunEnterMode == EWallRunEnter::EWRE_Upward)
+			{
+				bIsDeceleratingZ = true;
+				Velocity.Z = 700.f;
+			}
+			else if (WallRunEnterMode == EWallRunEnter::EWRE_Downward)
+			{
+				bIsDeceleratingZ = true;
+				Velocity.Z = -700.f;
+			}
+			else if (WallRunEnterMode == EWallRunEnter::EWRE_Neutral)
+			{
+				bIsDeceleratingZ = false;
+				Velocity.Z = 0.f;
 			}
 			break;
+		}
+		
 		case EMovementState::EMS_Mantle:
-			{
-				OnMantleDelegate.Broadcast();
-				bHasRecentlySlid = false;
-				SlideElapsedTime = 0.f;
-			}
+		{
+			OnMantleDelegate.Broadcast();
+			bHasRecentlySlid = false;
+			SlideElapsedTime = 0.f;
 			break;
+		}
+		
 		case EMovementState::EMS_Slide:
-			{
-				OnSlideDelegate.Broadcast();
-				bHasRecentlySlid = true;
-				SlideDecelerationAmount = (Velocity.Size() - CrouchSpeed) / FMath::Max(SlideMaxDuration - SlideElapsedTime, 0.1f);
-			}
+		{
+			OnSlideDelegate.Broadcast();
+			bHasRecentlySlid = true;
+			SlideDecelerationAmount = (Velocity.Size() - CrouchSpeed) / FMath::Max(
+				SlideMaxDuration - SlideElapsedTime, 0.1f);
 			break;
+		}
+		
 		case EMovementState::EMS_Downed:
-			{
-				OnDownedDelegate.Broadcast();
-				DownedStartControlRotation = SuraPawnPlayer->GetControlRotation();
-				DownedStartTime = GetWorld()->GetTimeSeconds();
-				// if (OldState == EMovementState::EMS_Move)
-				// {
-				// 	Velocity = FVector::ZeroVector;
-				// }
-				
-				Velocity += ReceivedDamageDirection * ReceivedDamageForce;
-			}
+		{
+			OnDownedDelegate.Broadcast();
+			DownedStartControlRotation = SuraPawnPlayer->GetControlRotation();
+			DownedStartTime = GetWorld()->GetTimeSeconds();
+			// if (OldState == EMovementState::EMS_Move)
+			// {
+			// 	Velocity = FVector::ZeroVector;
+			// }
+
+			Velocity += ReceivedDamageDirection * ReceivedDamageForce;
 			break;
+		}
+		
 		case EMovementState::EMS_Dead:
+		{
+			Velocity = FVector::ZeroVector;
+			DeathStartControlRotation = SuraPawnPlayer->GetControlRotation();
+			DeathStartTime = GetWorld()->GetTimeSeconds();
 			break;
+		}
 		default:
 			break;
 	}
@@ -1684,6 +1766,12 @@ void USuraPlayerMovementComponent::OnMovementStateChanged(EMovementState OldStat
 	if (OldState == EMovementState::EMS_Airborne && (NewState == EMovementState::EMS_Move || NewState == EMovementState::EMS_Slide))
 	{
 		OnLandDelegate.Broadcast(LastVelocityBeforeLand.Z);
+	}
+
+	if (OldState == EMovementState::EMS_Dead && NewState == EMovementState::EMS_Move)
+	{
+		SuraPlayerController->PlayerCameraManager->StopCameraFade();
+		SuraPlayerController->PlayerCameraManager->StartCameraFade(1.f, 0.f, 1.f, FLinearColor::Black, true);
 	}
 }
 
@@ -1703,10 +1791,11 @@ bool USuraPlayerMovementComponent::IsGrounded()
 	FVector SweepStart = SuraPawnPlayer->GetActorLocation();
 	FVector SweepEnd = SuraPawnPlayer->GetActorLocation() +
 		FVector::DownVector * (SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+
+	float CapsuleRadius = SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleRadius();
 	
 	bool bHit = GetWorld()->SweepSingleByChannel(GroundHit, SweepStart, SweepEnd, FQuat::Identity, ECC_WorldStatic,
-		FCollisionShape::MakeSphere(15.f), GroundSweepParams, ResponseParams);
-	
+		FCollisionShape::MakeSphere(CapsuleRadius - 5.f), GroundSweepParams, ResponseParams);
 
 	if (!bHit || !GroundHit.bBlockingHit)
 	{
@@ -1792,6 +1881,7 @@ void USuraPlayerMovementComponent::NotifyResetModification()
 
 void USuraPlayerMovementComponent::NotifyDeath()
 {
+	bDeadRequested = true;
 }
 
 
