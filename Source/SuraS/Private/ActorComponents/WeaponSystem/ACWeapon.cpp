@@ -1251,7 +1251,10 @@ void AWeapon::FireMultiProjectile_Pool(FWeaponFireData* FireData, int32 NumPenet
 		if (bWeaponAssetsReady)
 		{
 			//TODO: 방향 정상화
-			SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, ProjectileDirection.Rotation());
+			if (FireData->MuzzleFireEffect)
+			{
+				SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, SpawnLocation, ProjectileDirection.Rotation());
+			}
 		}
 	}
 
@@ -1264,7 +1267,10 @@ void AWeapon::FireMultiProjectile_Pool(FWeaponFireData* FireData, int32 NumPenet
 		}
 	}
 
-	StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon); //TODO: ������. ����
+	if (AM_Fire_Character && AM_Fire_Weapon)
+	{
+		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon); //TODO: ������. ����
+	}
 
 	// <Overheat> //TODO: Delete
 	if (bIsOverheatMode)

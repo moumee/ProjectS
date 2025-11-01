@@ -17,7 +17,7 @@
 /**
  * 
  */
-USTRUCT(Atomic, BlueprintType)
+USTRUCT(BlueprintType)
 struct FWeaponFireData
 {
 	GENERATED_USTRUCT_BODY()
