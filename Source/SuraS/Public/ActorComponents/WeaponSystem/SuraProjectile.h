@@ -119,17 +119,27 @@ protected:
 
 	int32 CurrentRicochetCount = 0;
 
-
 public:	
 	ASuraProjectile();
-	void InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0, bool HitScan = false, bool AutoAim = false);
+	void InitProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0, bool HitScan = false, bool AutoAim = false);
 	void InitProjectile_Pool(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0, bool HitScan = false, bool AutoAim = false);
 	void InitPhysicsProjectile();
 	void InitHitScan();
 	void LoadProjectileData();
 	void LoadProjectileData_Pool();
+	void SetWeapon(AWeapon* NewWeapon);
 	void SetHomingTarget(bool bIsHoming, AActor* Target);
 	void LaunchProjectile();
+	void LaunchProjectile_Pool(FVector MuzzlePos, FRotator Direction);
+
+private:
+	bool bActive = false;
+	FTimerHandle LifeTimer;
+	float LifeSpan;
+public:
+	void StartLifeTimer(float Seconds);
+	void StopLifeTimer();
+	void DeactiveProjectile();
 
 	void ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector CenterLocation);
 	void ApplyDamage(AActor* OtherActor, float DamageAmount, EDamageType DamageType, bool bCanForceDamage, const FName BoneName, TEnumAsByte<EPhysicalSurface> SurfaceType = SurfaceType1, const FVector ImpulseDirection = FVector::ZeroVector, const FVector ImpactPoint = FVector::ZeroVector);
@@ -163,6 +173,13 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void BeginDestroy() override;
+
+	/** Called when the actor falls out of the world 'safely' (below KillZ and such) */
+	virtual void FellOutOfWorld(const class UDamageType& dmgType) override;
+
+	/** Called when the Actor is outside the hard limit on world bounds */
+	virtual void OutsideWorldBounds() override;
+
 
 #pragma region Sound
 protected:
