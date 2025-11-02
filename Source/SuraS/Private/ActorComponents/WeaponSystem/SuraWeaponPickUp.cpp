@@ -82,7 +82,7 @@ AWeapon* ASuraWeaponPickUp::SpawnWeapon(ASuraPawnPlayer* Character)
 			FActorSpawnParameters ActorSpawnParams;
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 			NewWeapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass, GetActorTransform(), ActorSpawnParams);
-			NewWeapon->InitializeWeapon(Character);
+			NewWeapon->InitWeapon(Character);
 		}
 	}
 

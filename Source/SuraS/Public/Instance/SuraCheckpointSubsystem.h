@@ -32,9 +32,16 @@ public:
 	FOnCheckpointLoaded OnCheckpointLoadedDelegate;
 
 	void LoadCheckpoint();
-
+	
 	void SaveCheckpoint(FName MapName, const FTransform& SpawnTransform, int32 OrderIndex);
 
 	USuraSaveGame* GetCurrentSave() const { return CurrentSave; }
+
+	bool HasSavedCheckpoint() const;
+
+	/**
+	 * Should clear the saved checkpoint before loading level 1 from new game button.
+	 */
+	void ClearSavedCheckpoint();
 	
 };

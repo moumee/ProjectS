@@ -30,17 +30,18 @@ public class SuraS : ModuleRules
             "CinematicCamera",
             "LevelSequence", // Added by Yoony for Level Sequence
             "MovieScene", // Added by Yoony for Level Sequence
-            "NiagaraUIRenderer" // Addyd by suhyeon for hitscrren niagara
+            "NiagaraUIRenderer", // Addyd by suhyeon for hitscrren niagara
+            "MovieSceneTracks"
         });
 
 
-        //if (Target.bBuildEditor)
-        //{
-        //    PrivateDependencyModuleNames.AddRange(new string[]
-        //    {
-        //        "BlueprintGraph" //Added by Boranaga for Animation
-        //    });
-        //}
+		//if (Target.bBuildEditor)
+		//{
+		//    PrivateDependencyModuleNames.AddRange(new string[]
+		//    {
+		//        "BlueprintGraph" //Added by Boranaga for Animation
+		//    });
+		//}
 
-    }
+	}
 }

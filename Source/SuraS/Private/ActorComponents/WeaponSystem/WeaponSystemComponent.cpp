@@ -145,7 +145,7 @@ void UWeaponSystemComponent::InitStartingWeapons()
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 			AWeapon* NewWeapon = World->SpawnActor<AWeapon>(WeaponClasses.Find(Elem.Key)->Get(), FTransform(), ActorSpawnParams);
 			if (!NewWeapon) continue;
-			NewWeapon->InitializeWeapon(Cast<ASuraPawnPlayer>(GetOwner()));
+			NewWeapon->InitWeapon(Cast<ASuraPawnPlayer>(GetOwner()));
 
 			AddNewWeaponToInventory(NewWeapon);
 
@@ -190,7 +190,7 @@ void UWeaponSystemComponent::InitStartingWeapons()
 			FActorSpawnParameters ActorSpawnParams;
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 			NewWeapon = GetWorld()->SpawnActor<AWeapon>(DTWSC->WeaponClasses[DTWSC->StartingWeaponName], PlayerOwner->GetActorTransform(), ActorSpawnParams);
-			NewWeapon->InitializeWeapon(PlayerOwner);
+			NewWeapon->InitWeapon(PlayerOwner);
 		}
 	}
 
@@ -426,10 +426,11 @@ bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 			CurrentWeapon = NewWeapon;
 			CurrentWeapon->SwitchWeapon(PlayerOwner, true);
 		}
+		OnWeaponPickedUp.Broadcast(NewWeaponPickUp->GetWeaponName()); /** suhyeon **/
 	}
 
 	//FName WeaponNameAsFName = FName(*UEnum::GetValueAsString(NewWeaponPickUp->GetWeaponName()));
-	OnWeaponPickedUp.Broadcast(NewWeaponPickUp->GetWeaponName()); /** suhyeon **/
+	
 
 	return true;
 }

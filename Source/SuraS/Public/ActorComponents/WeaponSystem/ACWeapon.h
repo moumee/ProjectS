@@ -94,9 +94,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	UAnimMontage* FireAnimation;
 
-	/** Gun muzzle's offset from the characters location */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	FVector MuzzleOffset;
+	UStaticMeshComponent* MuzzlePoint;
 
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -141,7 +140,7 @@ public:
 
 	AWeapon();
 
-	void InitializeWeapon(ASuraPawnPlayer* NewCharacter);
+	void InitWeapon(ASuraPawnPlayer* NewCharacter);
 	void InitializeCamera(ASuraPawnPlayer* NewCharacter);
 	void InitializeUI();
 
@@ -150,6 +149,7 @@ protected:
 	UPROPERTY(Transient) bool bWeaponAssetsReady = false;
 public:
 	void LoadWeaponData();
+	void LoadWeaponData_Upgrade();
 	void SetMeshVisibility(bool bflag);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
@@ -242,8 +242,11 @@ protected:
 
 #pragma region FireData
 protected:
+	UPROPERTY()
 	FWeaponFireData FireData_L;
+	UPROPERTY()
 	FWeaponFireData FireData_R;
+	UPROPERTY()
 	FWeaponFireData FireData_Skill;
 #pragma endregion
 
@@ -742,18 +745,17 @@ protected:
 
 #pragma region Projectile
 protected:
-	UPROPERTY()
-	TArray<ASuraProjectile*> Projectiles_L;
-	UPROPERTY()
-	TArray<ASuraProjectile*> Projectiles_R;
-
 	int32 NumProjectile_L = 10;
 	int32 NumProjectile_R = 5;
 
-	int32 CurrProjectileIdx_L = 0;
-	int32 CurrProjectileIdx_R = 0;
+	//----------------------------
+	TMap<TSubclassOf<ASuraProjectile>, TArray<ASuraProjectile*>> ProjectilePool;
+	TSet<ASuraProjectile*> ActiveProjectileSet;
+
 public:
-	void InitProjectiles();
+	void InitProjectiles(TSubclassOf<ASuraProjectile> ProjectileClass, int32 NumObject);
+	ASuraProjectile* GetProjectileFromPool(TSubclassOf<ASuraProjectile> ProjectileClass);
+	void ReturnProjectile(ASuraProjectile* Projectile);
 #pragma endregion
 
 #pragma region Projectile/SingleProjectileSpread

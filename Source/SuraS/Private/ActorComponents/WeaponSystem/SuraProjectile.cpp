@@ -78,10 +78,117 @@ ASuraProjectile::ASuraProjectile()
 
 	ProjectileMesh->SetCastShadow(false);
 
-	InitialLifeSpan = 10.0f; //MEMO: Pooling을 위해 제거
+	//InitialLifeSpan = 10.0f; //MEMO: Pooling을 위해 제거
+	
+	// <Pooling Version>
+	InitialLifeSpan = 0;
+	SetActorHiddenInGame(true);
+	//SetActorEnableCollision(false);
+	SetActorTickEnabled(false);
 }
 
-void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable, bool HitScan, bool AutoAim)
+void ASuraProjectile::StartLifeTimer(float Seconds)
+{
+	if (Seconds > 0.f)
+	{
+		GetWorldTimerManager().SetTimer(LifeTimer, this, &ASuraProjectile::DeactiveProjectile, Seconds, false);
+	}
+}
+
+void ASuraProjectile::StopLifeTimer()
+{
+	GetWorldTimerManager().ClearTimer(LifeTimer);
+}
+
+void ASuraProjectile::DeactiveProjectile()
+{
+	StopLifeTimer();
+
+	//----------------
+	//TODO: Deactive 시킬것들 전부 하기
+
+	NumPenetrableObjects = 0;
+	CurrentRicochetCount = 0;
+
+	// <HitScan>
+	if (bIsHitScan)
+	{
+		bIsHitScan = false;
+		bActivatedMeshMovementForHitScan = false;
+		HitScanEndPoints.Empty();
+		CurrEndPointIdx = 0;
+		DistanceMoved = 0;
+		DistanceMoved;
+		TargetDistance = 0.f;
+	}
+	
+	// <Penetration>
+	NumPenetratedObjects = 0;
+	AdditionalDamage = 0;
+
+	// <Homing>
+	TargetEnemy = nullptr;
+	ProjectileMovement->bIsHomingProjectile = false;
+
+	// <Damage Decay>
+	DefaultDamage = ProjectileData->DefaultDamage;
+	GetWorldTimerManager().ClearTimer(DamageDecayTimer);
+
+	// <Custom Projectile Movement>
+	bUseCustomProjectieMovement = false;
+
+	// <Trail Effect>
+	if (TrailEffectComponent)
+	{
+		if (bShouldUpdateTrailEffect)
+		{
+			TrailEffectComponent->Deactivate();
+			TrailEffectComponent->DestroyComponent();
+		}
+	}
+
+	// <Radius>
+	ProjectileRadius = InitialRadius;
+	CollisionComp->SetSphereRadius(InitialRadius);
+
+	//-------------
+
+	bActive = false;
+	SetActorHiddenInGame(true);
+	//SetActorEnableCollision(false);
+	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Block);
+
+	CollisionComp->OnComponentHit.RemoveDynamic(this, &ASuraProjectile::OnHit);
+	CollisionComp->OnComponentBeginOverlap.RemoveDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
+
+
+	CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	SetActorTickEnabled(false);
+
+	ProjectileMovement->StopMovementImmediately();
+	ProjectileMovement->Deactivate();
+
+
+	//TODO: homing이면 또 처리해줘야 할 것들이 많음...
+
+	//TODO: 생각해보니까 InitProjectile에서 진행하는 것들을 모두 역방향으로 하면 될 듯?
+
+
+
+	//---------------
+
+	if (Weapon)
+	{
+		Weapon->ReturnProjectile(this);
+	}
+	else
+	{
+		//TODO: 어떠한 처리를 해야하나?
+	}
+}
+
+void ASuraProjectile::InitProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable, bool HitScan, bool AutoAim)
 {
 	if (IsValid(OwnerWeapon))
 	{
@@ -107,7 +214,7 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 		{
 			bIsHitScan = HitScan;
 			NumPenetrableObjects = NumPenetrable;
-			UE_LOG(LogTemp, Error, TEXT("Projectile Penetrable Num: %d"), NumPenetrableObjects);
+			//UE_LOG(LogTemp, Error, TEXT("Projectile Penetrable Num: %d"), NumPenetrableObjects);
 			//CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 			//CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap);
 			InitHitScan();
@@ -122,7 +229,7 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 				//CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap);
 				InitPhysicsProjectile();
 				NumPenetrableObjects = NumPenetrable;
-				UE_LOG(LogTemp, Error, TEXT("Projectile Penetrable Num: %d"), NumPenetrableObjects);
+				//UE_LOG(LogTemp, Error, TEXT("Projectile Penetrable Num: %d"), NumPenetrableObjects);
 			}
 			else
 			{
@@ -163,8 +270,13 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, AWeapon* O
 
 void ASuraProjectile::InitProjectile_Pool(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable, bool HitScan, bool AutoAim)
 {
-	//TODO: LifeSpan 적용해야 할 듯 함
+	UE_LOG(LogTemp, Error, TEXT("InitProjectile_Pool"));
 
+	bActive = true;
+	SetActorHiddenInGame(false);
+	//SetActorEnableCollision(true);
+	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	SetActorTickEnabled(true);
 
 	if (IsValid(OwnerWeapon))
 	{
@@ -174,8 +286,6 @@ void ASuraProjectile::InitProjectile_Pool(AActor* OwnerOfProjectile, AWeapon* Ow
 	if (IsValid(OwnerOfProjectile))
 	{
 		ProjectileOwner = OwnerOfProjectile;
-
-		LoadProjectileData();
 		SpawnTrailEffect();
 	}
 
@@ -201,7 +311,10 @@ void ASuraProjectile::InitProjectile_Pool(AActor* OwnerOfProjectile, AWeapon* Ow
 			}
 			else
 			{
-				CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
+				if (!CollisionComp->OnComponentHit.IsAlreadyBound(this, &ASuraProjectile::OnHit))
+				{
+					CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
+				}
 			}
 		}
 	}
@@ -229,12 +342,21 @@ void ASuraProjectile::InitProjectile_Pool(AActor* OwnerOfProjectile, AWeapon* Ow
 	{
 		GetWorld()->GetTimerManager().SetTimer(DamageDecayTimer, this, &ASuraProjectile::ApplyDamageDecay, DamageDecayTime, false);
 	}
+
+	StartLifeTimer(LifeSpan);
 }
 
 void ASuraProjectile::InitPhysicsProjectile()
 {
-	CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
-	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
+
+	if (!CollisionComp->OnComponentHit.IsAlreadyBound(this, &ASuraProjectile::OnHit))
+	{
+		CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
+	}
+	if (!CollisionComp->OnComponentBeginOverlap.IsAlreadyBound(this, &ASuraProjectile::OnComponentBeginOverlap))
+	{
+		CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
+	}
 	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap);
 }
@@ -324,7 +446,7 @@ void ASuraProjectile::LoadProjectileData_Pool()
 		ExplosionEffect = ProjectileData->ExplosionEffect;
 		DecalMaterial = ProjectileData->HoleDecal;
 
-		InitialLifeSpan = ProjectileData->InitialLifeSpan;
+		LifeSpan = ProjectileData->InitialLifeSpan;
 
 		// <Sound>
 		HitSound_Default = ProjectileData->HitSound_Default;
@@ -379,6 +501,11 @@ void ASuraProjectile::LoadProjectileData_Pool()
 	}
 }
 
+void ASuraProjectile::SetWeapon(AWeapon* NewWeapon)
+{
+	Weapon = NewWeapon;
+}
+
 void ASuraProjectile::SetHomingTarget(bool bIsHoming, AActor* Target)
 {
 	ProjectileMovement->bIsHomingProjectile = bIsHoming;
@@ -399,6 +526,12 @@ void ASuraProjectile::SetHomingTarget(bool bIsHoming, AActor* Target)
 
 void ASuraProjectile::LaunchProjectile()
 {
+	ProjectileMovement->Activate();
+}
+
+void ASuraProjectile::LaunchProjectile_Pool(FVector MuzzlePos, FRotator Direction)
+{
+	SetActorLocationAndRotation(MuzzlePos, Direction);
 	ProjectileMovement->Activate();
 }
 
@@ -523,7 +656,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 				else
 				{
 					ApplyDamage(OtherActor, DefaultDamage + AdditionalDamage, EDamageType::Melee, false, Hit.BoneName,UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()), Hit.ImpactNormal, Hit.ImpactPoint);
-					UE_LOG(LogTemp, Error, TEXT("bone11-1: %s"), *Hit.BoneName.ToString());
+					//UE_LOG(LogTemp, Error, TEXT("bone11-1: %s"), *Hit.BoneName.ToString());
 					if (Cast<ACharacter>(OtherActor))
 					{
 						if (OnBodyShot.IsBound())
@@ -542,7 +675,8 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 				if (Cast<ACharacter>(OtherActor))
 				{
-					Destroy();
+					//Destroy();
+					DeactiveProjectile();
 				}
 				else
 				{
@@ -552,7 +686,8 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 					}
 					else
 					{
-						Destroy();
+						//Destroy();
+						DeactiveProjectile();
 					}
 				}
 			}
@@ -568,7 +703,8 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 			SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 			SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 
-			Destroy();
+			//Destroy();
+			DeactiveProjectile();
 		}
 	}
 }
@@ -637,7 +773,8 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 						TrailEffectComponent->DestroyComponent();
 					}
 
-					Destroy();
+					//Destroy();
+					DeactiveProjectile();
 				}
 			}
 		}
@@ -1447,6 +1584,10 @@ void ASuraProjectile::Tick(float DeltaTime)
 	{
 		UpdateProjectileMovement(DeltaTime);
 	}
+
+	//--------------------------------
+	// <Pool Version>
+	//TODO: Activate flag에 따라 활성화 여부 결정
 }
 
 void ASuraProjectile::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -1466,6 +1607,22 @@ void ASuraProjectile::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ASuraProjectile::BeginDestroy()
 {
 	Super::BeginDestroy();
+}
+
+void ASuraProjectile::FellOutOfWorld(const UDamageType& dmgType)
+{
+	SetActorLocation(FVector::ZeroVector);
+	SetActorRotation(FRotator::ZeroRotator);
+
+	DeactiveProjectile();
+}
+
+void ASuraProjectile::OutsideWorldBounds()
+{
+	SetActorLocation(FVector::ZeroVector);
+	SetActorRotation(FRotator::ZeroRotator);
+
+	DeactiveProjectile();
 }
 
 
