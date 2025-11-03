@@ -73,9 +73,6 @@ struct SURAS_API FProjectileData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Homing")
 	float HomingAccelerationMagnitude = 3000.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
-	bool bCanPenetrate = false;
 	//--------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Impulse")
 	bool bCanApplyImpulseToEnemy = false;
@@ -90,10 +87,6 @@ struct SURAS_API FProjectileData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ricochet")
 	float MinIncidenceAngle = 5.f;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
-	//int32 NumPenetrableObjects = 4;
-
 	//--------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitScan")
 	bool bDebugHitScan = false;

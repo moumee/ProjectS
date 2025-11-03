@@ -159,9 +159,7 @@ public:
 	void DetachWeaponFromPlayer();
 
 	void FireSingleProjectile(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
-	void FireSingleProjectile_Pool(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 	void FireMultiProjectile(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
-	void FireMultiProjectile_Pool(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 AdditionalPellet = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 
 #pragma region Socket
 protected:
@@ -175,7 +173,6 @@ protected:
 	bool bIsHitScan_R = false;
 
 	void FireSingleHitScan(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
-	void FireSingleHitScan_Pool(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 #pragma endregion
 
 #pragma region AutoAim
@@ -184,7 +181,6 @@ protected:
 	float AutoAimRadius = 100.f;
 
 	void FireSingleAutoAim(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
-	void FireSingleAutoAim_Pool(FWeaponFireData* FireData = nullptr, int32 NumPenetrable = 0, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 #pragma endregion
 
 public:
@@ -336,7 +332,7 @@ protected:
 	TSubclassOf<class AProjectileShell> ProjectileShellClass;
 	UPROPERTY(EditAnywhere)
 	int32 MaxProjectileShellNum = 5;
-	TArray<AProjectileShell*> ProjectileShells; //TODO: queue로 대체 , 근데 그냥 array가 나을듯
+	TArray<AProjectileShell*> ProjectileShells;
 
 	UPROPERTY(EditAnywhere)
 	FVector DefaultEjectImpulseVec;
@@ -373,11 +369,6 @@ protected:
 	FVector TargetLocationOfProjectile;
 
 public:
-	bool PerformLineTrace(FVector StartLocation, FVector LineDirection, float MaxDistance, FVector& HitLocation);
-	bool PerformSphereTrace(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& HitLocation);
-	bool PerformSphereTrace_new(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& HitLocation);
-	bool TrySphereSweepNearestActor(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& OutHitLocation, FHitResult& OutHitResult);
-
 	FVector CalculateScreenCenterWorldPositionAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const;
 
 	void SetAimSocketTransform();
@@ -464,8 +455,6 @@ protected:
 	UWeaponAimUIWidget* AimUIWidget;
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "AmmoCounterWidget")
 	TSubclassOf<UAmmoCounterWidget> AmmoCounterWidgetClass;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AmmoCounterWidget")
-	UWidgetComponent* AmmoCounterWidgetComponent; //TODO: 삭제
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AmmoCounterWidget")
 	UAmmoCounterWidget* AmmoCounterWidget;
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "TargetMarkerWidget")

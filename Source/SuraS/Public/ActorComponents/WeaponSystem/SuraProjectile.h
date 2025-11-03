@@ -103,9 +103,6 @@ protected:
 	float HomingAccelerationMagnitude = 3000.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
-	bool bCanPenetrate = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
 	int32 NumPenetrableObjects = 4;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ricochet")
@@ -122,15 +119,12 @@ protected:
 public:	
 	ASuraProjectile();
 	void InitProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0, bool HitScan = false, bool AutoAim = false);
-	void InitProjectile_Pool(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0, bool HitScan = false, bool AutoAim = false);
 	void InitPhysicsProjectile();
 	void InitHitScan();
 	void LoadProjectileData();
-	void LoadProjectileData_Pool();
 	void SetWeapon(AWeapon* NewWeapon);
 	void SetHomingTarget(bool bIsHoming, AActor* Target);
-	void LaunchProjectile();
-	void LaunchProjectile_Pool(FVector MuzzlePos, FRotator Direction);
+	void LaunchProjectile(FVector MuzzlePos, FRotator Direction);
 
 private:
 	bool bActive = false;
@@ -208,7 +202,6 @@ protected:
 	float TargetDistance;
 	FVector MovementDirection;
 	void PerformHitScan(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, TArray<FVector>& OutHitLocations);
-	void PerformHitScan_Upgrade(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, TArray<FVector>& OutHitLocations);
 	void InitHitScanProjectileMovement(FVector StartLocation);
 	void UpdateHitScanProjectileMovement(float DeltaTime);
 public:
@@ -239,8 +232,7 @@ protected:
 
 #pragma region Homing
 protected:
-	//TODO: DTȭ ��Ű��
-	float ExlosionTriggerRadius = 10.f;
+	float ExlosionTriggerRadius = 10.f; //TODO: DT
 
 	UPROPERTY()
 	ASuraCharacterEnemyBase* TargetEnemy = nullptr;

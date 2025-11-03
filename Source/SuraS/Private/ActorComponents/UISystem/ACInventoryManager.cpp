@@ -164,28 +164,28 @@ void UACInventoryManager::UpdateWeaponAttributeUI(AWeapon* Weapon) // <JaeHyeong
 		InventoryWidget->MagazineTextBlock->SetText(FText::FromString(FString::Printf(TEXT("%d / %d"), Ammo, TotalAmmo)));
 	}
 
-	// Projectile
-	if (Row->LeftProjectileClass) //TODO: Weapon의 Default FireData에서 ProjectileClass 정보 가져오도록
-	{
-		const ASuraProjectile* ProjectileCDO = Row->LeftProjectileClass->GetDefaultObject<ASuraProjectile>();
-		if (ProjectileCDO)
-		{
-			const FProjectileData* ProjectileData = ProjectileCDO->GetProjectileData();
-			if (ProjectileData)
-			{
-				const float Damage = ProjectileData->DefaultDamage;
-				if (InventoryWidget->CurrentWeaponDamage)
-				{
-					const float DamagePercent = FMath::Clamp(Damage / 100.f, 0.f, 1.f);
-					InventoryWidget->CurrentWeaponDamage->SetPercent(DamagePercent);
-				}
-				if (InventoryWidget->CurrentWeaponDamageText)
-				{
-					InventoryWidget->CurrentWeaponDamageText->SetText(FText::AsNumber(Damage));
-				}
-			}
-		}
-	}
+	//// Projectile
+	//if (Row->LeftProjectileClass) //TODO: Weapon의 Default FireData에서 ProjectileClass 정보 가져오도록
+	//{
+	//	const ASuraProjectile* ProjectileCDO = Row->LeftProjectileClass->GetDefaultObject<ASuraProjectile>();
+	//	if (ProjectileCDO)
+	//	{
+	//		const FProjectileData* ProjectileData = ProjectileCDO->GetProjectileData();
+	//		if (ProjectileData)
+	//		{
+	//			const float Damage = ProjectileData->DefaultDamage;
+	//			if (InventoryWidget->CurrentWeaponDamage)
+	//			{
+	//				const float DamagePercent = FMath::Clamp(Damage / 100.f, 0.f, 1.f);
+	//				InventoryWidget->CurrentWeaponDamage->SetPercent(DamagePercent);
+	//			}
+	//			if (InventoryWidget->CurrentWeaponDamageText)
+	//			{
+	//				InventoryWidget->CurrentWeaponDamageText->SetText(FText::AsNumber(Damage));
+	//			}
+	//		}
+	//	}
+	//}
 
 	// 5) FireRate
 	{
