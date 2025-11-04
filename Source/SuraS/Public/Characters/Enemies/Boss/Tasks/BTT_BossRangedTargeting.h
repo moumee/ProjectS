@@ -16,17 +16,6 @@ struct FBossRangedTargetingMemory
 
 	float TargetingDuration = 2.f;
 	float RangedAttackStartTime = 0.f;
-
-	bool IsValid() const
-	{
-		return Boss.IsValid() && TargetActor.IsValid();
-	}
-
-	void Reset()
-	{
-		Boss.Reset();
-		TargetActor.Reset();
-	}
 };
 /**
  * 
