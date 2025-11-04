@@ -3,7 +3,6 @@
 
 #include "Animations/ANS/ANS_BossAttackArea.h"
 
-#include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "Characters/Enemies/Boss/SuraBossAttackArea.h"
 #include "Characters/Enemies/Boss/SuraCharacterBossProto.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"

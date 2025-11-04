@@ -614,7 +614,7 @@ void USuraPlayerMovementComponent::TickSlide(float DeltaTime)
 	{
 		CurrentJumpCount++;
 		Velocity.Z = PrimaryJumpZVelocity;
-		bShouldKeepSlideSpeed = SlideStateElapsedTime > 0.2f; // TODO : Make this as a variable
+		bShouldKeepSlideSpeed = SlideStateElapsedTime >= 0.1f; // TODO : Make this as a variable
 		
 		LastSlideSpeedBeforeAirborne = Velocity;
 		OnPrimaryJumpDelegate.Broadcast();

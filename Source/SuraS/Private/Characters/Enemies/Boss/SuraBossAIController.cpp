@@ -7,15 +7,23 @@
 #include "Kismet/GameplayStatics.h"
 
 
+
+void ASuraBossAIController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	RunBehaviorTree(BehaviorTree);
+
+	
+}
+
 void ASuraBossAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	RunBehaviorTree(BehaviorTree);
-
 	if (APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, "PlayerPawn Valid");
 		GetBlackboardComponent()->SetValueAsObject("PlayerPawn", PlayerPawn);
 	}
 }
+

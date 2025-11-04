@@ -13,9 +13,7 @@ UCLASS()
 class SURAS_API UANS_RotateTowardsAttackArea : public UAnimNotifyState
 {
 	GENERATED_BODY()
-
-	FRotator TargetRotation;
-
+	
 	UPROPERTY(EditAnywhere)
 	float RotationInterpSpeed = 5.f;
 
