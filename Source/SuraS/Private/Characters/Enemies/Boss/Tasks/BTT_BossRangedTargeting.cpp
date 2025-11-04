@@ -21,15 +21,15 @@ EBTNodeResult::Type UBTT_BossRangedTargeting::ExecuteTask(UBehaviorTreeComponent
 	check(Memory);
 	APawn* OwningPawn = OwnerComp.GetAIOwner()->GetPawn();
 	if (!OwningPawn) return EBTNodeResult::Failed;
-	ASuraCharacterBossProto* Boss = Cast<ASuraCharacterBossProto>(OwningPawn);
-	Memory->Boss = Boss;
+	Memory->Boss = Cast<ASuraCharacterBossProto>(OwningPawn);
+	ASuraCharacterBossProto* Boss = Memory->Boss.Get();
+	if (!Boss) return EBTNodeResult::Failed;
 
 	UObject* TargetObject = OwnerComp.GetBlackboardComponent()->GetValueAsObject(TargetKey.SelectedKeyName);
 	if (!TargetObject) return EBTNodeResult::Failed;
-	AActor* TargetActor = Cast<AActor>(TargetObject);
-	Memory->TargetActor = TargetActor;
-
-	if (!Memory->TargetActor.IsValid() || !Memory->Boss.IsValid()) return EBTNodeResult::Failed;
+	Memory->TargetActor = Cast<AActor>(TargetObject);
+	AActor* TargetActor = Memory->TargetActor.Get();
+	if (!TargetActor) return EBTNodeResult::Failed;
 
 	Memory->TargetingDuration = Boss->GetRangedAttackTargetingDuration();
 	Memory->RangedAttackStartTime = OwnerComp.GetWorld()->GetTimeSeconds();
@@ -55,8 +55,8 @@ void UBTT_BossRangedTargeting::TickTask(UBehaviorTreeComponent& OwnerComp, uint8
 	
 	LaserComp->SetVariableVec3("User.BeamEnd", PlayerActor->GetActorLocation());
 
-	float CurrentTime = OwnerComp.GetWorld()->GetTimeSeconds();
-	if (CurrentTime >= Memory->RangedAttackStartTime + Memory->TargetingDuration)
+	float CurrentTime = Boss->GetWorld()->GetTimeSeconds();
+	if (CurrentTime - Memory->RangedAttackStartTime >= Memory->TargetingDuration)
 	{
 		Boss->SetLaserFireEnd(PlayerActor->GetActorLocation());
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
@@ -84,12 +84,17 @@ void UBTT_BossRangedTargeting::OnTaskFinished(UBehaviorTreeComponent& OwnerComp,
 {
 	FBossRangedTargetingMemory* Memory = CastInstanceNodeMemory<FBossRangedTargetingMemory>(NodeMemory);
 	
-	if (TaskResult != EBTNodeResult::Succeeded)
+	if (ASuraCharacterBossProto* Boss = Memory->Boss.Get())
 	{
-		if (ASuraCharacterBossProto* Boss = Memory->Boss.Get())
+		UNiagaraComponent* LaserNiagara = Boss->GetLaserNiagaraComponent();
+		if (ensureAlwaysMsgf(LaserNiagara, TEXT("Laser niagara is not assigned in the boss blueprint!!")))
 		{
-			Boss->GetLaserNiagaraComponent()->DeactivateImmediate();
+			if (TaskResult != EBTNodeResult::Succeeded)	
+				LaserNiagara->DeactivateImmediate();
+			Boss->LastSavedMuzzlePositionBeforeFire = Boss->GetMesh()->GetSocketLocation("Muzzle");
+			LaserNiagara->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 		}
+			
 	}
 }
 

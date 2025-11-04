@@ -11,6 +11,8 @@ class ASuraCharacterBossProto;
 struct FBossMeleeAttackMemory
 {
 	TWeakObjectPtr<ASuraCharacterBossProto> Boss;
+
+	float Cooldown = 0.f;
 };
 /**
  * 

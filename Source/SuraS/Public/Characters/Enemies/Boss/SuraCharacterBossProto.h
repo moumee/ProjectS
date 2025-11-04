@@ -82,17 +82,31 @@ public:
 	UNiagaraComponent* GetLaserNiagaraComponent() const { return LaserNiagaraComponent; }
 
 	UAnimMontage* GetRangedAttackMontage() const { return RangedAttack.RangedAttackMontage; }
+
+	bool GetMeleeHitPlayer() const { return bMeleeHitPlayer; }
+
+	void SetMeleeHitPlayer(bool bNewValue) { bMeleeHitPlayer = bNewValue; }
+
+	FRotator GetTargetAttackAreaFacingRotation() const { return TargetAttackAreaFacingRotation; }
+
+	void SetTargetAttackAreaFacingRotation(const FRotator& TargetRotation) { TargetAttackAreaFacingRotation = TargetRotation; }
+
+	UNiagaraSystem* GetLaserFireNiagaraSystem() const { return LaserFireNiagaraSystem; }
+
+	FVector LastSavedMuzzlePositionBeforeFire;
 	
 protected:
 
 	virtual void BeginPlay() override;
-
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UNiagaraSystem> LaserNiagaraSystem;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UNiagaraComponent> LaserNiagaraComponent;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UNiagaraSystem> LaserFireNiagaraSystem;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<USuraBoss_DataAsset> BossDataAsset;
@@ -190,4 +204,9 @@ protected:
 	TSet<FName> AttackAreaTags;
 
 	FVector LaserFireEnd;
+
+	bool bMeleeHitPlayer = false;
+
+	FRotator TargetAttackAreaFacingRotation;
+	
 };
