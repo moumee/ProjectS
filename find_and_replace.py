@@ -1,3 +1,50 @@
+import subprocess
+import sys
+import os
+
+# --- ⚙️ CONFIGURATION ---
+# !! You MUST change these paths !!
+UE_EDITOR_CMD = r"C:\Program Files\Epic Games\UE_5.3\Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
+PROJECT_UPROJECT = r"D:\MyProject\MyProject.uproject"
+# The commandlet name must match your C++ class name (without the U)
+COMMANDLET_NAME = "CheckAsset"
+# -------------------------
+
+def check_asset_integrity(absolute_file_path):
+    """
+    Runs the UE5 commandlet to check if the asset is loadable.
+    Returns True if loadable (exit code 0), False otherwise.
+    """
+    print(f"  Validating asset: {absolute_file_path}")
+    
+    # We must use the full path for the commandlet
+    command = [
+        UE_EDITOR_CMD,
+        PROJECT_UPROJECT,
+        f"-run={COMMANDLET_NAME}",
+        f"-FilePath=\"{absolute_file_path}\""
+    ]
+    
+    # This will be slow as it loads the engine
+    try:
+        result = subprocess.run(
+            ' '.join(command), 
+            shell=True, 
+            capture_output=True, 
+            text=True, 
+            check=True
+        )
+        # The commandlet returns 0 on success
+        print("  [SUCCESS] Asset loaded successfully.")
+        return True
+    except subprocess.CalledProcessError as e:
+        # The commandlet returns 1 (or non-zero) on failure
+        print(f"  [FAILURE] Asset is corrupt or failed to load.")
+        # Uncomment to see engine error logs
+        # print(f"  Engine Output: {e.stdout}\n{e.stderr}")
+        return False
+
+
 def find_last_good_version(relative_file_path):
     """
     Iterates through Git history for a file, checks each version,
@@ -91,3 +138,22 @@ def find_last_good_version(relative_file_path):
     if not found_good_commit:
         print(f"\n--- ❌ FAILURE ---")
         print(f"Checked all {len(commit_hashes)} versions. No uncorrupted version was found in history.")
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python find_good_asset.py <relative_path_to_uasset>")
+        print(r'Example: python find_good_asset.py "Content/Blueprints/BP_MyActor.uasset"')
+        sys.exit(1)
+    
+    # Ensure the user has a clean working directory
+    status_result = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True).stdout
+    if status_result:
+        print("!! WARNING: Your working directory is not clean. !!")
+        print("Please stash or commit your changes before running this script.")
+        print("This script will check out files and may overwrite your local changes.")
+        if input("Type 'CONTINUE' to proceed anyway: ") != "CONTINUE":
+            print("Aborted.")
+            sys.exit(1)
+            
+    file_path = sys.argv[1].replace("\\", "/")
+    find_last_good_version(file_path)
