@@ -3,6 +3,7 @@
 
 #include "UI/KillLogWidget.h"
 
+#include "Blueprint/WidgetTree.h"
 #include "Components/HorizontalBox.h"
 #include "Components/Image.h"
 #include "Components/SizeBox.h"
@@ -38,13 +39,13 @@ void UKillLogWidget::AddSkull()
 	SkullBox->ClearChildren(); // 전부 제거 후 다시 삽입할 예정
 
 	// [2] SkullImage 생성
-	UImage* SkullImage = NewObject<UImage>(this);
+	UImage* SkullImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
 	SkullImage->SetBrushFromTexture(SkullTexture);
 	SkullImage->SetRenderOpacity(0.f); // 초기 투명도
 	SkullImage->SetRenderTransform(FWidgetTransform(FVector2D(0.f, 0.f), FVector2D(2.f, 2.f), FVector2D(0.5f, 0.5f), 0.f)); // 초기 2배 크기
 
 	// [3] SizeBox로 감싸서 64x64 크기 고정
-	USizeBox* SizeWrapper = NewObject<USizeBox>(this);
+	USizeBox* SizeWrapper = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
 	SizeWrapper->SetWidthOverride(64.f);
 	SizeWrapper->SetHeightOverride(64.f);
 	SizeWrapper->AddChild(SkullImage);
@@ -89,51 +90,48 @@ void UKillLogWidget::AddSkull()
 	const float FadeOutInterval = 0.02f;
 	const int32 FadeOutSteps = FadeOutDuration / FadeOutInterval;
 
-	FTimerHandle FadeOutTimer;
-	GetWorld()->GetTimerManager().SetTimer(FadeOutTimer, [WeakWrapper, Counter = 0, FadeOutSteps, this, &FadeOutTimer]() mutable // FadeOutTimer를 참조로 캡처
+	TSharedPtr<FTimerHandle> FadeOutTimerPtr = MakeShared<FTimerHandle>();
+	GetWorld()->GetTimerManager().SetTimer(*FadeOutTimerPtr, 
+		[WeakWrapper, Counter = 0, FadeOutSteps, this, FadeOutTimerPtr]() mutable
 	{
 		if (!WeakWrapper.IsValid())
 		{
 			return;
 		}
 
-		if (USizeBox* ValidWrapper = WeakWrapper.Get())
-		{
-			if (ValidWrapper->GetChildrenCount() > 0)
+			USizeBox* ValidWrapper = WeakWrapper.Get();
+			if (!ValidWrapper || ValidWrapper->GetChildrenCount() == 0)
 			{
-				if (UImage* SkullToRemove = Cast<UImage>(ValidWrapper->GetChildAt(0)))
+				GetWorld()->GetTimerManager().ClearTimer(*FadeOutTimerPtr);
+				return;
+			}
+
+			if (UImage* SkullToRemove = Cast<UImage>(ValidWrapper->GetChildAt(0)))
+			{
+				float Progress = FMath::Clamp(static_cast<float>(Counter) / FadeOutSteps, 0.f, 1.f);
+				float Opacity = FMath::Lerp(1.f, 0.f, Progress);
+				SkullToRemove->SetRenderOpacity(Opacity);
+				Counter++;
+
+				if (Counter > FadeOutSteps)
 				{
-					float Progress = FMath::Clamp(static_cast<float>(Counter) / FadeOutSteps, 0.f, 1.f);
-					float Opacity = FMath::Lerp(1.f, 0.f, Progress);
-					SkullToRemove->SetRenderOpacity(Opacity);
-
-					Counter++;
-
-					if (Counter > FadeOutSteps)
+					if (SkullBox && SkullBox->IsValidLowLevelFast())
 					{
 						SkullBox->RemoveChild(ValidWrapper);
-						// ValidWrapper->MarkPendingKill(); // GC를 위해 마킹 (선택 사항)
-						GetWorld()->GetTimerManager().ClearTimer(FadeOutTimer);
 					}
-				}
-				else
-				{
-					// Child가 UImage가 아닌 경우 타이머 종료
-					GetWorld()->GetTimerManager().ClearTimer(FadeOutTimer);
+
+					GetWorld()->GetTimerManager().ClearTimer(*FadeOutTimerPtr);
 				}
 			}
 			else
 			{
-				// 더 이상 자식이 없으면 타이머 종료
-				GetWorld()->GetTimerManager().ClearTimer(FadeOutTimer);
+				GetWorld()->GetTimerManager().ClearTimer(*FadeOutTimerPtr);
 			}
-		}
-		else
-		{
-			// WeakWrapper가 유효하지 않으면 타이머 종료
-			GetWorld()->GetTimerManager().ClearTimer(FadeOutTimer);
-		}
-	}, FadeOutInterval, true, DelayBeforeFadeOut);
+		},
+		FadeOutInterval,
+		true,
+		DelayBeforeFadeOut
+	);
 }
 
 // void UKillLogWidget::AddScoreEntry(const FString& Reason, int32 Value)
