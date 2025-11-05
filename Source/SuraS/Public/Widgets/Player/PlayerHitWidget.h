@@ -16,7 +16,7 @@ class SURAS_API UPlayerHitWidget : public UUserWidget
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
-	class UWidgetAnimation* FadeInOutAnimation;
+	UWidgetAnimation* FadeInOutAnimation = nullptr;
 
 	virtual void NativeConstruct() override;
 
@@ -28,10 +28,10 @@ protected:
 	TArray<UTexture2D*> HitEffectBackgrounds;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* HitEffect;
+	UImage* HitEffect = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* HitEffectBackground;
+	UImage* HitEffectBackground = nullptr;
 
 public:
 	void PlayFadeAnimation();

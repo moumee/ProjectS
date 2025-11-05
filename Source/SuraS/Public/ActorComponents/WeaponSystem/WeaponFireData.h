@@ -29,9 +29,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	FWeaponRecoilStruct Recoil;
 	UPROPERTY(EditAnywhere)
-	USoundBase* FireSound;
+	USoundBase* FireSound = nullptr;
 	UPROPERTY(EditAnywhere)
-	UNiagaraSystem* MuzzleFireEffect;
+	UNiagaraSystem* MuzzleFireEffect = nullptr;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UWeaponCameraShakeBase> CamShake;
 	UPROPERTY(EditAnywhere)
@@ -61,13 +61,13 @@ public:
 		TSubclassOf<class ASuraProjectile> InProjectileClass,
 		FArmRecoilStruct InArmRecoilStruct,
 		FWeaponRecoilStruct InRecoil,
-		USoundBase* InFireSound,
-		UNiagaraSystem* InMuzzleFireEffect,
-		TSubclassOf<UWeaponCameraShakeBase> InCamShake,
-		int32 InAmmoCost,
-		float InMaxAngleOfMultiProjectileSpread,
-		int32 InPelletsNum,
-		bool InbAllowFireWithInsufficientAmmo
+		USoundBase* InFireSound = nullptr,
+		UNiagaraSystem* InMuzzleFireEffect = nullptr,
+		TSubclassOf<UWeaponCameraShakeBase> InCamShake = nullptr,
+		int32 InAmmoCost = 0,
+		float InMaxAngleOfMultiProjectileSpread = 0.f,
+		int32 InPelletsNum = 0,
+		bool InbAllowFireWithInsufficientAmmo = false
 	) :
 		ProjectileClass(InProjectileClass),
 		Armrecoil(InArmRecoilStruct),

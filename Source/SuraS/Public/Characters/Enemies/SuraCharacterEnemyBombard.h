@@ -16,7 +16,7 @@ class SURAS_API ASuraCharacterEnemyBombard : public ASuraCharacterEnemyBase
 	GENERATED_BODY()
 
 	UPROPERTY()
-	ASuraFirearmMissileLauncher* Firearm;
+	ASuraFirearmMissileLauncher* Firearm = nullptr;
 
 protected:
 	virtual void BeginPlay() override;

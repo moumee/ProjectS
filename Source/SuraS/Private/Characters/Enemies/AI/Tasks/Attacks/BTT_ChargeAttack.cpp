@@ -119,8 +119,11 @@ void UBTT_ChargeAttack::EndTask()
 // Always the last function to be called before the task ends
 void UBTT_ChargeAttack::OnRoarEnded() const
 {
-	CachedCharger->GetCapsuleComponent()->OnComponentHit.RemoveDynamic(this, &UBTT_ChargeAttack::OnHit);
-	CachedCharger->OverlapBox->OnComponentBeginOverlap.RemoveDynamic(this, &UBTT_ChargeAttack::OnOverlapBegin);
+	if (CachedCharger)
+	{
+		CachedCharger->GetCapsuleComponent()->OnComponentHit.RemoveDynamic(this, &UBTT_ChargeAttack::OnHit);
+		CachedCharger->OverlapBox->OnComponentBeginOverlap.RemoveDynamic(this, &UBTT_ChargeAttack::OnOverlapBegin);
+	}
 	
 	FinishLatentTask(*CachedOwnerComp.Get(), EBTNodeResult::Succeeded);
 }

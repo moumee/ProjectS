@@ -48,19 +48,19 @@ protected:
 
 	/** UI Manager들 **/
 	UPROPERTY()
-	UACInventoryManager* InventoryManager;
+	UACInventoryManager* InventoryManager = nullptr;
 
 	UPROPERTY()
-	UACKillLogManager* KillLogManager;
+	UACKillLogManager* KillLogManager = nullptr;
 
 	UPROPERTY()
-	UACPlayerHUDManager* PlayerHUDManager;
+	UACPlayerHUDManager* PlayerHUDManager = nullptr;
 
 	UPROPERTY()
-	UACSkillManager* SkillManager;
+	UACSkillManager* SkillManager = nullptr;
 	
 	UPROPERTY()
-	UWeaponSystemComponent* WeaponSystemComponent;
+	UWeaponSystemComponent* WeaponSystemComponent = nullptr;
 
 	/** Pause 메뉴 위젯 블루프린트 클래스 (UUserWidget 또는 UBaseUIWidget일 수 있음) */
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
@@ -118,22 +118,22 @@ public:
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* OpenInventoryAction;
+	UInputAction* OpenInventoryAction = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* OpenPauseMenuAction;
+	UInputAction* OpenPauseMenuAction = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* ShowTabMenuAction;
+	UInputAction* ShowTabMenuAction = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
-	UDataTable* DTWeapon;
+	UDataTable* DTWeapon = nullptr;
 
 	//UPROPERTY(EditDefaultsOnly, Category = "Data") // <JaeHyeong>
 	//UDataTable* DTWeaponSystemComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
-	UDataTable* DTUISetting;
+	UDataTable* DTUISetting = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TMap<EUIType, TSubclassOf<UBaseUIWidget>> UIWidgetClasses; // 위젯 블루프린트 클래스

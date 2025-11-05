@@ -18,11 +18,11 @@ public:
 	UPROPERTY(EditAnywhere)
 	EWeaponAction ActionName;
 	UPROPERTY(EditAnywhere)
-	bool bIsLeftInput;
+	bool bIsLeftInput = false;
 	UPROPERTY(EditAnywhere)
-	bool bSingleProjectile;
+	bool bSingleProjectile = false;
 	UPROPERTY(EditAnywhere)
-	int32 NumPenetrable;
+	int32 NumPenetrable = 0;
 
 
 	FBufferedFireRequest(

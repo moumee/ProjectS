@@ -18,11 +18,11 @@ class SURAS_API USuraPlayerDashingState : public USuraPlayerBaseState
 
 	float DashSpeedDecreaseTime = 0.f;
 
-	float DashImpulseSpeed;
+	float DashImpulseSpeed = 0.f;
 
-	float DashStartSpeed;
+	float DashStartSpeed = 0.f;
 
-	float DashEndSpeed;
+	float DashEndSpeed = 0.f;
 
 	FVector DashDirection;
 

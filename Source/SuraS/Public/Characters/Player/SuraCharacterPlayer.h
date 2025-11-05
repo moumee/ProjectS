@@ -40,59 +40,61 @@ class SURAS_API ASuraCharacterPlayer : public ASuraCharacterBase, public IDamage
 {
 	GENERATED_BODY()
 
-	TSubclassOf<class UUserWidget> HitEffectWidgetClass;
-	UPlayerHitWidget* HitEffectWidget;
+	TSubclassOf<UUserWidget> HitEffectWidgetClass;
+
+	UPROPERTY()
+	UPlayerHitWidget* HitEffectWidget = nullptr;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponSystem")
-	UWeaponSystemComponent* WeaponSystem;
+	UWeaponSystemComponent* WeaponSystem = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Attack Tokens")
-	UACPlayerAttackTokens* AttackTokensComponent;
+	UACPlayerAttackTokens* AttackTokensComponent = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Damage")
-	UACDamageSystem* DamageSystemComponent;
+	UACDamageSystem* DamageSystemComponent = nullptr;
 
 	UPROPERTY()
-	USuraPlayerBaseState* CurrentState;
+	USuraPlayerBaseState* CurrentState = nullptr;
 
 	UPROPERTY()
-	USuraPlayerBaseState* PreviousState;
+	USuraPlayerBaseState* PreviousState = nullptr;
 
 	UPROPERTY()
-	USuraPlayerBaseState* PreviousGroundedState;
+	USuraPlayerBaseState* PreviousGroundedState = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes")
-	UACPlayerMovementData* PlayerMovementData;
+	UACPlayerMovementData* PlayerMovementData = nullptr;
 
 	// UI component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
-	UACUIMangerComponent* UIManager;
+	UACUIMangerComponent* UIManager = nullptr;
 
 
 #pragma region Input
 	
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputMappingContext* DefaultMappingContext;
+	UInputMappingContext* DefaultMappingContext = nullptr;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputAction* MoveAction;
+	UInputAction* MoveAction = nullptr;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputAction* LookAction;
+	UInputAction* LookAction = nullptr;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputAction* JumpAction;
+	UInputAction* JumpAction = nullptr;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputAction* ShootAction;
+	UInputAction* ShootAction = nullptr;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputAction* CrouchAction;
+	UInputAction* CrouchAction = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputAction* DashAction;
+	UInputAction* DashAction = nullptr;
 
 
 	
@@ -100,23 +102,23 @@ protected:
 #pragma endregion Input
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug")
-	bool bIsDebugMode;
+	bool bIsDebugMode = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
-	UCameraComponent* Camera;
+	UCameraComponent* Camera = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")
-	USkeletalMeshComponent* ArmMesh;
+	USkeletalMeshComponent* ArmMesh = nullptr;
 
-	float DefaultCapsuleHalfHeight;
+	float DefaultCapsuleHalfHeight = 0.f;
 
 	FVector DefaultCameraLocation;
 	
-	float BaseMovementSpeed;
+	float BaseMovementSpeed = 0.f;
 
-	float AdditionalMovementSpeed;
+	float AdditionalMovementSpeed = 0.f;
 
-	bool bShouldUpdateAdditionalMovementSpeed;
+	bool bShouldUpdateAdditionalMovementSpeed = false;
 
 	float CurrentDashCooldownIndex = 0.f;
 
@@ -207,31 +209,31 @@ public:
 
 	// It is used to change state to desired ground state when transitioning from Falling State
 	UPROPERTY()
-	USuraPlayerBaseState* DesiredGroundState;
+	USuraPlayerBaseState* DesiredGroundState = nullptr;
 	
 	UPROPERTY(BlueprintReadOnly)
-	USuraPlayerWalkingState* WalkingState;
+	USuraPlayerWalkingState* WalkingState = nullptr;
 	UPROPERTY(BlueprintReadOnly)
-	USuraPlayerRunningState* RunningState;
+	USuraPlayerRunningState* RunningState = nullptr;
 	UPROPERTY(BlueprintReadOnly)
-	USuraPlayerJumpingState* JumpingState;
+	USuraPlayerJumpingState* JumpingState = nullptr;
 	UPROPERTY(BlueprintReadOnly)
-	USuraPlayerFallingState* FallingState;
+	USuraPlayerFallingState* FallingState = nullptr;
 	UPROPERTY(BlueprintReadOnly)
-	USuraPlayerDashingState* DashingState;
+	USuraPlayerDashingState* DashingState = nullptr;
 	UPROPERTY(BlueprintReadOnly)
-	USuraPlayerCrouchingState* CrouchingState;
+	USuraPlayerCrouchingState* CrouchingState = nullptr;
 	UPROPERTY(BlueprintReadOnly)
-	USuraPlayerHangingState* HangingState;
+	USuraPlayerHangingState* HangingState = nullptr;
 	UPROPERTY(BlueprintReadOnly)
-	USuraPlayerMantlingState* MantlingState;
+	USuraPlayerMantlingState* MantlingState = nullptr;
 	UPROPERTY(BlueprintReadOnly)
-	USuraPlayerWallRunningState* WallRunningState;
+	USuraPlayerWallRunningState* WallRunningState = nullptr;
 	UPROPERTY(BlueprintReadOnly)
-	USuraPlayerSlidingState* SlidingState;
+	USuraPlayerSlidingState* SlidingState = nullptr;
 
 	int MaxJumps = 2;
-	int JumpsLeft;
+	int JumpsLeft = 0;
 
 	// Input Action Bound Boolean Flags
 	bool bJumpTriggered = false;
@@ -247,8 +249,8 @@ public:
 	EWallSide WallRunSide = EWallSide::None;
 	FVector WallRunDirection = FVector::ZeroVector;
 
-	int MaxDashes;
-	int DashesLeft;
+	int MaxDashes = 0;
+	int DashesLeft = 0;
 
 	FTimerHandle DashingTimerHandle;
 
@@ -261,23 +263,23 @@ public:
 	// S - Sets ForwardAxisInputValue to -1
 	// A - Sets RightAxisInputValue to -1
 	// D - Sets RightAxisInputValue to 1
-	float ForwardAxisInputValue;
-	float RightAxisInputValue;
+	float ForwardAxisInputValue = 0.f;
+	float RightAxisInputValue = 0.f;
 
-	float DefaultGroundFriction;
-	float DefaultGravityScale;
-	float DefaultBrakingDecelerationWalking;
-	float DefaultBrakingDecelerationFalling;
-	float DefaultBrakingFriction;
-	float DefaultFallingLateralFriction;
-	float DefaultCameraFOV;
+	float DefaultGroundFriction = 0.f;
+	float DefaultGravityScale = 0.f;
+	float DefaultBrakingDecelerationWalking = 0.f;
+	float DefaultBrakingDecelerationFalling = 0.f;
+	float DefaultBrakingFriction = 0.f;
+	float DefaultFallingLateralFriction = 0.f;
+	float DefaultCameraFOV = 0.f;
 	
 
 	bool bShouldRestoreCameraTilt = false;
 	bool bShouldRestoreCapsuleHalfHeight = false;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Movement)
-	float XYSpeed;
+	float XYSpeed = 0.f;
 	
 	UFUNCTION(BlueprintCallable)
 	void SetBaseMovementSpeed(float MovementSpeed);

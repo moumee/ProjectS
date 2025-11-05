@@ -6,6 +6,7 @@
 #include "Navigation/NavLinkProxy.h"
 #include "EnemyTraverseLink.generated.h"
 
+class ASuraCharacterEnemyBase;
 /**
  * 
  */
@@ -15,7 +16,7 @@ class SURAS_API AEnemyTraverseLink : public ANavLinkProxy
 	GENERATED_BODY()
 
 	UPROPERTY()
-	ASuraCharacterEnemyBase* CachedEnemy;
+	ASuraCharacterEnemyBase* CachedEnemy = nullptr;
 
 	void OnCachedEnemyDeath();
 
@@ -36,7 +37,7 @@ public:
 	TArray<FVector> PathPoints;
 
 	UPROPERTY(EditAnywhere, Category = "NavLink Automation")
-	AActor* TargetSimpleLinkActor;
+	AActor* TargetSimpleLinkActor = nullptr;
 	
 	AEnemyTraverseLink();
 

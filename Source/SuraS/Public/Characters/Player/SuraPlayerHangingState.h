@@ -14,16 +14,16 @@ class SURAS_API USuraPlayerHangingState : public USuraPlayerBaseState
 {
 	GENERATED_BODY()
 
-	float ElapsedTime;
+	float ElapsedTime = 0.f;
 
-	bool bShouldMoveToHangPosition;
+	bool bShouldMoveToHangPosition = false;
 
 	FVector StartPosition;
 
 	FVector HangPosition = FVector::ZeroVector;
 
 	UPROPERTY()
-	APlayerController* PlayerController;
+	APlayerController* PlayerController = nullptr;
 
 public:
 

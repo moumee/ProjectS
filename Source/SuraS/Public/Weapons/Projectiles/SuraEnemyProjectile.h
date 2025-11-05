@@ -33,14 +33,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Niagara")
 	UNiagaraComponent* NiagaraComponent;
 	
-	float M_DamageAmount;
-	float M_HeadshotAdditionalDamage;
-	float M_LifeSapn;
-	float M_InitialRadius;
-	float M_ExplosionRadius;
-	float M_HomingAccelerationMagnitude;
-	float M_DestroyDurationAfterLaunch;
-	float M_DestroyDurationAfterHit;
+	float M_DamageAmount = 0.f;
+	float M_HeadshotAdditionalDamage = 0.f;
+	float M_LifeSapn = 0.f;
+	float M_InitialRadius = 0.f;
+	float M_ExplosionRadius = 0.f;
+	float M_HomingAccelerationMagnitude = 0.f;
+	float M_DestroyDurationAfterLaunch = 0.f;
+	float M_DestroyDurationAfterHit = 0.f;
 
 public:	
 	// Sets default values for this actor's properties

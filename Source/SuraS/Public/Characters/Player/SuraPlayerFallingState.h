@@ -25,7 +25,7 @@ class SURAS_API USuraPlayerFallingState : public USuraPlayerBaseState
 	float ElapsedTime = 0.f;
 
 	UPROPERTY()
-	APlayerController* PlayerController;
+	APlayerController* PlayerController = nullptr;
 
 	FVector DesiredSlidingDirection = FVector::ZeroVector;
 

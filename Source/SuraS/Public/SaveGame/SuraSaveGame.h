@@ -25,6 +25,6 @@ public:
 	FName MapName;
 
 	UPROPERTY(VisibleAnywhere)
-	int32 CheckpointOrderIndex;
+	int32 CheckpointOrderIndex = 0;
 	
 };

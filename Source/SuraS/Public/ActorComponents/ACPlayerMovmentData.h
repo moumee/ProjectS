@@ -17,7 +17,7 @@ class SURAS_API UACPlayerMovementData : public UActorComponent
 private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Data Table", meta = (AllowPrivateAccess = "true"))
-	UDataTable* PlayerMovementDT;
+	UDataTable* PlayerMovementDT = nullptr;
 
 	FPlayerMovementData* PlayerRow;
 

@@ -14,13 +14,13 @@ class SURAS_API AEnemyPatrolRoute : public AActor
 	GENERATED_BODY()
 
 	UPROPERTY()
-	USplineComponent* PatrolRoute;
+	USplineComponent* PatrolRoute = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol Route", meta=(AllowPrivateAccess = "true"))
 	bool bIsRouteLooped = false;
 
-	int _PatrolIndex = 0;
-	int _Direction = 1;
+	int32 _PatrolIndex = 0;
+	int32 _Direction = 1;
 
 public:
 	// Sets default values for this actor's properties

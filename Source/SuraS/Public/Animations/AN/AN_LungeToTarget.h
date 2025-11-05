@@ -15,7 +15,7 @@ class SURAS_API UAN_LungeToTarget : public UAnimNotify
 	GENERATED_BODY()
 	
 	UPROPERTY(EditAnywhere)
-    	float LungeForce;
+    	float LungeForce = 0.f;
 
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 };

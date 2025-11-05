@@ -29,7 +29,7 @@ struct FBossMeleeInfo
 	UPROPERTY()
 	TObjectPtr<UAnimMontage> AttackMontage;
 	UPROPERTY()
-	float Cooldown;
+	float Cooldown = 0.f;
 	
 };
 

@@ -42,7 +42,7 @@ class SURAS_API USuraPlayerSlidingState : public USuraPlayerBaseState
 	FVector TargetSlideDirection = FVector::ZeroVector;
 
 	UPROPERTY()
-	APlayerController* PlayerController;
+	APlayerController* PlayerController = nullptr;
 
 public:
 

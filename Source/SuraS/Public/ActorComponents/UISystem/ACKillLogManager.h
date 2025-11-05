@@ -15,10 +15,10 @@ class SURAS_API UACKillLogManager : public UActorComponent
 	GENERATED_BODY()
 
 	UPROPERTY()
-	UKillLogWidget* KillLogWidget;
+	UKillLogWidget* KillLogWidget = nullptr;
 
 	UPROPERTY()
-	UACUIMangerComponent* UIManager;
+	UACUIMangerComponent* UIManager = nullptr;
 
 public:	
 	// Sets default values for this component's properties

@@ -274,17 +274,25 @@ void ASuraCharacterEnemyBase::LungeToTarget(float LungeForce = 1000.f)
 		return;
 
 	GetAIController()->StopMovement();
+
+	if (!GetAIController()->GetAttackTarget())
+		return;
 	
 	FVector TargetLocation = GetAIController()->GetAttackTarget()->GetActorLocation();
+
+	if (!GetCharacterMovement())
+		return;
 	
 	float OriginalMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	GetCharacterMovement()->MaxWalkSpeed = LungeForce;
 
 	FTimerHandle LungeSpeedResetHandle;
-	GetWorldTimerManager().SetTimer(LungeSpeedResetHandle, [this, OriginalMaxWalkSpeed]()
-	{
-		GetCharacterMovement()->MaxWalkSpeed = OriginalMaxWalkSpeed;
-	}, 0.5f, false);
+	GetWorldTimerManager().SetTimer(
+		LungeSpeedResetHandle,
+		FTimerDelegate::CreateWeakLambda(this, [this, OriginalMaxWalkSpeed]() { if (GetCharacterMovement()) GetCharacterMovement()->MaxWalkSpeed = OriginalMaxWalkSpeed; }),
+	0.5f,
+	false
+	);
 
 	UAIBlueprintHelperLibrary::SimpleMoveToLocation(GetAIController(), TargetLocation);
 	

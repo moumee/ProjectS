@@ -19,16 +19,16 @@ class SURAS_API USuraEnemyAnimInstance : public UAnimInstance
 	
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Enemy")
-	ASuraCharacterEnemyBase* Enemy;
+	ASuraCharacterEnemyBase* Enemy = nullptr;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	FVector Velocity;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	float GroundSpeed;
+	float GroundSpeed = 0.f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	float Direction;
+	float Direction = 0.f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bIsPursueOrAttacking = false;
@@ -37,7 +37,7 @@ protected:
 	EEnemyStates EnemyState;
 
 	UPROPERTY()
-	AEnemyBaseAIController* EnemyBaseAIController;
+	AEnemyBaseAIController* EnemyBaseAIController = nullptr;
 
 	virtual void NativeInitializeAnimation() override;
 

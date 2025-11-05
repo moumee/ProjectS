@@ -24,7 +24,7 @@ protected:
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "TriggerEnd")
-	UBoxComponent* TriggerBox;
+	UBoxComponent* TriggerBox = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TriggerEnd")
 	TArray<AEnemyClimbNavLink*> ClimbNavLinks;

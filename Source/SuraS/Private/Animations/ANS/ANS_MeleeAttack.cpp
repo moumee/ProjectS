@@ -11,21 +11,24 @@ void UANS_MeleeAttack::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequen
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EvetnRef);
 
-	CachedEnemy = Cast<ASuraCharacterEnemyBase>(MeshComp->GetOwner());
+	if (ASuraCharacterEnemyBase* OwnerEnemy = Cast<ASuraCharacterEnemyBase>(MeshComp->GetOwner()))
+		OwnerEnemy->SetCanInflictDamage(true);
 }
 
 void UANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EvetnRef)
 {
 	Super::NotifyTick(MeshComp, Animation, TotalDuration, EvetnRef);
 
-	if (CachedEnemy && MeshComp)
+	ASuraCharacterEnemyBase* OwnerEnemy = Cast<ASuraCharacterEnemyBase>(MeshComp->GetOwner());
+
+	if (OwnerEnemy && MeshComp)
 	{
 		TArray<FHitResult> Hits;
 		FCollisionQueryParams CollisionQueryParams;
-		CollisionQueryParams.AddIgnoredActor(GetEnemyChar());
+		CollisionQueryParams.AddIgnoredActor(OwnerEnemy);
 
-		const FVector Start = GetEnemyChar()->GetActorLocation() + GetEnemyChar()->GetActorForwardVector() * GetEnemyChar()->GetCapsuleComponent()->GetScaledCapsuleRadius();
-		const FVector End = Start + GetEnemyChar()->GetActorForwardVector() * CachedEnemy->GetMeleeAttackRange();
+		const FVector Start = OwnerEnemy->GetActorLocation() + OwnerEnemy->GetActorForwardVector() * OwnerEnemy->GetCapsuleComponent()->GetScaledCapsuleRadius();
+		const FVector End = Start + OwnerEnemy->GetActorForwardVector() * OwnerEnemy->GetMeleeAttackRange();
 
 		// ANS cannot access GetWorld directly! Must be accessed through MeshComp or whoever has access to GetWorld function first
 		bool bHit = MeshComp->GetWorld()->SweepMultiByChannel(
@@ -34,11 +37,11 @@ void UANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 			End,
 			FQuat::Identity,
 			ECollisionChannel::ECC_Pawn,
-			FCollisionShape::MakeSphere(CachedEnemy->GetMeleeAttackSphereRadius()),
+			FCollisionShape::MakeSphere(OwnerEnemy->GetMeleeAttackSphereRadius()),
 			CollisionQueryParams
 		);
 
-		if (bHit && bCanInflictDamage)
+		if (bHit && OwnerEnemy->CanInflictDamage())
 		{
 			for (auto Hit : Hits)
 			{
@@ -46,12 +49,12 @@ void UANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 				{
 
 					FDamageData DamageData;
-					DamageData.DamageAmount = CachedEnemy->GetAttackDamageAmount() + AdditionalDamageAmount;
+					DamageData.DamageAmount = OwnerEnemy->GetAttackDamageAmount() + AdditionalDamageAmount;
 					DamageData.DamageType = EDamageType::Melee;
 
-					Player->TakeDamage(DamageData, GetEnemyChar());
+					Player->TakeDamage(DamageData, OwnerEnemy);
 
-					bCanInflictDamage = false;
+					OwnerEnemy->SetCanInflictDamage(false);
 
 					break;
 				}
@@ -67,5 +70,6 @@ void UANS_MeleeAttack::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequence
 {
 	Super::NotifyEnd(MeshComp, Animation, EvetnRef);
 
-	bCanInflictDamage = true;
+	if (ASuraCharacterEnemyBase* OwnerEnemy = Cast<ASuraCharacterEnemyBase>(MeshComp->GetOwner()))
+		OwnerEnemy->SetCanInflictDamage(true);
 }

@@ -31,14 +31,14 @@ public:
 
 	// Crosshair 상태 추적
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Crosshair")
-	bool bIsTargeting;
+	bool bIsTargeting = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Crosshair")
-	bool bIsHeadShot;
+	bool bIsHeadShot = false;
 
 	// Crosshair 위젯 참조
 	UPROPERTY()
-	UCrosshairWidget* CrosshairWidget;
+	UCrosshairWidget* CrosshairWidget = nullptr;
 	
 	// Crosshair Widget 클래스 (블루프린트에서 할당)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Crosshair")
@@ -46,10 +46,10 @@ public:
 
 	// 상태별 Overlay
 	UPROPERTY()
-	UOverlay* NormalOverlay;
+	UOverlay* NormalOverlay = nullptr;
 
 	UPROPERTY()
-	UOverlay* CriticalOverlay;
+	UOverlay* CriticalOverlay = nullptr;
 
 public:
 	// 크로스 헤어 위젯 초기화
@@ -67,6 +67,7 @@ private:
 	void GetCameraViewPoint(FVector& OutLocation, FRotator& OutRotation) const; // 카메라 위치 가져오기
 	void CheckHitLocation(AActor* HitActor, FName HitBone); // 충돌한 부위 확인
 
-	APlayerController* PlayerController; // 플레이어 컨트롤러 참조
+	UPROPERTY()
+	APlayerController* PlayerController = nullptr; // 플레이어 컨트롤러 참조
 
 };
