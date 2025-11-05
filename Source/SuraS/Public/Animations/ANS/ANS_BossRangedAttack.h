@@ -16,13 +16,6 @@ class SURAS_API UANS_BossRangedAttack : public UAnimNotifyState
 	GENERATED_BODY()
 
 private:
-
-	TWeakObjectPtr<ASuraCharacterBossProto> WeakBoss;
-
-	bool bHasHit = false;
-
-	float DamageAmount = 0.f;
-
 	virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration,
 		const FAnimNotifyEventReference& EventReference) override;
 

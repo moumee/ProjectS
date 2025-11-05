@@ -18,6 +18,7 @@
 #define SURFACE_LEFT_ARM SurfaceType8
 #define SURFACE_RIGHT_ARM SurfaceType9
 
+
 ASuraCharacterBossProto::ASuraCharacterBossProto()
 {
 	HeadMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HeadMesh"));

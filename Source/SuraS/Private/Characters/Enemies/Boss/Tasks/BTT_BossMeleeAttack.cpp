@@ -38,7 +38,7 @@ EBTNodeResult::Type UBTT_BossMeleeAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 	if (AttackAreas.IsEmpty()) return EBTNodeResult::Failed;
 	
 	FBossMeleeInfo MeleeInfo = Boss->GetMeleeAttackMontageAndCooldownByTag(AttackAreaTag);
-	Boss->StartMeleeAttackCooldown(MeleeInfo.Cooldown);
+	Memory->Cooldown = MeleeInfo.Cooldown;
 	
 	UAnimInstance* AnimInstance = Boss->GetMesh()->GetAnimInstance();
 	if (!AnimInstance) return EBTNodeResult::Failed;
@@ -58,6 +58,7 @@ void UBTT_BossMeleeAttack::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uin
 
 	if (ASuraCharacterBossProto* Boss = Memory->Boss.Get())
 	{
+		Boss->StartMeleeAttackCooldown(Memory->Cooldown);
 		if (TaskResult == EBTNodeResult::Succeeded && Boss->GetCurrentState() != EBossState::Dead)
 		{
 			Boss->SetCurrentState(EBossState::Idle);
@@ -83,9 +84,8 @@ void UBTT_BossMeleeAttack::InitializeFromAsset(UBehaviorTree& Asset)
 
 void UBTT_BossMeleeAttack::OnMontageEnded(UAnimMontage* AnimMontage, bool bInterrupted, TWeakObjectPtr<UBehaviorTreeComponent> OwnerComp)
 {
-	if (OwnerComp.IsValid())
+	if (UBehaviorTreeComponent* Component = OwnerComp.Get())
 	{
-		UBehaviorTreeComponent* Component = OwnerComp.Get();
 		FinishLatentTask(*Component, bInterrupted ? EBTNodeResult::Failed : EBTNodeResult::Succeeded);
 	}
 	
