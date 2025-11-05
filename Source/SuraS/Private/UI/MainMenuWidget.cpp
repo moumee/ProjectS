@@ -34,13 +34,20 @@ void UMainMenuWidget::NativeConstruct()
 
 void UMainMenuWidget::OnPlayClicked()
 {
-    UGameplayStatics::OpenLevel(GetWorld(), TEXT("EnemiesDev"));
-    
-    APlayerController* PC = GetOwningPlayer();
-    if (PC)
+    if (!LevelToLoad.IsNull())
     {
-        PC->SetInputMode(FInputModeGameOnly());
-        PC->bShowMouseCursor = false;
+        UGameplayStatics::OpenLevelBySoftObjectPtr(GetWorld(), LevelToLoad);
+        
+        APlayerController* PC = GetOwningPlayer();
+        if (PC)
+        {
+            PC->SetInputMode(FInputModeGameOnly());
+            PC->bShowMouseCursor = false;
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("MainMenuWidget::OnPlayClicked - 'LevelToLoad'가 에디터에서 설정되지 않았습니다."));
     }
 }
 
