@@ -30,6 +30,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
 	TSubclassOf<UUserWidget> OptionsWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Level")
+	TSoftObjectPtr<UWorld> LevelToLoad;
 	
 	UFUNCTION()
 	void OnPlayClicked();
