@@ -39,15 +39,15 @@ void UPlayerHUD::NativeConstruct()
 	}
 
 	// 애니메이션 등록 (키 값은 UMG 애니메이션 변수명과 동일하게 작성)
-	AnimationMap.Add(TEXT("Slot0_TopToCenter"), Slot0_TopToCenter);
+	if (Slot0_TopToCenter) {AnimationMap.Add(TEXT("Slot0_TopToCenter"), Slot0_TopToCenter);}
 	// AnimationMap.Add(TEXT("Slot0_CenterToBottom"), Slot0_CenterToBottom);
 	// AnimationMap.Add(TEXT("Slot0_BottomToTop"), Slot0_BottomToTop);
 
-	AnimationMap.Add(TEXT("Slot1_TopToCenter"), Slot1_TopToCenter);
+	if (Slot1_TopToCenter) {AnimationMap.Add(TEXT("Slot1_TopToCenter"), Slot1_TopToCenter);}
 	// AnimationMap.Add(TEXT("Slot1_CenterToBottom"), Slot1_CenterToBottom);
 	// AnimationMap.Add(TEXT("Slot1_BottomToTop"), Slot1_BottomToTop);
 
-	AnimationMap.Add(TEXT("Slot2_TopToCenter"), Slot2_TopToCenter);
+	if (Slot2_TopToCenter) {AnimationMap.Add(TEXT("Slot2_TopToCenter"), Slot2_TopToCenter);}
 	// AnimationMap.Add(TEXT("Slot2_CenterToBottom"), Slot2_CenterToBottom);
 	// AnimationMap.Add(TEXT("Slot2_BottomToTop"), Slot2_BottomToTop);
 	

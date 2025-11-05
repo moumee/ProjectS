@@ -19,6 +19,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="AI")
 	TObjectPtr<UBehaviorTree> BehaviorTree;
 	
+	virtual void OnPossess(APawn* InPawn) override;
+
 	virtual void BeginPlay() override;
 	
 };
