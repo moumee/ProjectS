@@ -24,28 +24,28 @@ public:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime);
 public:
 	UPROPERTY(meta = (BindWidget))
-	UImage* Dot;
+	UImage* Dot = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* OutCircle;
+	UImage* OutCircle = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UOverlay* NormalOverlay;
+	UOverlay* NormalOverlay = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UOverlay* CriticalOverlay;
+	UOverlay* CriticalOverlay = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* TopCrosshair;
+	UImage* TopCrosshair = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* BottomCrosshair;
+	UImage* BottomCrosshair = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* LeftCrosshair;
+	UImage* LeftCrosshair = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* RightCrosshair;
+	UImage* RightCrosshair = nullptr;
 
 	
 
@@ -117,18 +117,19 @@ protected:
 	FTimerHandle RightDashTimerHandle;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* DashGauge;
+	UTextBlock* DashGauge = nullptr;
 
-	float fDashGauge;
+	float fDashGauge = 0.f;
 	
 	// Dash Counter
 	UPROPERTY(meta = (BindWidget))
-	UProgressBar* LeftDashCounter;
+	UProgressBar* LeftDashCounter = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UProgressBar* RightDashCounter;
-	
-	ASuraPawnPlayer* SuraPawnPlayer;
+	UProgressBar* RightDashCounter = nullptr;
+
+	UPROPERTY()
+	ASuraPawnPlayer* SuraPawnPlayer = nullptr;
 
 public:
 	void SetDashGauge();

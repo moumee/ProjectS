@@ -217,7 +217,8 @@ public:
 	
 #pragma region Control
 protected:
-	AWeapon* ControllingWeapon;
+	UPROPERTY()
+	AWeapon* ControllingWeapon = nullptr;
 public:
 	bool TryTakeControl(AWeapon* NewWeapon);
 	void ReleaseControl();

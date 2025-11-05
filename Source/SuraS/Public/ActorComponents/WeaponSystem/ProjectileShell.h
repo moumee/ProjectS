@@ -33,9 +33,9 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere)
-	UCapsuleComponent* CapsuleComponent;
+	UCapsuleComponent* CapsuleComponent = nullptr;
 	UPROPERTY(EditAnywhere)
-	UStaticMeshComponent* ProjectileShellMesh;
+	UStaticMeshComponent* ProjectileShellMesh = nullptr;
 	UPROPERTY(EditAnywhere)
 	float VisibleDuration = 5.f;
 	FTimerHandle InvisibleTimer;

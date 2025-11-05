@@ -35,13 +35,13 @@ protected:
 	EMovementState MovementState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bIsRunning;
+	bool bIsRunning = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bIsCrouching;
+	bool bIsCrouching = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bIsDashing;
+	bool bIsDashing = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector Velocity;
@@ -60,13 +60,13 @@ protected:
 	EWeaponStateType CurrentWeaponStateType;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
-	bool bIsZoomIn;
+	bool bIsZoomIn = false;
 
-	//TODO: »ç¿ë¾ÈÇÒ µí. »èÁ¦¿ä¸Á
+	//TODO: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	FVector ScreenCenterWorldLocation;
 
-	//TODO: »ç¿ë¾ÈÇÒ µí. »èÁ¦¿ä¸Á
+	//TODO: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	FVector TargetRightHandWorldLocation;
 
@@ -88,12 +88,12 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	FRotator AimPointRotation;
 
-	//TODO: Logic ¹Ù²ã¾ß ÇÔ
+	//TODO: Logic ï¿½Ù²ï¿½ï¿½ ï¿½ï¿½
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
-	AWeapon* CurrentWeapon;
+	AWeapon* CurrentWeapon = nullptr;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
-	AWeapon* CurrentSkillWeapon;
+	AWeapon* CurrentSkillWeapon = nullptr;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	bool bHasWeapon = false;

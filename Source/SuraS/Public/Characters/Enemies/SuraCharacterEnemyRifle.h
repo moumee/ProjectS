@@ -16,11 +16,11 @@ class SURAS_API ASuraCharacterEnemyRifle : public ASuraCharacterEnemyBase
 {
 	GENERATED_BODY()
 
-	/*UPROPERTY()
-	ASuraFirearmRifle* Firearm;*/
-
 	UPROPERTY()
 	AEnemyProjectileRifleBullet* Projectile;
+
+	float FireANSDuration = 0.f;
+	float CurrentANSTime = 0.f;
 
 protected:
 	virtual void BeginPlay() override;
@@ -41,4 +41,9 @@ public:
 	virtual void Attack(ASuraPawnPlayer* Player) override;
 
 	virtual void OnDeathTriggered() override;
+
+	FORCEINLINE float GetFireANSDuration() const { return FireANSDuration; }
+	FORCEINLINE float GetCurrentANSTime() const { return CurrentANSTime; }
+	FORCEINLINE void SetFireANSDuration(float time) { FireANSDuration = time; };
+	FORCEINLINE void SetCurrentANSTime(float time) { CurrentANSTime = time; };
 };

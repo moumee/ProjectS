@@ -55,7 +55,7 @@ void ASuraCharacterEnemyRifle::SetProjectileScale(float scale)
 {
 	if (Projectile)
 	{
-		Projectile->SetActorScale3D(Projectile->GetActorScale() * scale);
+		Projectile->SetActorScale3D(FVector(scale, scale, scale));
 	}
 }
 

@@ -21,18 +21,18 @@ private:
 
 	UACBossDamageSystem();
 
-	float MaxHeadHealth;
+	float MaxHeadHealth = 0.f;
 	UPROPERTY(EditAnywhere)
-	float HeadHealth;
-	float MaxBodyHealth;
+	float HeadHealth = 0.f;
+	float MaxBodyHealth = 0.f;
 	UPROPERTY(EditAnywhere)
-	float BodyHealth;
-	float MaxLeftArmHealth;
+	float BodyHealth = 0.f;
+	float MaxLeftArmHealth = 0.f;
 	UPROPERTY(EditAnywhere)
-	float LeftArmHealth;
-	float MaxRightArmHealth;
+	float LeftArmHealth = 0.f;
+	float MaxRightArmHealth = 0.f;
 	UPROPERTY(EditAnywhere)
-	float RightArmHealth;
+	float RightArmHealth = 0.f;
 
 	UPROPERTY(VisibleAnywhere)
 	bool bLeftArmDead = false;
@@ -51,6 +51,6 @@ public:
 
 	void SetHeadDamageMultiplier(float Value) { HeadDamageMultiplier = Value; };
 
-	float GetLeftArmHealth() { return LeftArmHealth; }
-	float GetRightArmHealth() { return RightArmHealth; }
+	float GetLeftArmHealth() const { return LeftArmHealth; }
+	float GetRightArmHealth() const { return RightArmHealth; }
 };

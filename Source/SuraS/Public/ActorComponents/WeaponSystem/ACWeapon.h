@@ -165,7 +165,7 @@ public:
 
 #pragma region Socket
 protected:
-	FName WeaponSocketName;
+	FName WeaponSocketName = FName("");
 
 #pragma endregion
 
@@ -211,25 +211,25 @@ protected:
 #pragma region WeaponState
 public:
 	UPROPERTY(VisibleAnywhere)
-	USuraWeaponBaseState* CurrentState;
+	USuraWeaponBaseState* CurrentState = nullptr;
 	UPROPERTY(VisibleAnywhere)
-	USuraWeaponIdleState* IdleState;
+	USuraWeaponIdleState* IdleState = nullptr;
 	UPROPERTY(VisibleAnywhere)
-	USuraWeaponFiringState* FiringState;
+	USuraWeaponFiringState* FiringState = nullptr;
 	UPROPERTY(VisibleAnywhere)
-	USuraWeaponUnequippedState* UnequippedState;
+	USuraWeaponUnequippedState* UnequippedState = nullptr;
 	UPROPERTY(VisibleAnywhere)
-	USuraWeaponReloadingState* ReloadingState;
+	USuraWeaponReloadingState* ReloadingState = nullptr;
 	UPROPERTY(VisibleAnywhere)
-	USuraWeaponPumpActionReloadState* PumpActionReloadingState;
+	USuraWeaponPumpActionReloadState* PumpActionReloadingState = nullptr;
 	UPROPERTY(VisibleAnywhere)
-	USuraWeaponSwitchingState* SwitchingState;
+	USuraWeaponSwitchingState* SwitchingState = nullptr;
 	UPROPERTY(VisibleAnywhere)
-	USuraWeaponTargetingState* TargetingState;
+	USuraWeaponTargetingState* TargetingState = nullptr;
 	UPROPERTY(VisibleAnywhere)
-	USuraWeaponChargingState* ChargingState;
+	USuraWeaponChargingState* ChargingState = nullptr;
 	UPROPERTY(VisibleAnywhere)
-	USuraWeaponWaitingState* WaitingState;
+	USuraWeaponWaitingState* WaitingState = nullptr;
 public:
 	UFUNCTION()
 	USuraWeaponBaseState* GetCurrentState() const { return CurrentState; }
@@ -237,8 +237,11 @@ public:
 	
 protected:
 	/** The Character holding this weapon*/
-	ASuraPawnPlayer* Character;
-	APlayerController* CharacterController;
+	UPROPERTY()
+	ASuraPawnPlayer* Character = nullptr;
+
+	UPROPERTY()
+	APlayerController* CharacterController = nullptr;
 
 #pragma region FireData
 protected:
@@ -274,40 +277,40 @@ public:
 #pragma region Animation/Character
 protected:
 	UPROPERTY()
-	UAnimInstance* CharacterAnimInstance;
+	UAnimInstance* CharacterAnimInstance = nullptr;
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Character")
-	UAnimMontage* AM_Fire_Character;
+	UAnimMontage* AM_Fire_Character = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Character")
-	UAnimMontage* AM_Reload_Character;
+	UAnimMontage* AM_Reload_Character = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Character")
-	UAnimMontage* AM_Equip_Character;
+	UAnimMontage* AM_Equip_Character = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Character")
-	UAnimMontage* AM_Unequip_Character;
+	UAnimMontage* AM_Unequip_Character = nullptr;
 #pragma endregion
 
 #pragma region Animation/Weapon
 protected: // TODO: 처리 고려
 	UPROPERTY()
-	UAnimInstance* WeaponAnimInstance;
+	UAnimInstance* WeaponAnimInstance = nullptr;
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Weapon")
-	UAnimMontage* AM_Fire_Weapon;
+	UAnimMontage* AM_Fire_Weapon = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Weapon")
-	UAnimMontage* AM_Reload_Weapon;
+	UAnimMontage* AM_Reload_Weapon = nullptr;
 #pragma endregion
 
 #pragma region Sound
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* ChargeSound;
+	USoundBase* ChargeSound = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	UAudioComponent* WeaponAudioComponent;
+	UAudioComponent* WeaponAudioComponent = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* TargetSearchLoopSound;
+	USoundBase* TargetSearchLoopSound = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* TargetLockedSound;
+	USoundBase* TargetLockedSound = nullptr;
 
 	void PlayWeaponSound(USoundBase* weaponsound = nullptr);
 	void StopWeaponSound();
@@ -316,14 +319,14 @@ protected:
 #pragma region Niagara
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UNiagaraSystem* ChargeEffect;
+	UNiagaraSystem* ChargeEffect = nullptr;
 
 	FVector ChargeEffectLocation;
 	FRotator ChargeEffectRotation;
 	FVector ChargeEffenctScale;
 
 	UPROPERTY()
-	UNiagaraComponent* ChargeEffectComponent;
+	UNiagaraComponent* ChargeEffectComponent = nullptr;
 public:
 	void SpawnMuzzleFireEffect(UNiagaraSystem* FireEffect = nullptr, FVector SpawnLocation = FVector(), FRotator SpawnRotation = FRotator());
 	void SpawnChargeEffect(FVector SpawnLocation, FRotator SpawnRotation, FVector EffectScale);
@@ -336,12 +339,13 @@ protected:
 	TSubclassOf<class AProjectileShell> ProjectileShellClass;
 	UPROPERTY(EditAnywhere)
 	int32 MaxProjectileShellNum = 5;
+	UPROPERTY()
 	TArray<AProjectileShell*> ProjectileShells; //TODO: queue로 대체 , 근데 그냥 array가 나을듯
 
 	UPROPERTY(EditAnywhere)
 	FVector DefaultEjectImpulseVec;
 	UPROPERTY(EditAnywhere)
-	float DefaultEjectImpulse;
+	float DefaultEjectImpulse = 0.f;
 
 	int32 CurrProjectileShellIdx = 0;
 
@@ -428,7 +432,7 @@ protected:
 	int32 MaxAmmoPerMag = 20.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 LeftAmmoInCurrentMag;
+	int32 LeftAmmoInCurrentMag = 0;
 
 	FTimerHandle ReloadingTimer;
 protected:
@@ -596,6 +600,7 @@ public:
 	void UpdateTargetMarkers();
 	void ResetTargetMarkers();
 protected:
+	UPROPERTY()
 	TArray<AActor*> ConfirmedTargets;
 	int32 CurrentTargetIndex = 0;
 	float MissileLaunchDelay = 0.2;
@@ -750,6 +755,7 @@ protected:
 
 	//----------------------------
 	TMap<TSubclassOf<ASuraProjectile>, TArray<ASuraProjectile*>> ProjectilePool;
+	UPROPERTY()
 	TSet<ASuraProjectile*> ActiveProjectileSet;
 
 public:

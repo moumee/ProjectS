@@ -21,7 +21,7 @@ public:
 
 private:
 	UPROPERTY(BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = "true"))
-	float CurrentHealth;
+	float CurrentHealth = 0.f;
 
 	// 회복 타이머를 관리하기 위한 핸들
 	FTimerHandle RegenTimerHandle;

@@ -58,24 +58,27 @@ public:
 	
 
 private:
-	UACUIMangerComponent* UIManager;
+	UPROPERTY()
+	UACUIMangerComponent* UIManager = nullptr;
 
 	//Inventory 위젯을 저장할 변수
 	UPROPERTY()
-	UInventoryWidget* InventoryWidget;
+	UInventoryWidget* InventoryWidget = nullptr;
 
 	int32 PendingWeaponIndex = -1; // 버튼을 누르면 바꾸고자 하는 weaponInventory index를 저장하는 변수
 	bool bWaitingForWeaponSwitch = false; //
 
 	// WeaponSystemComponent 포인터
-	UWeaponSystemComponent* pWeaponSystemComponent;
+	UPROPERTY()
+	UWeaponSystemComponent* pWeaponSystemComponent = nullptr;
 
 	// DTWeapon 포인터 변수
-	UDataTable* DTWeapon;
+	UPROPERTY()
+	UDataTable* DTWeapon = nullptr;
 	// DTProjectile 포인터 변수
 	//UDataTable* DTProjectile;
 	
 protected:
 	UPROPERTY(VisibleAnywhere)
-	UCustomGameInstance* GameInstance; // <JaeHyeong>
+	UCustomGameInstance* GameInstance = nullptr; // <JaeHyeong>
 };

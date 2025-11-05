@@ -67,7 +67,7 @@ public:
 	TSubclassOf<AActor> RLeg;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX")
-	UNiagaraSystem* BloodEffect;
+	UNiagaraSystem* BloodEffect = nullptr;
 
 	void SetImpulsePower(float weak, float normal, float hard);
 	void SetPartsHealth(float head, float body, float rArm, float lArm, float lLeg, float rLeg);

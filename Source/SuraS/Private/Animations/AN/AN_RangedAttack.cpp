@@ -11,5 +11,10 @@ void UAN_RangedAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
 	Super::Notify(MeshComp, Animation, EventReference);
 
 	if (ASuraCharacterEnemyBase* Owner = Cast<ASuraCharacterEnemyBase>(MeshComp->GetOwner()))
-		Owner->Attack(Owner->GetAIController()->GetAttackTarget());
+	{
+		if (Owner->GetAIController() && Owner->GetAIController()->GetAttackTarget())
+		{
+			Owner->Attack(Owner->GetAIController()->GetAttackTarget());
+		}
+	}
 }

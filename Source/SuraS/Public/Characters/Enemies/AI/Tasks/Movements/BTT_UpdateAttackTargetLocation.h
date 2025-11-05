@@ -6,9 +6,7 @@
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "BTT_UpdateAttackTargetLocation.generated.h"
 
-/**
- * 
- */
+
 UCLASS()
 class SURAS_API UBTT_UpdateAttackTargetLocation : public UBTTask_BlackboardBase
 {

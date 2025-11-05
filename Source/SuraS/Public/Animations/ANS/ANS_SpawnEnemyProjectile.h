@@ -14,12 +14,6 @@ UCLASS()
 class SURAS_API UANS_SpawnEnemyProjectile : public UAnimNotifyState
 {
 	GENERATED_BODY()
-
-	UPROPERTY()
-	ASuraCharacterEnemyRifle* CachedEnemy;
-
-	float ANSDuration = 0.f;
-	float CurrentDuration = 0.f;
 	
 public:
 	virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EvetnRef) override;

@@ -97,6 +97,8 @@ protected:
 
 	bool bIsLevelSequenceSpawned = false;
 
+	bool bCanInflictDamage = true;
+
 	// [protected functions]
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -162,6 +164,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void TurnOnAIController();
+
+	FORCEINLINE bool CanInflictDamage() const { return bCanInflictDamage; }
+	void SetCanInflictDamage(bool val) { bCanInflictDamage = val; };
 
 	// behavior tree getter
 	FORCEINLINE UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
