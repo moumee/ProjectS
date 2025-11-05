@@ -30,7 +30,7 @@ class SURAS_API USuraPlayerJumpingState : public USuraPlayerBaseState
 	float SlideSpeedDecreaseElapsedTime = 0.f;
 
 	UPROPERTY()
-	APlayerController* PlayerController;
+	APlayerController* PlayerController = nullptr;
 
 public:
 

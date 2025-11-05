@@ -23,15 +23,15 @@ class SURAS_API URocketLauncherSkillWidget : public UBaseUIWidget
 	
 	// widget binding
 	UPROPERTY(meta = (BindWidget))
-	UImage* SlowScreen;
+	UImage* SlowScreen = nullptr;
 	UPROPERTY(meta = (BindWidgetAnim),Transient)
-	UWidgetAnimation* FadeInAnimation;
+	UWidgetAnimation* FadeInAnimation = nullptr;
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
-	UWidgetAnimation* FadeOutAnimation;
+	UWidgetAnimation* FadeOutAnimation = nullptr;
 	
 	// 플레이어에서 넘겨줄 데이터테이블
 	UPROPERTY()
-	UDataTable* DT_UI;
+	UDataTable* DT_UI = nullptr;
 	
 	float ElapsedTime = 0.0f;
 	FVector2D StartScale;
@@ -42,7 +42,8 @@ class SURAS_API URocketLauncherSkillWidget : public UBaseUIWidget
 	FVector2D FadeStartScale;
 	FVector2D FadeTargetScale = FVector2D(2.0f, 2.0f); // 최종 스케일
 
-	UACSkillManager* SkillManager;
+	UPROPERTY()
+	UACSkillManager* SkillManager = nullptr;
 
 public:
 	virtual void NativeConstruct() override;

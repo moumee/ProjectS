@@ -17,7 +17,7 @@ class SURAS_API ASuraCharacterEnemyRifle : public ASuraCharacterEnemyBase
 	GENERATED_BODY()
 
 	UPROPERTY()
-	AEnemyProjectileRifleBullet* Projectile;
+	AEnemyProjectileRifleBullet* Projectile = nullptr;
 
 	float FireANSDuration = 0.f;
 	float CurrentANSTime = 0.f;

@@ -16,7 +16,7 @@ class SURAS_API USettingSaveGame : public USaveGame
 
 public:
 	UPROPERTY(VisibleAnywhere, Category = "Settings")
-	float SavedMouseSensitivity;
+	float SavedMouseSensitivity = 0.f;
 
 	USettingSaveGame()
 	{

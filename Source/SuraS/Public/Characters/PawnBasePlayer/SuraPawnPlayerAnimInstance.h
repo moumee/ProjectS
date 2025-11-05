@@ -25,13 +25,13 @@ protected:
 	EMovementState MovementState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bIsRunning;
+	bool bIsRunning = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bIsCrouching;
+	bool bIsCrouching = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bIsDashing;
+	bool bIsDashing = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector Velocity;

@@ -25,13 +25,13 @@ protected:
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Trigger LS")
-	UBoxComponent* TriggerBox;
+	UBoxComponent* TriggerBox = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Level Sequence")
-	ULevelSequence* LevelSequenceAsset;
+	ULevelSequence* LevelSequenceAsset = nullptr;
 
 	UPROPERTY()
-	ULevelSequencePlayer* LevelSequencePlayer;
+	ULevelSequencePlayer* LevelSequencePlayer = nullptr;
 
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

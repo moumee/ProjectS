@@ -84,16 +84,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<USoundBase> DeathSound;
 
-	float AttackDamageAmount;
-	float AttackRate;
-	float MeleeAttackRange;
-	float MeleeAttackSphereRadius;
+	float AttackDamageAmount = 0.f;
+	float AttackRate = 0.f;
+	float MeleeAttackRange = 0.f;
+	float MeleeAttackSphereRadius = 0.f;
 
-	float MaxWalkSpeed;
-	float MinWalkSpeedVariation;
-	float MaxWalkSpeedVariation;
-	float MinAttackRateVariation;
-	float MaxAttackRateVariation;
+	float MaxWalkSpeed = 0.f;
+	float MinWalkSpeedVariation = 0.f;
+	float MaxWalkSpeedVariation = 0.f;
+	float MinAttackRateVariation = 0.f;
+	float MaxAttackRateVariation = 0.f;
 
 	bool bIsLevelSequenceSpawned = false;
 
@@ -209,13 +209,13 @@ public:
 	TArray<UAnimMontage*> AttackAnimations;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
-	UAnimMontage* ClimbAnimation;
+	UAnimMontage* ClimbAnimation = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
-	UAnimMontage* ThrowAnimation;
+	UAnimMontage* ThrowAnimation = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
-	UAnimMontage* FallingAnimation;
+	UAnimMontage* FallingAnimation = nullptr;
 
 	//poolsystem
 	bool isInitialized = false;

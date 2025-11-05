@@ -6,6 +6,7 @@
 #include "UI/BaseUIWidget.h"
 #include "CrosshairWidget.generated.h"
 
+class UImage;
 /**
  * 
  */
@@ -17,20 +18,20 @@ class SURAS_API UCrosshairWidget : public UBaseUIWidget
 public:
 	// 크로스헤어 크기를 조절할 변수
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Crosshair")
-	float CrosshairSpread;
+	float CrosshairSpread = 0.f;
 
 	// 크로스헤어 선을 조절할 UI 위젯 참조 변수
 	UPROPERTY(meta = (BindWidget))
-	class UImage* TopCrosshair;
+	UImage* TopCrosshair = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* BottomCrosshair;
+	UImage* BottomCrosshair = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* LeftCrosshair;
+	UImage* LeftCrosshair = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* RightCrosshair;
+	UImage* RightCrosshair = nullptr;
 
 	// 애니메이션 함수
 	UFUNCTION(BlueprintCallable, Category = "Crosshair")

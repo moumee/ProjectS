@@ -27,14 +27,15 @@ class SURAS_API UPlayerHUD : public UBaseUIWidget
 {
 	GENERATED_BODY()
 
-	UACPlayerHUDManager* PlayerHUDManager;
+	UPROPERTY()
+	UACPlayerHUDManager* PlayerHUDManager = nullptr;
 
 
 #pragma region HpBar
 private:
 	// HP 단계별 이미지 배열
 	UPROPERTY(meta = (BindWidget))
-	UImage* HpBar;
+	UImage* HpBar = nullptr;
 
 	// 현재 피격 단계 (0~5)
 	int32 CurrentHitStage = 0;
@@ -43,9 +44,10 @@ private:
 	// FTimerHandle RecoveryTimerHandle;
 
 	UPROPERTY()
-	UHitScreenWidget* PlayerHitWidget;
+	UHitScreenWidget* PlayerHitWidget = nullptr;
 
-	ASuraPawnPlayer* SuraPawnPlayer;
+	UPROPERTY()
+	ASuraPawnPlayer* SuraPawnPlayer = nullptr;
 	
 
 public:
@@ -71,16 +73,16 @@ public:
 #pragma region WeaponCarousel
 private:
 	UPROPERTY(meta = (BindWidget))
-	UOverlay* WeaponSlot_0;
+	UOverlay* WeaponSlot_0 = nullptr;
 	UPROPERTY(meta = (BindWidget))
-	UOverlay* WeaponSlot_1;
+	UOverlay* WeaponSlot_1 = nullptr;
 	// UPROPERTY(meta = (BindWidget))
 	// UOverlay* WeaponSlot_2;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* Image_0;
+	UImage* Image_0 = nullptr;
 	UPROPERTY(meta = (BindWidget))
-	UImage* Image_1;
+	UImage* Image_1 = nullptr;
 	// UPROPERTY(meta = (BindWidget))
 	// UImage* Image_2;
 
@@ -89,28 +91,29 @@ private:
 	// UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
 	// UWidgetAnimation* Slot0_BottomToTop;
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
-	UWidgetAnimation* Slot0_TopToCenter;
+	UWidgetAnimation* Slot0_TopToCenter = nullptr;
 	// UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
 	// UWidgetAnimation* Slot1_CenterToBottom;
 	// UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
 	// UWidgetAnimation* Slot1_BottomToTop;
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
-	UWidgetAnimation* Slot1_TopToCenter;
+	UWidgetAnimation* Slot1_TopToCenter = nullptr;
 	// UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
 	// UWidgetAnimation* Slot2_CenterToBottom;
 	// UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
 	// UWidgetAnimation* Slot2_BottomToTop;
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
-	UWidgetAnimation* Slot2_TopToCenter;
+	UWidgetAnimation* Slot2_TopToCenter = nullptr;
 
 	UPROPERTY(meta=(BindWidget))
-	UTextBlock* WeaponInventoryNum;
+	UTextBlock* WeaponInventoryNum = nullptr;
 
 	UPROPERTY(meta=(BindWidget))
-	UImage* background;
+	UImage* background = nullptr;
 
 	int32 CurrentWeaponIndex = 0; // 인벤토리 기준 현재 무기 인덱스
 
+	UPROPERTY()
 	UWeaponSystemComponent* WeaponSystemComponent = nullptr;
 
 	// Animation 키 -> 애니메이션 포인터 매핑

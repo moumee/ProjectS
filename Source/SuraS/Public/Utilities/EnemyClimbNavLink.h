@@ -14,7 +14,7 @@ class SURAS_API AEnemyClimbNavLink : public ANavLinkProxy
 	GENERATED_BODY()
 
 	UPROPERTY()
-	ASuraCharacterEnemyBase* CachedEnemy;
+	ASuraCharacterEnemyBase* CachedEnemy = nullptr;
 
 	void OnCachedEnemyDeath();
 

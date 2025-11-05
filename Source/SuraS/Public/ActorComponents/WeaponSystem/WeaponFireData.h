@@ -63,7 +63,7 @@ public:
 		FWeaponRecoilStruct InRecoil,
 		USoundBase* InFireSound = nullptr,
 		UNiagaraSystem* InMuzzleFireEffect = nullptr,
-		TSubclassOf<UWeaponCameraShakeBase> InCamShake,
+		TSubclassOf<UWeaponCameraShakeBase> InCamShake = nullptr,
 		int32 InAmmoCost = 0,
 		float InMaxAngleOfMultiProjectileSpread = 0.f,
 		int32 InPelletsNum = 0,

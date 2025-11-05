@@ -23,20 +23,20 @@ struct FAnimNode_BoneRotationControl : public FAnimNode_Base
 	FComponentSpacePoseLink ComponentPose;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Performance, meta = (PinHiddenByDefault, DisplayName = "LOD Threshold"))
-	int32 LODThreshold;
+	int32 LODThreshold = 0;
 
 	UPROPERTY(Transient)
-	float ActualAlpha;
+	float ActualAlpha = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Alpha)
 	EAnimAlphaInputType AlphaInputType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Alpha, meta = (PinShownByDefault, DisplayName = "bEnabled"))
-	bool bAlphaBoolEnabled;
+	bool bAlphaBoolEnabled = false;
 
 	// Current strength of the skeletal control
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Alpha, meta = (PinShownByDefault))
-	float Alpha;
+	float Alpha = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Alpha)
 	FInputScaleBias AlphaScaleBias;

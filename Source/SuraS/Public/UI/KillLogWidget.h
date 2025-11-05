@@ -34,7 +34,7 @@ protected:
 	
 
 	UPROPERTY(meta = (BindWidget))
-	UHorizontalBox* SkullBox;
+	UHorizontalBox* SkullBox = nullptr;
 
 	// UPROPERTY(meta = (BindWidget))
 	// UTextBlock* TotalScoreText;
@@ -55,10 +55,10 @@ protected:
 	
 private:
 	UPROPERTY()
-	UACKillLogManager* KillLogManager;
+	UACKillLogManager* KillLogManager = nullptr;
 
 	UPROPERTY()
-	UTexture2D* SkullTexture;
+	UTexture2D* SkullTexture = nullptr;
 
 	//int32 TotalScore = 0;
 	

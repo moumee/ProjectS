@@ -21,8 +21,8 @@ protected:
 
 public:
 	UPROPERTY()
-	USkeletalMeshComponent* WeaponMesh;
+	USkeletalMeshComponent* WeaponMesh = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Mesh")
-	USkeletalMesh* WeaponMeshAsset;
+	USkeletalMesh* WeaponMeshAsset = nullptr;
 };

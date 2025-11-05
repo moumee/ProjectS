@@ -35,7 +35,7 @@ class SURAS_API UDamageIndicatorWidget : public UBaseUIWidget
 	float IndicatorDuration = 1.0f; // default
 
 	UPROPERTY()
-	ASuraPawnPlayer* PlayerPawn;
+	ASuraPawnPlayer* PlayerPawn = nullptr;
 
 	UPROPERTY(Transient)
 	TWeakObjectPtr<AActor> LastDamageCauser;
@@ -58,15 +58,15 @@ protected:
 	// 위젯 블루프린트에서 접근할 수 있도록 UI 요소에 바인딩할 변수
 	// 근거리 및 원거리용 이미지 위젯 변수
 	UPROPERTY(meta = (BindWidget))
-	UImage* MeleeIndicatorArrow;
+	UImage* MeleeIndicatorArrow = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* RangedIndicatorArrow;
+	UImage* RangedIndicatorArrow = nullptr;
 
 	UPROPERTY(Transient, meta = (BindWidgetAnim))
-	UWidgetAnimation* FadeIn;
+	UWidgetAnimation* FadeIn = nullptr;
 	UPROPERTY(Transient, meta = (BindWidgetAnim))
-	UWidgetAnimation* FadeOut;
+	UWidgetAnimation* FadeOut = nullptr;
 
 	// BeginPlay와 유사한 기능의 함수
 	virtual void NativeConstruct() override;

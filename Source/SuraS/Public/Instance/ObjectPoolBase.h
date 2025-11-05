@@ -25,10 +25,11 @@ public:
 	AActor* GetPooledObject(FVector position, FRotator rotation);
 
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
-	AActor* PooledObject;
+	AActor* PooledObject = nullptr;
 	TSubclassOf<class AActor> PooledObjectSubclass;
 
-	UBehaviorTree* BehaviorTree;
+	UPROPERTY()
+	UBehaviorTree* BehaviorTree = nullptr;
 
 protected:
 
@@ -37,8 +38,9 @@ protected:
 	UPROPERTY()
 	TArray<AActor*> ObjectPool;
 	FActorSpawnParameters ActorSpawnParameters;
+	
 	UPROPERTY()
-	UWorld* World;
+	UWorld* World = nullptr;
 
 
 private:

@@ -27,7 +27,7 @@ class SURAS_API USuraPlayerCrouchingState : public USuraPlayerBaseState
 	float CrouchAnimationSpeed = 5.f;
 
 	UPROPERTY()
-	APlayerController* PlayerController;
+	APlayerController* PlayerController = nullptr;
 	
 public:
 

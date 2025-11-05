@@ -27,7 +27,7 @@ class SURAS_API USuraPlayerWallRunningState : public USuraPlayerBaseState
 	
 	float ElapsedTime = 0.f;
 
-	float MaxDuration;
+	float MaxDuration = 0.f;
 
 	bool bShouldSlideUp = false;
 
@@ -40,7 +40,7 @@ class SURAS_API USuraPlayerWallRunningState : public USuraPlayerBaseState
 	float WallRunCameraTiltAngle = 0.f;
 
 	UPROPERTY()
-	APlayerController* PlayerController;
+	APlayerController* PlayerController = nullptr;
 	
 public:
 

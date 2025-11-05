@@ -21,7 +21,7 @@ public:
 	UCustomGameInstance();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-	float MouseSensitivity;
+	float MouseSensitivity = 0.f;
 
 	// 무기 소유 상태를 저장하는 TMap
 	UPROPERTY()

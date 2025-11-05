@@ -34,10 +34,10 @@ struct FWeaponUI
 	GENERATED_BODY()
 
 	UPROPERTY()
-	UImage* WeaponImage;
+	UImage* WeaponImage = nullptr;
 
 	UPROPERTY()
-	UTextBlock* WeaponText;
+	UTextBlock* WeaponText = nullptr;
 
 	FWeaponUI() : WeaponImage(nullptr), WeaponText(nullptr) {}
 	FWeaponUI(UImage* Image, UTextBlock* Text) : WeaponImage(Image), WeaponText(Text) {};
@@ -50,28 +50,29 @@ class SURAS_API UInventoryWidget : public UBaseUIWidget
 
 protected:
 	// InventoryManger reference variable
-	UACInventoryManager* InventoryManager;
+	UPROPERTY()
+	UACInventoryManager* InventoryManager = nullptr;
 	
 	/**  탭관련  **/
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* TabWeapon;
+	UTextBlock* TabWeapon = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* TabChip;
+	UTextBlock* TabChip = nullptr;
 	
 	EInventoryTab CurrentTab;
 
 	// Widget Switcher
 	UPROPERTY(meta = (BindWidget))
-	UWidgetSwitcher* ContentSwitcher;
+	UWidgetSwitcher* ContentSwitcher = nullptr;
 
 	UPROPERTY(meta = (BindWidget), BlueprintReadWrite, Category = "Weapon UI")
-	UWidgetSwitcher* WeaponWidgetSwitcher;
+	UWidgetSwitcher* WeaponWidgetSwitcher = nullptr;
 
 	/** 사운드 **/
 	// 탭 전환 효과음
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
-	USoundBase* TabSwitchSound;
+	USoundBase* TabSwitchSound = nullptr;
 	
 public:
 	// 위젯이 생성된 후 호출되는 함수
@@ -106,7 +107,8 @@ public:
 	void SwitchPage(int32 PageIndex);
 	
 	// DTWeapon 포인터 변수
-	UDataTable* DTWeapon;
+	UPROPERTY()
+	UDataTable* DTWeapon = nullptr;
 	
 	void UpdateWeaponUI(EWeaponName WeaponName); // <JaeHyeong> FString -> EWeaponName 수정
 

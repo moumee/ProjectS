@@ -23,7 +23,7 @@ public:
 	TSubclassOf<AActor> PooledObject;
 
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
-	UBehaviorTree* BehaviorTree;
+	UBehaviorTree* BehaviorTree = nullptr;
 
 protected:
 	virtual void BeginPlay() override;
@@ -36,6 +36,6 @@ private:
 
 	FTimerHandle TimerHandler;
 	UPROPERTY()
-	UObjectPoolBase* Pool;
+	UObjectPoolBase* Pool = nullptr;
 
 };

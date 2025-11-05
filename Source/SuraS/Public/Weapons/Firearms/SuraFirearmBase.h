@@ -21,10 +21,10 @@ protected:
 	UPROPERTY()
 	ASuraCharacterEnemyBase* OwnerCharacter;
 
-	int32 MaxAmmo;
-	int32 CurrentAmmoInReserve;
-	int32 CurrentAmmonInMag;
-	int32 MagSize;
+	int32 MaxAmmo = 0;
+	int32 CurrentAmmoInReserve = 0;
+	int32 CurrentAmmonInMag = 0;
+	int32 MagSize = 0;
 
 public:	
 	ASuraFirearmBase();

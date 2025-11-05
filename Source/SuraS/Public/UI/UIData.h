@@ -14,5 +14,5 @@ struct SURAS_API FUIData : public FTableRowBase
 public:
 	// UI 요소 이름
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SettingValues")
-	float AnimDuration;
+	float AnimDuration = 0.f;
 };
