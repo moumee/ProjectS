@@ -27,7 +27,7 @@ public:
 	TArray<ASuraCharacterEnemyBase*> EnemiesToTrigger;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "TriggerEnemies")
-	UBoxComponent* TriggerBox;
+	UBoxComponent* TriggerBox = nullptr;
 
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

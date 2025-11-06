@@ -31,5 +31,5 @@ protected:
 private:
 	// C++ 코드 내에서 생성하고 관리하므로 UPROPERTY()만 붙여 GC(가비지 컬렉션)에 의해 제거되지 않도록 함
 	UPROPERTY()
-	UWidgetComponent* IndicatorWidgetComponent;
+	UWidgetComponent* IndicatorWidgetComponent = nullptr;
 };

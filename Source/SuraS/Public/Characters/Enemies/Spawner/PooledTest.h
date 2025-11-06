@@ -26,7 +26,7 @@ public:
 	bool IsActive();
 
 protected:
-	bool Active;
+	bool Active = false;
 	float LifeSpan = 0.0f;
-	int PoolIndex;
+	int PoolIndex = 0;
 };

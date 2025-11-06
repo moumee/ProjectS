@@ -41,28 +41,28 @@ protected:
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (RowType="ProjectileData"))
 	//FDataTableRowHandle ProjectileDataTableHandle;
 
-	FProjectileData* ProjectileData;
+	FProjectileData* ProjectileData = nullptr;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
-	USphereComponent* CollisionComp;
+	USphereComponent* CollisionComp = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	UProjectileMovementComponent* ProjectileMovement;
+	UProjectileMovementComponent* ProjectileMovement = nullptr;
 	
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
-	UStaticMeshComponent* ProjectileMesh;
+	UStaticMeshComponent* ProjectileMesh = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
-	UNiagaraSystem* TrailEffect;
+	UNiagaraSystem* TrailEffect = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UNiagaraSystem* ExplosionEffect;
+	UNiagaraSystem* ExplosionEffect = nullptr;
 
 	UPROPERTY()
-	UNiagaraComponent* TrailEffectComponent;
+	UNiagaraComponent* TrailEffectComponent = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
-	UNiagaraSystem* ImpactEffect;
+	UNiagaraSystem* ImpactEffect = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
-	UMaterialInterface* DecalMaterial;
+	UMaterialInterface* DecalMaterial = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float DefaultDamage = 0.f;
@@ -70,10 +70,10 @@ protected:
 	float HeadShotAdditionalDamage = 0.f;
 
 	UPROPERTY(VisibleAnywhere)
-	AActor* ProjectileOwner;
+	AActor* ProjectileOwner = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
-	AWeapon* Weapon;
+	AWeapon* Weapon = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
 	float InitialSpeed = 50000.f;
@@ -129,7 +129,7 @@ public:
 private:
 	bool bActive = false;
 	FTimerHandle LifeTimer;
-	float LifeSpan;
+	float LifeSpan = 0.f;
 public:
 	void StartLifeTimer(float Seconds);
 	void StopLifeTimer();
@@ -178,15 +178,15 @@ public:
 #pragma region Sound
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HitSound_Default;
+	USoundBase* HitSound_Default = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HitSound_Metal;
+	USoundBase* HitSound_Metal = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HitSound_Glass;
+	USoundBase* HitSound_Glass = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HitSound_Enemy;
+	USoundBase* HitSound_Enemy = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HitSound_Energy;
+	USoundBase* HitSound_Energy = nullptr;
 	void PlaySoundAtLocationByMaterial(EPhysicalSurface SurfaceType, FVector Location);
 #pragma endregion
 
@@ -197,9 +197,9 @@ protected:
 	bool bActivatedMeshMovementForHitScan = false;
 	TArray<FVector> HitScanEndPoints;
 	int32 CurrEndPointIdx = 0;
-	float HitScanProjectileVelocity;
-	float DistanceMoved;
-	float TargetDistance;
+	float HitScanProjectileVelocity = 0.f;
+	float DistanceMoved = 0.f;
+	float TargetDistance = 0.f;
 	FVector MovementDirection;
 	void PerformHitScan(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, TArray<FVector>& OutHitLocations);
 	void InitHitScanProjectileMovement(FVector StartLocation);
@@ -271,12 +271,12 @@ protected:
 protected:
 	bool bUseCustomProjectieMovement = false;
 	UPROPERTY(EditAnywhere)
-	float PM_Cam_To_d_Len;
-	float PM_Start_To_d_Len;
+	float PM_Cam_To_d_Len = 0.f;
+	float PM_Start_To_d_Len = 0.f;
 
-	float PM_Vel;
+	float PM_Vel = 0.f;
 
-	float PM_k_by_d;
+	float PM_k_by_d = 0.f;
 
 	FVector PM_Cam_Pos;
 	FVector PM_d_Pos;

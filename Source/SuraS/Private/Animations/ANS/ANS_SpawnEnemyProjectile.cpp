@@ -10,13 +10,14 @@ void UANS_SpawnEnemyProjectile::NotifyBegin(USkeletalMeshComponent* MeshComp, UA
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EvetnRef);
 
-	CachedEnemy = Cast<ASuraCharacterEnemyRifle>(MeshComp->GetOwner());
+	if (ASuraCharacterEnemyRifle* OwnerRangedEnemy = Cast<ASuraCharacterEnemyRifle>(MeshComp->GetOwner()))
+	{
+		if (OwnerRangedEnemy->GetWorld() && OwnerRangedEnemy->GetWorld()->IsGameWorld())
+			OwnerRangedEnemy->SpawnProjectile();
 
-	if (CachedEnemy	&& CachedEnemy->GetWorld() && CachedEnemy->GetWorld()->IsGameWorld())
-		CachedEnemy->SpawnProjectile();
-
-	ANSDuration = EvetnRef.GetNotify()->GetDuration();
-	CurrentDuration = 0.f;
+		OwnerRangedEnemy->SetFireANSDuration(EvetnRef.GetNotify()->GetDuration());
+		OwnerRangedEnemy->SetCurrentANSTime(0.f);
+	}
 }
 
 void UANS_SpawnEnemyProjectile::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
@@ -24,10 +25,13 @@ void UANS_SpawnEnemyProjectile::NotifyTick(USkeletalMeshComponent* MeshComp, UAn
 {
 	Super::NotifyTick(MeshComp, Animation, TotalDuration, EvetnRef);
 
-	CurrentDuration += TotalDuration;
+	if (ASuraCharacterEnemyRifle* OwnerRangedEnemy = Cast<ASuraCharacterEnemyRifle>(MeshComp->GetOwner()))
+	{
+		OwnerRangedEnemy->SetCurrentANSTime(OwnerRangedEnemy->GetCurrentANSTime() + TotalDuration);
+		
+		if (OwnerRangedEnemy->GetWorld() && OwnerRangedEnemy->GetWorld()->IsGameWorld() && OwnerRangedEnemy->GetCurrentANSTime() < OwnerRangedEnemy->GetFireANSDuration())
+			OwnerRangedEnemy->SetProjectileScale(FMath::Clamp(OwnerRangedEnemy->GetCurrentANSTime() / OwnerRangedEnemy->GetFireANSDuration(), 0.f, 1.f));
 
-	// UE_LOG(LogTemp, Error, TEXT("ANS Current Time / Full Duration: %ff"), CurrentDuration / ANSDuration);
-
-	if (CurrentDuration > ANSDuration && CachedEnemy	&& CachedEnemy->GetWorld() && CachedEnemy->GetWorld()->IsGameWorld())
-		CachedEnemy->SetProjectileScale(FMath::Clamp(CurrentDuration / ANSDuration, 0.f, 1.f));
+		// UE_LOG(LogTemp, Error, TEXT("ANS Current Time / Full Duration: %ff"), OwnerRangedEnemy->GetCurrentANSTime() / OwnerRangedEnemy->GetFireANSDuration());
+	}
 }

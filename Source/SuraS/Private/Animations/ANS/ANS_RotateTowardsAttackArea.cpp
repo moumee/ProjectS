@@ -24,7 +24,7 @@ void UANS_RotateTowardsAttackArea::NotifyBegin(USkeletalMeshComponent* MeshComp,
 			{
 				FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(Boss->GetActorLocation(),
 					Areas[0]->GetActorLocation());
-				TargetRotation = FRotator(0.f, LookAtRotation.Yaw, 0.f);
+				Boss->SetTargetAttackAreaFacingRotation(FRotator(0.f, LookAtRotation.Yaw, 0.f));
 				
 			}
 		}
@@ -36,10 +36,11 @@ void UANS_RotateTowardsAttackArea::NotifyTick(USkeletalMeshComponent* MeshComp, 
 {
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 
-	if (AActor* Actor = MeshComp->GetOwner())
+	if (ASuraCharacterBossProto* Boss = Cast<ASuraCharacterBossProto>(MeshComp->GetOwner()))
 	{
-		FRotator InterpolatedRotation = FMath::RInterpTo(Actor->GetActorRotation(), TargetRotation, FrameDeltaTime, RotationInterpSpeed);
-		Actor->SetActorRotation(InterpolatedRotation);
+		FRotator TargetRotation = Boss->GetTargetAttackAreaFacingRotation();
+		FRotator InterpolatedRotation = FMath::RInterpTo(Boss->GetActorRotation(), TargetRotation, FrameDeltaTime, RotationInterpSpeed);
+		Boss->SetActorRotation(InterpolatedRotation);
 	}
 	
 }

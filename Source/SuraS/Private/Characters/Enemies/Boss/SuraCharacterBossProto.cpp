@@ -18,6 +18,7 @@
 #define SURFACE_LEFT_ARM SurfaceType8
 #define SURFACE_RIGHT_ARM SurfaceType9
 
+
 ASuraCharacterBossProto::ASuraCharacterBossProto()
 {
 	HeadMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HeadMesh"));
@@ -45,23 +46,23 @@ void ASuraCharacterBossProto::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	if (bIsMeleeAttackOnCooldown)
-	{
-		MeleeAttackCooldown = FMath::Max(MeleeAttackCooldown - DeltaTime, 0.f);
-		if (MeleeAttackCooldown <= 0.f)
-		{
-			bIsMeleeAttackOnCooldown = false;
-		}
-	}
-
-	if (bIsRangedAttackOnCooldown)
-	{
-		RangedAttackCooldown = FMath::Max(RangedAttackCooldown - DeltaTime, 0.f);
-		if (RangedAttackCooldown <= 0.f)
-		{
-			bIsRangedAttackOnCooldown = false;
-		}
-	}
+	// if (bIsMeleeAttackOnCooldown)
+	// {
+	// 	MeleeAttackCooldown = FMath::Max(MeleeAttackCooldown - DeltaTime, 0.f);
+	// 	if (MeleeAttackCooldown <= 0.f)
+	// 	{
+	// 		bIsMeleeAttackOnCooldown = false;
+	// 	}
+	// }
+	//
+	// if (bIsRangedAttackOnCooldown)
+	// {
+	// 	RangedAttackCooldown = FMath::Max(RangedAttackCooldown - DeltaTime, 0.f);
+	// 	if (RangedAttackCooldown <= 0.f)
+	// 	{
+	// 		bIsRangedAttackOnCooldown = false;
+	// 	}
+	// }
 }
 
 void ASuraCharacterBossProto::StartMeleeAttackCooldown(float Duration)

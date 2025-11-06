@@ -9,6 +9,7 @@
 #include "Enumerations/Enemies/EnemyEnums.h"
 #include "EnemyBaseAIController.generated.h"
 
+class UAISenseConfig_Sight;
 class ASuraCharacterEnemyBase;
 class ASuraPawnPlayer;
 /**
@@ -20,7 +21,7 @@ class SURAS_API AEnemyBaseAIController : public AAIController
 	GENERATED_BODY()
 
 	UPROPERTY()
-	class UAISenseConfig_Sight* SightConfig;
+	UAISenseConfig_Sight* SightConfig = nullptr;
 	
 	TWeakObjectPtr<ASuraCharacterEnemyBase> CachedPossessedPawn;
 

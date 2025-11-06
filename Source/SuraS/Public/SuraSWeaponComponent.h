@@ -20,11 +20,11 @@ public:
 
 	/** Sound to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
-	USoundBase* FireSound;
+	USoundBase* FireSound = nullptr;
 	
 	/** AnimMontage to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	UAnimMontage* FireAnimation;
+	UAnimMontage* FireAnimation = nullptr;
 
 	/** Gun muzzle's offset from the characters location */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
@@ -56,5 +56,6 @@ protected:
 
 private:
 	/** The Character holding this weapon*/
-	ASuraSCharacter* Character;
+	UPROPERTY()
+	ASuraSCharacter* Character = nullptr;
 };

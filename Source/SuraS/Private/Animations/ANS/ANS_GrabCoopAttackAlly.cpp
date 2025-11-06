@@ -17,24 +17,19 @@ void UANS_GrabCoopAttackAlly::NotifyBegin(USkeletalMeshComponent* MeshComp, UAni
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EvetnRef);
 
-	CachedEnemy = Cast<ASuraCharacterEnemyBase>(MeshComp->GetOwner());
-
-	if (CachedEnemy)
+	if (ASuraCharacterEnemyBase* OwnerEnemy = Cast<ASuraCharacterEnemyBase>(MeshComp->GetOwner()))
 	{
-		CachedEnemyAlly = Cast<ASuraCharacterEnemyBase>(CachedEnemy->GetAIController()->GetBlackboardComponent()->GetValueAsObject("CoopAlly"));
-		Player = Cast<ASuraPawnPlayer>(CachedEnemy->GetAIController()->GetBlackboardComponent()->GetValueAsObject("AttackTarget"));
-
-		if (CachedEnemyAlly)
+		if (ASuraCharacterEnemyBase* AllyEnemy = Cast<ASuraCharacterEnemyBase>(OwnerEnemy->GetAIController()->GetBlackboardComponent()->GetValueAsObject("CoopAlly")))
 		{
-			CachedEnemy->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_ENEMY_OVERLAP, ECollisionResponse::ECR_Ignore);
-			CachedEnemy->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_ENEMY_PAWN, ECollisionResponse::ECR_Ignore);
-			CachedEnemy->GetMesh()->IgnoreActorWhenMoving(CachedEnemyAlly, true);
-			CachedEnemy->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_ENEMY_OVERLAP, ECollisionResponse::ECR_Ignore);
-			CachedEnemy->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_ENEMY_PAWN, ECollisionResponse::ECR_Ignore);
-			CachedEnemy->GetCapsuleComponent()->IgnoreActorWhenMoving(CachedEnemyAlly, true);
+			OwnerEnemy->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_ENEMY_OVERLAP, ECollisionResponse::ECR_Ignore);
+			OwnerEnemy->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_ENEMY_PAWN, ECollisionResponse::ECR_Ignore);
+			OwnerEnemy->GetMesh()->IgnoreActorWhenMoving(AllyEnemy, true);
+			OwnerEnemy->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_ENEMY_OVERLAP, ECollisionResponse::ECR_Ignore);
+			OwnerEnemy->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_ENEMY_PAWN, ECollisionResponse::ECR_Ignore);
+			OwnerEnemy->GetCapsuleComponent()->IgnoreActorWhenMoving(AllyEnemy, true);
 			
 			FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-			CachedEnemyAlly->AttachToComponent(CachedEnemy->GetMesh(), AttachmentRules, FName(TEXT("RightHand")));
+			AllyEnemy->AttachToComponent(OwnerEnemy->GetMesh(), AttachmentRules, FName(TEXT("RightHand")));
 		}
 	}
 }
@@ -44,18 +39,24 @@ void UANS_GrabCoopAttackAlly::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimS
 {
 	Super::NotifyEnd(MeshComp, Animation, EvetnRef);
 
-	if (CachedEnemy && CachedEnemyAlly && Player)
+	if (ASuraCharacterEnemyBase* OwnerEnemy = Cast<ASuraCharacterEnemyBase>(MeshComp->GetOwner()))
 	{
-		FDetachmentTransformRules DetachmentRules(EDetachmentRule::KeepWorld, true);
-		CachedEnemyAlly->DetachFromActor(DetachmentRules);
+		if (ASuraCharacterEnemyBase* AllyEnemy = Cast<ASuraCharacterEnemyBase>(OwnerEnemy->GetAIController()->GetBlackboardComponent()->GetValueAsObject("CoopAlly")))
+		{
+			if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OwnerEnemy->GetAIController()->GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
+			{
+				FDetachmentTransformRules DetachmentRules(EDetachmentRule::KeepWorld, true);
+				AllyEnemy->DetachFromActor(DetachmentRules);
 		
-		FVector AttackTargetLocation = Player->GetActorLocation();
-		FVector FinalDestination = FVector(AttackTargetLocation.X, AttackTargetLocation.Y, AttackTargetLocation.Z + 250.f);
-		FVector LaunchVelocity = FinalDestination - CachedEnemyAlly->GetActorLocation();
+				FVector AttackTargetLocation = Player->GetActorLocation();
+				FVector FinalDestination = FVector(AttackTargetLocation.X, AttackTargetLocation.Y, AttackTargetLocation.Z + 250.f);
+				FVector LaunchVelocity = FinalDestination - AllyEnemy->GetActorLocation();
 
-		// CachedEnemy->GetCharacterMovement()->SafeMveUpdateComponent
-		// UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, CachedEnemyAlly->GetActorLocation(), FinalDestination, 0.f, 0.5f);
+				// CachedEnemy->GetCharacterMovement()->SafeMveUpdateComponent
+				// UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, CachedEnemyAlly->GetActorLocation(), FinalDestination, 0.f, 0.5f);
 		
-		CachedEnemyAlly->LaunchCharacter(LaunchVelocity * 3.f, true, true);
+				AllyEnemy->LaunchCharacter(LaunchVelocity * 3.f, true, true);
+			}
+		}
 	}
 }

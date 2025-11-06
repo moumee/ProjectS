@@ -25,8 +25,8 @@ protected:
 	TWeakObjectPtr<AActor> OwningActor;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* DistanceText;
+	UTextBlock* DistanceText = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* TargetIcon;
+	UImage* TargetIcon = nullptr;
 };

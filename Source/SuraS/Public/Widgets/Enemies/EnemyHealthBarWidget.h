@@ -20,7 +20,7 @@ class SURAS_API UEnemyHealthBarWidget : public UUserWidget
 	UProgressBar* HealthBar = nullptr;
 
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
-	class UWidgetAnimation* FadeInOutAnimation;
+	UWidgetAnimation* FadeInOutAnimation = nullptr;
 
 // protected:
 	// Called when the game starts

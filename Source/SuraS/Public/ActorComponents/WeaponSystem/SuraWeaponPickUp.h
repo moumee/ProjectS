@@ -56,13 +56,13 @@ protected:
 	TSubclassOf<AWeapon> WeaponClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* WeaponMesh;
+	USkeletalMeshComponent* WeaponMesh = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponName WeaponName;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
-	USuraPickUpComponent* PickUpComponent;
+	USuraPickUpComponent* PickUpComponent = nullptr;
 protected:
 	UPROPERTY(EditAnywhere)
 	bool bIsMagazine = false;

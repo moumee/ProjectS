@@ -43,7 +43,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
 		int spawnCount = 5;
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
-		UBehaviorTree* BehaviorTree;
+		UBehaviorTree* BehaviorTree = nullptr;
 
 	FTimerHandle TimerHandler;
 

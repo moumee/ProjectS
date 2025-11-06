@@ -128,6 +128,4 @@ struct SURAS_API FPawnPlayerMovementRow : public FTableRowBase
 	
 	UPROPERTY(EditAnywhere, Category = "Movement", meta=(ClampMin=0))
 	float DownedInvincibleDuration = 1.f;
-	
-	
 };

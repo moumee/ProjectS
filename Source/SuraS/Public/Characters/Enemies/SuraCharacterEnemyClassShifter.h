@@ -17,7 +17,7 @@ class SURAS_API ASuraCharacterEnemyClassShifter : public ASuraCharacterEnemyBase
 	FTimerHandle RotationHandle;
 
 	UPROPERTY()
-	const ASuraPawnPlayer* Player;
+	ASuraPawnPlayer* Player = nullptr;
 
 	void RotateTowardPlayer();
 	

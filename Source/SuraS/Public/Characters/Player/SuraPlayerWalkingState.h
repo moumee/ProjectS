@@ -21,7 +21,7 @@ class SURAS_API USuraPlayerWalkingState : public USuraPlayerBaseState
 	float SpeedTransitionTime = 0;
 
 	UPROPERTY()
-	APlayerController* PlayerController;
+	APlayerController* PlayerController = nullptr;
 
 public:
 

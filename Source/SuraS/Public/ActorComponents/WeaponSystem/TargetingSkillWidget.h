@@ -18,14 +18,14 @@ class SURAS_API UTargetingSkillWidget : public UUserWidget
 	GENERATED_BODY()
 public:
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* CurrentSkillCoolDown;
+	UTextBlock* CurrentSkillCoolDown = nullptr;
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* MaxSkillCoolDown;
+	UTextBlock* MaxSkillCoolDown = nullptr;
 
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* ElapsedTimeAfterTargetingStarted;
+	UTextBlock* ElapsedTimeAfterTargetingStarted = nullptr;
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* MaxTargetingTime;
+	UTextBlock* MaxTargetingTime = nullptr;
 
 	void InitializeUI(float NewCurrCoolDown, float NewMaxSkillCoolDown, float NewCurrTargetingTime, float NewMaxTargetingTime);
 	void SetTargetingSkillCoolDown(float NewCurrCoolDown);
@@ -36,7 +36,7 @@ public:
 private:
 	// HP 단계별 이미지 배열
 	UPROPERTY(meta = (BindWidget))
-	UImage* CoolTimeBar;
+	UImage* CoolTimeBar = nullptr;
 
 	float CachedMaxCoolDown;
 

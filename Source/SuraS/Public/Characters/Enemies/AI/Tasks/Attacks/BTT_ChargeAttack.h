@@ -18,7 +18,7 @@ class SURAS_API UBTT_ChargeAttack : public UBTTask_BlackboardBase
 	bool bIsAttacking = false;
 	bool bWasAttackSuccessful = false;
 
-	float OriginalMaxWalkSpeed;
+	float OriginalMaxWalkSpeed = 0.f;
 
 	float ElapsedChargeTime = 0.f;
 

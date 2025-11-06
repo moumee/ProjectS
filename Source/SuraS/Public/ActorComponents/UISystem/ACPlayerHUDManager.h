@@ -16,11 +16,12 @@ class SURAS_API UACPlayerHUDManager : public UActorComponent
 {
 	GENERATED_BODY()
 
-	UACUIMangerComponent* UIManager;
+	UPROPERTY()
+	UACUIMangerComponent* UIManager = nullptr;
 
 	//Inventory 위젯을 저장할 변수
 	UPROPERTY()
-	UPlayerHUD* PlayerHUDWidget;
+	UPlayerHUD* PlayerHUDWidget = nullptr;
 
 public:	
 	// Sets default values for this component's properties
@@ -29,6 +30,8 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+
+	UPROPERTY()
 	UWeaponSystemComponent* WeaponSystemComponent = nullptr;
 
 public:	

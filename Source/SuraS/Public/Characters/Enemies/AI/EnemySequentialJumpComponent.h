@@ -23,11 +23,11 @@ public:
 	void SetPathPoints(const TArray<FVector>& InPathPoints);
 
 	UPROPERTY(EditAnywhere, Category = "Jump Settings")
-	UAnimMontage* JumpStartMontage;
+	UAnimMontage* JumpStartMontage = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Jump Settings")
-	UAnimMontage* JumpLoopMontage;
+	UAnimMontage* JumpLoopMontage = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Jump Settings")
-	UAnimMontage* JumpEndMontage;
+	UAnimMontage* JumpEndMontage = nullptr;
 
 protected:
 	virtual void BeginPlay() override;
@@ -59,25 +59,25 @@ private:
 	// 전체 경로
 	TArray<FVector> PathPoints;
 	// 현재 목표 지점의 인덱스
-	int32 CurrentTargetIndex;
+	int32 CurrentTargetIndex = 0;
 	// 시퀀스가 진행 중인지 여부
-	bool bIsSequenceActive;
+	bool bIsSequenceActive = false;
 
 	// -- 상태 변수 --
-	bool bIsMoving;
-	float ElapsedTime;      // 이동 경과 시간
+	bool bIsMoving = false;
+	float ElapsedTime = 0.f;      // 이동 경과 시간
 	UPROPERTY(EditAnywhere, Category = "Jump Settings")
-	float TotalDuration = 0.7f;;    // 총 이동 시간
+	float TotalDuration = 0.7f;    // 총 이동 시간
 	UPROPERTY(EditAnywhere, Category = "Jump Settings")
-	float ArcHeight = 100;;        // 포물선 최고 높이
-	float jumpdage;
+	float ArcHeight = 100;        // 포물선 최고 높이
+	float jumpdage = 0.f;
 	FVector StartPosition;    // 시작 월드 좌표
 	FVector EndPosition;      // 도착 월드 좌표
 	bool bIsWating = false;
 	UPROPERTY(EditAnywhere, Category = "Jump Settings")
 	float WaitingTime = 0.2f;;  
 	UPROPERTY()
-	UAnimInstance* EnemyAnimInstance;
+	UAnimInstance* EnemyAnimInstance = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Jump Settings")
 	float AnimSpeed = 2.f;
 };

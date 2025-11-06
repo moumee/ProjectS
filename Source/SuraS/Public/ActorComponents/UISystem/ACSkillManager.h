@@ -16,8 +16,11 @@ class SURAS_API UACSkillManager : public UActorComponent
 {
 	GENERATED_BODY()
 
-	URocketLauncherSkillWidget* RocketLauncherSkillWidget;
-	UACUIMangerComponent* UIManager;
+	UPROPERTY()
+	URocketLauncherSkillWidget* RocketLauncherSkillWidget = nullptr;
+
+	UPROPERTY()
+	UACUIMangerComponent* UIManager = nullptr;
 
 public:	
 	// Sets default values for this component's properties

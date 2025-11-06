@@ -11,6 +11,9 @@
  * 
  */
 
+class UTextBlock;
+class UImage;
+
 UENUM(BlueprintType)
 enum class ETargetLockOnState : uint8
 {
@@ -27,10 +30,10 @@ class SURAS_API UTargetMarkerWidget : public UUserWidget
 
 protected:
 	UPROPERTY(meta = (BindWidget))
-	class UImage* MarkerImage;
+	UImage* MarkerImage = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* BoolTest;
+	UTextBlock* BoolTest = nullptr;
 
 	ETargetLockOnState CurrentLockOnState = ETargetLockOnState::None;
 	
@@ -41,7 +44,7 @@ protected:
 	UPROPERTY(Transient)
 	float AnimationElapsedTime = 0.0f; // 애니메이션 경과 시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	float AnimationDuration; // 애니메이션 총 지속 시간
+	float AnimationDuration = 0.f; // 애니메이션 총 지속 시간
 
 
 	// 에디터에서 설정 가능하도록 UPROPERTY 매크로를 추가

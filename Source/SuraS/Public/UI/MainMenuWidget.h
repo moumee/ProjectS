@@ -4,53 +4,47 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "PauseMenuWidget.generated.h"
+#include "MainMenuWidget.generated.h"
 
+class UButton;
 /**
  * 
  */
-
-class UButton;
-class UOptionMenuWidget;
-class UACUIMangerComponent;
-
-
 UCLASS()
-class SURAS_API UPauseMenuWidget : public UUserWidget
+class SURAS_API UMainMenuWidget : public UUserWidget
 {
 	GENERATED_BODY()
-
+	
 protected:
 	virtual void NativeConstruct() override;
+
+	// --- 위젯 바인딩 변수 ---
+	UPROPERTY(meta = (BindWidget))
+	UButton* Btn_Play;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* Btn_Options;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* Btn_Quit;
 	
-	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> Btn_Play; 
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> Btn_Options;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> Btn_Quit;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
 	TSubclassOf<UUserWidget> OptionsWidgetClass;
 
-	UFUNCTION()
-	void OnResumeClicked();
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Level")
+	TSoftObjectPtr<UWorld> LevelToLoad;
 	
+	UFUNCTION()
+	void OnPlayClicked();
+
 	UFUNCTION()
 	void OnOptionsClicked();
-	
+
 	UFUNCTION()
 	void OnQuitClicked();
 
 private:
 	UPROPERTY()
-	TObjectPtr<UUserWidget> OptionsMenuInstance;
-	
-	UPROPERTY()
-	TObjectPtr<UACUIMangerComponent> UIManager;
+	UUserWidget* OptionsMenuInstance;
 	
 };

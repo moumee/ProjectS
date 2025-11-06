@@ -20,31 +20,31 @@ class SURAS_API USuraPlayerAnimInstance : public UAnimInstance
 protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Player")
-	ASuraCharacterPlayer* Player;
+	ASuraCharacterPlayer* Player = nullptr;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	float GroundSpeed;
+	float GroundSpeed = 0.f;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	FVector Velocity;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	float RunSpeed;
+	float RunSpeed = 0.f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	bool bIsInAir;
+	bool bIsInAir = false;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	bool bCrouchTriggered;
+	bool bCrouchTriggered = false;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	float Direction;
+	float Direction = 0.f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	float Pitch;
+	float Pitch = 0.f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	USuraPlayerBaseState* CurrentState;
+	USuraPlayerBaseState* CurrentState = nullptr;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	EPlayerState CurrentStateType;

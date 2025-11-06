@@ -4,25 +4,38 @@
 #include "Animations/ANS/ANS_BossRangedAttack.h"
 
 #include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Characters/Enemies/Boss/SuraCharacterBossProto.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Kismet/KismetSystemLibrary.h"
+
+static TAutoConsoleVariable<bool> CVarShowBossRangeAttack(TEXT("moumee.ShowBossRangeAttack"), false, TEXT("Shows boss ranged debug shape"));
 
 void UANS_BossRangedAttack::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
                                         float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
-
-	AActor* Actor = MeshComp->GetOwner();
-	if (!IsValid(Actor)) return;
-
-	WeakBoss = Cast<ASuraCharacterBossProto>(Actor);
-	if (!WeakBoss.IsValid()) return;
-
-	ASuraCharacterBossProto* Boss = WeakBoss.Get();
+	
+	
+	ASuraCharacterBossProto* Boss = Cast<ASuraCharacterBossProto>(MeshComp->GetOwner());
+	if (!IsValid(Boss)) return;
+	
 	Boss->GetLaserNiagaraComponent()->DeactivateImmediate();
-
-	DamageAmount = Boss->GetRangedDamageAmount();
+	Boss->GetLaserNiagaraComponent()->AttachToComponent(Boss->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, "Muzzle");
+	checkf(Boss->GetLaserFireNiagaraSystem(), TEXT("Laser fire niagara system is not fucking assigned in boss blueprint!!!"));
+		
+	UNiagaraComponent* SpawnedFireEffect = UNiagaraFunctionLibrary::SpawnSystemAtLocation(Boss, Boss->GetLaserFireNiagaraSystem(),
+		Boss->LastSavedMuzzlePositionBeforeFire, FRotator::ZeroRotator, FVector(1), true, true,
+		ENCPoolMethod::AutoRelease, true);
+	
+	if (SpawnedFireEffect)
+	{
+		//TODO: Enable this line when effect is done.
+	
+		
+		//SpawnedFireEffect->SetVariableVec3("User.BeamEnd", Boss->GetLaserFireEnd());
+	}
+	
 	
 }
 
@@ -31,30 +44,31 @@ void UANS_BossRangedAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 {
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 
-	if (bHasHit) return;
+	ASuraCharacterBossProto* Boss = Cast<ASuraCharacterBossProto>(MeshComp->GetOwner());
+	if (!IsValid(Boss)) return;
+
+	if (Boss->GetMeleeHitPlayer()) return;
 	
-	if (ASuraCharacterBossProto* Boss = WeakBoss.Get())
+	FVector LaserStart = Boss->LastSavedMuzzlePositionBeforeFire;
+	FVector LaserEnd = Boss->GetLaserFireEnd();
+
+	FHitResult LaserHit;
+	EDrawDebugTrace::Type DebugTraceType = CVarShowBossRangeAttack.GetValueOnGameThread() ? EDrawDebugTrace::ForOneFrame : EDrawDebugTrace::None;
+	bool bHit = UKismetSystemLibrary::SphereTraceSingleByProfile(MeshComp, LaserStart, LaserEnd, 30.f, FName("Player"),
+		false, {}, DebugTraceType, LaserHit, true);
+
+	if (bHit)
 	{
-		FVector LaserStart = Boss->GetMesh()->GetSocketLocation(FName("Muzzle"));
-		FVector LaserEnd = Boss->GetLaserFireEnd();
-
-		FHitResult LaserHit;
-		bool bHit = UKismetSystemLibrary::SphereTraceSingleByProfile(MeshComp, LaserStart, LaserEnd, 3.f, FName("Player"),
-			false, {}, EDrawDebugTrace::None, LaserHit, true);
-
-		if (bHit)
+		if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(LaserHit.GetActor()))
 		{
-			if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(LaserHit.GetActor()))
-			{
-				bHasHit = true;
-				FDamageData DamageData;
-				DamageData.DamageType = EDamageType::Projectile;
-				DamageData.ImpactPoint = LaserHit.ImpactPoint;
-				DamageData.BoneName = LaserHit.BoneName;
-				DamageData.bCanForceDamage = false;
-				DamageData.DamageAmount = DamageAmount; 
-				Player->TakeDamage(DamageData, MeshComp->GetOwner());
-			}
+			Boss->SetMeleeHitPlayer(true);
+			FDamageData DamageData;
+			DamageData.DamageType = EDamageType::Projectile;
+			DamageData.ImpactPoint = LaserHit.ImpactPoint;
+			DamageData.BoneName = LaserHit.BoneName;
+			DamageData.bCanForceDamage = false;
+			DamageData.DamageAmount = Boss->GetRangedDamageAmount(); 
+			Player->TakeDamage(DamageData, MeshComp->GetOwner());
 		}
 	}
 
@@ -65,6 +79,8 @@ void UANS_BossRangedAttack::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSeq
 	const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
-	bHasHit = false;
-}
+	ASuraCharacterBossProto* Boss = Cast<ASuraCharacterBossProto>(MeshComp->GetOwner());
+	if (!IsValid(Boss)) return;
 
+	Boss->SetMeleeHitPlayer(false);
+}

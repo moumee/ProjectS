@@ -10,6 +10,8 @@
 UBTT_SetInterruptible::UBTT_SetInterruptible(FObjectInitializer const& ObjectInitializer)
 {
 	NodeName = "Set Interruptible";
+
+	bCreateNodeInstance = true;
 }
 
 EBTNodeResult::Type UBTT_SetInterruptible::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

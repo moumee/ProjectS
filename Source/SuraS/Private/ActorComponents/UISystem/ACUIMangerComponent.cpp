@@ -295,8 +295,9 @@ void UACUIMangerComponent::TogglePauseMenu()
 				PauseMenuInstance->AddToViewport(); 
 				UGameplayStatics::SetGamePaused(GetWorld(), true);
 				
-
-				PauseMenuInstance->SetKeyboardFocus();
+				FInputModeUIOnly InputMode;
+				InputMode.SetWidgetToFocus(PauseMenuInstance->TakeWidget());
+				InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 				
 				PC->SetInputMode(FInputModeUIOnly());
 				PC->SetShowMouseCursor(true);
