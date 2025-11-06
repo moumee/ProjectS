@@ -51,6 +51,7 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	Camera->SetRelativeLocation(FVector(0.f, 0.f, 70.f));
 	Camera->bUsePawnControlRotation = true;
 	Camera->PostProcessSettings.bOverride_DepthOfFieldFocalDistance = true;
+	DefaultCameraRelativeLocation = Camera->GetRelativeLocation();
 
 	ArmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arm Mesh"));
 	ArmMesh->SetupAttachment(Camera);
@@ -64,6 +65,7 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	MovementComponent->SetDefaultCapsuleValues(CapsuleComponent->GetScaledCapsuleRadius(), CapsuleComponent->GetScaledCapsuleHalfHeight());
 
 	CameraMovementComponent = CreateDefaultSubobject<USuraPlayerCameraComponent>(TEXT("CameraMovement Component"));
+	
 	
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
@@ -118,6 +120,8 @@ void ASuraPawnPlayer::BeginPlay()
 		CheckpointSubsystem->OnCheckpointLoadedDelegate.AddDynamic(this, &ThisClass::OnCheckPointLoaded);
 	}
 
+	Camera->SetRelativeLocation(DefaultCameraRelativeLocation);
+
 	// Crash the game if there is no data asset assigned
 	checkf(PlayerSound_DataAsset, TEXT("Player sound data asset is not assigned"));
 
@@ -147,7 +151,7 @@ void ASuraPawnPlayer::BeginPlay()
 	GetWorld()->GetTimerManager().SetTimer(PlayerHealthCheckTimer, PlayerHealthCheckTimerDelegate,
 		CorrectionSystemCheckTime, true);
 
-	DefaultCameraRelativeLocation = Camera->GetRelativeLocation();
+	
 
 	CachedGameInstance = Cast<UCustomGameInstance>(GetGameInstance());
 	if (!CachedGameInstance)
