@@ -406,7 +406,6 @@ protected:
 	void SpringDamper_f(float CurrPos, float CurrVel, float GoalPos, float GoalVel, double& OutPos, double& OutVel, float damping_ratio, float halflife, float DeltaTime, float eps = 1e-8f);
 	void UpdateSpringDamper(float DeltaTime);
 	void UpdateSpringDamper_Upgrade(float DeltaTime);
-	void UpdateSpringDamper_Upgrade_2(float DeltaTime);
 	void UpdateSpringDamper_MLS(float DeltaTime);
 #pragma endregion
 
