@@ -11,19 +11,21 @@
 void ASuraBossAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-
-	RunBehaviorTree(BehaviorTree);
-
-	
 }
 
 void ASuraBossAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	check(BehaviorTree);
+	RunBehaviorTree(BehaviorTree);
+
 	if (APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0))
 	{
-		GetBlackboardComponent()->SetValueAsObject("PlayerPawn", PlayerPawn);
+		if (Blackboard)
+		{
+			Blackboard->SetValueAsObject("PlayerPawn", PlayerPawn);
+		}
 	}
 }
 
