@@ -15,6 +15,6 @@ class SURAS_API UBTT_CheckPlayerHealthCondition : public UBTTask_BlackboardBase
 	GENERATED_BODY()
 
 public:
-	explicit UBTT_CheckPlayerHealthCondition(FObjectInitializer const& ObjectInitializer);
+	explicit UBTT_CheckPlayerHealthCondition();
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };

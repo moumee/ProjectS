@@ -25,6 +25,8 @@ class SURAS_API UBTT_GetYeeted : public UBTTask_BlackboardBase
 
 	bool bIsFalling = false;
 	bool bIsDoneGettingYeeted =false;
+	float ElapsedTime = 0.f;
+	float const MaxElapsedTime = 3.f;
 	
 	TWeakObjectPtr<ASuraCharacterEnemyBase> CachedEnemy;
 

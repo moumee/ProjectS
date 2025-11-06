@@ -238,3 +238,13 @@ void UBTT_ChargeAttack::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AAct
 		OtherEnemy->LaunchCharacter(OtherEnemy->GetActorUpVector() * 1000.f, true, true);
 	}
 }
+
+void UBTT_ChargeAttack::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
+	EBTNodeResult::Type TaskResult)
+{
+	if (auto Charger = CachedWeakCharger.Get())
+	{
+		Charger->GetCapsuleComponent()->OnComponentHit.RemoveDynamic(this, &UBTT_ChargeAttack::OnHit);
+		Charger->OverlapBox->OnComponentBeginOverlap.RemoveDynamic(this, &UBTT_ChargeAttack::OnOverlapBegin);
+	}
+}

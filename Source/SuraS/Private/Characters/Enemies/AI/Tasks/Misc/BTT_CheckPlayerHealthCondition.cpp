@@ -11,7 +11,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
 
-UBTT_CheckPlayerHealthCondition::UBTT_CheckPlayerHealthCondition(FObjectInitializer const& ObjectInitializer)
+UBTT_CheckPlayerHealthCondition::UBTT_CheckPlayerHealthCondition()
 {
 	NodeName = "Check Player Health Condition";
 }
@@ -20,7 +20,7 @@ EBTNodeResult::Type UBTT_CheckPlayerHealthCondition::ExecuteTask(UBehaviorTreeCo
 {
 	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
 	{
-		float PlayerHealthPercentage = Player->GetHealthComponent()->GetCurrentHealth() / Player->GetHealthComponent()->GetMaxHealth();
+		float PlayerHealthPercentage = Player->GetDamageSystemComponent()->GetHealth() / Player->GetDamageSystemComponent()->GetMaxHealth();
 
 		if (PlayerHealthPercentage < 0.5f)
 		{

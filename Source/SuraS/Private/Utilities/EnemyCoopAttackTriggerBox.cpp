@@ -37,7 +37,7 @@ void AEnemyCoopAttackTriggerBox::ActivateCoopAttack()
 	{
 		if (Enemy.Get() && Enemy->GetAIController() && Enemy->GetAIController()->GetCurrentState() != EEnemyStates::CoopAttacking)
 		{
-			AvailableEnemies.Add(Enemy.Get());
+			AvailableEnemies.AddUnique(Enemy.Get());
 		}
 	}
 
@@ -120,7 +120,7 @@ void AEnemyCoopAttackTriggerBox::OnEnemyOverlapBegin(UPrimitiveComponent* Overla
 {
 	if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(OtherActor))
 	{
-		EnemiesForCoopAttack.Add(Enemy);
+		EnemiesForCoopAttack.AddUnique(Enemy);
 
 		if (bIsPlayerInsideTrigger)
 			ActivateCoopAttack(); 
@@ -152,7 +152,7 @@ void AEnemyCoopAttackTriggerBox::OnPlayerOverlapBegin(UPrimitiveComponent* Overl
 		for (AActor* Actor : OutActors)
 		{
 			if (ASuraCharacterEnemyBase* EnemyActor = Cast<ASuraCharacterEnemyBase>(Actor))
-				EnemiesForCoopAttack.Add(EnemyActor);
+				EnemiesForCoopAttack.AddUnique(EnemyActor);
 		}
 		
 		bIsPlayerInsideTrigger = true;

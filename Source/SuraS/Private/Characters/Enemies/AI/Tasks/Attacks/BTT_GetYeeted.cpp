@@ -27,6 +27,17 @@ EBTNodeResult::Type UBTT_GetYeeted::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 
 	// Mem->bIsDoneGettingYeeted = false;
 	bIsDoneGettingYeeted = false;
+
+	if (ASuraCharacterEnemyBase* Enemy = CachedEnemy.Get())
+	{
+		Enemy->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &UBTT_GetYeeted::OnHit);
+		// Mem->CachedEnemy.Get()->GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &UBTT_GetYeeted::OnOverlapBegin);
+				
+		UAnimInstance* const EnemyAnimInstance = Enemy->GetMesh()->GetAnimInstance();
+		UAnimMontage* FallingMontage = Enemy->GetFallingMontage();
+
+		EnemyAnimInstance->Montage_Play(FallingMontage);
+	}
 	
 	return EBTNodeResult::InProgress;
 }
@@ -86,7 +97,7 @@ void UBTT_GetYeeted::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemo
 		}
 	}*/
 
-	if (ASuraCharacterEnemyBase* Enemy = CachedEnemy.Get())
+	/*if (ASuraCharacterEnemyBase* Enemy = CachedEnemy.Get())
 	{
 		if (Enemy->GetCharacterMovement()->IsFalling())
 		{
@@ -95,14 +106,7 @@ void UBTT_GetYeeted::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemo
 			if (!bIsFalling) // one time init
 			{
 				bIsFalling = true;
-
-				Enemy->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &UBTT_GetYeeted::OnHit);
-				// Mem->CachedEnemy.Get()->GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &UBTT_GetYeeted::OnOverlapBegin);
 				
-				UAnimInstance* const EnemyAnimInstance = Enemy->GetMesh()->GetAnimInstance();
-				UAnimMontage* FallingMontage = Enemy->GetFallingMontage();
-
-				EnemyAnimInstance->Montage_Play(FallingMontage);
 			}
 		}
 		else
@@ -118,6 +122,13 @@ void UBTT_GetYeeted::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemo
 		{
 			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 		}
+	}*/
+
+	ElapsedTime += DeltaSeconds;
+
+	if (ElapsedTime > MaxElapsedTime)
+	{
+		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 	}
 }
 
@@ -161,8 +172,10 @@ void UBTT_GetYeeted::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 
 		Mem->bIsDoneGettingYeeted = true;
 	}*/
+	
+	ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OtherActor);
 
-	if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OtherActor))
+	if (IsValid(Player))
 	{
 		// UE_LOG(LogTemp, Log, TEXT("OnHit %s"), *Player->GetName());
 		if (ASuraCharacterEnemyBase* Enemy = CachedEnemy.Get())
