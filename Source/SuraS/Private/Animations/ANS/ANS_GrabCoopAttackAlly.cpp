@@ -29,7 +29,8 @@ void UANS_GrabCoopAttackAlly::NotifyBegin(USkeletalMeshComponent* MeshComp, UAni
 			OwnerEnemy->GetCapsuleComponent()->IgnoreActorWhenMoving(AllyEnemy, true);
 			
 			FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-			AllyEnemy->AttachToComponent(OwnerEnemy->GetMesh(), AttachmentRules, FName(TEXT("RightHand")));
+			AttachmentRules.RotationRule = EAttachmentRule::KeepWorld;
+			AllyEnemy->AttachToComponent(OwnerEnemy->GetCapsuleComponent(), AttachmentRules, FName(TEXT("RightHand")));
 		}
 	}
 }
