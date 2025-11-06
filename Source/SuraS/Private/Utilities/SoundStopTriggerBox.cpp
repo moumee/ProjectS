@@ -3,12 +3,15 @@
 
 #include "Utilities/SoundStopTriggerBox.h"
 
+#include "Interfaces/PlayerInterface.h"
+#include "Utilities/SoundStartTriggerBox.h"
+
 
 // Sets default values
 ASoundStopTriggerBox::ASoundStopTriggerBox()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 }
 
 // Called when the game starts or when spawned
@@ -18,9 +21,14 @@ void ASoundStopTriggerBox::BeginPlay()
 	
 }
 
-// Called every frame
-void ASoundStopTriggerBox::Tick(float DeltaTime)
+void ASoundStopTriggerBox::OnTriggerBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
-	Super::Tick(DeltaTime);
+	if (!Cast<IPlayerInterface>(OtherActor)) return;
+
+	if (ASoundStartTriggerBox* Trigger = SoundTriggerToStop.Get())
+	{
+		
+	}
 }
+
 

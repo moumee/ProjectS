@@ -181,12 +181,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Editor Assign")
 	TObjectPtr<UInputAction> TeleportToLastCheckpointAction;
-	
-
-	FTimerHandle PlayerHealthCheckTimer;
-	float ConditionalPlayerHP = 50.f;
-	float CorrectionSystemCheckTime = 10.f;
-	void CheckPlayerHealth();
 
 	FVector2D PlayerLookInputVector2D; // <WeaponSystem>
 
