@@ -26,16 +26,17 @@ protected:
 	UFUNCTION()
 	void OnTriggerBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
-	UPROPERTY()
-	TObjectPtr<UAudioComponent> BackgroundMusicAudioComponent;
+	UPROPERTY(EditAnywhere)
+	float BackgroundMusicFadeInDuration = 1.f;
 
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<USoundBase> BackgroundMusic;
+	UPROPERTY(EditAnywhere)
+	float SpatialEffectFadeInDuration = 0.f;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UAudioComponent> BackgroundMusicAudioComponent;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UAudioComponent> SpatialEffectAudioComponent;
 
-	UPROPERTY(EditAnywhere)
-	TObjectPtr<USoundBase> SpatialEffectAudio;
 	
 };

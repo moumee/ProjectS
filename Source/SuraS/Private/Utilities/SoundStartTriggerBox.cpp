@@ -4,8 +4,10 @@
 #include "Utilities/SoundStartTriggerBox.h"
 
 #include "Components/AudioComponent.h"
+#include "Components/ShapeComponent.h"
 #include "Interfaces/PlayerInterface.h"
 
+#define PLAYER_TRACE_CHANNEL ECC_GameTraceChannel4
 
 // Sets default values
 ASoundStartTriggerBox::ASoundStartTriggerBox()
@@ -13,9 +15,15 @@ ASoundStartTriggerBox::ASoundStartTriggerBox()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
+	GetCollisionComponent()->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
+	GetCollisionComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
+	GetCollisionComponent()->SetCollisionResponseToChannel(PLAYER_TRACE_CHANNEL, ECR_Overlap);
+	
+
 	BackgroundMusicAudioComponent = CreateDefaultSubobject<UAudioComponent>("BackgroundMusicAudioComponent");
 	BackgroundMusicAudioComponent->SetupAttachment(RootComponent);
 	BackgroundMusicAudioComponent->bAutoActivate = false;
+	BackgroundMusicAudioComponent->bAllowSpatialization = false;
 
 	SpatialEffectAudioComponent = CreateDefaultSubobject<UAudioComponent>("SpatialEffectAudioComponent");
 	SpatialEffectAudioComponent->SetupAttachment(RootComponent);
@@ -26,10 +34,8 @@ ASoundStartTriggerBox::ASoundStartTriggerBox()
 void ASoundStartTriggerBox::BeginPlay()
 {
 	Super::BeginPlay();
-
-	BackgroundMusicAudioComponent->SetSound(BackgroundMusic);
-	SpatialEffectAudioComponent->SetSound(SpatialEffectAudio);
-
+	
+	SetActorHiddenInGame(false);
 	OnActorBeginOverlap.AddDynamic(this, &ThisClass::ASoundStartTriggerBox::OnTriggerBeginOverlap);
 	
 }
@@ -40,12 +46,12 @@ void ASoundStartTriggerBox::OnTriggerBeginOverlap(AActor* OverlappedActor, AActo
 	
 	if (BackgroundMusicAudioComponent->GetSound())
 	{
-		BackgroundMusicAudioComponent->Play();
+		BackgroundMusicAudioComponent->FadeIn(BackgroundMusicFadeInDuration, 1.f, 0.f, EAudioFaderCurve::Logarithmic);
 	}
 
 	if (SpatialEffectAudioComponent->GetSound())
 	{
-		SpatialEffectAudioComponent->Play();
+		SpatialEffectAudioComponent->FadeIn(SpatialEffectFadeInDuration, 1.f, 0.f, EAudioFaderCurve::Logarithmic);
 	}
 }
 
