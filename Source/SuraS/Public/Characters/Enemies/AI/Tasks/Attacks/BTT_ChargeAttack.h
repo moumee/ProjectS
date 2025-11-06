@@ -19,16 +19,12 @@ class SURAS_API UBTT_ChargeAttack : public UBTTask_BlackboardBase
 	bool bWasAttackSuccessful = false;
 
 	float OriginalMaxWalkSpeed = 0.f;
-
 	float ElapsedChargeTime = 0.f;
+	
+	TWeakObjectPtr<ASuraCharacterEnemyCharger> CachedWeakCharger;
+	TWeakObjectPtr<UBehaviorTreeComponent> CachedWeakOwnerComp;
 
-	UPROPERTY()
-	TObjectPtr<ASuraCharacterEnemyCharger> CachedCharger;
-
-	UPROPERTY()
-	TObjectPtr<UBehaviorTreeComponent> CachedOwnerComp;
-
-	void OnAttackReadyEnded();
+	void OnAttackReadyEnded(ASuraCharacterEnemyCharger* Charger);
 	void OnRoarEnded() const;
 	
 	void EndTask();

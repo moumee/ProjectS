@@ -4,6 +4,7 @@
 #include "Characters/Enemies/AI/Tasks/Misc/BTT_CheckPlayerHealthCondition.h"
 
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
+#include "ActorComponents/UISystem/ACPlayerHealthComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
@@ -13,15 +14,13 @@
 UBTT_CheckPlayerHealthCondition::UBTT_CheckPlayerHealthCondition(FObjectInitializer const& ObjectInitializer)
 {
 	NodeName = "Check Player Health Condition";
-
-	bCreateNodeInstance = true;
 }
 
 EBTNodeResult::Type UBTT_CheckPlayerHealthCondition::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
 	{
-		float PlayerHealthPercentage = Player->GetDamageSystemComponent()->GetHealth() / Player->GetDamageSystemComponent()->GetMaxHealth();
+		float PlayerHealthPercentage = Player->GetHealthComponent()->GetCurrentHealth() / Player->GetHealthComponent()->GetMaxHealth();
 
 		if (PlayerHealthPercentage < 0.5f)
 		{
