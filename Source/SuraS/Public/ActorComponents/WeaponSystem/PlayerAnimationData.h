@@ -20,6 +20,21 @@ struct SURAS_API FPlayerAnimationData : public FTableRowBase
 	FVector Stiffness = {100.f, 100.f, 100.f};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpringDamper")
 	FVector Damping = { 40.f, 40.f, 30.f };
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpringDamper")
+	FVector DampingRatio = { 1.f, 1.f, 1.f };
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpringDamper")
+	FVector HalfLife = { 1.f, 1.f, 1.f };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpringDamper")
+	bool bUseDampingRatio = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpringDamper")
+	bool bUseMLS = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpringDamper")
+	int32 MLSBufferSize = 10;
 	//--------------------------------------------------------------
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")

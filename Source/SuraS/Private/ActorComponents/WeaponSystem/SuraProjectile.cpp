@@ -47,9 +47,6 @@ ASuraProjectile::ASuraProjectile()
 
 	CollisionComp->bReturnMaterialOnMove = true;
 
-	//CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);		// set up a notification for when this component hits something blocking
-	//CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
-
 	// Players can't walk on it
 	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
 	CollisionComp->CanCharacterStepUpOn = ECB_No;
@@ -78,8 +75,6 @@ ASuraProjectile::ASuraProjectile()
 
 	ProjectileMesh->SetCastShadow(false);
 
-	//InitialLifeSpan = 10.0f; //MEMO: Pooling을 위해 제거
-	
 	// <Pooling Version>
 	InitialLifeSpan = 0;
 	SetActorHiddenInGame(true);
@@ -162,115 +157,22 @@ void ASuraProjectile::DeactiveProjectile()
 	CollisionComp->OnComponentHit.RemoveDynamic(this, &ASuraProjectile::OnHit);
 	CollisionComp->OnComponentBeginOverlap.RemoveDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
 
-
 	CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	SetActorTickEnabled(false);
 
 	ProjectileMovement->StopMovementImmediately();
 	ProjectileMovement->Deactivate();
-
-
-	//TODO: homing이면 또 처리해줘야 할 것들이 많음...
-
-	//TODO: 생각해보니까 InitProjectile에서 진행하는 것들을 모두 역방향으로 하면 될 듯?
-
-
-
 	//---------------
 
 	if (Weapon)
 	{
 		Weapon->ReturnProjectile(this);
 	}
-	else
-	{
-		//TODO: 어떠한 처리를 해야하나?
-	}
 }
 
 void ASuraProjectile::InitProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable, bool HitScan, bool AutoAim)
 {
-	if (IsValid(OwnerWeapon))
-	{
-		Weapon = OwnerWeapon;
-	}
-
-	if (IsValid(OwnerOfProjectile))
-	{
-		ProjectileOwner = OwnerOfProjectile;
-
-		LoadProjectileData();
-		SpawnTrailEffect();
-	}
-
-	if (AutoAim)
-	{
-		bIsHitScan = false;
-		NumPenetrableObjects = 0; //TODO: ???
-	}
-	else
-	{
-		if (HitScan)
-		{
-			bIsHitScan = HitScan;
-			NumPenetrableObjects = NumPenetrable;
-			//UE_LOG(LogTemp, Error, TEXT("Projectile Penetrable Num: %d"), NumPenetrableObjects);
-			//CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-			//CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap);
-			InitHitScan();
-		}
-		else
-		{
-			if (NumPenetrable > 0 || bCanPenetrate)
-			{
-				//CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
-				//CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
-				//CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-				//CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECR_Overlap);
-				InitPhysicsProjectile();
-				NumPenetrableObjects = NumPenetrable;
-				//UE_LOG(LogTemp, Error, TEXT("Projectile Penetrable Num: %d"), NumPenetrableObjects);
-			}
-			else
-			{
-				UE_LOG(LogTemp, Error, TEXT("OnComponentHit"));
-				CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);
-			}
-		}
-	}
-
-	if (bCanSimpleBounce)
-	{
-		// MEMO: Test
-		ProjectileMovement->bShouldBounce = true; 
-		ProjectileMovement->Bounciness = 0.6f;    //(0~1)
-		ProjectileMovement->Friction = 0.2f;     
-		ProjectileMovement->BounceVelocityStopSimulatingThreshold = 10.0f;
-		ProjectileMovement->bRotationFollowsVelocity = true;
-	}
-
-
-	AdditionalDamage = additonalDamage;
-
-	if (AdditionalRadius > 0.f)
-	{
-		ProjectileRadius = InitialRadius + AdditionalRadius;
-		CollisionComp->SetSphereRadius(InitialRadius + AdditionalRadius);
-	}
-
-	//UE_LOG(LogTemp, Warning, TEXT("Projectile InitialSpeed: %f"), ProjectileMovement->InitialSpeed);
-	//UE_LOG(LogTemp, Warning, TEXT("Projectile MaxSpeed: %f"), ProjectileMovement->MaxSpeed);
-
-	//TODO: Set Damage Decay Timer
-	if (DamageDecayTime > 0)
-	{
-		GetWorld()->GetTimerManager().SetTimer(DamageDecayTimer, this, &ASuraProjectile::ApplyDamageDecay, DamageDecayTime, false);
-	}
-}
-
-void ASuraProjectile::InitProjectile_Pool(AActor* OwnerOfProjectile, AWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable, bool HitScan, bool AutoAim)
-{
-	UE_LOG(LogTemp, Error, TEXT("InitProjectile_Pool"));
+	//UE_LOG(LogTemp, Error, TEXT("InitProjectile_Pool"));
 
 	bActive = true;
 	SetActorHiddenInGame(false);
@@ -304,7 +206,7 @@ void ASuraProjectile::InitProjectile_Pool(AActor* OwnerOfProjectile, AWeapon* Ow
 		}
 		else
 		{
-			if (NumPenetrable > 0 || bCanPenetrate)
+			if (NumPenetrable > 0)
 			{
 				InitPhysicsProjectile();
 				NumPenetrableObjects = NumPenetrable;
@@ -369,74 +271,6 @@ void ASuraProjectile::InitHitScan()
 
 void ASuraProjectile::LoadProjectileData()
 {
-	//ProjectileData = ProjectileDataTable->FindRow<FProjectileData>(ProjectileID, TEXT(""));
-	ProjectileData = ProjectileDataTableHandle.GetRow<FProjectileData>("");
-	if (ProjectileData)
-	{
-		// <Effect>
-		TrailEffect = ProjectileData->TrailEffect;
-		ImpactEffect = ProjectileData->ImpactEffect;
-		ExplosionEffect = ProjectileData->ExplosionEffect;
-		DecalMaterial = ProjectileData->HoleDecal;
-
-		InitialLifeSpan = ProjectileData->InitialLifeSpan;
-		SetLifeSpan(ProjectileData->InitialLifeSpan); //TODO: Pool 버전에서는 LifeSpan용 함수 따로 만들어서 Deactive 시켜야 할 듯 함
-
-		// <Sound>
-		HitSound_Default = ProjectileData->HitSound_Default;
-		HitSound_Metal = ProjectileData->HitSound_Metal;
-		HitSound_Glass = ProjectileData->HitSound_Glass;
-		HitSound_Enemy = ProjectileData->HitSound_Enemy;
-		HitSound_Energy = ProjectileData->HitSound_Energy;
-
-		// <Damage>
-		DefaultDamage = ProjectileData->DefaultDamage;
-		HeadShotAdditionalDamage = ProjectileData->HeadShotAdditionalDamage;
-
-		// <Explosive>
-		bIsExplosive = ProjectileData->bIsExplosive;
-		bVisualizeExplosionRadius = ProjectileData->bVisualizeExplosionRadius;
-		MaxExplosiveDamage = ProjectileData->MaxExplosiveDamage;
-		MaxExplosionRadius = ProjectileData->MaxExplosionRadius;
-
-		// <Homing>
-		HomingAccelerationMagnitude = ProjectileData->HomingAccelerationMagnitude;
-
-		// <Velocity>
-		ProjectileMovement->InitialSpeed = ProjectileData->InitialSpeed;
-		ProjectileMovement->MaxSpeed = ProjectileData->MaxSpeed;
-		PM_Vel = ProjectileData->MaxSpeed;
-		HitScanProjectileVelocity = ProjectileData->InitialSpeed;
-
-		InitialRadius = ProjectileData->InitialRadius;
-		CollisionComp->SetSphereRadius(InitialRadius);
-
-		// <Penetration>
-		bCanPenetrate = ProjectileData->bCanPenetrate; //legacy
-
-		// <Impulse>
-		bCanApplyImpulseToEnemy = ProjectileData->bCanApplyImpulseToEnemy;
-		HitImpulseToEnemy = ProjectileData->HitImpulseToEnemy;
-
-		// <Ricochet>
-		bCanSimpleBounce = ProjectileData->bCanSimpleBounce;
-		MaxRicochetCount = ProjectileData->MaxRicochetCount;
-		MinIncidenceAngle = ProjectileData->MinIncidenceAngle;
-
-		// <HitScan>
-		bDebugHitScan = ProjectileData->bDebugHitScan;
-
-		// <DamageDecay>
-		DamageDecayTime = ProjectileData->DamageDecayTime;
-		DamageDecayRate = ProjectileData->DamageDecayRate;
-
-		// <CustomProjectileMovement>
-		PM_Cam_To_d_Len = ProjectileData->PM_Cam_To_d_Len;
-	}
-}
-
-void ASuraProjectile::LoadProjectileData_Pool()
-{
 	ProjectileData = ProjectileDataTableHandle.GetRow<FProjectileData>("");
 	if (ProjectileData)
 	{
@@ -476,9 +310,6 @@ void ASuraProjectile::LoadProjectileData_Pool()
 
 		InitialRadius = ProjectileData->InitialRadius;
 		CollisionComp->SetSphereRadius(InitialRadius);
-
-		// <Penetration>
-		bCanPenetrate = ProjectileData->bCanPenetrate; //legacy
 
 		// <Impulse>
 		bCanApplyImpulseToEnemy = ProjectileData->bCanApplyImpulseToEnemy;
@@ -524,12 +355,7 @@ void ASuraProjectile::SetHomingTarget(bool bIsHoming, AActor* Target)
 	}
 }
 
-void ASuraProjectile::LaunchProjectile()
-{
-	ProjectileMovement->Activate();
-}
-
-void ASuraProjectile::LaunchProjectile_Pool(FVector MuzzlePos, FRotator Direction)
+void ASuraProjectile::LaunchProjectile(FVector MuzzlePos, FRotator Direction)
 {
 	SetActorLocationAndRotation(MuzzlePos, Direction);
 	ProjectileMovement->Activate();
@@ -601,7 +427,7 @@ bool ASuraProjectile::SearchOverlappedActor(FVector CenterLocation, float Search
 void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	//TODO: Projectile�� �ٸ� actor���� hit ���� ��, OtherActor�� ������ ���� �ٸ� event �߻���Ű��. Interface ����ϱ�
-	if (bCanPenetrate)
+	if (NumPenetrableObjects > 0)
 	{
 		SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 		SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
@@ -712,7 +538,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	//UE_LOG(LogTemp, Error, TEXT("Projectile Overlapped!!!"));
-	if (NumPenetrableObjects > 0 || bCanPenetrate)
+	if (NumPenetrableObjects > 0)
 	{
 		if (OtherActor != nullptr)
 		{
@@ -919,121 +745,11 @@ void ASuraProjectile::SetHitScanActive(bool bflag)
 void ASuraProjectile::LaunchHitScan(FVector StartLocation, FVector TraceDirection, FVector MuzzlePos)
 {
 	//PerformHitScan(StartLocation, TraceDirection, 50000.f, ProjectileRadius, HitScanEndPoints); //TODO: MaxDistnace 설정해야함
-	PerformHitScan_Upgrade(StartLocation, TraceDirection, 50000.f, ProjectileRadius, HitScanEndPoints); //TODO: MaxDistnace 설정해야함
+	PerformHitScan(StartLocation, TraceDirection, 50000.f, ProjectileRadius, HitScanEndPoints); //TODO: MaxDistnace 설정해야함
 
 	InitHitScanProjectileMovement(MuzzlePos);
 }
 void ASuraProjectile::PerformHitScan(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, TArray<FVector>& OutHitLocations)
-{
-	FVector Start = StartLocation;
-	FVector Direction = TraceDirection;
-	FVector End = StartLocation + TraceDirection * MaxDistance;
-
-	TArray<FVector> HitStaticLocations;
-
-	FCollisionObjectQueryParams ObjectQueryParams;
-	//ObjectQueryParams.AddObjectTypesToQuery(ECC_Visibility);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_GameTraceChannel6);
-
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(ProjectileOwner);
-	Params.AddIgnoredComponent(Weapon->GetWeaponMesh());
-	Params.AddIgnoredComponent(ProjectileMesh);
-	Params.AddIgnoredActor(this);
-	Params.bReturnPhysicalMaterial = true;
-
-	for (int32 RicochetCount = 0; RicochetCount <= MaxRicochetCount; RicochetCount++)
-	{
-		TArray<FHitResult> TempHitResults;
-
-		bool bHit = GetWorld()->SweepMultiByObjectType(
-			TempHitResults,
-			Start,
-			End,
-			FQuat::Identity,
-			ObjectQueryParams,
-			FCollisionShape::MakeSphere(SphereRadius),
-			Params
-		);
-		
-		if (bDebugHitScan) { DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 10.f); }
-
-		bool bIsBlockedByWorldStatic = false;
-
-		if (bHit)
-		{
-			TArray<AActor*> OnceDamagedEnemies;
-			for (const FHitResult& HitResult : TempHitResults)
-			{
-				if (NumPenetratedObjects <= NumPenetrableObjects)
-				{
-					ACharacter* Enemy = Cast<ACharacter>(HitResult.GetActor());
-					if (Enemy && !OnceDamagedEnemies.Contains(Enemy))
-					{
-						OnceDamagedEnemies.AddUnique(Enemy);
-
-						if (HeadShotAdditionalDamage > 0.f && CheckHeadHit(HitResult))
-						{
-							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage + HeadShotAdditionalDamage,
-								EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
-
-							if (OnHeadShot.IsBound())
-							{
-								OnHeadShot.Execute();
-							}
-						}
-						else
-						{
-							ApplyDamage(HitResult.GetActor(), DefaultDamage + AdditionalDamage, EDamageType::Melee, false, HitResult.BoneName, UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get()), TraceDirection, HitResult.ImpactPoint);
-							//UE_LOG(LogTemp, Error, TEXT("bone11-2: %s"), *HitResult.BoneName.ToString());
-							if (OnBodyShot.IsBound())
-							{
-								OnBodyShot.Execute();
-							}
-						}
-
-						UpdatePenetration();
-					}
-				}
-
-				if (HitResult.GetComponent()->GetCollisionObjectType() == ECC_WorldStatic)
-				{
-					HitStaticLocations.Add(HitResult.ImpactPoint);
-
-					if (bDebugHitScan) { DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 12, FColor::Red, false, 50.f); }
-
-					Start = HitResult.ImpactPoint;
-
-					if (CheckRicochetAngle(HitResult.ImpactNormal, Direction))
-					{
-						Direction = GetReflectionAngle(HitResult.ImpactNormal, Direction);
-						Start = Start + Direction.GetSafeNormal() * (SphereRadius + 1.f);
-						End = Start + Direction * MaxDistance;
-						CurrentRicochetCount++;
-					}
-					else
-					{
-						RicochetCount = MaxRicochetCount + 1;
-					}
-					bIsBlockedByWorldStatic = true;
-					break;
-				}
-			}
-		}
-
-		if (!bHit || !bIsBlockedByWorldStatic)
-		{
-			HitStaticLocations.Add(End);
-			break;
-		}		
-	}
-
-	OutHitLocations = HitStaticLocations;
-}
-void ASuraProjectile::PerformHitScan_Upgrade(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, TArray<FVector>& OutHitLocations)
 {
 	FVector Start = StartLocation;
 	FVector Direction = TraceDirection;
@@ -1176,7 +892,7 @@ void ASuraProjectile::UpdateHitScanProjectileMovement(float DeltaTime)
 	{
 		if (CurrEndPointIdx + 1 > HitScanEndPoints.Num() - 1)
 		{
-			// 그대로 직진? Destroy?
+			//TODO: 그대로 직진? Destroy?
 		}
 		else
 		{

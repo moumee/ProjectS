@@ -39,13 +39,6 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	EWeaponAction SkillAction = EWeaponAction::WeaponAction_None;
 	//-----------------------------------------------------------------
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
-	TSoftClassPtr<class ASuraProjectile> LeftProjectileClass; //TODO: 삭제
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
-	//TSoftClassPtr<class ASuraProjectile> RightProjectileClass;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
-	//TSoftClassPtr<class ASuraProjectile> SkillProjectileClass;
-	////-----------------------------------------------------------------
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	//TSoftObjectPtr<UNiagaraSystem> FireEffect_L = nullptr;
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
@@ -60,19 +53,6 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	FRotator ChargeEffectRotation = FRotator();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	FVector ChargeEffenctScale = { 1.f, 1.f, 1.f };
-	////-----------------------------------------------------------------
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	//TSoftObjectPtr<USoundBase> FireSound_L = nullptr;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	//TSoftObjectPtr<USoundBase> FireSound_R = nullptr;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	//TSoftObjectPtr<USoundBase> FireSound_Skill = nullptr;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	//TSoftObjectPtr<USoundBase> ChargeSound = nullptr;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	//TSoftObjectPtr<USoundBase> TargetSearchLoopSound = nullptr;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	//TSoftObjectPtr<USoundBase> TargetLockedSound = nullptr;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IK")
 	FTransform RightHandOffset = FTransform();
