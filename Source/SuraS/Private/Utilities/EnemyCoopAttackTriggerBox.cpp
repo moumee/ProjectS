@@ -68,9 +68,12 @@ void AEnemyCoopAttackTriggerBox::ActivateCoopAttack()
 				"TargetRotation",
 				FRotator(0, EnemiesForCoopAttack[1]->GetActorRotation().Yaw, 0)
 				); // to straighten the climbing rotation
-			
-			EnemyA->GetAIController()->SetStateToCoopAttack(EnemiesForCoopAttack[1].Get(), true);
-			EnemyB->GetAIController()->SetStateToCoopAttack(EnemiesForCoopAttack[0].Get(), false);
+
+			if (EnemyA != EnemyB)
+			{
+				EnemyA->GetAIController()->SetStateToCoopAttack(EnemyB, true);
+				EnemyB->GetAIController()->SetStateToCoopAttack(EnemyA, false);
+			}
 
 			// possibly reactivate the remaining enemies?
 
