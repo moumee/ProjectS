@@ -7,6 +7,7 @@
 #include "NiagaraComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/Boss/SuraCharacterBossProto.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 UBTT_BossRangedTargeting::UBTT_BossRangedTargeting()
 {
@@ -52,13 +53,24 @@ void UBTT_BossRangedTargeting::TickTask(UBehaviorTreeComponent& OwnerComp, uint8
 
 	UNiagaraComponent* LaserComp = Boss->GetLaserNiagaraComponent();
 	if (!IsValid(LaserComp)) FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+
+	FHitResult HitResult;
+	bool bHit = UKismetSystemLibrary::LineTraceSingle(Boss, Boss->GetMesh()->GetSocketLocation("Muzzle"), PlayerActor->GetActorLocation(),
+		UEngineTypes::ConvertToTraceType(ECC_WorldStatic), false, { Boss }, EDrawDebugTrace::ForOneFrame,
+		HitResult, false);
+
+	FVector LaserEndLocation = PlayerActor->GetActorLocation();
+	if (HitResult.IsValidBlockingHit() && bHit)
+	{
+		LaserEndLocation = HitResult.ImpactPoint;
+	}
 	
-	LaserComp->SetVariableVec3("User.BeamEnd", PlayerActor->GetActorLocation());
+	LaserComp->SetVectorParameter("User.BeamEnd", LaserEndLocation);
 
 	float CurrentTime = Boss->GetWorld()->GetTimeSeconds();
 	if (CurrentTime - Memory->RangedAttackStartTime >= Memory->TargetingDuration)
 	{
-		Boss->SetLaserFireEnd(PlayerActor->GetActorLocation());
+		Boss->SetLaserFireEnd(LaserEndLocation);
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 	}
 	

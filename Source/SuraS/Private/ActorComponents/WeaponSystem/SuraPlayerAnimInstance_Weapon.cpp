@@ -882,64 +882,6 @@ void USuraPlayerAnimInstance_Weapon::UpdateSpringDamper_Upgrade(float DeltaTime)
 	//RightHandSocketSpringDamperTransform.SetRotation(RotByX * RotByZ * CurrentRightHandSocketTransform.GetRotation());
 	RightHandSocketSpringDamperTransform.SetRotation(RotByY * RotByX * RotByZ * CurrentRightHandSocketTransform.GetRotation()); //Test
 }
-void USuraPlayerAnimInstance_Weapon::UpdateSpringDamper_Upgrade_2(float DeltaTime) //TODO: CurrPos를 Mesh의 Socket의 World Transform을 직접 가져오도록해보자
-{
-	FTransform MeshToWorldTransform = SuraPlayer->GetArmMesh()->GetComponentTransform();
-	FTransform ActorToWorldTransform = SuraPlayer->GetTransform();
-
-	//SuraPlayer->GetArmMesh()->GetBoneLocation(FName("hand_r"), EBoneSpaces::WorldSpace);
-
-	//UE_LOG(LogTemp, Warning, TEXT("GoalVel: %s"), *GoalVel.ToString());
-	//UE_LOG(LogTemp, Warning, TEXT("GoalPos: %s"), *GoalPos.ToString());
-	//UE_LOG(LogTemp, Warning, TEXT("CurrVel: %s"), *CurrVel.ToString());
-	//UE_LOG(LogTemp, Warning, TEXT("CurrPos: %s"), *CurrPos.ToString());
-
-
-
-	//FVector CurrPos = ActorToWorldTransform.InverseTransformPosition(CurrentComponentPos); //Actor
-	FVector CurrWorldPos = SuraPlayer->GetArmMesh()->GetBoneLocation(FName("hand_r"), EBoneSpaces::WorldSpace);
-	FVector CurrPos = ActorToWorldTransform.InverseTransformPosition(CurrWorldPos); //Actor
-	FVector CurrVel = ActorToWorldTransform.InverseTransformVector((CurrWorldPos - PreviousComponentPos) / DeltaTime); //Actor
-	PreviousComponentPos = CurrWorldPos;
-
-	//UE_LOG(LogTemp, Warning, TEXT("GoalVel: %s"), *GoalVel.ToString());
-	//UE_LOG(LogTemp, Warning, TEXT("GoalPos: %s"), *GoalPos.ToString());
-	//UE_LOG(LogTemp, Warning, TEXT("CurrVel: %s"), *CurrVel.ToString());
-	//UE_LOG(LogTemp, Warning, TEXT("CurrPos: %s"), *CurrPos.ToString());
-
-
-
-	FVector GoalPos = ActorToWorldTransform.InverseTransformPosition(MeshToWorldTransform.TransformPosition(CurrentRightHandSocketTransform.GetLocation())); //Actor
-	FVector GoalVel = ActorToWorldTransform.InverseTransformVector(SuraPlayer->GetVelocity()); //Actor
-
-	FVector OutPos; //Actor
-	FVector OutVel; //Actor
-
-	// Local 기준
-	SpringDamper_f(CurrPos.X, CurrVel.X, GoalPos.X, GoalVel.X, OutPos.X, OutVel.X, DampingRatio.X, HalfLife.X, DeltaTime);
-	SpringDamper_f(CurrPos.Y, CurrVel.Y, GoalPos.Y, GoalVel.Y, OutPos.Y, OutVel.Y, DampingRatio.Y, HalfLife.Y, DeltaTime);
-	SpringDamper_f(CurrPos.Z, CurrVel.Z, GoalPos.Z, GoalVel.Z, OutPos.Z, OutVel.Z, DampingRatio.Z, HalfLife.Z, DeltaTime);
-
-	FVector ConvertedPos = (GoalPos + (OutPos - GoalPos) * DamperScale);
-	ConvertedPos.X = GoalPos.X;
-
-	ConvertedPos = MeshToWorldTransform.InverseTransformPosition(ActorToWorldTransform.TransformPosition(ConvertedPos));
-
-	CurrentComponentPos = ActorToWorldTransform.TransformPosition(OutPos); //World
-	CurrentComponentVel = ActorToWorldTransform.TransformVector(OutVel); //World
-
-	FVector DirectionVec = ConvertedPos - (CurrentRightHandSocketTransform.GetLocation() + FVector(0.f, -20.f, 0.f));
-	FQuat RotByZ = FQuat(FVector::ZAxisVector, -FMath::Atan(DirectionVec.X / DirectionVec.Y));
-	FQuat RotByX = FQuat(FVector::XAxisVector, FMath::Atan(DirectionVec.Z / FMath::Sqrt(DirectionVec.X * DirectionVec.X + DirectionVec.Y * DirectionVec.Y)));
-
-	//Tilt
-	FQuat RotByY = FQuat(FVector::YAxisVector, (CurrentRightHandSocketTransform.GetLocation().X - ConvertedPos.X) * (0.3f)); //Test
-
-
-	RightHandSocketSpringDamperTransform.SetLocation(ConvertedPos);
-	//RightHandSocketSpringDamperTransform.SetRotation(RotByX * RotByZ * CurrentRightHandSocketTransform.GetRotation());
-	RightHandSocketSpringDamperTransform.SetRotation(RotByY * RotByX * RotByZ * CurrentRightHandSocketTransform.GetRotation()); //Test
-}
 void USuraPlayerAnimInstance_Weapon::UpdateSpringDamper_MLS(float DeltaTime)
 {
 	FTransform MeshToWorldTransform = SuraPlayer->GetArmMesh()->GetComponentTransform();

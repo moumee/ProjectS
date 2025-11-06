@@ -131,6 +131,7 @@ void AWeapon::InitWeapon(ASuraPawnPlayer* NewCharacter)
 
 	InitProjectiles(FireData_L.ProjectileClass, 10);
 	InitProjectiles(FireData_R.ProjectileClass, 10);
+	InitProjectiles(FireData_Skill.ProjectileClass, 10);
 }
 
 void AWeapon::InitializeCamera(ASuraPawnPlayer* NewCharacter) //TODO: Need to integrate camera system with player system
@@ -3490,6 +3491,7 @@ void AWeapon::InitProjectiles(TSubclassOf<ASuraProjectile> ProjectileClass, int3
 		{ 
 			//UE_LOG(LogTemp, Warning, TEXT("InitProjectiles"));
 			Projectile->LoadProjectileData();
+			Projectile->DeactiveProjectile();
 			Pool.Add(Projectile);
 		}
 	}
