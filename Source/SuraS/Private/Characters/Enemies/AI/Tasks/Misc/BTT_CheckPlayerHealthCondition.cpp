@@ -4,17 +4,16 @@
 #include "Characters/Enemies/AI/Tasks/Misc/BTT_CheckPlayerHealthCondition.h"
 
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
+#include "ActorComponents/UISystem/ACPlayerHealthComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
 
-UBTT_CheckPlayerHealthCondition::UBTT_CheckPlayerHealthCondition(FObjectInitializer const& ObjectInitializer)
+UBTT_CheckPlayerHealthCondition::UBTT_CheckPlayerHealthCondition()
 {
 	NodeName = "Check Player Health Condition";
-
-	bCreateNodeInstance = true;
 }
 
 EBTNodeResult::Type UBTT_CheckPlayerHealthCondition::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

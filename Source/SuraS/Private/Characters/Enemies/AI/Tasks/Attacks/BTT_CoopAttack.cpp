@@ -115,6 +115,7 @@ void UBTT_CoopAttack::OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted
 
 	if (ASuraCharacterEnemyBase* Enemy = CachedEnemy.Get())
 	{
+		Enemy->GetAIController()->GetBlackboardComponent()->SetValueAsObject("CoopAlly", nullptr);
 		Enemy->GetAIController()->GetBlackboardComponent()->SetValueAsBool("IsCoopThrower", false);
 	}
 	
