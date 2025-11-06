@@ -30,9 +30,6 @@ void UANS_BossRangedAttack::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimS
 	
 	if (SpawnedFireEffect)
 	{
-		//TODO: Enable this line when effect is done.
-	
-		
 		SpawnedFireEffect->SetVectorParameter("User.BeamEnd", Boss->GetLaserFireEnd());
 	}
 	
@@ -54,8 +51,10 @@ void UANS_BossRangedAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 
 	FHitResult LaserHit;
 	EDrawDebugTrace::Type DebugTraceType = CVarShowBossRangeAttack.GetValueOnGameThread() ? EDrawDebugTrace::ForOneFrame : EDrawDebugTrace::None;
-	bool bHit = UKismetSystemLibrary::SphereTraceSingleByProfile(MeshComp, LaserStart, LaserEnd, 30.f, FName("Player"),
-		false, {}, DebugTraceType, LaserHit, true);
+
+	bool bHit = UKismetSystemLibrary::SphereTraceSingle(MeshComp, LaserStart, LaserEnd, 30.f,
+		UEngineTypes::ConvertToTraceType(ECC_WorldStatic), false,
+		{ Boss }, DebugTraceType, LaserHit, false);
 
 	if (bHit)
 	{
