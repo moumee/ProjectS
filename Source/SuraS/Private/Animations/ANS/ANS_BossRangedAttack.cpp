@@ -33,7 +33,7 @@ void UANS_BossRangedAttack::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimS
 		//TODO: Enable this line when effect is done.
 	
 		
-		//SpawnedFireEffect->SetVariableVec3("User.BeamEnd", Boss->GetLaserFireEnd());
+		SpawnedFireEffect->SetVectorParameter("User.BeamEnd", Boss->GetLaserFireEnd());
 	}
 	
 	
