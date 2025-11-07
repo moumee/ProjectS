@@ -15,7 +15,6 @@
 #include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerMovementComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/SceneCaptureComponent2D.h" //<JaeHyeong>
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
@@ -25,9 +24,7 @@
 #include "GameModes/SuraLevelGameMode.h"
 #include "Instance/SuraCheckpointSubsystem.h"
 #include "Kismet/GameplayStatics.h"
-#include "Math/UnitConversion.h"
 #include "SaveGame/SuraSaveGame.h"
-#include "Slate/SGameLayerManager.h"
 #include "UI/CustomGameInstance.h"
 
 ASuraPawnPlayer::ASuraPawnPlayer()
@@ -51,6 +48,7 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	Camera->SetRelativeLocation(FVector(0.f, 0.f, 70.f));
 	Camera->bUsePawnControlRotation = true;
 	Camera->PostProcessSettings.bOverride_DepthOfFieldFocalDistance = true;
+	DefaultCameraRelativeLocation = Camera->GetRelativeLocation();
 
 	ArmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arm Mesh"));
 	ArmMesh->SetupAttachment(Camera);
@@ -64,6 +62,7 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 	MovementComponent->SetDefaultCapsuleValues(CapsuleComponent->GetScaledCapsuleRadius(), CapsuleComponent->GetScaledCapsuleHalfHeight());
 
 	CameraMovementComponent = CreateDefaultSubobject<USuraPlayerCameraComponent>(TEXT("CameraMovement Component"));
+	
 	
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
@@ -118,6 +117,8 @@ void ASuraPawnPlayer::BeginPlay()
 		CheckpointSubsystem->OnCheckpointLoadedDelegate.AddDynamic(this, &ThisClass::OnCheckPointLoaded);
 	}
 
+	Camera->SetRelativeLocation(DefaultCameraRelativeLocation);
+
 	// Crash the game if there is no data asset assigned
 	checkf(PlayerSound_DataAsset, TEXT("Player sound data asset is not assigned"));
 
@@ -141,13 +142,7 @@ void ASuraPawnPlayer::BeginPlay()
 	GetPlayerMovementComponent()->OnLandDelegate.AddDynamic(this, &ASuraPawnPlayer::OnLand);
 	GetPlayerMovementComponent()->OnDashDelegate.AddDynamic(this, &ASuraPawnPlayer::OnDash);
 	GetPlayerMovementComponent()->OnDashEndDelegate.AddDynamic(this, &ASuraPawnPlayer::OnDashEnd);
-
-	FTimerDelegate PlayerHealthCheckTimerDelegate;
-	PlayerHealthCheckTimerDelegate.BindUObject(this, &ASuraPawnPlayer::CheckPlayerHealth);
-	GetWorld()->GetTimerManager().SetTimer(PlayerHealthCheckTimer, PlayerHealthCheckTimerDelegate,
-		CorrectionSystemCheckTime, true);
-
-	DefaultCameraRelativeLocation = Camera->GetRelativeLocation();
+	
 
 	CachedGameInstance = Cast<UCustomGameInstance>(GetGameInstance());
 	if (!CachedGameInstance)
@@ -228,24 +223,6 @@ void ASuraPawnPlayer::PossessedBy(AController* NewController)
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
-	}
-}
-
-void ASuraPawnPlayer::CheckPlayerHealth()
-{
-	// UE_LOG(LogTemp, Display, TEXT("Checked Player Health. Current Player Health : %f"), DamageSystemComponent->GetHealth());
-	if (DamageSystemComponent->GetHealth() <= ConditionalPlayerHP)
-	{
-		OnPlayerHealthHalved.Broadcast();
-		// Reduce the number of max tokens in the AttackTokensComponent
-		AttackTokensComponent->SetMaxEnemyAttackTokens(3); // TODO: make magic numbers into variables in a data table
-		AttackTokensComponent->SetMaxEnemyPursuitTokens(3);
-	}
-	else
-	{
-		// Restore the number of max tokens
-		AttackTokensComponent->SetMaxEnemyAttackTokens(8);
-		AttackTokensComponent->SetMaxEnemyPursuitTokens(6);
 	}
 }
 
