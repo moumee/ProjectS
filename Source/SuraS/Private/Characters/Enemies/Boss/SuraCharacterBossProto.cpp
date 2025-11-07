@@ -46,35 +46,51 @@ void ASuraCharacterBossProto::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	// if (bIsMeleeAttackOnCooldown)
-	// {
-	// 	MeleeAttackCooldown = FMath::Max(MeleeAttackCooldown - DeltaTime, 0.f);
-	// 	if (MeleeAttackCooldown <= 0.f)
-	// 	{
-	// 		bIsMeleeAttackOnCooldown = false;
-	// 	}
-	// }
-	//
-	// if (bIsRangedAttackOnCooldown)
-	// {
-	// 	RangedAttackCooldown = FMath::Max(RangedAttackCooldown - DeltaTime, 0.f);
-	// 	if (RangedAttackCooldown <= 0.f)
-	// 	{
-	// 		bIsRangedAttackOnCooldown = false;
-	// 	}
-	// }
+	if (bIsMeleeAttackOnCooldown)
+	{
+		MeleeAttackCooldown = FMath::Max(MeleeAttackCooldown - DeltaTime, 0.f);
+		if (MeleeAttackCooldown <= 0.f)
+		{
+			bIsMeleeAttackOnCooldown = false;
+			if (BlackboardComp)
+			{
+				BlackboardComp->SetValueAsBool("bIsMeleeAttackOnCooldown", false);
+			}
+		}
+	}
+	
+	if (bIsRangedAttackOnCooldown)
+	{
+		RangedAttackCooldown = FMath::Max(RangedAttackCooldown - DeltaTime, 0.f);
+		if (RangedAttackCooldown <= 0.f)
+		{
+			bIsRangedAttackOnCooldown = false;
+			if (BlackboardComp)
+			{
+				BlackboardComp->SetValueAsBool("bIsRangedAttackOnCooldown", false);
+			}
+		}
+	}
 }
 
 void ASuraCharacterBossProto::StartMeleeAttackCooldown(float Duration)
 {
 	MeleeAttackCooldown = Duration;
 	bIsMeleeAttackOnCooldown = true;
+	if (BlackboardComp)
+	{
+		BlackboardComp->SetValueAsBool("bIsMeleeAttackOnCooldown", true);
+	}
 }
 
 void ASuraCharacterBossProto::StartRangedAttackCooldown()
 {
 	RangedAttackCooldown = RangedAttack.Cooldown;
 	bIsRangedAttackOnCooldown = true;
+	if (BlackboardComp)
+	{
+		BlackboardComp->SetValueAsBool("bIsRangedAttackOnCooldown", true);
+	}
 }
 
 void ASuraCharacterBossProto::AddAttackAreaTag(FName InTag)
