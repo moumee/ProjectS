@@ -12,7 +12,7 @@ class UACPlayerHUDManager;
 class UInputAction;
 class UEnhancedInputComponent;
 class UBaseUIWidget;
-class UACInventoryManager;
+// class UACInventoryManager;
 class UACCrosshairManager;
 class UACKillLogManager;
 class UACSkillManager;
@@ -23,7 +23,7 @@ UENUM(BlueprintType)
 enum class EUIType : uint8
 {
 	None UMETA(DisplayName = "None"),
-	Inventory UMETA(DisplayName = "Inventory"),
+	//Inventory UMETA(DisplayName = "Inventory"),
 	KillLog UMETA(DisplayName = "KillLog"),
 	PlayerHUD UMETA(DisplayName = "PlayerHUD"),
 	Skill UMETA(DisplayName = "Skill"),
@@ -47,8 +47,8 @@ protected:
 	void SetupInput();
 
 	/** UI Manager들 **/
-	UPROPERTY()
-	UACInventoryManager* InventoryManager = nullptr;
+	// UPROPERTY()
+	// UACInventoryManager* InventoryManager = nullptr;
 
 	UPROPERTY()
 	UACKillLogManager* KillLogManager = nullptr;
@@ -117,8 +117,8 @@ public:
 
 
 private:
-	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* OpenInventoryAction = nullptr;
+	// UPROPERTY(EditAnywhere, Category = "Input")
+	// UInputAction* OpenInventoryAction = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* OpenPauseMenuAction = nullptr;
