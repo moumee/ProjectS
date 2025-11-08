@@ -3,7 +3,6 @@
 
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "Structures/DamageData.h"
-#include "Trace/Analysis.h"
 
 void UACDamageSystem::StartRegeneration()
 {

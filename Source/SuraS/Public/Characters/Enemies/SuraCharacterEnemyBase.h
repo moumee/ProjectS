@@ -191,6 +191,8 @@ public:
 
 	virtual void LungeToTarget(float LungeForce);
 
+	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
+
 	UAnimMontage* ChooseRandomAttackMontage();
 
 	UAnimMontage* GetClimbMontage() const { return ClimbAnimation; };
