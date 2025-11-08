@@ -132,7 +132,7 @@ public:
 	void OnWeaponSwitchAnim(int32 PrevIndex, int32 NewIndex);
 
 	UFUNCTION()
-	void OnHealthUpdated(float NewHealth, float OldHealth, float MaxHealth);
+	void OnHealthUpdated(float NewHealth, float OldHealth, float MaxHealth, AActor* DamageCauser);
 	UFUNCTION()
 	void InitializeHUD() const;
 	

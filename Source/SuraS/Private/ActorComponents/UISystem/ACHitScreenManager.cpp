@@ -5,7 +5,7 @@
 
 #include "NiagaraSystemWidget.h"
 #include "NiagaraUIComponent.h"
-#include "ActorComponents/UISystem/ACPlayerHealthComponent.h"
+#include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "UI/HitScreenWidget.h"
 
@@ -29,17 +29,17 @@ void UACHitScreenManager::BeginPlay()
 	ASuraPawnPlayer* OwnerCharacter = Cast<ASuraPawnPlayer>(GetOwner());
 	if (OwnerCharacter)
 	{
-		UACPlayerHealthComponent* HealthComp = OwnerCharacter->GetHealthComponent();
+		UACDamageSystem* HealthComp = OwnerCharacter->GetDamageSystemComponent();
 		if (HealthComp)
 		{
 			HealthComp->OnHealthChanged.AddDynamic(this, &UACHitScreenManager::OnOwnerHealthChanged);
-			OnOwnerHealthChanged(HealthComp->GetCurrentHealth(), HealthComp->GetCurrentHealth(), HealthComp->GetMaxHealth());
+			OnOwnerHealthChanged(HealthComp->GetHealth(), HealthComp->GetHealth(), HealthComp->GetMaxHealth(), nullptr);
 		}
 	}
 	
 }
 
-void UACHitScreenManager::OnOwnerHealthChanged(float NewHealth, float OldHealth, float MaxHealth)
+void UACHitScreenManager::OnOwnerHealthChanged(float NewHealth, float OldHealth, float MaxHealth, AActor* DamageCauser)
 {
 	if (MaxHealth <= 0) return;
 
