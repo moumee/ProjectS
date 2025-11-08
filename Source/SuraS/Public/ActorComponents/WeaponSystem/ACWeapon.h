@@ -494,7 +494,7 @@ protected:
 #pragma region WeaponType
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EWeaponName WeaponName;
+	EWeaponName WeaponName = EWeaponName::WeaponName_Rifle;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponType WeaponType;
 public:
