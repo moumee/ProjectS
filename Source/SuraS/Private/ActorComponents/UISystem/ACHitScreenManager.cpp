@@ -3,6 +3,7 @@
 
 #include "ActorComponents/UISystem/ACHitScreenManager.h"
 
+#include "NiagaraSystem.h"
 #include "NiagaraSystemWidget.h"
 #include "NiagaraUIComponent.h"
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
@@ -113,22 +114,23 @@ void UACHitScreenManager::UpdateHitScreen(float NewHealth, float OldHealth, floa
         if (HealthRatio >= 0.8f && HealthRatio < 1.0f)
         {
             DesiredNiagaraSystem = NiagaraAsset_99_80;
-        	UE_LOG(LogTemp, Warning, TEXT("99_80나이아가라 적용됨"));
         }
         else if (HealthRatio >= 0.5f)
         {
             DesiredNiagaraSystem = NiagaraAsset_79_50;
-        	UE_LOG(LogTemp, Warning, TEXT("79_50나이아가라 적용됨"));
         }
         else if (HealthRatio >= LowHPThreshold)
         {
             DesiredNiagaraSystem = NiagaraAsset_49_30;
-        	UE_LOG(LogTemp, Warning, TEXT("49_30나이아가라 적용됨"));
         }
         
         // 현재 할당된 에셋과 목표 에셋이 다를 경우에만 교체하여 불필요한 업데이트를 방지
         if (DesiredNiagaraSystem && CurrentNiagaraComponent->GetAsset() != DesiredNiagaraSystem)
         {
+        	UE_LOG(LogTemp, Warning, TEXT("=== 나이아가라 에셋 교체: %s -> %s ==="), 
+				*GetNameSafe(CurrentNiagaraComponent->GetAsset()), 
+				*GetNameSafe(DesiredNiagaraSystem));
+        	
             CurrentNiagaraComponent->SetAsset(DesiredNiagaraSystem);
             CurrentNiagaraComponent->Activate(true); 
         }
