@@ -279,6 +279,7 @@ void ASuraProjectile::LoadProjectileData()
 		ImpactEffect = ProjectileData->ImpactEffect;
 		ExplosionEffect = ProjectileData->ExplosionEffect;
 		DecalMaterial = ProjectileData->HoleDecal;
+		TrailOffsetDist = ProjectileData->TrailOffsetDist;
 
 		LifeSpan = ProjectileData->InitialLifeSpan;
 
@@ -632,9 +633,7 @@ void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Roc
 		FTransform TrailEndTransform = ProjectileMesh->GetSocketTransform(FName(TEXT("TrailEnd")), ERelativeTransformSpace::RTS_Component);
 
 		// TODO: offset�� Traile ���� �ٸ��� �����ؾ���. �ƴϸ� �����Ϳ��� Mesh���� socket�� ��ġ�� ���� �ٲ��ִ� ���� ���� ���������
-		float DistanceOffset = 80.f;
-
-		FVector TrailLocationOffset = (TrailEndTransform.GetLocation() - TrailStartTransform.GetLocation()).GetSafeNormal() * DistanceOffset;
+		FVector TrailLocationOffset = (TrailEndTransform.GetLocation() - TrailStartTransform.GetLocation()).GetSafeNormal() * TrailOffsetDist;
 		
 		if (bShouldAttachedToWeapon)
 		{
