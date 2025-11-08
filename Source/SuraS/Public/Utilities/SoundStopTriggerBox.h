@@ -6,6 +6,8 @@
 #include "Engine/TriggerBox.h"
 #include "SoundStopTriggerBox.generated.h"
 
+class ASoundStartTriggerBox;
+
 UCLASS()
 class SURAS_API ASoundStopTriggerBox : public ATriggerBox
 {
@@ -19,7 +21,14 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(EditAnywhere)
+	float BackgroundMusicFadeOutDuration = 1.f;
+	UPROPERTY(EditAnywhere)
+	float SpatialEffectFadeOutDuration = 1.f;
+
+	UPROPERTY(EditInstanceOnly)
+	TWeakObjectPtr<ASoundStartTriggerBox> SoundTriggerToStop;
+
+	UFUNCTION()
+	void OnTriggerBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
 };

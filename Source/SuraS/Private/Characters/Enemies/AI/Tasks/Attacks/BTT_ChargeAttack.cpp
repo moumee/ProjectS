@@ -20,26 +20,31 @@ EBTNodeResult::Type UBTT_ChargeAttack::ExecuteTask(UBehaviorTreeComponent& Owner
 {
 	if (ASuraCharacterEnemyCharger* const Charger = Cast<ASuraCharacterEnemyCharger>(OwnerComp.GetAIOwner()->GetCharacter()))
 	{
-		CachedCharger = Charger;
-		CachedOwnerComp = &OwnerComp;
+		CachedWeakCharger = Charger;
+		CachedWeakOwnerComp = &OwnerComp;
 
-		CachedCharger->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &UBTT_ChargeAttack::OnHit);
-		CachedCharger->OverlapBox->OnComponentBeginOverlap.AddDynamic(this, &UBTT_ChargeAttack::OnOverlapBegin);
+		if (!CachedWeakCharger.Get() || !CachedWeakOwnerComp.Get()) return EBTNodeResult::Failed;
+
+		CachedWeakCharger->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &UBTT_ChargeAttack::OnHit);
+		CachedWeakCharger->OverlapBox->OnComponentBeginOverlap.AddDynamic(this, &UBTT_ChargeAttack::OnOverlapBegin);
 		
-		UAnimMontage* AttackReadyAnimation = CachedCharger->GetChargeReadyAnimation();
-		float AttackReadyAnimDuration = CachedCharger->PlayAnimMontage(AttackReadyAnimation);
-
-		TWeakObjectPtr<ASuraCharacterEnemyCharger> WeakCharger = CachedCharger;
+		UAnimMontage* AttackReadyAnimation = CachedWeakCharger->GetChargeReadyAnimation();
+		float AttackReadyAnimDuration = CachedWeakCharger->PlayAnimMontage(AttackReadyAnimation);
+		
 		TWeakObjectPtr<UBTT_ChargeAttack> WeakThis = this;
 		FTimerHandle AnimCompleteHandle;
 
-		GetWorld()->GetTimerManager().SetTimer(AnimCompleteHandle, [WeakThis, WeakCharger]()
+		GetWorld()->GetTimerManager().SetTimer(AnimCompleteHandle, [WeakThis]()
 		{
 			if (auto Task = WeakThis.Get())
 			{
-				if (auto Charger = WeakCharger.Get())
+				if (auto Charger = Task->CachedWeakCharger.Get())
 				{
-					Task->OnAttackReadyEnded();
+					Task->OnAttackReadyEnded(Charger);
+				}
+				else if (auto OwnerComp = Task->CachedWeakOwnerComp.Get())
+				{
+					Task->FinishLatentTask(*OwnerComp, EBTNodeResult::Failed);
 				}
 			}
 		}, AttackReadyAnimDuration, false);
@@ -56,61 +61,85 @@ void UBTT_ChargeAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeM
 	
 	if (bIsAttacking) 
 	{
-		ElapsedChargeTime += DeltaSeconds;
-		
-		if (ElapsedChargeTime > ChargeDuration)
+		if (auto Charger = CachedWeakCharger.Get())
 		{
-			EndTask();
+			ElapsedChargeTime += DeltaSeconds;
+		
+			if (ElapsedChargeTime > ChargeDuration)
+			{
+				EndTask();
+			}
+			else
+			{
+				Charger->AddMovementInput(Charger->GetActorForwardVector());
+			}
 		}
 		else
 		{
-			CachedCharger->AddMovementInput(CachedCharger->GetActorForwardVector());
+			FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		}
 	}
 }
 
-void UBTT_ChargeAttack::OnAttackReadyEnded()
+void UBTT_ChargeAttack::OnAttackReadyEnded(ASuraCharacterEnemyCharger* Charger)
 {
 	bIsAttacking = true;
-	OriginalMaxWalkSpeed = CachedCharger->GetCharacterMovement()->MaxWalkSpeed;
-	CachedCharger->GetCharacterMovement()->MaxWalkSpeed = ChargeMaxWalkSpeed;
-	CachedCharger->GetCharacterMovement()->MaxAcceleration = ChargeMaxWalkSpeed;
-	CachedCharger->GetCharacterMovement()->bRequestedMoveUseAcceleration = false;
-
-	CachedCharger->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay); // to face only the front
-	CachedCharger->ActivateDashEffect();
 	
-	UAnimMontage* AttackAnimation = CachedCharger->ChooseRandomAttackMontage();
+	OriginalMaxWalkSpeed = Charger->GetCharacterMovement()->MaxWalkSpeed;
+	Charger->GetCharacterMovement()->MaxWalkSpeed = ChargeMaxWalkSpeed;
+	Charger->GetCharacterMovement()->MaxAcceleration = ChargeMaxWalkSpeed;
+	Charger->GetCharacterMovement()->bRequestedMoveUseAcceleration = false;
 
-	CachedCharger->PlayAnimMontage(AttackAnimation);
+	Charger->GetAIController()->ClearFocus(EAIFocusPriority::Gameplay); // to face only the front
+	Charger->ActivateDashEffect();
+	
+	UAnimMontage* AttackAnimation = Charger->ChooseRandomAttackMontage();
+	Charger->PlayAnimMontage(AttackAnimation);
 }
 
 void UBTT_ChargeAttack::EndTask()
 {
+	auto OwnerComp = CachedWeakOwnerComp.Get();
+	auto Charger = CachedWeakCharger.Get();
+
+	if (!OwnerComp || !Charger)
+	{
+		if (OwnerComp) FinishLatentTask(*OwnerComp, EBTNodeResult::Failed);
+
+		return;
+	}
+	
 	// reset values
 	ElapsedChargeTime = 0.f;
 	bIsAttacking = false;
-	CachedCharger->GetCharacterMovement()->MaxWalkSpeed = OriginalMaxWalkSpeed;
-	CachedCharger->GetCharacterMovement()->bRequestedMoveUseAcceleration = true;
+	Charger->GetCharacterMovement()->MaxWalkSpeed = OriginalMaxWalkSpeed;
+	Charger->GetCharacterMovement()->bRequestedMoveUseAcceleration = true;
 	bWasAttackSuccessful = false;
 
-	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(CachedOwnerComp.Get()->GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
+	if (ASuraPawnPlayer* const Player = Cast<ASuraPawnPlayer>(OwnerComp->GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
 	{
-		CachedCharger->GetAIController()->SetFocus(Player);
+		Charger->GetAIController()->SetFocus(Player);
 	}
 
 	// end the task
 	/*UAnimInstance* const EnemyAnimInstance = CachedCharger->GetMesh()->GetAnimInstance();
 	EnemyAnimInstance->Montage_Stop(0.2f);*/
-	CachedCharger->StopAnimMontage();
+	Charger->StopAnimMontage();
 
-	UAnimMontage* RoarAnimation = CachedCharger->ChooseRandomRoarMontage();
-	float RoarAnimDuration = CachedCharger->PlayAnimMontage(RoarAnimation);
-	
+	UAnimMontage* RoarAnimation = Charger->ChooseRandomRoarMontage();
+	float RoarAnimDuration = Charger->PlayAnimMontage(RoarAnimation);
+
+	TWeakObjectPtr<UBTT_ChargeAttack> WeakThis = this;
 	FTimerHandle AnimCompleteHandle;
 	GetWorld()->GetTimerManager().SetTimer(
 		AnimCompleteHandle,
-		FTimerDelegate::CreateWeakLambda(this, [this]() { OnRoarEnded(); }),
+		[WeakThis]()
+		{
+			if (auto Task = WeakThis.Get())
+			{
+				Task->OnRoarEnded();
+			}
+		},
 		RoarAnimDuration,
 		false
 	);
@@ -119,13 +148,16 @@ void UBTT_ChargeAttack::EndTask()
 // Always the last function to be called before the task ends
 void UBTT_ChargeAttack::OnRoarEnded() const
 {
-	if (CachedCharger)
+	auto OwnerComp = CachedWeakOwnerComp.Get();
+	if (!OwnerComp) return;
+	
+	if (auto Charger = CachedWeakCharger.Get())
 	{
-		CachedCharger->GetCapsuleComponent()->OnComponentHit.RemoveDynamic(this, &UBTT_ChargeAttack::OnHit);
-		CachedCharger->OverlapBox->OnComponentBeginOverlap.RemoveDynamic(this, &UBTT_ChargeAttack::OnOverlapBegin);
+		Charger->GetCapsuleComponent()->OnComponentHit.RemoveDynamic(this, &UBTT_ChargeAttack::OnHit);
+		Charger->OverlapBox->OnComponentBeginOverlap.RemoveDynamic(this, &UBTT_ChargeAttack::OnOverlapBegin);
 	}
 	
-	FinishLatentTask(*CachedOwnerComp.Get(), EBTNodeResult::Succeeded);
+	FinishLatentTask(*OwnerComp, EBTNodeResult::Succeeded);
 }
 
 void UBTT_ChargeAttack::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -134,29 +166,35 @@ void UBTT_ChargeAttack::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 	if (bIsAttacking)
 	{
 		UPrimitiveComponent* ActorHitComp = OtherActor->FindComponentByClass<UPrimitiveComponent>();
+
+		auto Charger = CachedWeakCharger.Get();
+		if (!Charger) return;
+
+		ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OtherActor);
 		
-		if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OtherActor))
+		if (IsValid(Player))
 		{
 			// UE_LOG(LogTemp, Warning, TEXT("Charge Attacked Player"));
-
+			
 			if (!bWasAttackSuccessful)
 			{
-				FVector DirectionToOther = (OtherActor->GetActorLocation() - CachedCharger->GetActorLocation()).GetSafeNormal2D();
-				FVector ChargerRightVector = CachedCharger->GetActorRightVector().GetSafeNormal2D();
+				
+				FVector DirectionToOther = (OtherActor->GetActorLocation() - Charger->GetActorLocation()).GetSafeNormal2D();
+				FVector ChargerRightVector = Charger->GetActorRightVector().GetSafeNormal2D();
 
 				float SideSign = FMath::Sign(FVector::DotProduct(ChargerRightVector, DirectionToOther));
 
 				FVector PerpendicularDirection = ChargerRightVector * SideSign;
 				
 				FDamageData DamageData;
-				DamageData.DamageAmount = CachedCharger->GetAttackDamageAmount();
+				DamageData.DamageAmount = Charger->GetAttackDamageAmount();
 				DamageData.DamageType = EDamageType::Charge;
 				DamageData.ImpulseDirection = PerpendicularDirection;
 				DamageData.ImpulseMagnitude = 1000.f;
 			
-				Player->TakeDamage(DamageData, CachedCharger);
+				Player->TakeDamage(DamageData, Charger);
 
-				CachedCharger->ActivateCollisionEffect();
+				Charger->ActivateCollisionEffect();
 				bWasAttackSuccessful = true;
 			}
 		}
@@ -165,11 +203,11 @@ void UBTT_ChargeAttack::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 			// UE_LOG(LogTemp, Error, TEXT("Charger Hit with %s"), *ActorHitComp->GetCollisionProfileName().ToString());
 			
 			bIsAttacking = false;
-			CachedCharger->ActivateCollisionEffect();
+			Charger->ActivateCollisionEffect();
 			
-			UAnimMontage* StunAnimation = CachedCharger->GetStunAnimation();
+			UAnimMontage* StunAnimation = Charger->GetStunAnimation();
 
-			float StunAnimDuration = CachedCharger->PlayAnimMontage(StunAnimation);
+			float StunAnimDuration = Charger->PlayAnimMontage(StunAnimation);
 
 			FTimerHandle AnimCompleteHandle;
 			GetWorld()->GetTimerManager().SetTimer(
@@ -198,5 +236,15 @@ void UBTT_ChargeAttack::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AAct
 	{
 		// UE_LOG(LogTemp, Error, TEXT("Charger Overlapped with OtherEnemy"))
 		OtherEnemy->LaunchCharacter(OtherEnemy->GetActorUpVector() * 1000.f, true, true);
+	}
+}
+
+void UBTT_ChargeAttack::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
+	EBTNodeResult::Type TaskResult)
+{
+	if (auto Charger = CachedWeakCharger.Get())
+	{
+		Charger->GetCapsuleComponent()->OnComponentHit.RemoveDynamic(this, &UBTT_ChargeAttack::OnHit);
+		Charger->OverlapBox->OnComponentBeginOverlap.RemoveDynamic(this, &UBTT_ChargeAttack::OnOverlapBegin);
 	}
 }
