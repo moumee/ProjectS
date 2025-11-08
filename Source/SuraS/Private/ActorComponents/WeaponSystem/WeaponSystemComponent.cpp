@@ -91,6 +91,68 @@ bool UWeaponSystemComponent::IsSceneCaptureActive()
 {
 	return bUseSceneCapture;
 }
+void UWeaponSystemComponent::UnlockWeapon(EWeaponName NewWeaponName)
+{
+	if (!DTWSC) return;
+	const TMap<EWeaponName, TSubclassOf<AWeapon>> WeaponClasses = DTWSC->WeaponClasses;
+	UCustomGameInstance* GameInstance = Cast<UCustomGameInstance>(GetWorld()->GetGameInstance());
+
+	for (int32 i = 0; i < WeaponInventory.Num(); i++)
+	{
+		if (WeaponInventory[i]->GetWeaponName() == NewWeaponName)
+		{
+			int32 PrevIdx = CurrentWeaponIndex;
+			CurrentWeaponIndex = i;
+			CurrentWeapon = WeaponInventory[i];
+			CurrentWeapon->SwitchWeapon(PlayerOwner, true);
+			OnWeaponSwitched.Broadcast(PrevIdx, CurrentWeaponIndex);
+
+			return;
+		}
+	}
+
+	for (int32 i = 0; i < SkillWeaponInventory.Num(); i++)
+	{
+		if (SkillWeaponInventory[i]->GetWeaponName() == NewWeaponName)
+		{
+			int32 PrevIdx = CurrentSkillWeaponIndex;
+			CurrentSkillWeaponIndex = i;
+			CurrentSkillWeapon = SkillWeaponInventory[i];
+			return;
+		}
+	}
+
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+	const TSubclassOf<AWeapon>* NewWeaponClass = WeaponClasses.Find(NewWeaponName);
+	if (!NewWeaponClass) return;
+	FActorSpawnParameters ActorSpawnParams;
+	ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	AWeapon* NewWeapon = World->SpawnActor<AWeapon>(NewWeaponClass->Get(), FTransform(), ActorSpawnParams);
+	if (!NewWeapon) return;
+	NewWeapon->InitWeapon(Cast<ASuraPawnPlayer>(GetOwner()));
+	AddNewWeaponToInventory(NewWeapon);
+
+	if (!GameInstance) return;
+	if (GameInstance->OwnedWeapons.Contains(NewWeaponName))
+	{
+		GameInstance->OwnedWeapons[NewWeaponName] = true;
+	}
+	else
+	{
+		GameInstance->OwnedWeapons.Emplace(NewWeaponName, true);
+	}
+
+	if (CurrentWeapon == nullptr)
+	{
+		int32 PrevIdx = CurrentWeaponIndex;
+		CurrentWeaponIndex = WeaponInventory.Num() - 1;
+		CurrentWeapon = NewWeapon;
+		CurrentWeapon->SwitchWeapon(PlayerOwner, true);
+		OnWeaponSwitched.Broadcast(PrevIdx, CurrentWeaponIndex);
+	}
+}
 void UWeaponSystemComponent::LoadWSCData()
 {
 	DTWSC = WSCDataTableHandle.GetRow<FWeaponSystemComponentData>("");

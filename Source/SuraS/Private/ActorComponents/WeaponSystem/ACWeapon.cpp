@@ -907,7 +907,7 @@ void AWeapon::FireSingleProjectile(FWeaponFireData* FireData, int32 NumPenetrabl
 		if (bWeaponAssetsReady)
 		{
 			//TODO: SpawnRotation 정상화
-			SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, MuzzleLocation, SpawnRotation);  //TODO: 여기서 자꾸 런타임 에러나서 터짐
+			SpawnMuzzleFireEffect(FireData->MuzzleFireEffect, MuzzleLocation, SpawnRotation);
 		}
 	}
 
@@ -1027,7 +1027,7 @@ void AWeapon::FireMultiProjectile(FWeaponFireData* FireData, int32 NumPenetrable
 
 	if (AM_Fire_Character && AM_Fire_Weapon)
 	{
-		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon); //TODO: ������. ����
+		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
 	}
 
 	// <Overheat> //TODO: Delete
@@ -1129,7 +1129,6 @@ void AWeapon::FireSingleHitScan(FWeaponFireData* FireData, int32 NumPenetrable, 
 		}
 	}
 
-	// Try and play the sound if specified
 	if (FireData != nullptr && FireData->FireSound != nullptr)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, FireData->FireSound, Character->GetActorLocation());
@@ -1222,7 +1221,7 @@ void AWeapon::FireSingleAutoAim(FWeaponFireData* FireData, int32 NumPenetrable, 
 		ASuraProjectile* Projectile = GetProjectileFromPool(FireData->ProjectileClass);
 
 		Projectile->InitProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable, false, true);
-		SetUpAimUIDelegateBinding(Projectile); // TODO: 쭝복 바인딩 막아야함
+		SetUpAimUIDelegateBinding(Projectile);
 		Projectile->SetHomingTarget(false, nullptr);
 		Projectile->LaunchAutoAim(StartLocation, SpreadedDirection, AutoAimDirection, MuzzleLocation, 50000.f, AutoAimRadius);
 
@@ -1283,7 +1282,6 @@ void AWeapon::ZoomIn()
 {
 	bIsZoomIn = true;
 
-	//TODO: �Ʒ����� ��Ÿ�� ���� �߻�����. �����ؾ���
 	if (Character->GetWeaponSystemComponent() && Character->GetWeaponSystemComponent()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 	{
 		Character->GetWeaponSystemComponent()->ZoomIn(true);
