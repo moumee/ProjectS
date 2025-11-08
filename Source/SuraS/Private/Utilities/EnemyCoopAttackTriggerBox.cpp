@@ -32,37 +32,72 @@ AEnemyCoopAttackTriggerBox::AEnemyCoopAttackTriggerBox()
 
 void AEnemyCoopAttackTriggerBox::ActivateCoopAttack()
 {
+	TArray<ASuraCharacterEnemyBase*> AvailableEnemies;
 	for (auto Enemy : EnemiesForCoopAttack)
+	{
+		if (Enemy.Get() && Enemy->GetAIController() && Enemy->GetAIController()->GetCurrentState() != EEnemyStates::CoopAttacking)
+		{
+			AvailableEnemies.AddUnique(Enemy.Get());
+		}
+	}
+
+	for (auto Enemy : AvailableEnemies)
 	{
 		Enemy->GetAIController()->EndPursueState();
 		Enemy->GetAIController()->GetBrainComponent()->StopLogic("CoopAttack");
 	}
-	
-	if (EnemiesForCoopAttack.Num() >= 2)
+
+	// Coop Attack Start
+	if (AvailableEnemies.Num() >= 2)
 	{
-		// UE_LOG(LogTemp, Error, TEXT("Enough for coop attack"));
+		while (AvailableEnemies.Num() >= 2)
+		{
+			// UE_LOG(LogTemp, Error, TEXT("Enough for coop attack"));
+			ASuraCharacterEnemyBase* EnemyA = AvailableEnemies[0];
+			ASuraCharacterEnemyBase* EnemyB = AvailableEnemies[1];
 
-		EnemiesForCoopAttack[0]->GetAIController()->GetBrainComponent()->RestartLogic();
-		EnemiesForCoopAttack[1]->GetAIController()->GetBrainComponent()->RestartLogic();
+			EnemyA->GetAIController()->GetBrainComponent()->RestartLogic();
+			EnemyB->GetAIController()->GetBrainComponent()->RestartLogic();
 
-		EnemiesForCoopAttack[0]->GetAIController()->GetBlackboardComponent()->SetValueAsRotator(
-			"TargetRotation",
-			FRotator(0, EnemiesForCoopAttack[0]->GetActorRotation().Yaw, 0)
-			);
+			EnemyA->GetAIController()->GetBlackboardComponent()->SetValueAsRotator(
+				"TargetRotation",
+				FRotator(0, EnemiesForCoopAttack[0]->GetActorRotation().Yaw, 0)
+				);
 		
-		EnemiesForCoopAttack[1]->GetAIController()->GetBlackboardComponent()->SetValueAsRotator(
-			"TargetRotation",
-			FRotator(0, EnemiesForCoopAttack[1]->GetActorRotation().Yaw, 0)
-			); // to straighten the climbing rotation
-			
-		EnemiesForCoopAttack[0]->GetAIController()->SetStateToCoopAttack(EnemiesForCoopAttack[1], true);
-		EnemiesForCoopAttack[1]->GetAIController()->SetStateToCoopAttack(EnemiesForCoopAttack[0], false);
+			EnemyB->GetAIController()->GetBlackboardComponent()->SetValueAsRotator(
+				"TargetRotation",
+				FRotator(0, EnemiesForCoopAttack[1]->GetActorRotation().Yaw, 0)
+				); // to straighten the climbing rotation
 
-		// possibly reactivate the remaining enemies?
+			if (EnemyA != EnemyB)
+			{
+				EnemyA->GetAIController()->SetStateToCoopAttack(EnemyB, true);
+				EnemyB->GetAIController()->SetStateToCoopAttack(EnemyA, false);
+			}
 
-		EnemiesForCoopAttack.Empty();
+			// possibly reactivate the remaining enemies?
 
-		// UE_LOG(LogTemp, Log, TEXT("EnemiesForCoopAttack length %d"), EnemiesForCoopAttack.Num());
+			AvailableEnemies.RemoveAt(1);
+			AvailableEnemies.RemoveAt(0);
+
+			// UE_LOG(LogTemp, Log, TEXT("EnemiesForCoopAttack length %d"), EnemiesForCoopAttack.Num());
+		}
+
+		if (AvailableEnemies.Num() > 0)
+		{
+			ASuraCharacterEnemyBase* Loner = AvailableEnemies[0];
+			Loner->GetAIController()->GetBrainComponent()->RestartLogic();
+
+			Loner->GetAIController()->SetStateToChaseOrPursue(Loner);
+		}
+	}
+	else
+	{
+		for (auto Enemy : AvailableEnemies)
+		{
+			Enemy->GetAIController()->GetBrainComponent()->RestartLogic();
+			Enemy->GetAIController()->SetStateToChaseOrPursue(Enemy);
+		}
 	}
 
 	// 1. Find another enemy in a radius
@@ -88,7 +123,7 @@ void AEnemyCoopAttackTriggerBox::OnEnemyOverlapBegin(UPrimitiveComponent* Overla
 {
 	if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(OtherActor))
 	{
-		EnemiesForCoopAttack.Add(Enemy);
+		EnemiesForCoopAttack.AddUnique(Enemy);
 
 		if (bIsPlayerInsideTrigger)
 			ActivateCoopAttack(); 
@@ -120,7 +155,7 @@ void AEnemyCoopAttackTriggerBox::OnPlayerOverlapBegin(UPrimitiveComponent* Overl
 		for (AActor* Actor : OutActors)
 		{
 			if (ASuraCharacterEnemyBase* EnemyActor = Cast<ASuraCharacterEnemyBase>(Actor))
-				EnemiesForCoopAttack.Add(EnemyActor);
+				EnemiesForCoopAttack.AddUnique(EnemyActor);
 		}
 		
 		bIsPlayerInsideTrigger = true;

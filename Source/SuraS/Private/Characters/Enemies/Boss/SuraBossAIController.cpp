@@ -7,7 +7,6 @@
 #include "Kismet/GameplayStatics.h"
 
 
-
 void ASuraBossAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);

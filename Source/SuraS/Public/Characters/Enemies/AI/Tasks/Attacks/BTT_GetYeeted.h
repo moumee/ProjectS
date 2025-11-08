@@ -25,6 +25,8 @@ class SURAS_API UBTT_GetYeeted : public UBTTask_BlackboardBase
 
 	bool bIsFalling = false;
 	bool bIsDoneGettingYeeted =false;
+	float ElapsedTime = 0.f;
+	float const MaxElapsedTime = 3.f;
 	
 	TWeakObjectPtr<ASuraCharacterEnemyBase> CachedEnemy;
 
@@ -41,4 +43,5 @@ public:
 	explicit UBTT_GetYeeted();
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+	virtual void OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult) override;
 };

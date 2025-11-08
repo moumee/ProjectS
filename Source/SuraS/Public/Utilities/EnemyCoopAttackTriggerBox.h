@@ -27,8 +27,7 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TriggerEnemies")
-	TArray<ASuraCharacterEnemyBase*> EnemiesForCoopAttack;
+	TArray<TWeakObjectPtr<ASuraCharacterEnemyBase>> EnemiesForCoopAttack;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	TObjectPtr<USceneComponent> TriggerRootComponent;

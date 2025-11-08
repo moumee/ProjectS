@@ -27,6 +27,17 @@ EBTNodeResult::Type UBTT_GetYeeted::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 
 	// Mem->bIsDoneGettingYeeted = false;
 	bIsDoneGettingYeeted = false;
+
+	if (ASuraCharacterEnemyBase* Enemy = CachedEnemy.Get())
+	{
+		Enemy->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &UBTT_GetYeeted::OnHit);
+		// Mem->CachedEnemy.Get()->GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &UBTT_GetYeeted::OnOverlapBegin);
+				
+		UAnimInstance* const EnemyAnimInstance = Enemy->GetMesh()->GetAnimInstance();
+		UAnimMontage* FallingMontage = Enemy->GetFallingMontage();
+
+		EnemyAnimInstance->Montage_Play(FallingMontage);
+	}
 	
 	return EBTNodeResult::InProgress;
 }
@@ -86,7 +97,7 @@ void UBTT_GetYeeted::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemo
 		}
 	}*/
 
-	if (ASuraCharacterEnemyBase* Enemy = CachedEnemy.Get())
+	/*if (ASuraCharacterEnemyBase* Enemy = CachedEnemy.Get())
 	{
 		if (Enemy->GetCharacterMovement()->IsFalling())
 		{
@@ -95,14 +106,7 @@ void UBTT_GetYeeted::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemo
 			if (!bIsFalling) // one time init
 			{
 				bIsFalling = true;
-
-				Enemy->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &UBTT_GetYeeted::OnHit);
-				// Mem->CachedEnemy.Get()->GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &UBTT_GetYeeted::OnOverlapBegin);
 				
-				UAnimInstance* const EnemyAnimInstance = Enemy->GetMesh()->GetAnimInstance();
-				UAnimMontage* FallingMontage = Enemy->GetFallingMontage();
-
-				EnemyAnimInstance->Montage_Play(FallingMontage);
 			}
 		}
 		else
@@ -116,28 +120,20 @@ void UBTT_GetYeeted::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemo
 
 		if (bIsDoneGettingYeeted)
 		{
-			// UE_LOG(LogTemp, Error, TEXT("Done Getting Yeeted"));
-			Enemy->GetCapsuleComponent()->OnComponentHit.RemoveDynamic(this, &UBTT_GetYeeted::OnHit);
-			// Mem->CachedEnemy.Get()->GetCapsuleComponent()->OnComponentBeginOverlap.RemoveDynamic(this, &UBTT_GetYeeted::OnOverlapBegin);
-
-			UAnimInstance* const EnemyAnimInstance = Enemy->GetMesh()->GetAnimInstance();
-			EnemyAnimInstance->Montage_Stop(0.2f);
-			FRotator TargetRotation = Enemy->GetAIController()->GetBlackboardComponent()->GetValueAsRotator("TargetRotation");
-			Enemy->SetActorRotation(FRotator(0, TargetRotation.Yaw, 0));
-
-			if (Enemy->GetAIController()->GetBrainComponent()->IsPaused())
-			{
-				Enemy->GetAIController()->GetBrainComponent()->RestartLogic();
-				Enemy->GetAIController()->SetStateToChaseOrPursue(Enemy);
-			}
-
 			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 		}
+	}*/
+
+	ElapsedTime += DeltaSeconds;
+
+	if (ElapsedTime > MaxElapsedTime)
+	{
+		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 	}
 }
 
 void UBTT_GetYeeted::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	FVector NormalImpulse, const FHitResult& Hit)
+                           FVector NormalImpulse, const FHitResult& Hit)
 {
 	AActor* MyOwner = HitComponent->GetOwner();
 	if (!MyOwner) return;
@@ -176,8 +172,10 @@ void UBTT_GetYeeted::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 
 		Mem->bIsDoneGettingYeeted = true;
 	}*/
+	
+	ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OtherActor);
 
-	if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OtherActor))
+	if (IsValid(Player))
 	{
 		// UE_LOG(LogTemp, Log, TEXT("OnHit %s"), *Player->GetName());
 		if (ASuraCharacterEnemyBase* Enemy = CachedEnemy.Get())
@@ -253,3 +251,27 @@ void UBTT_GetYeeted::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 {
 	return sizeof(FBTTGetYeetedTaskMemory);
 }*/
+
+void UBTT_GetYeeted::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
+	EBTNodeResult::Type TaskResult)
+{
+	auto Enemy = CachedEnemy.Get();
+	if (!Enemy) return;
+	
+	// UE_LOG(LogTemp, Error, TEXT("Done Getting Yeeted"));
+	Enemy->GetCapsuleComponent()->OnComponentHit.RemoveDynamic(this, &UBTT_GetYeeted::OnHit);
+	// Mem->CachedEnemy.Get()->GetCapsuleComponent()->OnComponentBeginOverlap.RemoveDynamic(this, &UBTT_GetYeeted::OnOverlapBegin);
+
+	UAnimInstance* const EnemyAnimInstance = Enemy->GetMesh()->GetAnimInstance();
+	EnemyAnimInstance->Montage_Stop(0.2f);
+	FRotator TargetRotation = Enemy->GetAIController()->GetBlackboardComponent()->GetValueAsRotator("TargetRotation");
+	Enemy->SetActorRotation(FRotator(0, TargetRotation.Yaw, 0));
+
+	if (Enemy->GetAIController()->GetBrainComponent()->IsPaused())
+	{
+		Enemy->GetAIController()->GetBrainComponent()->RestartLogic();
+		Enemy->GetAIController()->GetBlackboardComponent()->SetValueAsObject("CoopAlly", nullptr);
+		Enemy->GetAIController()->GetBlackboardComponent()->SetValueAsBool("IsCoopThrower", false);
+		Enemy->GetAIController()->SetStateToChaseOrPursue(Enemy);
+	}
+}
