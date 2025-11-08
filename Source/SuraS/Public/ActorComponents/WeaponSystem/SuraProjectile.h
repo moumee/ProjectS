@@ -130,7 +130,8 @@ public:
 	void LaunchProjectile(FVector MuzzlePos, FRotator Direction);
 
 private:
-	bool bActive = false;
+	UPROPERTY(VisibleAnywhere)
+	bool bIsActivated = false;
 	FTimerHandle LifeTimer;
 	float LifeSpan = 0.f;
 public:
@@ -196,12 +197,16 @@ protected:
 #pragma region HitScan
 protected:
 	bool bDebugHitScan = false;
+	UPROPERTY(VisibleAnywhere)
 	bool bIsHitScan = false;
+	UPROPERTY(VisibleAnywhere)
 	bool bActivatedMeshMovementForHitScan = false;
 	TArray<FVector> HitScanEndPoints;
 	int32 CurrEndPointIdx = 0;
 	float HitScanProjectileVelocity = 0.f;
+	UPROPERTY(VisibleAnywhere)
 	float DistanceMoved = 0.f;
+	UPROPERTY(VisibleAnywhere)
 	float TargetDistance = 0.f;
 	FVector MovementDirection;
 	void PerformHitScan(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, TArray<FVector>& OutHitLocations);
@@ -213,6 +218,9 @@ public:
 #pragma endregion
 
 #pragma region AutoAim
+protected:
+	UPROPERTY(VisibleAnywhere)
+	bool bIsAutoAim = false;
 public:
 	void LaunchAutoAim(FVector StartLocation, FVector TraceDir, FVector AutoAimDir, FVector MuzzleLoc, float MaxDistance, float AutoAimRadius);
 #pragma endregion
@@ -272,6 +280,7 @@ protected:
 
 #pragma region ProjectileMovement
 protected:
+	UPROPERTY(VisibleAnywhere)
 	bool bUseCustomProjectieMovement = false;
 	UPROPERTY(EditAnywhere)
 	float PM_Cam_To_d_Len = 0.f;
