@@ -44,12 +44,12 @@ void ASoundStartTriggerBox::OnTriggerBeginOverlap(AActor* OverlappedActor, AActo
 {
 	if (!Cast<IPlayerInterface>(OtherActor)) return;
 	
-	if (BackgroundMusicAudioComponent->GetSound())
+	if (BackgroundMusicAudioComponent->GetSound() && !BackgroundMusicAudioComponent->IsPlaying())
 	{
 		BackgroundMusicAudioComponent->FadeIn(BackgroundMusicFadeInDuration, 1.f, 0.f, EAudioFaderCurve::Logarithmic);
 	}
 
-	if (SpatialEffectAudioComponent->GetSound())
+	if (SpatialEffectAudioComponent->GetSound() && !SpatialEffectAudioComponent->IsPlaying())
 	{
 		SpatialEffectAudioComponent->FadeIn(SpatialEffectFadeInDuration, 1.f, 0.f, EAudioFaderCurve::Logarithmic);
 	}
