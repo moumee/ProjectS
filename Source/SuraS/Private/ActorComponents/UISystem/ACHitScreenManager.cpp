@@ -3,9 +3,10 @@
 
 #include "ActorComponents/UISystem/ACHitScreenManager.h"
 
+#include "NiagaraSystem.h"
 #include "NiagaraSystemWidget.h"
 #include "NiagaraUIComponent.h"
-#include "ActorComponents/UISystem/ACPlayerHealthComponent.h"
+#include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "UI/HitScreenWidget.h"
 
@@ -29,17 +30,17 @@ void UACHitScreenManager::BeginPlay()
 	ASuraPawnPlayer* OwnerCharacter = Cast<ASuraPawnPlayer>(GetOwner());
 	if (OwnerCharacter)
 	{
-		UACPlayerHealthComponent* HealthComp = OwnerCharacter->GetHealthComponent();
+		UACDamageSystem* HealthComp = OwnerCharacter->GetDamageSystemComponent();
 		if (HealthComp)
 		{
 			HealthComp->OnHealthChanged.AddDynamic(this, &UACHitScreenManager::OnOwnerHealthChanged);
-			OnOwnerHealthChanged(HealthComp->GetCurrentHealth(), HealthComp->GetCurrentHealth(), HealthComp->GetMaxHealth());
+			OnOwnerHealthChanged(HealthComp->GetHealth(), HealthComp->GetHealth(), HealthComp->GetMaxHealth(), nullptr);
 		}
 	}
 	
 }
 
-void UACHitScreenManager::OnOwnerHealthChanged(float NewHealth, float OldHealth, float MaxHealth)
+void UACHitScreenManager::OnOwnerHealthChanged(float NewHealth, float OldHealth, float MaxHealth, AActor* DamageCauser)
 {
 	if (MaxHealth <= 0) return;
 
@@ -113,22 +114,23 @@ void UACHitScreenManager::UpdateHitScreen(float NewHealth, float OldHealth, floa
         if (HealthRatio >= 0.8f && HealthRatio < 1.0f)
         {
             DesiredNiagaraSystem = NiagaraAsset_99_80;
-        	UE_LOG(LogTemp, Warning, TEXT("99_80나이아가라 적용됨"));
         }
         else if (HealthRatio >= 0.5f)
         {
             DesiredNiagaraSystem = NiagaraAsset_79_50;
-        	UE_LOG(LogTemp, Warning, TEXT("79_50나이아가라 적용됨"));
         }
         else if (HealthRatio >= LowHPThreshold)
         {
             DesiredNiagaraSystem = NiagaraAsset_49_30;
-        	UE_LOG(LogTemp, Warning, TEXT("49_30나이아가라 적용됨"));
         }
         
         // 현재 할당된 에셋과 목표 에셋이 다를 경우에만 교체하여 불필요한 업데이트를 방지
         if (DesiredNiagaraSystem && CurrentNiagaraComponent->GetAsset() != DesiredNiagaraSystem)
         {
+        	UE_LOG(LogTemp, Warning, TEXT("=== 나이아가라 에셋 교체: %s -> %s ==="), 
+				*GetNameSafe(CurrentNiagaraComponent->GetAsset()), 
+				*GetNameSafe(DesiredNiagaraSystem));
+        	
             CurrentNiagaraComponent->SetAsset(DesiredNiagaraSystem);
             CurrentNiagaraComponent->Activate(true); 
         }

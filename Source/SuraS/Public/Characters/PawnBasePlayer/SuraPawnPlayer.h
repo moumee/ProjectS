@@ -70,7 +70,6 @@ public:
 	USkeletalMeshComponent* GetHandsMesh() { return HandsMesh; }   //<JaeHyeong>
 
 	UACUIMangerComponent* GetUIManager() const { return UIManager; } // <Suhyeon>
-	UACPlayerHealthComponent* GetHealthComponent() const { return HealthComponent; } // <Suheyon>
 	UACHitScreenManager* GetHitScreenManager() const { return HitScreenManager; } // <Suhyeon>
 
 	bool HasWeapon() const;  // <WeaponSystem>s
@@ -144,9 +143,6 @@ protected:
 	// UI component - suhyeon
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
 	UACUIMangerComponent* UIManager;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
-	UACPlayerHealthComponent* HealthComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
 	UACHitScreenManager* HitScreenManager;

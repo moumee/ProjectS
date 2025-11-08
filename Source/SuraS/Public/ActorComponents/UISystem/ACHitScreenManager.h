@@ -68,7 +68,7 @@ protected:
 
 	// 플레이어의 체력 변경 델리게이트에 바인딩할 함수
 	UFUNCTION()
-	void OnOwnerHealthChanged(float NewHealth, float OldHealth, float MaxHealth);
+	void OnOwnerHealthChanged(float NewHealth, float OldHealth, float MaxHealth, AActor* DamageCauser);
 
 public:	
 	// Called every frame

@@ -3,8 +3,7 @@
 
 #include "UI/PlayerHUD.h"
 
-#include "ActorComponents/UISystem/ACHitScreenManager.h"
-#include "ActorComponents/UISystem/ACPlayerHealthComponent.h"
+#include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
@@ -113,7 +112,7 @@ void UPlayerHUD::OnWeaponSwitchAnim(int32 PrevIndex, int32 NewIndex)
 	HandleWeaponSlotUIUpdate(PrevIndex, NewIndex);
 }
 
-void UPlayerHUD::OnHealthUpdated(float NewHealth, float OldHealth, float MaxHealth)
+void UPlayerHUD::OnHealthUpdated(float NewHealth, float OldHealth, float MaxHealth, AActor* DamageCauser)
 {
 	const float HealthRatio = (MaxHealth > 0) ? NewHealth / MaxHealth : 0.0f;
 	ApplyHpBarImage(HealthRatio);
@@ -148,7 +147,7 @@ void UPlayerHUD::InitializeHUD() const
 	// 	WeaponSlot_2->SetVisibility(ESlateVisibility::Visible);
 	// }
 
-	UACPlayerHealthComponent* HealthComp = SuraPawnPlayer->FindComponentByClass<UACPlayerHealthComponent>();
+	UACDamageSystem* HealthComp = SuraPawnPlayer->FindComponentByClass<UACDamageSystem>();
 	if (HealthComp && !HealthComp->OnHealthChanged.IsAlreadyBound(this, &UPlayerHUD::OnHealthUpdated)) // <JaeHyeong> 중복 바인딩 방지
 	{
 		HealthComp->OnHealthChanged.AddDynamic(this, &UPlayerHUD::OnHealthUpdated);

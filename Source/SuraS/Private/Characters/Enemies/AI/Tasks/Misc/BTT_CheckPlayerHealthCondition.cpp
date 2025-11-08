@@ -4,7 +4,6 @@
 #include "Characters/Enemies/AI/Tasks/Misc/BTT_CheckPlayerHealthCondition.h"
 
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
-#include "ActorComponents/UISystem/ACPlayerHealthComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"

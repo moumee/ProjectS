@@ -9,7 +9,6 @@
 #include "ActorComponents/AttackComponents/ACPlayerAttackTokens.h"
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "ActorComponents/UISystem/ACHitScreenManager.h"
-#include "ActorComponents/UISystem/ACPlayerHealthComponent.h"
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/PawnBasePlayer/SuraPlayerCameraComponent.h"
@@ -80,7 +79,6 @@ ASuraPawnPlayer::ASuraPawnPlayer()
 
 	// UIManager actor components - suhyeon
 	UIManager = CreateDefaultSubobject<UACUIMangerComponent>(TEXT("UI Manager Component"));
-	HealthComponent = CreateDefaultSubobject<UACPlayerHealthComponent>(TEXT("Health Component"));
 	HitScreenManager = CreateDefaultSubobject<UACHitScreenManager>(TEXT("HitScreen Manager Component"));
 
 	ForwardDashEffectComponent = CreateDefaultSubobject<UNiagaraComponent>("Forward Dash Effect Component");
@@ -129,7 +127,6 @@ void ASuraPawnPlayer::BeginPlay()
 
 	
 	GetDamageSystemComponent()->OnDamaged.AddUObject(CameraMovementComponent, &USuraPlayerCameraComponent::OnDamaged);
-	GetDamageSystemComponent()->OnDamaged.AddUObject(this, &ASuraPawnPlayer::OnDamaged);
 	GetDamageSystemComponent()->OnDeath.AddUObject(this, &ASuraPawnPlayer::OnDeath);
 
 	GetPlayerMovementComponent()->OnPrimaryJumpDelegate.AddDynamic(this, &ASuraPawnPlayer::OnPrimaryJump);
@@ -624,13 +621,6 @@ void ASuraPawnPlayer::RequestResetModification()
 	GetPlayerMovementComponent()->NotifyResetModification();
 }
 
-void ASuraPawnPlayer::OnDamaged()
-{
-	if (HealthComponent) 
-	{
-		HealthComponent->TakeDamage(10.0f); // default damage 10으로 일단 고정. 추후 변수로 변경
-	}
-}
 
 void ASuraPawnPlayer::OnDeath()
 {
