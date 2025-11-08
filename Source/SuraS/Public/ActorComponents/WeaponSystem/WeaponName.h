@@ -12,13 +12,14 @@
 UENUM(BlueprintType)
 enum class EWeaponName : uint8
 {
-	WeaponName_Pistol UMETA(DisplayName = "Pistol"),
+	//WeaponName_Pistol UMETA(DisplayName = "Pistol"),
 	WeaponName_Rifle UMETA(DisplayName = "Rifle"),
 	WeaponName_ShotGun UMETA(DisplayName = "ShotGun"),
 	WeaponName_MissileLauncher UMETA(DisplayName = "MissileLauncher"),
 	WeaponName_RailGun UMETA(DisplayName = "RailGun"),
 	WeaponName_EnergyRifle UMETA(DisplayName = "EnergyRifle")
 };
+ENUM_RANGE_BY_FIRST_AND_LAST(EWeaponName, EWeaponName::WeaponName_Rifle, EWeaponName::WeaponName_MissileLauncher);
 
 UCLASS()
 class SURAS_API AWeaponName : public AActor
