@@ -6,6 +6,7 @@
 #include "GameFramework/SaveGame.h"
 #include "SuraSaveGame.generated.h"
 
+enum class EWeaponName : uint8;
 /**
  * 
  */
@@ -26,5 +27,8 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	int32 CheckpointOrderIndex = 0;
+
+	UPROPERTY()
+	TMap<EWeaponName, bool> OwnedWeapons;
 	
 };

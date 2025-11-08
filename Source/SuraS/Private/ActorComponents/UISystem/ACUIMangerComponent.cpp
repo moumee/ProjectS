@@ -3,7 +3,6 @@
 
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "EnhancedInputComponent.h"
-#include "ActorComponents/UISystem/ACInventoryManager.h"
 #include "ActorComponents/UISystem/ACKillLogManager.h"
 #include "ActorComponents/UISystem/ACPlayerHudManager.h"
 #include "ActorComponents/UISystem/ACSkillManager.h"
@@ -25,7 +24,7 @@ UACUIMangerComponent::UACUIMangerComponent()
 
 	
 	// 매니저 생성 및 등록
-	InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("InventoryManager"));
+	//InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("InventoryManager"));
 	KillLogManager = CreateDefaultSubobject<UACKillLogManager>(TEXT("KillLog"));
 	PlayerHUDManager = CreateDefaultSubobject<UACPlayerHUDManager>(TEXT("PlayerHUD"));
 	SkillManager = CreateDefaultSubobject<UACSkillManager>(TEXT("Skill"));
@@ -67,7 +66,7 @@ void UACUIMangerComponent::SetupInput()
 	{
 		if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PC->InputComponent))
 		{
-			EnhancedInput->BindAction(OpenInventoryAction, ETriggerEvent::Started, this, &UACUIMangerComponent::OpenUI, EUIType::Inventory);
+			//EnhancedInput->BindAction(OpenInventoryAction, ETriggerEvent::Started, this, &UACUIMangerComponent::OpenUI, EUIType::Inventory);
 			EnhancedInput->BindAction(OpenPauseMenuAction, ETriggerEvent::Started, this, &UACUIMangerComponent::TogglePauseMenu);
 			// ETriggerEvent::Started -> 키가 눌렸을 때
 			EnhancedInput->BindAction(ShowTabMenuAction, ETriggerEvent::Started, this, &UACUIMangerComponent::OnShowTabMenuStarted);
@@ -130,15 +129,15 @@ void UACUIMangerComponent::InitializeWidgets()
 		// 위젯 타입별로 매니저 연결
 		switch (UIType)
 		{
-		case EUIType::Inventory:
-			{
-				if (UInventoryWidget* IW = Cast<UInventoryWidget>(NewWidget))
-				{
-					IW->SetInventoryManager(InventoryManager); // InventoryWidget에 InventoryManager를 할당
-					InventoryManager->SetInventoryWidget(IW);  // InventoryManager에 InventoryWidget을 할당
-				}
-				break;
-			}
+		// case EUIType::Inventory:
+		// 	{
+		// 		if (UInventoryWidget* IW = Cast<UInventoryWidget>(NewWidget))
+		// 		{
+		// 			IW->SetInventoryManager(InventoryManager); // InventoryWidget에 InventoryManager를 할당
+		// 			InventoryManager->SetInventoryWidget(IW);  // InventoryManager에 InventoryWidget을 할당
+		// 		}
+		// 		break;
+		// 	}
 
 		case EUIType::KillLog:
 			{
@@ -188,7 +187,7 @@ void UACUIMangerComponent::InitializeWidgets()
 
 void UACUIMangerComponent::InitializeManagers()
 {
-	InventoryManager->SetUIManager(this);
+	//InventoryManager->SetUIManager(this);
 	KillLogManager->SetUIManager(this);
 	PlayerHUDManager->SetUIManager(this);
 	SkillManager->SetUIManager(this);
