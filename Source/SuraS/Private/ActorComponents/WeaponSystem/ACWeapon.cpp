@@ -1616,6 +1616,8 @@ void AWeapon::EquipWeapon(ASuraPawnPlayer* TargetCharacter, bool bActivateDirect
 	SetInputActionBinding();
 	ChangeState(IdleState);
 
+	//UE_LOG(LogTemp, Error, TEXT("Weapon: %s"), *UEnum::GetValueAsString(GetWeaponName()));
+
 	if (bActivateDirectly)
 	{
 		AttachWeaponToPlayer(TargetCharacter);

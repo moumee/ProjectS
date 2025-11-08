@@ -319,15 +319,17 @@ void UWeaponSystemComponent::InitStartingWeapons_Ordering()
 		}
 	}
 
+	
+
 	for (int32 i = 0; i < WeaponInventory.Num(); i++)
 	{
-		UE_LOG(LogTemp, Error, TEXT("(int32 i = 0; i < WeaponInventory.Num(); i++)"));
+		//UE_LOG(LogTemp, Error, TEXT("(int32 i = 0; i < WeaponInventory.Num(); i++)"));
 
-		UE_LOG(LogTemp, Log, TEXT("Weapon: %s"), *UEnum::GetValueAsString(WeaponInventory[i]->GetWeaponName()));
+		//UE_LOG(LogTemp, Log, TEXT("Weapon: %s"), *UEnum::GetValueAsString(WeaponInventory[i]->GetWeaponName()));
 
 		if (WeaponInventory[i]->GetWeaponName() == DTWSC->StartingWeaponName)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Already has Starting weapon"));
+			//UE_LOG(LogTemp, Error, TEXT("Already has Starting weapon"));
 			//CurrentWeaponIndex = i;
 			//ChangeWeapon(CurrentWeaponIndex);
 			//CurrentWeaponIndex = 0;
@@ -338,38 +340,37 @@ void UWeaponSystemComponent::InitStartingWeapons_Ordering()
 			CurrentWeapon = WeaponInventory[i];
 			CurrentWeapon->SwitchWeapon(PlayerOwner, true);
 			OnWeaponSwitched.Broadcast(PrevIdx, CurrentWeaponIndex);
-
 			return;
 		}
 	}
 
-	AWeapon* NewWeapon;
+	//AWeapon* NewWeapon;
 
-	if (DTWSC->WeaponClasses.Contains(DTWSC->StartingWeaponName))
-	{
-		UWorld* const World = GetWorld();
-		if (World != nullptr && PlayerOwner != nullptr)
-		{
-			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			NewWeapon = GetWorld()->SpawnActor<AWeapon>(DTWSC->WeaponClasses[DTWSC->StartingWeaponName], PlayerOwner->GetActorTransform(), ActorSpawnParams);
-			NewWeapon->InitWeapon(PlayerOwner);
-		}
-	}
+	//if (DTWSC->WeaponClasses.Contains(DTWSC->StartingWeaponName))
+	//{
+	//	UWorld* const World = GetWorld();
+	//	if (World != nullptr && PlayerOwner != nullptr)
+	//	{
+	//		FActorSpawnParameters ActorSpawnParams;
+	//		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	//		NewWeapon = GetWorld()->SpawnActor<AWeapon>(DTWSC->WeaponClasses[DTWSC->StartingWeaponName], PlayerOwner->GetActorTransform(), ActorSpawnParams);
+	//		NewWeapon->InitWeapon(PlayerOwner);
+	//	}
+	//}
 
-	WeaponInventory.AddUnique(NewWeapon);
+	//WeaponInventory.AddUnique(NewWeapon);
 
-	if (CurrentWeapon == nullptr)
-	{
-		//CurrentWeapon = NewWeapon;
-		//CurrentWeapon->SwitchWeapon(PlayerOwner, true);
+	//if (CurrentWeapon == nullptr)
+	//{
+	//	//CurrentWeapon = NewWeapon;
+	//	//CurrentWeapon->SwitchWeapon(PlayerOwner, true);
 
-		int32 PrevIdx = CurrentWeaponIndex;
-		CurrentWeaponIndex = WeaponInventory.Num() - 1;
-		CurrentWeapon = NewWeapon;
-		CurrentWeapon->SwitchWeapon(PlayerOwner, true);
-		OnWeaponSwitched.Broadcast(PrevIdx, CurrentWeaponIndex);
-	}
+	//	int32 PrevIdx = CurrentWeaponIndex;
+	//	CurrentWeaponIndex = WeaponInventory.Num() - 1;
+	//	CurrentWeapon = NewWeapon;
+	//	CurrentWeapon->SwitchWeapon(PlayerOwner, true);
+	//	OnWeaponSwitched.Broadcast(PrevIdx, CurrentWeaponIndex);
+	//}
 }
 #pragma endregion
 
