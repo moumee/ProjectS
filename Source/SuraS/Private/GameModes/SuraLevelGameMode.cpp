@@ -38,6 +38,7 @@ void ASuraLevelGameMode::BeginPlay()
 	FName SavedMapName = Subsystem->GetCurrentSave()->MapName;
 	if (CurrentMapName != SavedMapName)
 	{
+		
 		Subsystem->SaveCheckpoint(CurrentMapName, ChoosePlayerStart(PlayerController)->GetActorTransform(), -1);
 	}
 	else
