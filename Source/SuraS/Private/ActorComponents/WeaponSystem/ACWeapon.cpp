@@ -74,8 +74,6 @@ AWeapon::AWeapon()
 	MuzzlePoint->SetCollisionObjectType(ECC_GameTraceChannel3); //Weapon
 	MuzzlePoint->SetCollisionResponseToAllChannels(ECR_Ignore);
 	// Fire Mode
-	//TODO: �ϴ��� �⺻ Single�� �ϴµ�, WeaponName�� ���� �����ڿ��� �������ִ� ������ �����ϱ�
-	WeaponName = EWeaponName::WeaponName_Rifle;
 	WeaponType = EWeaponType::WeaponType_Rifle;
 	
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
