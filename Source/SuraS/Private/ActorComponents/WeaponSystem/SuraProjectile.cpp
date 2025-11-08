@@ -105,17 +105,17 @@ void ASuraProjectile::DeactiveProjectile()
 	NumPenetrableObjects = 0;
 	CurrentRicochetCount = 0;
 
+	// <AutoAim>
+	bIsAutoAim = false;
+
 	// <HitScan>
-	if (bIsHitScan)
-	{
-		bIsHitScan = false;
-		bActivatedMeshMovementForHitScan = false;
-		HitScanEndPoints.Empty();
-		CurrEndPointIdx = 0;
-		DistanceMoved = 0;
-		DistanceMoved;
-		TargetDistance = 0.f;
-	}
+	bIsHitScan = false;
+	bActivatedMeshMovementForHitScan = false;
+	HitScanEndPoints.Empty();
+	CurrEndPointIdx = 0;
+	DistanceMoved = 0;
+	TargetDistance = 0.f;
+
 	
 	// <Penetration>
 	NumPenetratedObjects = 0;
@@ -147,8 +147,6 @@ void ASuraProjectile::DeactiveProjectile()
 	CollisionComp->SetSphereRadius(InitialRadius);
 
 	//-------------
-
-	bActive = false;
 	SetActorHiddenInGame(true);
 	//SetActorEnableCollision(false);
 	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
@@ -158,10 +156,13 @@ void ASuraProjectile::DeactiveProjectile()
 	CollisionComp->OnComponentBeginOverlap.RemoveDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
 
 	CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	SetActorTickEnabled(false);
 
 	ProjectileMovement->StopMovementImmediately();
 	ProjectileMovement->Deactivate();
+
+	SetActorTickEnabled(false);
+	bIsActivated = false;
+
 	//---------------
 
 	if (Weapon)
@@ -174,7 +175,7 @@ void ASuraProjectile::InitProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWe
 {
 	//UE_LOG(LogTemp, Error, TEXT("InitProjectile_Pool"));
 
-	bActive = true;
+	bIsActivated = true;
 	SetActorHiddenInGame(false);
 	//SetActorEnableCollision(true);
 	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -193,6 +194,7 @@ void ASuraProjectile::InitProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWe
 
 	if (AutoAim)
 	{
+		bIsAutoAim = true;
 		bIsHitScan = false;
 		NumPenetrableObjects = 0; //TODO: ???
 	}
@@ -279,6 +281,7 @@ void ASuraProjectile::LoadProjectileData()
 		ImpactEffect = ProjectileData->ImpactEffect;
 		ExplosionEffect = ProjectileData->ExplosionEffect;
 		DecalMaterial = ProjectileData->HoleDecal;
+		TrailOffsetDist = ProjectileData->TrailOffsetDist;
 
 		LifeSpan = ProjectileData->InitialLifeSpan;
 
@@ -632,9 +635,7 @@ void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Roc
 		FTransform TrailEndTransform = ProjectileMesh->GetSocketTransform(FName(TEXT("TrailEnd")), ERelativeTransformSpace::RTS_Component);
 
 		// TODO: offset�� Traile ���� �ٸ��� �����ؾ���. �ƴϸ� �����Ϳ��� Mesh���� socket�� ��ġ�� ���� �ٲ��ִ� ���� ���� ���������
-		float DistanceOffset = 80.f;
-
-		FVector TrailLocationOffset = (TrailEndTransform.GetLocation() - TrailStartTransform.GetLocation()).GetSafeNormal() * DistanceOffset;
+		FVector TrailLocationOffset = (TrailEndTransform.GetLocation() - TrailStartTransform.GetLocation()).GetSafeNormal() * TrailOffsetDist;
 		
 		if (bShouldAttachedToWeapon)
 		{
@@ -893,6 +894,13 @@ void ASuraProjectile::UpdateHitScanProjectileMovement(float DeltaTime)
 		if (CurrEndPointIdx + 1 > HitScanEndPoints.Num() - 1)
 		{
 			//TODO: 그대로 직진? Destroy?
+			if (TrailEffectComponent)
+			{
+				TrailEffectComponent->Deactivate();
+				TrailEffectComponent->DestroyComponent();
+				TrailEffectComponent = nullptr;
+			}
+			DeactiveProjectile();
 		}
 		else
 		{
@@ -1293,7 +1301,10 @@ void ASuraProjectile::Tick(float DeltaTime)
 	if (bIsHitScan)
 	{
 		//Projectile Movement Update
-		UpdateHitScanProjectileMovement(DeltaTime);
+		if (bActivatedMeshMovementForHitScan)
+		{
+			UpdateHitScanProjectileMovement(DeltaTime);
+		}
 	}
 
 	if (bUseCustomProjectieMovement)
