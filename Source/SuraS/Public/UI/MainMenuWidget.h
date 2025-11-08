@@ -7,6 +7,7 @@
 #include "MainMenuWidget.generated.h"
 
 class UButton;
+class UWorld;
 /**
  * 
  */
@@ -23,6 +24,9 @@ protected:
 	UButton* Btn_Play;
 
 	UPROPERTY(meta = (BindWidget))
+	UButton* Btn_NewGame;
+
+	UPROPERTY(meta = (BindWidget))
 	UButton* Btn_Options;
 
 	UPROPERTY(meta = (BindWidget))
@@ -36,6 +40,9 @@ protected:
 	
 	UFUNCTION()
 	void OnPlayClicked();
+	
+	UFUNCTION()
+	void OnNewGameClicked();
 
 	UFUNCTION()
 	void OnOptionsClicked();
