@@ -12,6 +12,7 @@ enum class EWeaponStateType : uint8
 	WeaponStateType_None UMETA(DisplayName = "None"),
 	WeaponStateType_Idle UMETA(DisplayName = "Idle"),
 	WeaponStateType_Firing UMETA(DisplayName = "Firing"),
+	WeaponStateType_FullAutoFiring UMETA(DisplayName = "FullAutoFiring"),
 	WeaponStateType_Reloading UMETA(DisplayName = "Reloading"),
 	WeaponStateType_PumpActionReloading UMETA(DisplayName = "PumpActionReloading"),
 	WeaponStateType_Unequipped UMETA(DisplayName = "Unequipped"),

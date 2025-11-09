@@ -10,6 +10,7 @@
 #include "ActorComponents/WeaponSystem/SuraWeaponBaseState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponIdleState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponFiringState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponFullAutoFiringState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponUnequippedState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponReloadingState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponPumpActionReloadState.h"
@@ -681,6 +682,7 @@ void AWeapon::BeginPlay()
 
 	IdleState = NewObject<USuraWeaponIdleState>(this, USuraWeaponIdleState::StaticClass());
 	FiringState = NewObject<USuraWeaponFiringState>(this, USuraWeaponFiringState::StaticClass());
+	FullAutoFiringState = NewObject<USuraWeaponFullAutoFiringState>(this, USuraWeaponFullAutoFiringState::StaticClass());
 	UnequippedState = NewObject<USuraWeaponUnequippedState>(this, USuraWeaponUnequippedState::StaticClass());
 	ReloadingState = NewObject<USuraWeaponReloadingState>(this, USuraWeaponReloadingState::StaticClass());
 	PumpActionReloadingState = NewObject<USuraWeaponPumpActionReloadState>(this, USuraWeaponPumpActionReloadState::StaticClass());
@@ -1261,7 +1263,7 @@ void AWeapon::FireSingleAutoAim(FWeaponFireData* FireData, int32 NumPenetrable, 
 
 void AWeapon::ZoomToggle()
 {
-	if (CurrentState == IdleState || CurrentState == FiringState)
+	if (CurrentState == IdleState || CurrentState == FiringState || CurrentState == FullAutoFiringState)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("Zoom!!!"));
 
@@ -1573,8 +1575,11 @@ void AWeapon::SwitchWeapon(ASuraPawnPlayer* TargetCharacter, bool bEquip)
 	{
 		BurstShotFired = 0;
 		GetWorld()->GetTimerManager().ClearTimer(SingleShotTimer);
-		GetWorld()->GetTimerManager().ClearTimer(FullAutoShotTimer);
 		GetWorld()->GetTimerManager().ClearTimer(BurstShotTimer);
+	}
+	else if (CurrentState == FullAutoFiringState)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(FullAutoShotTimer);
 	}
 
 	ChangeState(SwitchingState);
@@ -2312,6 +2317,12 @@ void AWeapon::HandleSingleFire(bool bIsLeftInput, bool bSingleProjectile, int32 
 		ChangeState(FiringState);
 		StartSingleShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
 	}
+	else if (CurrentState == FullAutoFiringState)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(FullAutoShotTimer);
+		ChangeState(FiringState);
+		StartSingleShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
+	}
 	else if (CurrentState == PumpActionReloadingState)
 	{
 		//UE_LOG(LogTemp, Error, TEXT("Fire input buffered during reload"));
@@ -2335,7 +2346,7 @@ void AWeapon::HandleFullAutoFire() //TODO: ï¿½È¾ï¿½ï¿½ï¿½. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿
 {
 	if (CurrentState == IdleState)
 	{
-		ChangeState(FiringState);
+		ChangeState(FullAutoFiringState);
 		StartSingleShot();
 	}
 }
@@ -2435,7 +2446,7 @@ void AWeapon::StartFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int32
 {
 	if (CurrentState == IdleState)
 	{
-		ChangeState(FiringState);
+		ChangeState(FullAutoFiringState);
 		UpdateFullAutoShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
 	}
 	else if (CurrentState == PumpActionReloadingState)
@@ -2511,7 +2522,7 @@ void AWeapon::UpdateFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int3
 }
 void AWeapon::StopFullAutoShot()
 {
-	if (CurrentState == FiringState)
+	if (CurrentState == FullAutoFiringState)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Ended!!!"));
 		GetWorld()->GetTimerManager().ClearTimer(FullAutoShotTimer);
