@@ -51,13 +51,7 @@ void ALevelTransitionTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedC
 
 void ALevelTransitionTriggerBox::TransitToNewLevel()
 {
-	ASuraPawnPlayer* const PlayerActor = Cast<ASuraPawnPlayer>(Player);
-	if (!PlayerActor) return;
-	UWeaponSystemComponent* WSC = PlayerActor->GetWeaponSystemComponent();
-	if (WSC)
-	{
-		WSC->UnlockWeapon(NewWeaponName);
-	}
+	UE_LOG(LogTemp, Error, TEXT("ALevelTransitionTriggerBox::TransitToNewLevel()"));
 
 	if (!Level.IsValid()) 
 	{	Level.LoadSynchronous();
@@ -67,6 +61,15 @@ void ALevelTransitionTriggerBox::TransitToNewLevel()
 	{
 		UGameplayStatics::OpenLevelBySoftObjectPtr(GetWorld(), Level);
 	}
+
+	ASuraPawnPlayer* const PlayerActor = Cast<ASuraPawnPlayer>(Player);
+	if (!PlayerActor) return;
+	UWeaponSystemComponent* WSC = PlayerActor->GetWeaponSystemComponent();
+	if (WSC)
+	{
+		WSC->UnlockWeapon(NewWeaponName);
+	}
+
 
 	FadeOut();
 	//UE_LOG(LogTemp, Error, TEXT("FadeOut!!!"));

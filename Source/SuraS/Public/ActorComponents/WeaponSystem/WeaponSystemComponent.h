@@ -86,12 +86,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon)
 	FDataTableRowHandle WSCDataTableHandle;
 	FWeaponSystemComponentData* DTWSC;
+protected:
+	UPROPERTY(VisibleAnywhere)
+	TMap<EWeaponName, bool> OwnedWeapons;
+public:
+	TMap<EWeaponName, bool> GetOwnerShipMap() const { return OwnedWeapons; }
 public:
 	void UnlockWeapon(EWeaponName NewWeaponName);
 protected:
 	void LoadWSCData();
 	void InitStartingWeapons();
 	void InitStartingWeapons_Ordering();
+	void SaveInventory();
 	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "TargetingSystem|PlayerReference", Meta = (AllowPrivateAccess = "true"))
 	//class APlayerCameraManager* PlayerCameraManager;
 #pragma endregion

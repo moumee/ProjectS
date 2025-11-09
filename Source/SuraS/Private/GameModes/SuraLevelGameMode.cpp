@@ -26,6 +26,8 @@ void ASuraLevelGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
+	UE_LOG(LogTemp, Error, TEXT("ASuraLevelGameMode::BeginPlay()"));
+
 	if (bPlayFromHere) return;
 
 	USuraCheckpointSubsystem* Subsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
@@ -39,11 +41,14 @@ void ASuraLevelGameMode::BeginPlay()
 	if (CurrentMapName != SavedMapName)
 	{
 		
-		Subsystem->SaveCheckpoint(CurrentMapName, ChoosePlayerStart(PlayerController)->GetActorTransform(), -1);
+		//Subsystem->SaveCheckpoint(CurrentMapName, ChoosePlayerStart(PlayerController)->GetActorTransform(), -1);
+		//UE_LOG(LogTemp, Error, TEXT("Subsystem->SaveCheckpoint(CurrentMapName, ChoosePlayerStart(PlayerController)->GetActorTransform(), -1);"));
 	}
 	else
 	{
 		Subsystem->LoadCheckpoint();
+
+		//UE_LOG(LogTemp, Error, TEXT("Subsystem->LoadCheckpoint();"));
 	}
 }
 

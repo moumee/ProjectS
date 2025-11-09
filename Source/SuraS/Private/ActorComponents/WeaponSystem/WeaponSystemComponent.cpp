@@ -95,9 +95,16 @@ bool UWeaponSystemComponent::IsSceneCaptureActive()
 }
 void UWeaponSystemComponent::UnlockWeapon(EWeaponName NewWeaponName)
 {
+	//UE_LOG(LogTemp, Error, TEXT("UWeaponSystemComponent::UnlockWeapon(EWeaponName NewWeaponName)"));
+
 	if (!DTWSC) return;
 	const TMap<EWeaponName, TSubclassOf<AWeapon>> WeaponClasses = DTWSC->WeaponClasses;
-	UCustomGameInstance* GameInstance = Cast<UCustomGameInstance>(GetWorld()->GetGameInstance());
+	//UCustomGameInstance* GameInstance = Cast<UCustomGameInstance>(GetWorld()->GetGameInstance());
+
+	//USuraCheckpointSubsystem* CheckpointSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
+	//if (!CheckpointSubsystem) { return; }
+	//USuraSaveGame* CurrentSave = CheckpointSubsystem->GetCurrentSave();
+
 
 	for (int32 i = 0; i < WeaponInventory.Num(); i++)
 	{
@@ -136,15 +143,27 @@ void UWeaponSystemComponent::UnlockWeapon(EWeaponName NewWeaponName)
 	NewWeapon->InitWeapon(Cast<ASuraPawnPlayer>(GetOwner()));
 	AddNewWeaponToInventory(NewWeapon);
 
-	if (!GameInstance) return;
-	if (GameInstance->OwnedWeapons.Contains(NewWeaponName))
-	{
-		GameInstance->OwnedWeapons[NewWeaponName] = true;
-	}
-	else
-	{
-		GameInstance->OwnedWeapons.Emplace(NewWeaponName, true);
-	}
+	//if (!CurrentSave) return;
+	//if (CurrentSave->OwnedWeapons.Contains(NewWeaponName))
+	//{
+	//	CurrentSave->OwnedWeapons[NewWeaponName] = true;
+	//}
+	//else
+	//{
+	//	CurrentSave->OwnedWeapons.Emplace(NewWeaponName, true);
+	//}
+
+	//if (OwnedWeapons.Contains(NewWeaponName))
+	//{
+	//	OwnedWeapons[NewWeaponName] = true;
+	//}
+	//else
+	//{
+	//	OwnedWeapons.Emplace(NewWeaponName, true);
+	//}
+	OwnedWeapons.FindOrAdd(NewWeaponName) = true;
+
+	SaveInventory();
 
 	if (CurrentWeapon == nullptr)
 	{
@@ -375,6 +394,9 @@ void UWeaponSystemComponent::InitStartingWeapons_Ordering()
 	// //}
 
 	// <suhyeon>  weapon save data changed
+
+	//UE_LOG(LogTemp, Error, TEXT("UWeaponSystemComponent::InitStartingWeapons_Ordering()"));
+
     if (!DTWSC)
     {
         return;
@@ -383,11 +405,7 @@ void UWeaponSystemComponent::InitStartingWeapons_Ordering()
 
 	
     USuraCheckpointSubsystem* CheckpointSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
-    if (!CheckpointSubsystem)
-    {
-        return;
-    }
-
+    if (!CheckpointSubsystem) { return; }
     USuraSaveGame* CurrentSave = CheckpointSubsystem->GetCurrentSave();
 	
     const bool bIsValidContinue = (CurrentSave && CurrentSave->OwnedWeapons.Num() > 0);
@@ -426,9 +444,12 @@ void UWeaponSystemComponent::InitStartingWeapons_Ordering()
 
             NewWeapon->InitWeapon(Cast<ASuraPawnPlayer>(GetOwner()));
             AddNewWeaponToInventory(NewWeapon);
+			OwnedWeapons.FindOrAdd(WeaponName) = true;
         }
     }
 	
+	SaveInventory();
+
     for (int32 i = 0; i < WeaponInventory.Num(); i++)
     {
        if (WeaponInventory[i] && WeaponInventory[i]->GetWeaponName() == DTWSC->StartingWeaponName) 
@@ -443,38 +464,53 @@ void UWeaponSystemComponent::InitStartingWeapons_Ordering()
        }
     }
 	
-    AWeapon* NewWeapon = nullptr; 
+    //AWeapon* NewWeapon = nullptr; 
 
-    if (DTWSC->WeaponClasses.Contains(DTWSC->StartingWeaponName))
-    {
-       UWorld* const World = GetWorld();
-       if (World != nullptr && PlayerOwner != nullptr)
-       {
-            FActorSpawnParameters ActorSpawnParams;
-            ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-            NewWeapon = GetWorld()->SpawnActor<AWeapon>(DTWSC->WeaponClasses[DTWSC->StartingWeaponName], PlayerOwner->GetActorTransform(), ActorSpawnParams);
-            
-            if(NewWeapon)
-            {
-                NewWeapon->InitWeapon(PlayerOwner);
-            }
-       }
-    }
+    //if (DTWSC->WeaponClasses.Contains(DTWSC->StartingWeaponName))
+    //{
+    //   UWorld* const World = GetWorld();
+    //   if (World != nullptr && PlayerOwner != nullptr)
+    //   {
+    //        FActorSpawnParameters ActorSpawnParams;
+    //        ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    //        NewWeapon = GetWorld()->SpawnActor<AWeapon>(DTWSC->WeaponClasses[DTWSC->StartingWeaponName], PlayerOwner->GetActorTransform(), ActorSpawnParams);
+    //        
+    //        if(NewWeapon)
+    //        {
+    //            NewWeapon->InitWeapon(PlayerOwner);
+    //        }
+    //   }
+    //}
 	
-    if (NewWeapon)
-    {
-        WeaponInventory.AddUnique(NewWeapon);
-        if (CurrentWeapon == nullptr)
-        {
-           int32 PrevIdx = CurrentWeaponIndex;
-           CurrentWeaponIndex = WeaponInventory.Num() - 1;
-           CurrentWeapon = NewWeapon;
-           CurrentWeapon->SwitchWeapon(PlayerOwner, true);
-           OnWeaponSwitched.Broadcast(PrevIdx, CurrentWeaponIndex);
-        }
-    }
+    //if (NewWeapon)
+    //{
+    //    WeaponInventory.AddUnique(NewWeapon);
+    //    if (CurrentWeapon == nullptr)
+    //    {
+    //       int32 PrevIdx = CurrentWeaponIndex;
+    //       CurrentWeaponIndex = WeaponInventory.Num() - 1;
+    //       CurrentWeapon = NewWeapon;
+    //       CurrentWeapon->SwitchWeapon(PlayerOwner, true);
+    //       OnWeaponSwitched.Broadcast(PrevIdx, CurrentWeaponIndex);
+    //    }
+    //}
 
 	
+}
+void UWeaponSystemComponent::SaveInventory()
+{
+	USuraCheckpointSubsystem* CheckpointSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
+	check(CheckpointSubsystem);
+	USuraSaveGame* CurrentSaveData = CheckpointSubsystem->GetCurrentSave();
+	check(CurrentSaveData);
+
+	FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
+	//FName SavedMapName = CurrentSaveData->MapName;
+	int32 SavedOrderIndex = CurrentSaveData->CheckpointOrderIndex;
+
+	CheckpointSubsystem->SaveCheckpoint(CurrentMapName, PlayerOwner->GetActorTransform(), -1);
+
+	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Saved Checkpoint"));
 }
 #pragma endregion
 
@@ -656,7 +692,7 @@ bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 		{
 			if (Weapon && Weapon->GetWeaponName() == NewWeaponName)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Already Possess"));
+				//UE_LOG(LogTemp, Warning, TEXT("Already Possess"));
 				if (Weapon->AddAmmo(NewAmmo))
 				{
 					NewWeaponPickUp->DestroyWeaponPickUp();
@@ -698,21 +734,36 @@ bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 	}
 
 
-	UCustomGameInstance* GameInstance = Cast<UCustomGameInstance>(GetWorld()->GetGameInstance());
-	if (GameInstance)
+	//UCustomGameInstance* GameInstance = Cast<UCustomGameInstance>(GetWorld()->GetGameInstance());
+	//USuraCheckpointSubsystem* CheckpointSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
+	//if (CheckpointSubsystem)
+	//{
+	//	USuraSaveGame* CurrentSave = CheckpointSubsystem->GetCurrentSave();
+	//	if (CurrentSave)
+	//	{
+	//		if (CurrentSave->OwnedWeapons.Contains(NewWeaponName))
+	//		{
+	//			CurrentSave->OwnedWeapons[NewWeaponName] = true;
+	//		}
+	//		else
+	//		{
+	//			CurrentSave->OwnedWeapons.Emplace(NewWeaponName, true);
+	//		}
+	//	}
+	//}
+
+	if (OwnedWeapons.Contains(NewWeaponName))
 	{
-		if (GameInstance->OwnedWeapons.Contains(NewWeaponName))
-		{
-			GameInstance->OwnedWeapons[NewWeaponName] = true;
-		}
-		else
-		{
-			GameInstance->OwnedWeapons.Emplace(NewWeaponName, true);
-		}
+		OwnedWeapons[NewWeaponName] = true;
+	}
+	else
+	{
+		OwnedWeapons.Emplace(NewWeaponName, true);
 	}
 
+	SaveInventory();
+
 	//FName WeaponNameAsFName = FName(*UEnum::GetValueAsString(NewWeaponPickUp->GetWeaponName()));
-	
 
 	return true;
 }
