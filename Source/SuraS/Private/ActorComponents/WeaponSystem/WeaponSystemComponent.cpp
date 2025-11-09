@@ -501,12 +501,12 @@ void UWeaponSystemComponent::SaveInventory()
 {
 	USuraCheckpointSubsystem* CheckpointSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
 	check(CheckpointSubsystem);
-	USuraSaveGame* CurrentSaveData = CheckpointSubsystem->GetCurrentSave();
-	check(CurrentSaveData);
+	//USuraSaveGame* CurrentSaveData = CheckpointSubsystem->GetCurrentSave();
+	//check(CurrentSaveData);
 
 	FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
 	//FName SavedMapName = CurrentSaveData->MapName;
-	int32 SavedOrderIndex = CurrentSaveData->CheckpointOrderIndex;
+	//int32 SavedOrderIndex = CurrentSaveData->CheckpointOrderIndex;
 
 	CheckpointSubsystem->SaveCheckpoint(CurrentMapName, PlayerOwner->GetActorTransform(), -1);
 
