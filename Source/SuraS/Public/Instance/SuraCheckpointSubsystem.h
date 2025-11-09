@@ -29,7 +29,7 @@ class SURAS_API USuraCheckpointSubsystem : public UGameInstanceSubsystem
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 
-	/** [추가] 종료 시 사용할 World와 PlayerPawn을 미리 캐시합니다. */
+	// 종료 시 사용할 World와 PlayerPawn을 미리 캐시
 	TWeakObjectPtr<UWorld> CachedWorld;
 	TWeakObjectPtr<ASuraPawnPlayer> CachedPlayerPawn;
 
@@ -57,8 +57,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "SaveGame")
 	FString GetCheckpointSlotName() const {return CheckpointSlotName;};
-
-	/** [추가] PlayerPawn이 스폰될 때 호출할 등록 함수입니다. */
+	
 	void RegisterPlayerAndWorld(ASuraPawnPlayer* PlayerPawn, UWorld* World);
 	
 };

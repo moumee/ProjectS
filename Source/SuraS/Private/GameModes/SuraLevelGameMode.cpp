@@ -26,69 +26,35 @@ void ASuraLevelGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UE_LOG(LogTemp, Error, TEXT("ASuraLevelGameMode::BeginPlay()"));
+    //UE_LOG(LogTemp, Error, TEXT("ASuraLevelGameMode::BeginPlay()"));
 
-	if (bPlayFromHere) return;
+    if (bPlayFromHere) return;
 
-	USuraCheckpointSubsystem* Subsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
-	ensure(Subsystem);
+    USuraCheckpointSubsystem* Subsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
+    if (!Subsystem) return;
 
-	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
-	ensure(PlayerController);
+    APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
+    if (!PlayerController) return; 
 
-	FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
-	FName SavedMapName = Subsystem->GetCurrentSave()->MapName;
-	if (CurrentMapName != SavedMapName)
-	{
-		
-		//Subsystem->SaveCheckpoint(CurrentMapName, ChoosePlayerStart(PlayerController)->GetActorTransform(), -1);
-		//UE_LOG(LogTemp, Error, TEXT("Subsystem->SaveCheckpoint(CurrentMapName, ChoosePlayerStart(PlayerController)->GetActorTransform(), -1);"));
-	// FName SavedMapName = Subsystem->GetCurrentSave()->MapName;
-	// if (CurrentMapName != SavedMapName)
-	// {
-	// 	
-	// 	Subsystem->SaveCheckpoint(CurrentMapName, ChoosePlayerStart(PlayerController)->GetActorTransform(), -1);
-	// }
-	// else
-	// {
-	// 	Subsystem->LoadCheckpoint();
-	// }
-
-	bool bShouldSaveNewCheckpoint = false;
+    FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
 	
-	if (USuraSaveGame* CurrentSave = Subsystem->GetCurrentSave())
-	{
-		// "이어하기"인데 맵이 다르면 (예: 1레벨 -> 2레벨)
-		if (CurrentSave->MapName != CurrentMapName)
-		{
-			bShouldSaveNewCheckpoint = true; 
-		}
-		// MapName이 같으면 "이어하기" 성공이므로, BeginPlay에서 아무것도 저장하지 않습니다.
-	}
-	else
-	{
-		Subsystem->LoadCheckpoint();
+    if (USuraSaveGame* CurrentSave = Subsystem->GetCurrentSave())
+    {
+        FName SavedMapName = CurrentSave->MapName;
 
-		//UE_LOG(LogTemp, Error, TEXT("Subsystem->LoadCheckpoint();"));
-		// "새 게임" (CurrentSave가 nullptr)
-		bShouldSaveNewCheckpoint = true; 
-	}
-
-	if (bShouldSaveNewCheckpoint)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("GameMode::BeginPlay: 새 게임/새 맵 감지. 기본 위치(비행기)를 체크포인트로 저장합니다."));
-		
-		// ChoosePlayerStart가 반환하는 기본 위치(비행기)를 찾아서 저장합니다.
-		AActor* DefaultPlayerStart = ChoosePlayerStart(PlayerController);
-		if (DefaultPlayerStart)
-		{
-			Subsystem->SaveCheckpoint(CurrentMapName, DefaultPlayerStart->GetActorTransform(), -1);
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("GameMode::BeginPlay: 이어하기 감지. (저장 로직 건너뜀)"));
-	}
+        if (CurrentMapName == SavedMapName)
+        {
+             Subsystem->LoadCheckpoint();
+        }
+    }
+    else
+    {
+        AActor* DefaultPlayerStart = ChoosePlayerStart(PlayerController);
+        if (DefaultPlayerStart)
+        {
+            Subsystem->SaveCheckpoint(CurrentMapName, DefaultPlayerStart->GetActorTransform(), -1);
+        }
+    }
 }
 
 void ASuraLevelGameMode::RespawnToLastCheckpoint(ASuraPawnPlayer* Player)

@@ -10,7 +10,6 @@
 
 UCustomGameInstance::UCustomGameInstance()
 {
-	// c++ 생성자에서 기본값 초기화
 	SettingsSaveSlotName = TEXT("SettingsSaveSlot");
 	MouseSensitivity = 0.7f; // default value for game instance;
 }
@@ -31,16 +30,10 @@ void UCustomGameInstance::Init()
 			USuraSaveGame* LoadedSave = Cast<USuraSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
 			if (LoadedSave)
 			{
-				// [핵심] 서브시스템의 CurrentSave 변수에 로드한 데이터를 설정합니다.
-				CheckpointSubsystem->SetCurrentSave(LoadedSave); // 1번에서 추가한 함수 호출
+				// 서브시스템의 CurrentSave 변수에 로드한 데이터를 설정합니다.
+				CheckpointSubsystem->SetCurrentSave(LoadedSave); 
 				UE_LOG(LogTemp, Warning, TEXT("GameInstance::Init: 저장된 체크포인트(%s) 로드 성공."), *SlotName);
 			}
-		}
-		else
-		{
-			// [핵심] 파일이 없으면 'SetCurrentSave'를 호출하지 않습니다.
-			// -> CheckpointSubsystem->CurrentSave는 nullptr로 유지됩니다.
-			UE_LOG(LogTemp, Log, TEXT("GameInstance::Init: 저장된 체크포인트 파일이 없습니다. (새 게임)"));
 		}
 	}
 }
@@ -52,7 +45,6 @@ void UCustomGameInstance::Shutdown()
 	USuraCheckpointSubsystem* CheckpointSubsystem = GetSubsystem<USuraCheckpointSubsystem>();
 	if (CheckpointSubsystem)
 	{
-		// 2. 서브시스템에 '종료 시 저장'을 요청합니다 (새 함수).
 		CheckpointSubsystem->SaveOnQuit();
 	}
 	
