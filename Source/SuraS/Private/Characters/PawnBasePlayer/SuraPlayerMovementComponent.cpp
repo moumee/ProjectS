@@ -215,7 +215,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 		FHitResult SteppingFrontHit;
 		FCollisionQueryParams SteppingFrontParams;
 		SteppingFrontParams.AddIgnoredActor(SuraPawnPlayer);
-
+		
 		bool bSteppingFrontHit = GetWorld()->SweepSingleByChannel(SteppingFrontHit, SuraPawnPlayer->GetActorLocation(),
 			SuraPawnPlayer->GetActorLocation() + SuraPawnPlayer->GetActorForwardVector() * 50.f, SuraPawnPlayer->GetActorQuat(),
 			ECC_WorldStatic, SuraPawnPlayer->GetCapsuleComponent()->GetCollisionShape(), SteppingFrontParams);
@@ -265,6 +265,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 	else
 	{
 		float CurrentCapsuleHalfHeight = SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+
 		if (GetWorld() && CurrentCapsuleHalfHeight < DefaultCapsuleHalfHeight)
 		{
 			FHitResult UnCrouchHitResult;
@@ -397,6 +398,7 @@ void USuraPlayerMovementComponent::TickMove(float DeltaTime)
 	FVector StepTraceStart = SuraPawnPlayer->GetActorLocation() + FVector(0, 0, -1) * (SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() - 5.f);
 	FVector StepTraceEnd = StepTraceStart + FVector::VectorPlaneProject(Input.WorldInputDir, GroundHit.ImpactNormal).GetSafeNormal() * SuraPawnPlayer->GetCapsuleComponent()->GetScaledCapsuleRadius();
 	FCollisionShape StepShape = FCollisionShape::MakeSphere(5.f);
+	
 	bool bStepHit = GetWorld()->SweepMultiByChannel(StepHits, StepTraceStart, StepTraceEnd, FQuat::Identity, ECC_WorldStatic, StepShape, StepParams);
 
 	// DrawDebugSphereTraceMulti(GetWorld(), StepTraceStart, StepTraceEnd,

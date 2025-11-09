@@ -6,6 +6,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "SuraCheckpointSubsystem.generated.h"
 
+enum class ESuraVideo : uint8;
 class ASuraPawnPlayer;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCheckpointLoaded);
 
@@ -50,6 +51,7 @@ public:
 	/**
 	 * Should clear the saved checkpoint before loading level 1 from new game button.
 	 */
+	UFUNCTION(BlueprintCallable)
 	void ClearSavedCheckpoint();
 
 	//suhyeon
@@ -59,5 +61,10 @@ public:
 	FString GetCheckpointSlotName() const {return CheckpointSlotName;};
 	
 	void RegisterPlayerAndWorld(ASuraPawnPlayer* PlayerPawn, UWorld* World);
-	
+
+	UFUNCTION(BlueprintCallable)
+	void SavePlayedVideo(ESuraVideo InPlayedVideo);
+
+	UFUNCTION(BlueprintCallable)
+	bool ShouldPlayVideo(ESuraVideo VideoToCheck);
 };
