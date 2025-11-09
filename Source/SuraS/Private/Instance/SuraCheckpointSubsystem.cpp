@@ -95,10 +95,10 @@ void USuraCheckpointSubsystem::ClearSavedCheckpoint()
 	if (UGameplayStatics::DoesSaveGameExist(CheckpointSlotName, 0))
 	{
 		UGameplayStatics::DeleteGameInSlot(CheckpointSlotName, 0);
-		
-		CurrentSave = Cast<USuraSaveGame>(
-			UGameplayStatics::CreateSaveGameObject(USuraSaveGame::StaticClass()));
 	}
+	
+	CurrentSave = Cast<USuraSaveGame>(
+			UGameplayStatics::CreateSaveGameObject(USuraSaveGame::StaticClass()));
 }
 
 void USuraCheckpointSubsystem::SaveOnQuit()
@@ -136,6 +136,27 @@ void USuraCheckpointSubsystem::RegisterPlayerAndWorld(ASuraPawnPlayer* PlayerPaw
 	CachedPlayerPawn = PlayerPawn;
 	CachedWorld = World;
 }
+
+void USuraCheckpointSubsystem::SavePlayedVideo(ESuraVideo InPlayedVideo)
+{
+	CurrentSave->PlayedVideo = InPlayedVideo;
+
+	UGameplayStatics::SaveGameToSlot(CurrentSave, CheckpointSlotName, 0);
+}
+
+bool USuraCheckpointSubsystem::ShouldPlayVideo(ESuraVideo VideoToCheck)
+{
+	if (static_cast<uint8>(VideoToCheck) > static_cast<uint8>(CurrentSave->PlayedVideo))
+	{
+		return true;
+	}
+	
+	return false;
+}
+
+
+
+
 
 
 
