@@ -6,6 +6,15 @@
 #include "GameFramework/SaveGame.h"
 #include "SuraSaveGame.generated.h"
 
+UENUM(BlueprintType)
+enum class ESuraVideo : uint8
+{
+	None,
+	FirstVideo,
+	SecondVideo,
+	ThirdVideo,
+};
+
 enum class EWeaponName : uint8;
 /**
  * 
@@ -20,15 +29,18 @@ public:
 	USuraSaveGame();
 
 	UPROPERTY(VisibleAnywhere)
-	FTransform SpawnTransform;
+	FTransform SpawnTransform = FTransform();
 
-	UPROPERTY(visibleAnywhere)
-	FName MapName;
+	UPROPERTY(VisibleAnywhere)
+	FName MapName = FName();
 
 	UPROPERTY(VisibleAnywhere)
 	int32 CheckpointOrderIndex = 0;
 
 	UPROPERTY()
 	TMap<EWeaponName, bool> OwnedWeapons;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	ESuraVideo PlayedVideo = ESuraVideo::None;
 	
 };
