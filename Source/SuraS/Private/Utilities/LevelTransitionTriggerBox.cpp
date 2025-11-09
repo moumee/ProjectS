@@ -8,6 +8,9 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
+#include "Engine/AssetManager.h"
+#include "Engine/StreamableManager.h"
+
 ALevelTransitionTriggerBox::ALevelTransitionTriggerBox()
 {
 	//PrimaryActorTick.bCanEverTick = true;
@@ -41,17 +44,20 @@ void ALevelTransitionTriggerBox::OnOverlapBegin(UPrimitiveComponent* OverlappedC
 	LoadingWidget->AddToViewport();
 	FadeIn();
 
-	FLatentActionInfo LatentInfo;
-	LatentInfo.CallbackTarget = this;
-	LatentInfo.ExecutionFunction = FName("TransitToNewLevel");
-	LatentInfo.Linkage = 0;
-	LatentInfo.UUID = 0;
-	UKismetSystemLibrary::Delay(this, 2.f, LatentInfo);
+	//FLatentActionInfo LatentInfo;
+	//LatentInfo.CallbackTarget = this;
+	////LatentInfo.ExecutionFunction = FName("TransitToNewLevel");
+	//LatentInfo.ExecutionFunction = FName("TransitToNewLevel_Async");
+	//LatentInfo.Linkage = 0;
+	//LatentInfo.UUID = 0;
+	//UKismetSystemLibrary::Delay(this, 2.f, LatentInfo);
+
+	TransitToNewLevel_Async();
 }
 
 void ALevelTransitionTriggerBox::TransitToNewLevel()
 {
-	UE_LOG(LogTemp, Error, TEXT("ALevelTransitionTriggerBox::TransitToNewLevel()"));
+	//UE_LOG(LogTemp, Error, TEXT("ALevelTransitionTriggerBox::TransitToNewLevel()"));
 
 	if (!Level.IsValid()) 
 	{	Level.LoadSynchronous();
@@ -61,6 +67,47 @@ void ALevelTransitionTriggerBox::TransitToNewLevel()
 	{
 		UGameplayStatics::OpenLevelBySoftObjectPtr(GetWorld(), Level);
 	}
+
+	ASuraPawnPlayer* const PlayerActor = Cast<ASuraPawnPlayer>(Player);
+	if (!PlayerActor) return;
+	UWeaponSystemComponent* WSC = PlayerActor->GetWeaponSystemComponent();
+	if (WSC)
+	{
+		WSC->UnlockWeapon(NewWeaponName);
+	}
+
+
+	FadeOut();
+	//UE_LOG(LogTemp, Error, TEXT("FadeOut!!!"));
+	SetInputEnabled(true);
+}
+
+void ALevelTransitionTriggerBox::TransitToNewLevel_Async()
+{
+	//UE_LOG(LogTemp, Error, TEXT("ALevelTransitionTriggerBox::TransitToNewLevel_Async()"));
+
+	if (bTransitioning) return;
+	bTransitioning = true;
+
+	if (Level.IsNull())
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("Level soft reference is null."));
+		bTransitioning = false;
+		return;
+	}
+
+	FStreamableManager& SM = UAssetManager::GetStreamableManager();
+	const FSoftObjectPath Path = Level.ToSoftObjectPath();
+
+	PendingLevelHandle = SM.RequestAsyncLoad(Path, FStreamableDelegate::CreateUObject(this, &ALevelTransitionTriggerBox::OnLevelPreloaded));
+}
+
+void ALevelTransitionTriggerBox::OnLevelPreloaded()
+{
+	//UE_LOG(LogTemp, Error, TEXT("ALevelTransitionTriggerBox::OnLevelPreloaded()"));
+
+	UGameplayStatics::OpenLevelBySoftObjectPtr(this, Level);
+
 
 	ASuraPawnPlayer* const PlayerActor = Cast<ASuraPawnPlayer>(Player);
 	if (!PlayerActor) return;
