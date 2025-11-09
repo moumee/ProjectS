@@ -45,12 +45,15 @@ void AEnemyBaseAIController::OnPossess(APawn* PossessedPawn)
 				InitializeBlackBoard(EnemyAttributesData->StrafeRadius, EnemyAttributesData->ChaseStrafeRadius, EnemyAttributesData->AttackRadius, EnemyAttributesData->AttackRate);
 
 				SightConfig->SightRadius = EnemyAttributesData->MaxSightRadius;
+				SightConfig->LoseSightRadius = SightConfig->SightRadius + 100.f;
 				SightConfig->PeripheralVisionAngleDegrees = EnemyAttributesData->SightAngle;
 			}
 
 			RunBehaviorTree(BehaviorTree);
 
 			UpdateCurrentState(EEnemyStates::Passive);
+
+			AttachToPawn(Enemy);
 
 			Enemy->SetUpAIController(this);
 		}
@@ -67,9 +70,9 @@ void AEnemyBaseAIController::SetupPerceptionSystem()
 
 		SightConfig->SightRadius = 1000.f;
 		SightConfig->LoseSightRadius = SightConfig->SightRadius + 100.f;
-		SightConfig->PeripheralVisionAngleDegrees = 70.f;
+		SightConfig->PeripheralVisionAngleDegrees = 180.f;
 		SightConfig->SetMaxAge(5.f);
-		SightConfig->AutoSuccessRangeFromLastSeenLocation = 500.f;
+		SightConfig->AutoSuccessRangeFromLastSeenLocation = 0.f;
 		SightConfig->DetectionByAffiliation.bDetectEnemies = true;
 		SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
 		SightConfig->DetectionByAffiliation.bDetectNeutrals = true;

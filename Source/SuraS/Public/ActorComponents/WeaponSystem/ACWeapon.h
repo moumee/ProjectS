@@ -31,6 +31,7 @@ class ASuraPawnPlayer;
 class USuraWeaponBaseState;
 class USuraWeaponIdleState;
 class USuraWeaponFiringState;
+class USuraWeaponFullAutoFiringState;
 class USuraWeaponUnequippedState;
 class USuraWeaponReloadingState;
 class USuraWeaponPumpActionReloadState;
@@ -212,6 +213,8 @@ public:
 	USuraWeaponIdleState* IdleState = nullptr;
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponFiringState* FiringState = nullptr;
+	UPROPERTY(VisibleAnywhere)
+	USuraWeaponFullAutoFiringState* FullAutoFiringState = nullptr;
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponUnequippedState* UnequippedState = nullptr;
 	UPROPERTY(VisibleAnywhere)

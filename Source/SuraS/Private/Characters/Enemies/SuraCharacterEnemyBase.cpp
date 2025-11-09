@@ -309,6 +309,16 @@ void ASuraCharacterEnemyBase::LungeToTarget(float LungeForce = 1000.f)
 	LaunchCharacter(Direction * Distance, true, true);*/
 }
 
+void ASuraCharacterEnemyBase::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
+{
+	FVector ActorLocation = GetActorLocation();
+	FRotator ActorRotation = GetActorRotation();
+	
+	OutLocation = ActorLocation + FVector(0.0f, 0.0f, 100.0f); // Adjust Z offset as needed
+	
+	OutRotation = FRotator(0.0f, ActorRotation.Yaw, 0.0f); 
+}
+
 bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, AActor* DamageCauser)
 {
 	if (GetDamageSystemComp()->GetHealth() > 0)

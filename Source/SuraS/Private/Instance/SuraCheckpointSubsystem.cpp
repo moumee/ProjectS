@@ -58,41 +58,8 @@ void USuraCheckpointSubsystem::LoadCheckpoint()
 
 void USuraCheckpointSubsystem::SaveCheckpoint(FName MapName, const FTransform& SpawnTransform, int32 OrderIndex)
 {
-	// if (USuraSaveGame* SaveGameInstance = Cast<USuraSaveGame>(
-	// 	UGameplayStatics::CreateSaveGameObject(USuraSaveGame::StaticClass())))
-	// {
-	// 	SaveGameInstance->MapName = MapName;
-	// 	SaveGameInstance->SpawnTransform = SpawnTransform;
-	// 	SaveGameInstance->CheckpointOrderIndex = OrderIndex;
-	//
-	// 	// [추가] 무기 소지 현황 저장
-	// 	ASuraPawnPlayer* PlayerPawn = Cast<ASuraPawnPlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
-	// 	if (PlayerPawn)
-	// 	{
-	// 		UWeaponSystemComponent* WeaponSystem = PlayerPawn->GetWeaponSystemComponent();
-	// 		if (WeaponSystem)
-	// 		{
-	// 			// WeaponSystemComponent의 실제 무기 인벤토리(AWeapon* 배열)를 순회
-	// 			for (AWeapon* Weapon : WeaponSystem->GetWeaponInventory())
-	// 			{
-	// 				if (Weapon)
-	// 				{
-	// 					// TMap<EWeaponName, bool>에 저장
-	// 					SaveGameInstance->OwnedWeapons.Add(Weapon->GetWeaponName(), true);
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	//
-	// 	UGameplayStatics::AsyncSaveGameToSlot(SaveGameInstance, CheckpointSlotName, 0);
-	//
-	// 	CurrentSave = SaveGameInstance;
-	//
-	// 	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Subsystem Save!"));
-	// }
-	
-	// [수정] 새 객체를 만들지 않고, 기존 CurrentSave를 업데이트하거나 (없으면) 생성합니다.
-	if (!CurrentSave)
+	if (USuraSaveGame* SaveGameInstance = Cast<USuraSaveGame>(
+		UGameplayStatics::CreateSaveGameObject(USuraSaveGame::StaticClass())))
 	{
 		// "새 게임" 후 첫 저장. 새 객체 생성.
 		CurrentSave = Cast<USuraSaveGame>(UGameplayStatics::CreateSaveGameObject(USuraSaveGame::StaticClass()));
@@ -104,23 +71,28 @@ void USuraCheckpointSubsystem::SaveCheckpoint(FName MapName, const FTransform& S
 	CurrentSave->SpawnTransform = SpawnTransform;
 	CurrentSave->CheckpointOrderIndex = OrderIndex;
 
-	// [수정] 무기 정보도 '현재 시점'으로 업데이트합니다.
-	ASuraPawnPlayer* PlayerPawn = Cast<ASuraPawnPlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
-	if (PlayerPawn)
-	{
-		UWeaponSystemComponent* WeaponSystem = PlayerPawn->GetWeaponSystemComponent();
-		if (WeaponSystem)
+		// [추가] 무기 소지 현황 저장
+		ASuraPawnPlayer* PlayerPawn = Cast<ASuraPawnPlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+		if (PlayerPawn)
 		{
-			CurrentSave->OwnedWeapons.Empty(); // [중요] 맵을 비우고 새로 채웁니다.
-			for (AWeapon* Weapon : WeaponSystem->GetWeaponInventory())
+			UWeaponSystemComponent* WeaponSystem = PlayerPawn->GetWeaponSystemComponent();
+			if (WeaponSystem)
 			{
-				if (Weapon)
-				{
-					CurrentSave->OwnedWeapons.Add(Weapon->GetWeaponName(), true);
-				}
+				//// WeaponSystemComponent의 실제 무기 인벤토리(AWeapon* 배열)를 순회
+				//for (AWeapon* Weapon : WeaponSystem->GetWeaponInventory())
+				//{
+				//	if (Weapon)
+				//	{
+				//		// TMap<EWeaponName, bool>에 저장
+				//		SaveGameInstance->OwnedWeapons.Add(Weapon->GetWeaponName(), true);
+				//	}
+				//}
+
+
+				SaveGameInstance->OwnedWeapons = WeaponSystem->GetOwnerShipMap();
+
 			}
 		}
-	}
 
 	// 비동기로 '업데이트된' CurrentSave를 저장
 	UGameplayStatics::AsyncSaveGameToSlot(CurrentSave, CheckpointSlotName, 0);
