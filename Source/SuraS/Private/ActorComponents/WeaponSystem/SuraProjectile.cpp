@@ -135,11 +135,8 @@ void ASuraProjectile::DeactiveProjectile()
 	// <Trail Effect>
 	if (TrailEffectComponent)
 	{
-		if (bShouldUpdateTrailEffect)
-		{
-			TrailEffectComponent->Deactivate();
-			TrailEffectComponent->DestroyComponent();
-		}
+		TrailEffectComponent->Deactivate();
+		TrailEffectComponent->DestroyComponent();
 	}
 
 	// <Radius>
