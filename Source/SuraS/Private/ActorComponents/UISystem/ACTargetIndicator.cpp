@@ -1,19 +1,18 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "ActorComponents/UISystem/ACTargetIndicator.h"
-
 #include "Components/WidgetComponent.h"
-#include "UI/TargetIndicatorWidget.h"
+#include "UI/TargetIndicatorWidget.h"        // (경로 확인)
+#include "UI/MissionTriggerBox.h"          // [추가] GetMarkerAnchor()를 위해
+#include "Components/BillboardComponent.h"   // [추가] MarkerAnchor의 타입을 알기 위해
+#include "GameFramework/Actor.h"
+#include "Engine/CollisionProfile.h"         // [추가] NoCollision 프로파일을 위해
 
 // Sets default values for this component's properties
 UACTargetIndicator::UACTargetIndicator()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
-
-	// ...
+	IndicatorWidgetComponent = nullptr; 
 }
 
 
@@ -22,29 +21,41 @@ void UACTargetIndicator::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// 컴포넌트가 부착된 액터(GetOwner())에 WidgetComponent를 동적으로 생성하고 부착
-	// BeginPlay 시점에 미리 생성해두어, 필요할 때마다 생성/파괴하는 비용(성능 저하) x
-	IndicatorWidgetComponent = NewObject<UWidgetComponent>(GetOwner(), TEXT("IndicatorWidget"));
-	if (IndicatorWidgetComponent)
+	AActor* Owner = GetOwner();
+	if (!Owner || !IndicatorWidgetClass)
 	{
-		IndicatorWidgetComponent->RegisterComponent();
-		IndicatorWidgetComponent->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-		IndicatorWidgetComponent->SetWidgetClass(IndicatorWidgetClass);
-		IndicatorWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+		return;
+	}
 
-		IndicatorWidgetComponent->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
-        
-		UTargetIndicatorWidget* IndicatorWidget = Cast<UTargetIndicatorWidget>(IndicatorWidgetComponent->GetUserWidgetObject());
-		if (IndicatorWidget)
-		{
-			IndicatorWidget->SetOwningActor(GetOwner());
-		}
+	IndicatorWidgetComponent = NewObject<UWidgetComponent>(Owner, TEXT("IndicatorWidget"));
+	if (!IndicatorWidgetComponent) return;
+	
+	USceneComponent* AttachTarget = nullptr;
+	AMissionTriggerBox* TriggerBox = Cast<AMissionTriggerBox>(Owner); 
 
-		// 처음에는 항상 숨겨진 상태로 시작
-		HideIndicator();
+	if (TriggerBox && TriggerBox->GetMarkerAnchor())
+	{
+		AttachTarget = TriggerBox->GetMarkerAnchor();
+	}
+	else
+	{
+		AttachTarget = Owner->GetRootComponent();
 	}
 	
+	IndicatorWidgetComponent->RegisterComponent(); 
+	IndicatorWidgetComponent->AttachToComponent(AttachTarget, FAttachmentTransformRules::KeepRelativeTransform);
 	
+	
+	IndicatorWidgetComponent->SetWidgetClass(IndicatorWidgetClass);
+	IndicatorWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen); 
+	IndicatorWidgetComponent->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName); 
+	
+	UTargetIndicatorWidget* IndicatorWidget = Cast<UTargetIndicatorWidget>(IndicatorWidgetComponent->GetUserWidgetObject());
+	if (IndicatorWidget)
+	{
+		IndicatorWidget->SetOwningActor(GetOwner());
+	}
+	HideIndicator();
 }
 
 void UACTargetIndicator::ShowIndicator() const
@@ -62,7 +73,3 @@ void UACTargetIndicator::HideIndicator() const
 		IndicatorWidgetComponent->SetVisibility(false);
 	}
 }
-
-
-
-
