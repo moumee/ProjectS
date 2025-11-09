@@ -26,30 +26,35 @@ void ASuraLevelGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UE_LOG(LogTemp, Error, TEXT("ASuraLevelGameMode::BeginPlay()"));
+    //UE_LOG(LogTemp, Error, TEXT("ASuraLevelGameMode::BeginPlay()"));
 
-	if (bPlayFromHere) return;
+    if (bPlayFromHere) return;
 
-	USuraCheckpointSubsystem* Subsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
-	ensure(Subsystem);
+    USuraCheckpointSubsystem* Subsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
+    if (!Subsystem) return;
 
-	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
-	ensure(PlayerController);
+    APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
+    if (!PlayerController) return; 
 
-	FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
-	FName SavedMapName = Subsystem->GetCurrentSave()->MapName;
-	if (CurrentMapName != SavedMapName)
-	{
-		
-		//Subsystem->SaveCheckpoint(CurrentMapName, ChoosePlayerStart(PlayerController)->GetActorTransform(), -1);
-		//UE_LOG(LogTemp, Error, TEXT("Subsystem->SaveCheckpoint(CurrentMapName, ChoosePlayerStart(PlayerController)->GetActorTransform(), -1);"));
-	}
-	else
-	{
-		Subsystem->LoadCheckpoint();
+    FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
+	
+    if (USuraSaveGame* CurrentSave = Subsystem->GetCurrentSave())
+    {
+        FName SavedMapName = CurrentSave->MapName;
 
-		//UE_LOG(LogTemp, Error, TEXT("Subsystem->LoadCheckpoint();"));
-	}
+        if (CurrentMapName == SavedMapName)
+        {
+             Subsystem->LoadCheckpoint();
+        }
+    }
+    else
+    {
+        AActor* DefaultPlayerStart = ChoosePlayerStart(PlayerController);
+        if (DefaultPlayerStart)
+        {
+            Subsystem->SaveCheckpoint(CurrentMapName, DefaultPlayerStart->GetActorTransform(), -1);
+        }
+    }
 }
 
 void ASuraLevelGameMode::RespawnToLastCheckpoint(ASuraPawnPlayer* Player)

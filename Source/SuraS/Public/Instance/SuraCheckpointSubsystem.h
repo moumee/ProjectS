@@ -6,6 +6,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "SuraCheckpointSubsystem.generated.h"
 
+class ASuraPawnPlayer;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCheckpointLoaded);
 
 class USaveGame;
@@ -27,6 +28,11 @@ class SURAS_API USuraCheckpointSubsystem : public UGameInstanceSubsystem
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
+
+	// 종료 시 사용할 World와 PlayerPawn을 미리 캐시
+	TWeakObjectPtr<UWorld> CachedWorld;
+	TWeakObjectPtr<ASuraPawnPlayer> CachedPlayerPawn;
+
 public:
 
 	FOnCheckpointLoaded OnCheckpointLoadedDelegate;
@@ -39,9 +45,19 @@ public:
 
 	bool HasSavedCheckpoint() const;
 
+	void SetCurrentSave(USuraSaveGame* SaveGame);
+
 	/**
 	 * Should clear the saved checkpoint before loading level 1 from new game button.
 	 */
 	void ClearSavedCheckpoint();
+
+	//suhyeon
+	void SaveOnQuit(); // save when shutdown
+
+	UFUNCTION(BlueprintCallable, Category = "SaveGame")
+	FString GetCheckpointSlotName() const {return CheckpointSlotName;};
+	
+	void RegisterPlayerAndWorld(ASuraPawnPlayer* PlayerPawn, UWorld* World);
 	
 };

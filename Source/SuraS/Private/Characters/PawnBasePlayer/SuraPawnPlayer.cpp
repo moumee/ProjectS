@@ -113,6 +113,7 @@ void ASuraPawnPlayer::BeginPlay()
 	if (USuraCheckpointSubsystem* CheckpointSubsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>())
 	{
 		CheckpointSubsystem->OnCheckpointLoadedDelegate.AddDynamic(this, &ThisClass::OnCheckPointLoaded);
+		CheckpointSubsystem->RegisterPlayerAndWorld(this, GetWorld());
 	}
 
 	Camera->SetRelativeLocation(DefaultCameraRelativeLocation);

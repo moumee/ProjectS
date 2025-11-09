@@ -2,12 +2,14 @@
 
 
 #include "UI/CustomGameInstance.h"
+
+#include "Instance/SuraCheckpointSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "SaveGame/SettingSaveGame.h"
+#include "SaveGame/SuraSaveGame.h"
 
 UCustomGameInstance::UCustomGameInstance()
 {
-	// c++ 생성자에서 기본값 초기화
 	SettingsSaveSlotName = TEXT("SettingsSaveSlot");
 	MouseSensitivity = 0.7f; // default value for game instance;
 }
@@ -16,11 +18,35 @@ void UCustomGameInstance::Init()
 {
 	Super::Init();
 	LoadSettings();
+
+	USuraCheckpointSubsystem* CheckpointSubsystem = GetSubsystem<USuraCheckpointSubsystem>();
+	if (CheckpointSubsystem)
+	{
+		const FString SlotName = CheckpointSubsystem->GetCheckpointSlotName(); 
+        
+		if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
+		{
+			// 동기식으로 저장 파일을 불러옵니다.
+			USuraSaveGame* LoadedSave = Cast<USuraSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
+			if (LoadedSave)
+			{
+				// 서브시스템의 CurrentSave 변수에 로드한 데이터를 설정합니다.
+				CheckpointSubsystem->SetCurrentSave(LoadedSave); 
+				UE_LOG(LogTemp, Warning, TEXT("GameInstance::Init: 저장된 체크포인트(%s) 로드 성공."), *SlotName);
+			}
+		}
+	}
 }
 
 void UCustomGameInstance::Shutdown()
 {
 	SaveSettings();
+	
+	USuraCheckpointSubsystem* CheckpointSubsystem = GetSubsystem<USuraCheckpointSubsystem>();
+	if (CheckpointSubsystem)
+	{
+		CheckpointSubsystem->SaveOnQuit();
+	}
 	
 	Super::Shutdown();
 }
