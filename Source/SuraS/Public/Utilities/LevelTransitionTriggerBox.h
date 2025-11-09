@@ -8,6 +8,8 @@
 #include "ActorComponents/WeaponSystem/WeaponName.h"
 #include "LevelTransitionTriggerBox.generated.h"
 
+struct FStreamableHandle;
+
 UCLASS()
 class SURAS_API ALevelTransitionTriggerBox : public AActor
 {
@@ -28,6 +30,8 @@ public:
 	void FadeOut();
 	UFUNCTION()
 	void TransitToNewLevel();
+	void TransitToNewLevel_Async();
+	void OnLevelPreloaded();
 protected:
 	void SetInputEnabled(bool bEnable);
 public:
@@ -43,5 +47,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	AActor* Player = nullptr;
+
+	TSharedPtr<FStreamableHandle> PendingLevelHandle;
+	UPROPERTY(VisibleAnywhere)
+	bool bTransitioning = false;
 
 };
