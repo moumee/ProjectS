@@ -42,6 +42,7 @@ public:
 	/**
 	 * Should clear the saved checkpoint before loading level 1 from new game button.
 	 */
+	UFUNCTION(BlueprintCallable)
 	void ClearSavedCheckpoint();
 	
 };
