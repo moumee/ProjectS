@@ -2,8 +2,11 @@
 
 
 #include "UI/CustomGameInstance.h"
+
+#include "Instance/SuraCheckpointSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "SaveGame/SettingSaveGame.h"
+#include "SaveGame/SuraSaveGame.h"
 
 UCustomGameInstance::UCustomGameInstance()
 {
@@ -16,11 +19,42 @@ void UCustomGameInstance::Init()
 {
 	Super::Init();
 	LoadSettings();
+
+	USuraCheckpointSubsystem* CheckpointSubsystem = GetSubsystem<USuraCheckpointSubsystem>();
+	if (CheckpointSubsystem)
+	{
+		const FString SlotName = CheckpointSubsystem->GetCheckpointSlotName(); 
+        
+		if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
+		{
+			// 동기식으로 저장 파일을 불러옵니다.
+			USuraSaveGame* LoadedSave = Cast<USuraSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
+			if (LoadedSave)
+			{
+				// [핵심] 서브시스템의 CurrentSave 변수에 로드한 데이터를 설정합니다.
+				CheckpointSubsystem->SetCurrentSave(LoadedSave); // 1번에서 추가한 함수 호출
+				UE_LOG(LogTemp, Warning, TEXT("GameInstance::Init: 저장된 체크포인트(%s) 로드 성공."), *SlotName);
+			}
+		}
+		else
+		{
+			// [핵심] 파일이 없으면 'SetCurrentSave'를 호출하지 않습니다.
+			// -> CheckpointSubsystem->CurrentSave는 nullptr로 유지됩니다.
+			UE_LOG(LogTemp, Log, TEXT("GameInstance::Init: 저장된 체크포인트 파일이 없습니다. (새 게임)"));
+		}
+	}
 }
 
 void UCustomGameInstance::Shutdown()
 {
 	SaveSettings();
+	
+	USuraCheckpointSubsystem* CheckpointSubsystem = GetSubsystem<USuraCheckpointSubsystem>();
+	if (CheckpointSubsystem)
+	{
+		// 2. 서브시스템에 '종료 시 저장'을 요청합니다 (새 함수).
+		CheckpointSubsystem->SaveOnQuit();
+	}
 	
 	Super::Shutdown();
 }
