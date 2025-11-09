@@ -367,9 +367,31 @@ void ASuraCharacterBossProto::OnBossDeath()
 	USuraBossAnimInstanceProto* AnimInstance = Cast<USuraBossAnimInstanceProto>(GetMesh()->GetAnimInstance());
 	if (!AnimInstance) return;
 
-	AnimInstance->Montage_Play(DeathMontage);
+	float MontageDuration = AnimInstance->Montage_Play(DeathMontage);
 	AnimInstance->bIsDead = true;
+
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ThisClass::OnDeathMontageEnded, MontageDuration);
 	
+}
+
+void ASuraCharacterBossProto::OnDeathMontageEnded()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	
+	if (auto* PlayerCameraManager = UGameplayStatics::GetPlayerCameraManager(World, 0))
+	{
+		PlayerCameraManager->StartCameraFade(0.f, 1.f, 1.f, FLinearColor::Black, true,
+			true);
+
+		FTimerHandle TimerHandle;
+		World->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateWeakLambda(this, [this]()
+		{
+			UGameplayStatics::OpenLevel(this, BossDataAsset->EndingLevel);
+		}), 1.f, false);
+	}
 }
 
 void ASuraCharacterBossProto::UpdateHeadHitColor(float Alpha)

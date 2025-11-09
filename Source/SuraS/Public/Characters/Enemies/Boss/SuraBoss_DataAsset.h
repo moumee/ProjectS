@@ -84,4 +84,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="Damage", meta=(ToolTip="머리 치명타 데미지 배율"))
 	float HeadDamageMultiplier = 1.5f;
+
+	UPROPERTY(EditAnywhere, Category="Ending Level")
+	FName EndingLevel = FName("/Game/Scenes/Ending/EndingLevel");
 };

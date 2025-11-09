@@ -140,6 +140,8 @@ protected:
 	void OnBossPartDestroyed(TEnumAsByte<EPhysicalSurface> PhysicalSurface);
 	
 	void OnBossDeath();
+
+	void OnDeathMontageEnded();
 	
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UBlackboardComponent> BlackboardComp;
