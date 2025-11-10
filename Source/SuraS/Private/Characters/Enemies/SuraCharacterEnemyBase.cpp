@@ -479,8 +479,14 @@ void ASuraCharacterEnemyBase::InitializeEnemy()
 	}
 }
 
-void ASuraCharacterEnemyBase::BindKillLogOnDeath() const
+void ASuraCharacterEnemyBase::BindKillLogOnDeath()
 {
+	// AddSkull 중복 호출 방지
+	if (bIsDeathEventBound)
+	{
+		return;
+	}
+	
 	if (UACDamageSystem* DamageSystem = FindComponentByClass<UACDamageSystem>())
 	{
 		DamageSystem->OnDeath.AddLambda([this]()
@@ -507,6 +513,8 @@ void ASuraCharacterEnemyBase::BindKillLogOnDeath() const
 				UGameplayStatics::PlaySound2D(GetWorld(), DeathSound);
 			}
 		});
+		
+		bIsDeathEventBound = true;
 	}
 }
 

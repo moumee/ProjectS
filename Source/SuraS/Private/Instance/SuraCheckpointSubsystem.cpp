@@ -146,6 +146,8 @@ void USuraCheckpointSubsystem::SavePlayedVideo(ESuraVideo InPlayedVideo)
 
 bool USuraCheckpointSubsystem::ShouldPlayVideo(ESuraVideo VideoToCheck)
 {
+	if (!CurrentSave) return true;
+	
 	if (static_cast<uint8>(VideoToCheck) > static_cast<uint8>(CurrentSave->PlayedVideo))
 	{
 		return true;

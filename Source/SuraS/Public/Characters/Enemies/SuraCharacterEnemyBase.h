@@ -48,6 +48,8 @@ class SURAS_API ASuraCharacterEnemyBase : public ASuraCharacterBase, public IDam
 	FTimerHandle HideHealthBarHandle;
 	FOnMontageEnded OnHitMontageEnded;
 
+	bool bIsDeathEventBound = false;
+
 protected:
 	// [protected variables]
 	FName EnemyType; // for initializing differently btw enemy types from the DT
@@ -224,7 +226,7 @@ public:
 	void InitializeEnemy();
 
 	//killLog Binding
-	void BindKillLogOnDeath() const;
+	void BindKillLogOnDeath();
 
 	//classShift
 	virtual void SetCrippled(){IsCrippled = false;}
