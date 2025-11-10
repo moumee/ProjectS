@@ -97,6 +97,7 @@ protected:
 	void LoadWSCData();
 	void InitStartingWeapons();
 	void InitStartingWeapons_Ordering();
+	void InitStartingWeapons_Fuck();
 	void SaveInventory();
 	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "TargetingSystem|PlayerReference", Meta = (AllowPrivateAccess = "true"))
 	//class APlayerCameraManager* PlayerCameraManager;
