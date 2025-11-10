@@ -23,6 +23,8 @@ void UKillLogWidget::SetSkullTexture(UTexture2D* InTexture)
 
 void UKillLogWidget::AddSkull()
 {
+	UE_LOG(LogTemp, Warning, TEXT("AddSkull()이 호출되었습니다. 시간: %f"), GetWorld()->GetTimeSeconds());
+	
 	if (!SkullBox || !SkullTexture) return;
 
 	// [1] 기존 해골 이미지들을 오른쪽으로 밀기
