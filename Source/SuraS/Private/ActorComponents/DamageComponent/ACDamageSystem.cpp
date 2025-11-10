@@ -6,13 +6,19 @@
 
 void UACDamageSystem::StartRegeneration()
 {
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+    
 	// 주기적으로 StartHealing을 호출하는 반복 타이머 설정
-	GetWorld()->GetTimerManager().SetTimer(
-		RegenTimerHandle,
-		this,
-		&UACDamageSystem::StartHealing,
-		TimeUntilRegenStart,
-		true
+	World->GetTimerManager().SetTimer(
+	   RegenTimerHandle,
+	   this,
+	   &UACDamageSystem::StartHealing,
+	   TimeUntilRegenStart,
+	   true
 	);
 }
 
@@ -60,7 +66,11 @@ void UACDamageSystem::Heal(float HealAmount)
 		// 체력이 가득 차면 재생 타이머 중지
 		if(Health >= MaxHealth)
 		{
-			GetWorld()->GetTimerManager().ClearTimer(RegenTimerHandle);
+			UWorld* World = GetWorld();
+			if (World)
+			{
+				World->GetTimerManager().ClearTimer(RegenTimerHandle);
+			}
 		}
 		return;
 	}
@@ -126,13 +136,19 @@ bool UACDamageSystem::TakeDamage(const FDamageData& DamageData, AActor* DamageCa
 	OnDamaged.Broadcast(); // 피격 이벤트
 	
 	OnHealthChanged.Broadcast(Health, OldHealth, MaxHealth, DamageCauser);
+
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return true; 
+	}
 	
-	GetWorld()->GetTimerManager().ClearTimer(RegenTimerHandle); // 기존 타이머 취소
+	World->GetTimerManager().ClearTimer(RegenTimerHandle); // 기존 타이머 취소
 
 	if (!bIsDead)
 	{
 		// TimeUntilRegenStart초 후에 StartRegeneration을 1회 호출
-		GetWorld()->GetTimerManager().SetTimer(
+		World->GetTimerManager().SetTimer(
 		   RegenTimerHandle,
 		   this,
 		   &UACDamageSystem::StartRegeneration,
