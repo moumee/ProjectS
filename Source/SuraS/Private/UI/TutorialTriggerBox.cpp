@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h" // SetGamePaused를 위해 필요
 #include "GameFramework/PlayerController.h"
 #include "Components/InputComponent.h" 
+#include "UI/TutorialWidget.h"
 
 ATutorialTriggerBox::ATutorialTriggerBox()
 {
@@ -36,23 +37,21 @@ void ATutorialTriggerBox::NotifyActorBeginOverlap(AActor* OtherActor)
 			if (PlayerController)
 			{
 				TriggeringPlayerController = PlayerController;
-				ActiveTutorialWidget = CreateWidget<UUserWidget>(PlayerController, TutorialWidgetClass);
+				ActiveTutorialWidget = CreateWidget<UTutorialWidget>(PlayerController, TutorialWidgetClass);
 
 				if (ActiveTutorialWidget)
 				{
+					ActiveTutorialWidget->OwningTriggerBox = this;
+					
 					ActiveTutorialWidget->AddToViewport();
-					
+          
 					UGameplayStatics::SetGamePaused(GetWorld(), true);
-
-					EnableInput(PlayerController);
 					
-					if (InputComponent)
-					{
-						FInputKeyBinding& Binding = InputComponent->BindKey(EKeys::AnyKey, IE_Pressed, this, &ATutorialTriggerBox::CloseTutorialWidget);
-						Binding.bExecuteWhenPaused = true; 
-					}
-
-					PlayerController->SetInputMode(FInputModeGameAndUI());
+					FInputModeGameAndUI InputMode;
+					InputMode.SetWidgetToFocus(ActiveTutorialWidget->TakeWidget());
+					InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+          
+					PlayerController->SetInputMode(InputMode);
 					PlayerController->bShowMouseCursor = true;
 				}
 			}
@@ -62,17 +61,9 @@ void ATutorialTriggerBox::NotifyActorBeginOverlap(AActor* OtherActor)
 
 void ATutorialTriggerBox::CloseTutorialWidget()
 {
-	if (ActiveTutorialWidget && TriggeringPlayerController)
+	if (TriggeringPlayerController)
 	{
-		ActiveTutorialWidget->RemoveFromParent();
-		
-		UGameplayStatics::SetGamePaused(GetWorld(), false);
-
-		TriggeringPlayerController->SetInputMode(FInputModeGameOnly());
-		TriggeringPlayerController->bShowMouseCursor = false;
-
 		DisableInput(TriggeringPlayerController);
-
 		ActiveTutorialWidget = nullptr;
 		TriggeringPlayerController = nullptr;
 	}

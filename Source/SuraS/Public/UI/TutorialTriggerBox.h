@@ -9,7 +9,8 @@
 /**
  * 
  */
-class UUserWidget;
+
+class UTutorialWidget;
 
 UCLASS()
 class SURAS_API ATutorialTriggerBox : public AMissionTriggerBox
@@ -19,6 +20,8 @@ class SURAS_API ATutorialTriggerBox : public AMissionTriggerBox
 public:
 	ATutorialTriggerBox();
 
+	void CloseTutorialWidget();
+	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tutorial")
 	TSubclassOf<UUserWidget> TutorialWidgetClass;
@@ -27,12 +30,10 @@ protected:
 
 private:
 	UPROPERTY(Transient) 
-	TObjectPtr<UUserWidget> ActiveTutorialWidget;
+	TObjectPtr<UTutorialWidget> ActiveTutorialWidget;
 	
 	UPROPERTY(Transient)
 	TObjectPtr<APlayerController> TriggeringPlayerController;
 	
-	UFUNCTION()
-	void CloseTutorialWidget();
 	
 };
