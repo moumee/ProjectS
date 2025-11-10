@@ -28,12 +28,19 @@ protected:
 	
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
+	void ShowTutorialWidget();
+
 private:
 	UPROPERTY(Transient) 
 	TObjectPtr<UTutorialWidget> ActiveTutorialWidget;
 	
 	UPROPERTY(Transient)
 	TObjectPtr<APlayerController> TriggeringPlayerController;
+	
+	FTimerHandle ShowWidgetTimerHandle;
+	
+	UPROPERTY(Transient)
+	TObjectPtr<APlayerController> PendingPlayerController;
 	
 	
 };
