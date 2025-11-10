@@ -3204,7 +3204,7 @@ void AWeapon::EnableTargetingSkill(bool bflag)
 {
 	bCanUseTargetingSkill = bflag;
 
-	if (TargetingSkillWidget)
+	if (TargetingSkillWidget && IsValid(TargetingSkillWidget))
 	{
 		TargetingSkillWidget->SetTargetingSkillCoolDown(TargetingSkillCoolDown);
 	}
