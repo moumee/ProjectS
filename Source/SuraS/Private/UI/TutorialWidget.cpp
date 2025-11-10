@@ -16,6 +16,11 @@ FReply UTutorialWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyE
 	return FReply::Unhandled();
 }
 
+FReply UTutorialWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	return FReply::Handled().SetUserFocus(this->TakeWidget());
+}
+
 void UTutorialWidget::CloseTutorialWidget()
 {
 	APlayerController* PlayerController = GetOwningPlayer();
