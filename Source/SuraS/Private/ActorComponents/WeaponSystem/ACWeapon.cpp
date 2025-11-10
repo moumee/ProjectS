@@ -3216,7 +3216,7 @@ void AWeapon::UpdateTargetingSkillUI()
 		float ElapsedTime = GetWorld()->GetTimerManager().GetTimerElapsed(TargetingSkillTimer);
 		ElapsedTime = FMath::Clamp(ElapsedTime, 0.f, TargetingSkillCoolDown);
 
-		if (TargetingSkillWidget)
+		if (TargetingSkillWidget && IsValid(TargetingSkillWidget))
 		{
 			TargetingSkillWidget->SetTargetingSkillCoolDown(ElapsedTime);
 		}
