@@ -9,7 +9,8 @@
 /**
  * 
  */
-class UUserWidget;
+
+class UTutorialWidget;
 
 UCLASS()
 class SURAS_API ATutorialTriggerBox : public AMissionTriggerBox
@@ -19,20 +20,27 @@ class SURAS_API ATutorialTriggerBox : public AMissionTriggerBox
 public:
 	ATutorialTriggerBox();
 
+	void CloseTutorialWidget();
+	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tutorial")
 	TSubclassOf<UUserWidget> TutorialWidgetClass;
 	
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
+	void ShowTutorialWidget();
+
 private:
 	UPROPERTY(Transient) 
-	TObjectPtr<UUserWidget> ActiveTutorialWidget;
+	TObjectPtr<UTutorialWidget> ActiveTutorialWidget;
 	
 	UPROPERTY(Transient)
 	TObjectPtr<APlayerController> TriggeringPlayerController;
 	
-	UFUNCTION()
-	void CloseTutorialWidget();
+	FTimerHandle ShowWidgetTimerHandle;
+	
+	UPROPERTY(Transient)
+	TObjectPtr<APlayerController> PendingPlayerController;
+	
 	
 };

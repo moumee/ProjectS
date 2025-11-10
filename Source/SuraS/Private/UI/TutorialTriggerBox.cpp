@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h" // SetGamePaused를 위해 필요
 #include "GameFramework/PlayerController.h"
 #include "Components/InputComponent.h" 
+#include "UI/TutorialWidget.h"
 
 ATutorialTriggerBox::ATutorialTriggerBox()
 {
@@ -30,49 +31,54 @@ void ATutorialTriggerBox::NotifyActorBeginOverlap(AActor* OtherActor)
 	{
 		Super::NotifyActorBeginOverlap(OtherActor);
 
-		if (TutorialWidgetClass)
+		PendingPlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+       
+		if (PendingPlayerController && TutorialWidgetClass)
 		{
-			APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-			if (PlayerController)
-			{
-				TriggeringPlayerController = PlayerController;
-				ActiveTutorialWidget = CreateWidget<UUserWidget>(PlayerController, TutorialWidgetClass);
-
-				if (ActiveTutorialWidget)
-				{
-					ActiveTutorialWidget->AddToViewport();
-					
-					UGameplayStatics::SetGamePaused(GetWorld(), true);
-
-					EnableInput(PlayerController);
-					
-					if (InputComponent)
-					{
-						FInputKeyBinding& Binding = InputComponent->BindKey(EKeys::AnyKey, IE_Pressed, this, &ATutorialTriggerBox::CloseTutorialWidget);
-						Binding.bExecuteWhenPaused = true; 
-					}
-
-					PlayerController->SetInputMode(FInputModeGameAndUI());
-					PlayerController->bShowMouseCursor = true;
-				}
-			}
+			GetWorld()->GetTimerManager().SetTimer(
+				ShowWidgetTimerHandle, 
+				this, 
+				&ATutorialTriggerBox::ShowTutorialWidget, 
+				0.01f, 
+				false
+			);
 		}
 	}
 }
 
+void ATutorialTriggerBox::ShowTutorialWidget()
+{
+
+	APlayerController* PlayerController = PendingPlayerController;
+	
+	if (PlayerController && TutorialWidgetClass && !ActiveTutorialWidget)
+	{
+		TriggeringPlayerController = PlayerController;
+		ActiveTutorialWidget = CreateWidget<UTutorialWidget>(PlayerController, TutorialWidgetClass);
+
+		if (ActiveTutorialWidget)
+		{
+			ActiveTutorialWidget->OwningTriggerBox = this;
+			ActiveTutorialWidget->AddToViewport();
+          
+			UGameplayStatics::SetGamePaused(GetWorld(), true);
+          
+			FInputModeGameAndUI InputMode;
+			InputMode.SetWidgetToFocus(ActiveTutorialWidget->TakeWidget());
+			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+          
+			PlayerController->SetInputMode(InputMode);
+			PlayerController->bShowMouseCursor = true;
+		}
+	}
+
+	PendingPlayerController = nullptr;
+}
+
 void ATutorialTriggerBox::CloseTutorialWidget()
 {
-	if (ActiveTutorialWidget && TriggeringPlayerController)
+	if (TriggeringPlayerController)
 	{
-		ActiveTutorialWidget->RemoveFromParent();
-		
-		UGameplayStatics::SetGamePaused(GetWorld(), false);
-
-		TriggeringPlayerController->SetInputMode(FInputModeGameOnly());
-		TriggeringPlayerController->bShowMouseCursor = false;
-
-		DisableInput(TriggeringPlayerController);
-
 		ActiveTutorialWidget = nullptr;
 		TriggeringPlayerController = nullptr;
 	}

@@ -87,10 +87,10 @@ void UOptionMenuWidget::OnApplyClicked()
 	
 	GameInstanceRef->ApplyAndSaveSettings();
 	
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("감도 설정이 적용되었습니다"));
-	}
+	// if (GEngine)
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("감도 설정이 적용되었습니다"));
+	// }
     
 	// 4. 적용 후 메뉴 닫기
 	OnCloseClicked();
