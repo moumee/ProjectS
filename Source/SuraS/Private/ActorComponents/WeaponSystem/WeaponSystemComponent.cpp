@@ -43,7 +43,8 @@ void UWeaponSystemComponent::BeginPlay()
 	Super::BeginPlay();
 	InitializePlayerReference();
 	LoadWSCData();
-	InitStartingWeapons_Ordering();
+	//InitStartingWeapons_Ordering();
+	InitStartingWeapons_Fuck();
 }
 
 void UWeaponSystemComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -438,13 +439,97 @@ void UWeaponSystemComponent::InitStartingWeapons_Ordering()
        }
     }	
 }
+void UWeaponSystemComponent::InitStartingWeapons_Fuck()
+{
+	if (!DTWSC)
+	{
+		return;
+	}
+	const TMap<EWeaponName, TSubclassOf<AWeapon>> WeaponClasses = DTWSC->WeaponClasses;
+
+	TMap<EWeaponName, bool> NewWeaponOwnerShip;
+
+	FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
+
+	if (CurrentMapName == FName("new_rhkdwls5") || CurrentMapName == FName("rhkdwls5_partition"))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Level 1"));
+
+		OwnedWeapons.FindOrAdd(EWeaponName::WeaponName_Rifle) = true;
+		OwnedWeapons.FindOrAdd(EWeaponName::WeaponName_ShotGun) = true;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("incorrect Name"));
+
+		OwnedWeapons.FindOrAdd(EWeaponName::WeaponName_Rifle) = true;
+		OwnedWeapons.FindOrAdd(EWeaponName::WeaponName_ShotGun) = true;
+		OwnedWeapons.FindOrAdd(EWeaponName::WeaponName_MissileLauncher) = true;
+	}
+
+
+	//const TMap<EWeaponName, bool>& WeaponOwnerShipMap = (bIsValidContinue)
+	//	? CurrentSave->OwnedWeapons
+	//	: DTWSC->WeaponOwnerShipMap;
+
+	for (EWeaponName WeaponName : TEnumRange<EWeaponName>())
+	{
+		const bool* bIsOwnedPtr = OwnedWeapons.Find(WeaponName);
+		if (bIsOwnedPtr && *bIsOwnedPtr)
+		{
+			UWorld* World = GetWorld();
+			if (!World)
+			{
+				continue;
+			}
+
+			const TSubclassOf<AWeapon>* WeaponClassPtr = WeaponClasses.Find(WeaponName);
+			if (!WeaponClassPtr || !(*WeaponClassPtr))
+			{
+				continue;
+			}
+
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			AWeapon* NewWeapon = World->SpawnActor<AWeapon>(*WeaponClassPtr, FTransform(), ActorSpawnParams);
+
+			if (!NewWeapon)
+			{
+				continue;
+			}
+
+			NewWeapon->InitWeapon(Cast<ASuraPawnPlayer>(GetOwner()));
+			AddNewWeaponToInventory(NewWeapon);
+			OwnedWeapons.FindOrAdd(WeaponName) = true;
+		}
+	}
+
+	//SaveInventory();
+
+	for (int32 i = 0; i < WeaponInventory.Num(); i++)
+	{
+		if (WeaponInventory[i] && WeaponInventory[i]->GetWeaponName() == DTWSC->StartingWeaponName)
+		{
+			int32 PrevIdx = CurrentWeaponIndex;
+			CurrentWeaponIndex = i;
+			CurrentWeapon = WeaponInventory[i];
+			CurrentWeapon->SwitchWeapon(PlayerOwner, true);
+
+			OnWeaponSwitched.Broadcast(PrevIdx, CurrentWeaponIndex);
+			return;
+		}
+	}
+}
 void UWeaponSystemComponent::SaveInventory()
 {
-	USuraCheckpointSubsystem* CheckpointSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
-	check(CheckpointSubsystem);
-	FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
-	CheckpointSubsystem->SaveCheckpoint(CurrentMapName, PlayerOwner->GetActorTransform(), -1);
-	//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Saved Checkpoint"));
+	// MEMO: 급해서 일단 비활성화
+	//USuraCheckpointSubsystem* CheckpointSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
+	//check(CheckpointSubsystem);
+	//FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
+	//CheckpointSubsystem->SaveCheckpoint(CurrentMapName, PlayerOwner->GetActorTransform(), -1);
+	////GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Saved Checkpoint"));
+
+	//------------------------------------
 }
 #pragma endregion
 

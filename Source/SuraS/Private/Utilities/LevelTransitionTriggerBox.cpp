@@ -109,13 +109,13 @@ void ALevelTransitionTriggerBox::OnLevelPreloaded()
 	UGameplayStatics::OpenLevelBySoftObjectPtr(this, Level);
 
 
-	ASuraPawnPlayer* const PlayerActor = Cast<ASuraPawnPlayer>(Player);
-	if (!PlayerActor) return;
-	UWeaponSystemComponent* WSC = PlayerActor->GetWeaponSystemComponent();
-	if (WSC)
-	{
-		WSC->UnlockWeapon(NewWeaponName);
-	}
+	//ASuraPawnPlayer* const PlayerActor = Cast<ASuraPawnPlayer>(Player);
+	//if (!PlayerActor) return;
+	//UWeaponSystemComponent* WSC = PlayerActor->GetWeaponSystemComponent();
+	//if (WSC)
+	//{
+	//	WSC->UnlockWeapon(NewWeaponName);
+	//}
 
 
 	FadeOut();
