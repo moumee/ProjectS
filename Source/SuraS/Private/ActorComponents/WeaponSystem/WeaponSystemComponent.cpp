@@ -871,7 +871,9 @@ bool UWeaponSystemComponent::IsCurrentSkillWeaponTargeting()
 }
 void UWeaponSystemComponent::SwitchToPreviousWeapon()
 {
-	if (IsCurrentSkillWeaponTargeting()) { return; }
+	if (IsCurrentSkillWeaponTargeting()
+		|| CurrentWeapon->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Switching
+		|| CurrentWeapon->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Unequipped) { return; }
 	if (WeaponInventory.Num() > 1)
 	{
 		const int32 PrevIndex = CurrentWeaponIndex;
@@ -889,7 +891,9 @@ void UWeaponSystemComponent::SwitchToPreviousWeapon()
 }
 void UWeaponSystemComponent::SwitchToNextWeapon()
 {
-	if (IsCurrentSkillWeaponTargeting()) { return; }
+	if (IsCurrentSkillWeaponTargeting() 
+		|| CurrentWeapon->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Switching
+		|| CurrentWeapon->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Unequipped) { return; }
 	if (WeaponInventory.Num() > 1)
 	{
 		const int32 PrevIndex = CurrentWeaponIndex;
@@ -903,7 +907,9 @@ void UWeaponSystemComponent::SwitchToNextWeapon()
 }
 void UWeaponSystemComponent::SwitchToIndex(int32 idx)
 {
-	if (IsCurrentSkillWeaponTargeting()) { return; }
+	if (IsCurrentSkillWeaponTargeting() 
+		|| CurrentWeapon->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Switching
+		|| CurrentWeapon->GetCurrentState()->GetWeaponStateType() == EWeaponStateType::WeaponStateType_Unequipped) { return; }
 	if (WeaponInventory.IsValidIndex(idx) && CurrentWeaponIndex != idx)
 	{
 		const int32 PrevIndex = CurrentWeaponIndex;
