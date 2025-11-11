@@ -305,4 +305,19 @@ protected:
 	void UpdateProjectileMovement(float DeltaTime);
 #pragma endregion
 
+#pragma region CheckStuck
+protected:
+	UPROPERTY(EditAnywhere)
+	int32 MaxStuckCount = 60;
+
+	UPROPERTY(VisibleAnywhere)
+	int32 StuckCount = 0;
+
+	UPROPERTY(VisibleAnywhere)
+	FVector PrevProjectileLoc = FVector::Zero();
+
+	void CheckAndDeactivateIfStuck();
+
+#pragma endregion
+
 };
