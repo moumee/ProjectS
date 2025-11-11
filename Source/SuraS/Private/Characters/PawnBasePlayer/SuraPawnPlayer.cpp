@@ -144,7 +144,11 @@ void ASuraPawnPlayer::BeginPlay()
 
 	if (ASuraLevelGameMode* GameMode = Cast<ASuraLevelGameMode>(GetWorld()->GetAuthGameMode()))
 	{
-		GameMode->TeleportToLastCheckpoint();
+		USuraCheckpointSubsystem* Subsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
+		if (Subsystem && Subsystem->HasSavedCheckpoint())
+		{
+			GameMode->TeleportToLastCheckpoint();
+		}
 	}
 }
 

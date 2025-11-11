@@ -35,8 +35,6 @@ void ASuraLevelGameMode::BeginPlay()
 		CurrentSave->SpawnTransform =
 			ChoosePlayerStart_Implementation(UGameplayStatics::GetPlayerController(this, 0))->GetActorTransform();
 		CurrentSave->CheckpointOrderIndex = -1;
-
-		UGameplayStatics::SaveGameToSlot(CurrentSave, Subsystem->GetCheckpointSlotName(), 0);
 	}
     
 }
