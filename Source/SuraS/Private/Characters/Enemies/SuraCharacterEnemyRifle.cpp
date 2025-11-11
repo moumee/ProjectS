@@ -64,7 +64,6 @@ void ASuraCharacterEnemyRifle::Attack(ASuraPawnPlayer* Player)
 	if (Projectile)
 	{
 		FDetachmentTransformRules DetachmentRules(EDetachmentRule::KeepWorld, true);
-		Projectile->DetachFromActor(DetachmentRules);
 		
 		Projectile->ActivateShootingEffect();
 		
@@ -102,7 +101,8 @@ void ASuraCharacterEnemyRifle::Attack(ASuraPawnPlayer* Player)
 				LaunchVelocity
 				);
 		}
-		
+
+		Projectile->DetachFromActor(DetachmentRules);
 		Projectile->LaunchProjectileWithVelocity(LaunchVelocity);
 	}
 	
