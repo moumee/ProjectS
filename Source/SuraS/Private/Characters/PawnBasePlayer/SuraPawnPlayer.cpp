@@ -147,7 +147,11 @@ void ASuraPawnPlayer::BeginPlay()
 		USuraCheckpointSubsystem* Subsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
 		if (Subsystem && Subsystem->HasSavedCheckpoint())
 		{
-			GameMode->TeleportToLastCheckpoint();
+			FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
+			if (CurrentMapName == Subsystem->GetCurrentSave()->MapName)
+			{
+				GameMode->TeleportToLastCheckpoint();
+			}
 		}
 	}
 }

@@ -21,7 +21,7 @@ class SURAS_API USuraCheckpointSubsystem : public UGameInstanceSubsystem
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USuraSaveGame> CurrentSave;
+	TObjectPtr<USuraSaveGame> CurrentSave = nullptr;
 
 	FString CheckpointSlotName = TEXT("Checkpoint");
 

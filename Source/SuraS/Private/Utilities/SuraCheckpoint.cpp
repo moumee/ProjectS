@@ -45,22 +45,38 @@ void ASuraCheckpoint::OnTriggerBeginOverlap(AActor* OverlappedActor, AActor* Oth
 	{
 		USuraCheckpointSubsystem* Subsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
 		check(Subsystem);
-		USuraSaveGame* CurrentSaveData = Subsystem->GetCurrentSave();
-		check(CurrentSaveData);
 
 		FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
-		FName SavedMapName = CurrentSaveData->MapName;
-		int32 SavedOrderIndex = CurrentSaveData->CheckpointOrderIndex;
-		if (CurrentMapName == SavedMapName)
+		
+		if (Subsystem->HasSavedCheckpoint())
 		{
-			if (CheckpointOrderIndex > SavedOrderIndex)
+			USuraSaveGame* CurrentSave = Subsystem->GetCurrentSave();
+			if (CurrentSave->MapName != CurrentMapName)
 			{
-				Subsystem->SaveCheckpoint(CurrentMapName, SpawnCapsule->GetComponentTransform(), CheckpointOrderIndex);
+				CurrentSave->MapName = CurrentMapName;
+				CurrentSave->SpawnTransform = SpawnCapsule->GetComponentTransform();
+				CurrentSave->CheckpointOrderIndex = CheckpointOrderIndex;
+				UGameplayStatics::SaveGameToSlot(CurrentSave, Subsystem->GetCheckpointSlotName(), 0);
+			}
+			else
+			{
+				if (CheckpointOrderIndex > CurrentSave->CheckpointOrderIndex)
+				{
+					CurrentSave->SpawnTransform = SpawnCapsule->GetComponentTransform();
+					CurrentSave->CheckpointOrderIndex = CheckpointOrderIndex;
+					UGameplayStatics::SaveGameToSlot(CurrentSave, Subsystem->GetCheckpointSlotName(), 0);
+				}
 			}
 		}
 		else
 		{
-			Subsystem->SaveCheckpoint(CurrentMapName, SpawnCapsule->GetComponentTransform(), CheckpointOrderIndex);
+			USuraSaveGame* NewSave = Cast<USuraSaveGame>(UGameplayStatics::CreateSaveGameObject(USuraSaveGame::StaticClass()));
+			NewSave->MapName = CurrentMapName;
+			NewSave->CheckpointOrderIndex = CheckpointOrderIndex;
+			NewSave->SpawnTransform = SpawnCapsule->GetComponentTransform();
+			NewSave->PlayedVideo = ESuraVideo::None;
+			UGameplayStatics::SaveGameToSlot(NewSave, Subsystem->GetCheckpointSlotName(), 0);
+			Subsystem->SetCurrentSave(NewSave);
 		}
 
 		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Saved Checkpoint"));

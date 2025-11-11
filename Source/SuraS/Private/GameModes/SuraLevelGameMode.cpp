@@ -25,17 +25,48 @@ void ASuraLevelGameMode::BeginPlay()
     APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
     if (!PlayerController) return; 
 
-    FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
-
-	USuraSaveGame* CurrentSave = Subsystem->GetCurrentSave();
+	FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
 	
-	if (!Subsystem->HasSavedCheckpoint())
+	
+	if (Subsystem->HasSavedCheckpoint())
 	{
-		CurrentSave->MapName = CurrentMapName;
-		CurrentSave->SpawnTransform =
-			ChoosePlayerStart_Implementation(UGameplayStatics::GetPlayerController(this, 0))->GetActorTransform();
-		CurrentSave->CheckpointOrderIndex = -1;
+		USuraSaveGame* CurrentSave = Subsystem->GetCurrentSave();
+		if (CurrentSave->MapName != CurrentMapName)
+		{
+			if (AActor* PlayerStartActor = ChoosePlayerStart(UGameplayStatics::GetPlayerController(this, 0)))
+			{
+				CurrentSave->MapName = CurrentMapName;
+				CurrentSave->SpawnTransform = PlayerStartActor->GetActorTransform();
+				CurrentSave->CheckpointOrderIndex = -1;
+				
+				UGameplayStatics::SaveGameToSlot(CurrentSave, Subsystem->GetCheckpointSlotName(), 0);
+			}
+		}
 	}
+	else
+	{
+		USuraSaveGame* NewSave = Cast<USuraSaveGame>(UGameplayStatics::CreateSaveGameObject(USuraSaveGame::StaticClass()));
+		if (AActor* PlayerStartActor = ChoosePlayerStart(UGameplayStatics::GetPlayerController(this, 0)))
+		{
+			NewSave->MapName = CurrentMapName;
+			NewSave->SpawnTransform = PlayerStartActor->GetActorTransform();
+			NewSave->CheckpointOrderIndex = -1;
+			NewSave->PlayedVideo = ESuraVideo::None;
+			UGameplayStatics::SaveGameToSlot(NewSave, Subsystem->GetCheckpointSlotName(), 0);
+			Subsystem->SetCurrentSave(NewSave);
+		}
+			
+	}
+	
+	
+	//
+	// if (!Subsystem->HasSavedCheckpoint())
+	// {
+	// 	CurrentSave->MapName = CurrentMapName;
+	// 	CurrentSave->SpawnTransform =
+	// 		ChoosePlayerStart_Implementation(UGameplayStatics::GetPlayerController(this, 0))->GetActorTransform();
+	// 	CurrentSave->CheckpointOrderIndex = -1;
+	// }
     
 }
 

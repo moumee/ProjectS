@@ -20,7 +20,7 @@ void USuraCheckpointSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	}
 	else
 	{
-		CurrentSave = Cast<USuraSaveGame>(UGameplayStatics::CreateSaveGameObject(USuraSaveGame::StaticClass()));
+		CurrentSave = nullptr;
 	}
 }
 
@@ -46,7 +46,7 @@ void USuraCheckpointSubsystem::SaveCheckpoint(FName MapName, const FTransform& S
 
 bool USuraCheckpointSubsystem::HasSavedCheckpoint() const
 {
-	return UGameplayStatics::DoesSaveGameExist(CheckpointSlotName, 0);
+	return UGameplayStatics::DoesSaveGameExist(CheckpointSlotName, 0) && CurrentSave;
 }
 
 void USuraCheckpointSubsystem::ClearSavedCheckpoint()
@@ -56,8 +56,7 @@ void USuraCheckpointSubsystem::ClearSavedCheckpoint()
 		UGameplayStatics::DeleteGameInSlot(CheckpointSlotName, 0);
 	}
 	
-	CurrentSave = Cast<USuraSaveGame>(
-			UGameplayStatics::CreateSaveGameObject(USuraSaveGame::StaticClass()));
+	CurrentSave = nullptr;
 }
 
 
