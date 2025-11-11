@@ -7,8 +7,6 @@
 #include "Components/HorizontalBox.h"
 #include "Components/Image.h"
 #include "Components/SizeBox.h"
-#include "Components/TextBlock.h"
-#include "Components/VerticalBox.h"
 
 void UKillLogWidget::SetKillLogManager(UACKillLogManager* InManager)
 {
@@ -247,19 +245,10 @@ void UKillLogWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	UTexture2D* LoadedTexture = Cast<UTexture2D>(
-	StaticLoadObject(UTexture2D::StaticClass(), nullptr, TEXT("/Game/UI/KillLog/img/img_skull"))
-);
-
-	if (LoadedTexture)
+	if (!IsValid(SkullTexture))
 	{
-		SkullTexture = LoadedTexture;
+		UE_LOG(LogTemp, Error, TEXT("WBP_KillLogWidget의 'Class Defaults'에서 SkullTexture가 할당되지 않았습니다!"));
 	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("스컬 텍스처 로딩 실패"));
-	}
-
 }
 
 

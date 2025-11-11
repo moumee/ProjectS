@@ -36,6 +36,9 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	UHorizontalBox* SkullBox = nullptr;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kill Log", meta = (BindWidgetOptional))
+	TObjectPtr<UTexture2D> SkullTexture;
+
 	// UPROPERTY(meta = (BindWidget))
 	// UTextBlock* TotalScoreText;
 	//
@@ -56,9 +59,6 @@ protected:
 private:
 	UPROPERTY()
 	UACKillLogManager* KillLogManager = nullptr;
-
-	UPROPERTY()
-	UTexture2D* SkullTexture = nullptr;
 
 	//int32 TotalScore = 0;
 	
