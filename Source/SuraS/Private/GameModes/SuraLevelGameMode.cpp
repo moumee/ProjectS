@@ -37,24 +37,22 @@ void ASuraLevelGameMode::BeginPlay()
     if (!PlayerController) return; 
 
     FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
-	
-    if (USuraSaveGame* CurrentSave = Subsystem->GetCurrentSave())
-    {
-        FName SavedMapName = CurrentSave->MapName;
 
-        if (CurrentMapName == SavedMapName)
-        {
-             Subsystem->LoadCheckpoint();
-        }
-    }
-    else
-    {
-        AActor* DefaultPlayerStart = ChoosePlayerStart(PlayerController);
-        if (DefaultPlayerStart)
-        {
-            Subsystem->SaveCheckpoint(CurrentMapName, DefaultPlayerStart->GetActorTransform(), -1);
-        }
-    }
+	USuraSaveGame* CurrentSave = Subsystem->GetCurrentSave();
+	
+	if (Subsystem->HasSavedCheckpoint())
+	{
+		TeleportToLastCheckpoint();
+	}
+	else
+	{
+		CurrentSave->MapName = CurrentMapName;
+		CurrentSave->SpawnTransform = UGameplayStatics::GetPlayerPawn(this, 0)->GetActorTransform();
+		CurrentSave->CheckpointOrderIndex = -1;
+
+		Subsystem->SaveCheckpoint(CurrentSave->MapName, CurrentSave->SpawnTransform, CurrentSave->CheckpointOrderIndex);
+	}
+    
 }
 
 void ASuraLevelGameMode::RespawnToLastCheckpoint(ASuraPawnPlayer* Player)

@@ -35,8 +35,9 @@ public:
 	FName MapName = FName();
 
 	UPROPERTY(VisibleAnywhere)
-	int32 CheckpointOrderIndex = 0;
+	int32 CheckpointOrderIndex = -1;
 
+	// Deprecated
 	UPROPERTY()
 	TMap<EWeaponName, bool> OwnedWeapons;
 	

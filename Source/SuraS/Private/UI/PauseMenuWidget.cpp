@@ -107,17 +107,6 @@ void UPauseMenuWidget::OnOptionsClicked()
 
 void UPauseMenuWidget::OnQuitClicked()
 {
-	USuraCheckpointSubsystem* CheckpointSubsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
-
-	if (CheckpointSubsystem)
-	{
-		CheckpointSubsystem->SaveOnQuit();
-		UE_LOG(LogTemp, Log, TEXT("UPauseMenuWidget: Game saved before returning to Main Menu."));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UPauseMenuWidget: CheckpointSubsystem is NULL. Cannot save."));
-	}
 	
 	if (MainMenuLevel.IsNull())
 	{

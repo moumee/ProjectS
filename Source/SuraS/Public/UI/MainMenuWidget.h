@@ -37,7 +37,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Level")
 	TSoftObjectPtr<UWorld> LevelToLoad;
-	
+
+	// Continue Game
 	UFUNCTION()
 	void OnPlayClicked();
 	

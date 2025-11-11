@@ -25,18 +25,9 @@ class SURAS_API USuraCheckpointSubsystem : public UGameInstanceSubsystem
 
 	FString CheckpointSlotName = TEXT("Checkpoint");
 
-	void OnLoadCompleted(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData);
-
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-
-	// 종료 시 사용할 World와 PlayerPawn을 미리 캐시
-	TWeakObjectPtr<UWorld> CachedWorld;
-	TWeakObjectPtr<ASuraPawnPlayer> CachedPlayerPawn;
-
 public:
-
-	FOnCheckpointLoaded OnCheckpointLoadedDelegate;
 
 	void LoadCheckpoint();
 	
@@ -53,14 +44,9 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable)
 	void ClearSavedCheckpoint();
-
-	//suhyeon
-	void SaveOnQuit(); // save when shutdown
-
-	UFUNCTION(BlueprintCallable, Category = "SaveGame")
-	FString GetCheckpointSlotName() const {return CheckpointSlotName;};
 	
-	void RegisterPlayerAndWorld(ASuraPawnPlayer* PlayerPawn, UWorld* World);
+	UFUNCTION(BlueprintCallable, Category = "SaveGame")
+	FString GetCheckpointSlotName() const { return CheckpointSlotName; };
 
 	UFUNCTION(BlueprintCallable)
 	void SavePlayedVideo(ESuraVideo InPlayedVideo);

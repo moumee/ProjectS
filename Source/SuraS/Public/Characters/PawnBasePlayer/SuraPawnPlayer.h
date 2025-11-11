@@ -228,8 +228,7 @@ protected:
 	UFUNCTION()
 	void OnDashEnd();
 
-	UFUNCTION()
-	void OnCheckPointLoaded();
+
 
 	float SlideEndTime = 0.f;
 };

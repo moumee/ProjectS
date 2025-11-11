@@ -110,12 +110,6 @@ void ASuraPawnPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (USuraCheckpointSubsystem* CheckpointSubsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>())
-	{
-		CheckpointSubsystem->OnCheckpointLoadedDelegate.AddDynamic(this, &ThisClass::OnCheckPointLoaded);
-		CheckpointSubsystem->RegisterPlayerAndWorld(this, GetWorld());
-	}
-
 	Camera->SetRelativeLocation(DefaultCameraRelativeLocation);
 
 	// Crash the game if there is no data asset assigned
@@ -535,6 +529,10 @@ void ASuraPawnPlayer::CalculateMappedSoundValue(const FPlayerSoundData& Data, fl
 	}
 }
 
+void ASuraPawnPlayer::OnDamaged()
+{
+}
+
 bool ASuraPawnPlayer::TakeDamage(const FDamageData& DamageData, AActor* DamageCauser)
 {
 	if (MovementComponent->GetIsInvincible())
@@ -727,24 +725,6 @@ void ASuraPawnPlayer::OnDashEnd()
 	RightDashEffectComponent->Deactivate();
 }
 
-void ASuraPawnPlayer::OnCheckPointLoaded()
-{
-	if (USuraCheckpointSubsystem* Subsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>())
-	{
-		USuraSaveGame* SaveData = Subsystem->GetCurrentSave();
-		check(SaveData);
-
-		FName CurrentMapName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
-		if (SaveData->MapName == CurrentMapName)
-		{
-			TeleportTo(SaveData->SpawnTransform.GetLocation(), SaveData->SpawnTransform.Rotator());
-		}
-		else
-		{
-			UGameplayStatics::OpenLevel(this, SaveData->MapName);
-		}
-	}
-}
 
 
 
