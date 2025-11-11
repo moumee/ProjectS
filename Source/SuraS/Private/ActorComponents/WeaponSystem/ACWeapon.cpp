@@ -1595,7 +1595,17 @@ void AWeapon::SwitchWeapon(ASuraPawnPlayer* TargetCharacter, bool bEquip)
 	if (bEquip)
 	{
 		AttachWeaponToPlayer(TargetCharacter);
-		GetWorld()->GetTimerManager().SetTimer(SwitchingTimer, [this, TargetCharacter, bEquip]() {EndWeaponSwitch(TargetCharacter, bEquip); }, WeaponSwitchingRate, false);
+		//GetWorld()->GetTimerManager().SetTimer(SwitchingTimer, [this, TargetCharacter, bEquip]() {EndWeaponSwitch(TargetCharacter, bEquip); }, WeaponSwitchingRate, false);
+		TWeakObjectPtr WeakThis = this;
+		GetWorld()->GetTimerManager().SetTimer(SwitchingTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis, TargetCharacter, bEquip]()
+			{
+				if (auto* HardThis = WeakThis.Get())
+				{
+					HardThis->EndWeaponSwitch(TargetCharacter, bEquip);
+				}
+
+			}), WeaponSwitchingRate, false);
+
 		StartAnimation(AM_Equip_Character, nullptr, WeaponSwitchingRate, WeaponSwitchingRate);
 	}
 	else
@@ -1877,7 +1887,14 @@ void AWeapon::StartReload()
 
 	// TODO: ���⼭ �Ϲ� Reloading���� OverHitting Recover���� �����ؼ� �ٸ� ó���� �������
 	StartAnimation(AM_Reload_Character, AM_Reload_Weapon, ReloadingTime, ReloadingTime);
-	GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopReload, ReloadingTime, false);
+	TWeakObjectPtr WeakThis = this;
+	GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis]()
+		{
+			if (auto* HardThis = WeakThis.Get())
+			{
+				HardThis->StopReload();
+			}
+		}), ReloadingTime,false);
 }
 void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 {
@@ -1913,7 +1930,18 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 			//}
 
 			CurrPumpActionReloadTime = PumpReloadingTime_End;
-			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_End, false);
+			//GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_End, false);
+			TWeakObjectPtr WeakThis = this;
+			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis]()
+				{
+					if (auto* HardThis = WeakThis.Get())
+					{
+						HardThis->StopPumpActionReload();
+					}
+
+				}), PumpReloadingTime_End, false);
+
+
 		}
 		else
 		{
@@ -1937,7 +1965,16 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 				WeaponMesh->GetAnimInstance()->Montage_JumpToSection(FName("LoopStart"), AM_Reload_Weapon);
 			}
 
-			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_Loop, false);
+			//GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_Loop, false);
+			TWeakObjectPtr WeakThis = this;
+			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis]()
+				{
+					if (auto* HardThis = WeakThis.Get())
+					{
+						HardThis->StopPumpActionReload();
+					}
+
+				}), PumpReloadingTime_Loop, false);
 		}
 	}
 	else
@@ -1964,7 +2001,16 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 			}
 
 			CurrPumpActionReloadTime = PumpReloadingTime_StartAndEnd;
-			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_StartAndEnd, false);
+			//GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_StartAndEnd, false);
+			TWeakObjectPtr WeakThis = this;
+			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis]()
+				{
+					if (auto* HardThis = WeakThis.Get())
+					{
+						HardThis->StopPumpActionReload();
+					}
+
+				}), PumpReloadingTime_StartAndEnd, false);
 		}
 		else
 		{
@@ -1988,7 +2034,17 @@ void AWeapon::StartPumpActionReload(bool bStartFromMiddle)
 				WeaponMesh->GetAnimInstance()->Montage_JumpToSection(FName("Start"), AM_Reload_Weapon);
 			}
 
-			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_Start, false);
+			//GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::StopPumpActionReload, PumpReloadingTime_Start, false);
+			TWeakObjectPtr WeakThis = this;
+			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis]()
+				{
+					if (auto* HardThis = WeakThis.Get())
+					{
+						HardThis->StopPumpActionReload();
+					}
+
+				}), PumpReloadingTime_Start, false);
+
 		}
 	}
 }
@@ -2029,7 +2085,17 @@ void AWeapon::StopPumpActionReload()
 			CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_LoopToFire);
 			CharacterAnimInstance->Montage_JumpToSection(FName("End"), AM_Reload_Character);
 
-			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::InterruptReloadAndFire, PumpReloadingTime_LoopToFire, false);
+			//GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::InterruptReloadAndFire, PumpReloadingTime_LoopToFire, false);
+			TWeakObjectPtr WeakThis = this;
+			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis]()
+				{
+					if (auto* HardThis = WeakThis.Get())
+					{
+						HardThis->InterruptReloadAndFire();
+					}
+
+				}), PumpReloadingTime_LoopToFire, false);
+
 		}
 
 	}
@@ -2047,7 +2113,16 @@ void AWeapon::StopPumpActionReload()
 			CharacterAnimInstance->Montage_Play(AM_Reload_Character, SectionTime / PumpReloadingTime_LoopToFire);
 			CharacterAnimInstance->Montage_JumpToSection(FName("End"), AM_Reload_Character);
 
-			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::InterruptReloadAndFire, PumpReloadingTime_LoopToFire, false);
+			//GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &AWeapon::InterruptReloadAndFire, PumpReloadingTime_LoopToFire, false);
+			TWeakObjectPtr WeakThis = this;
+			GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis]()
+				{
+					if (auto* HardThis = WeakThis.Get())
+					{
+						HardThis->InterruptReloadAndFire();
+					}
+
+				}), PumpReloadingTime_LoopToFire, false);
 		}
 	}
 	//if (BufferedFireRequest.IsSet() || bFireInputDuringReload)
@@ -2389,7 +2464,17 @@ void AWeapon::StartSingleShot(bool bIsLeftInput, bool bSingleProjectile, int32 N
 		}
 	}
 
-	GetWorld()->GetTimerManager().SetTimer(SingleShotTimer, this, &AWeapon::StopSingleShot, SingleShotDelay, false);
+	//GetWorld()->GetTimerManager().SetTimer(SingleShotTimer, this, &AWeapon::StopSingleShot, SingleShotDelay, false);
+	TWeakObjectPtr WeakThis = this;
+	GetWorld()->GetTimerManager().SetTimer(SingleShotTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis]()
+		{
+			if (auto* HardThis = WeakThis.Get())
+			{
+				HardThis->StopSingleShot();
+			}
+
+		}), SingleShotDelay, false);
+
 }
 void AWeapon::StopSingleShot()
 {
@@ -2427,7 +2512,16 @@ void AWeapon::StartBurstFire(bool bIsLeftInput, bool bSingleProjectile, int32 Nu
 			}
 		}
 		BurstShotFired++;
-		GetWorld()->GetTimerManager().SetTimer(BurstShotTimer, [this, bIsLeftInput, bSingleProjectile, NumPenetrable]() {StartBurstFire(bIsLeftInput, bSingleProjectile, NumPenetrable); }, BurstShotFireRate, true);
+		//GetWorld()->GetTimerManager().SetTimer(BurstShotTimer, [this, bIsLeftInput, bSingleProjectile, NumPenetrable]() {StartBurstFire(bIsLeftInput, bSingleProjectile, NumPenetrable); }, BurstShotFireRate, true);		
+		TWeakObjectPtr WeakThis = this;
+		GetWorld()->GetTimerManager().SetTimer(BurstShotTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis, bIsLeftInput, bSingleProjectile, NumPenetrable]()
+			{
+				if (auto* HardThis = WeakThis.Get())
+				{
+					HardThis->StartBurstFire(bIsLeftInput, bSingleProjectile, NumPenetrable);
+				}
+
+			}), BurstShotFireRate, true);
 	}
 	else
 	{
@@ -2441,7 +2535,16 @@ void AWeapon::StopBurstFire()
 	{
 		GetWorld()->GetTimerManager().ClearTimer(BurstShotTimer);
 	}
-	GetWorld()->GetTimerManager().SetTimer(BurstShotTimer, this, &AWeapon::EndBurstShot, BurstShotDelay, false);
+	//GetWorld()->GetTimerManager().SetTimer(BurstShotTimer, this, &AWeapon::EndBurstShot, BurstShotDelay, false);
+	TWeakObjectPtr WeakThis = this;
+	GetWorld()->GetTimerManager().SetTimer(BurstShotTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis]()
+		{
+			if (auto* HardThis = WeakThis.Get())
+			{
+				HardThis->EndBurstShot();
+			}
+
+		}), BurstShotDelay, false);
 }
 void AWeapon::EndBurstShot()
 {
@@ -2521,7 +2624,16 @@ void AWeapon::UpdateFullAutoShot(bool bIsLeftInput, bool bSingleProjectile, int3
 
 	if (HasAmmoInCurrentMag())
 	{
-		GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, bIsLeftInput, bSingleProjectile, NumPenetrable]() {UpdateFullAutoShot(bIsLeftInput, bSingleProjectile, NumPenetrable); }, FullAutoShotFireRate, false);
+		TWeakObjectPtr WeakThis = this;
+		//GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, bIsLeftInput, bSingleProjectile, NumPenetrable]() {UpdateFullAutoShot(bIsLeftInput, bSingleProjectile, NumPenetrable); }, FullAutoShotFireRate, false);
+		GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis, bIsLeftInput, bSingleProjectile, NumPenetrable]() 
+			{
+				if (auto* HardThis = WeakThis.Get())
+				{
+					HardThis->UpdateFullAutoShot(bIsLeftInput, bSingleProjectile, NumPenetrable);
+				}
+
+			}), FullAutoShotFireRate, false);
 	}
 	else
 	{
@@ -2621,7 +2733,18 @@ void AWeapon::UpdateTargetDetection(float DeltaTime) //TODO: �ش� Ÿ�� �
 
 
 	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
-	GetWorld()->GetTimerManager().SetTimer(TargetDetectionTimer, [this, DeltaSeconds]() {UpdateTargetDetection(DeltaSeconds); }, DeltaSeconds, false);
+	//GetWorld()->GetTimerManager().SetTimer(TargetDetectionTimer, [this, DeltaSeconds]() {UpdateTargetDetection(DeltaSeconds); }, DeltaSeconds, false);
+	TWeakObjectPtr WeakThis = this;
+	GetWorld()->GetTimerManager().SetTimer(TargetDetectionTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis, DeltaSeconds]()
+		{
+			if (auto* HardThis = WeakThis.Get())
+			{
+				HardThis->UpdateTargetDetection(DeltaSeconds);
+			}
+
+		}), DeltaSeconds, false);
+
+
 }
 void AWeapon::StopTargetDetection(FWeaponFireData* FireData)
 {
@@ -2890,7 +3013,16 @@ void AWeapon::UpdateMissileLaunch(FWeaponFireData* FireData)
 	}
 	else
 	{
-		GetWorld()->GetTimerManager().SetTimer(MissileLaunchTimer, [this, FireData] {UpdateMissileLaunch(FireData); }, MissileLaunchDelay, false);
+		//GetWorld()->GetTimerManager().SetTimer(MissileLaunchTimer, [this, FireData] {UpdateMissileLaunch(FireData); }, MissileLaunchDelay, false);
+		TWeakObjectPtr WeakThis = this;
+		GetWorld()->GetTimerManager().SetTimer(MissileLaunchTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis, FireData]()
+			{
+				if (auto* HardThis = WeakThis.Get())
+				{
+					HardThis->UpdateMissileLaunch(FireData);
+				}
+
+			}), MissileLaunchDelay, false);
 	}
 }
 void AWeapon::StopMissileLaunch()
@@ -2933,12 +3065,30 @@ void AWeapon::UpdateCharge()
 		}
 		else
 		{
-			GetWorld()->GetTimerManager().SetTimer(ChargingTimer, this, &AWeapon::UpdateCharge, DeltaSeconds, false);
+			//GetWorld()->GetTimerManager().SetTimer(ChargingTimer, this, &AWeapon::UpdateCharge, DeltaSeconds, false);
+			TWeakObjectPtr WeakThis = this;
+			GetWorld()->GetTimerManager().SetTimer(ChargingTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis]()
+				{
+					if (auto* HardThis = WeakThis.Get())
+					{
+						HardThis->UpdateCharge();
+					}
+
+				}), DeltaSeconds, false);
 		}
 	}
 	else
 	{
-		GetWorld()->GetTimerManager().SetTimer(ChargingTimer, this, &AWeapon::UpdateCharge, DeltaSeconds, false);
+		//GetWorld()->GetTimerManager().SetTimer(ChargingTimer, this, &AWeapon::UpdateCharge, DeltaSeconds, false);
+		TWeakObjectPtr WeakThis = this;
+		GetWorld()->GetTimerManager().SetTimer(ChargingTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis]()
+			{
+				if (auto* HardThis = WeakThis.Get())
+				{
+					HardThis->UpdateCharge();
+				}
+
+			}), DeltaSeconds, false);
 	}
 }
 void AWeapon::StopCharge()
@@ -3106,7 +3256,16 @@ void AWeapon::UpdateTargetDetectionSkill(float DeltaTime)
 	else
 	{
 		float DeltaSeconds = GetWorld()->GetDeltaSeconds();
-		GetWorld()->GetTimerManager().SetTimer(TargetDetectionTimer, [this, DeltaSeconds]() {UpdateTargetDetectionSkill(DeltaSeconds); }, DeltaSeconds, false);
+		//GetWorld()->GetTimerManager().SetTimer(TargetDetectionTimer, [this, DeltaSeconds]() {UpdateTargetDetectionSkill(DeltaSeconds); }, DeltaSeconds, false);
+		TWeakObjectPtr WeakThis = this;
+		GetWorld()->GetTimerManager().SetTimer(TargetDetectionTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis, DeltaSeconds]()
+			{
+				if (auto* HardThis = WeakThis.Get())
+				{
+					HardThis->UpdateTargetDetectionSkill(DeltaSeconds);
+				}
+
+			}), DeltaSeconds, false);
 	}
 }
 void AWeapon::HandleTargetingSkillFire(bool bIsLeftInput, bool bSingleProjectile, int32 NumPenetrable)
