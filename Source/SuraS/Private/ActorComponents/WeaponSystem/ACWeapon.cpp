@@ -3148,7 +3148,15 @@ void AWeapon::HandleTargetingSkillFire(bool bIsLeftInput, bool bSingleProjectile
 
 		bCanUseTargetingSkill = false;
 		bool bflag = true;
-		GetWorld()->GetTimerManager().SetTimer(TargetingSkillTimer, [this, bflag]() {EnableTargetingSkill(bflag); }, TargetingSkillCoolDown, false);
+
+		TWeakObjectPtr WeakThis = this;
+ 		GetWorld()->GetTimerManager().SetTimer(TargetingSkillTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis, bflag]()
+ 		{
+ 			if (auto* HardThis = WeakThis.Get())
+ 			{
+ 				HardThis->EnableTargetingSkill(bflag);
+ 			}
+ 		}), TargetingSkillCoolDown, false);
 		
 		if (LockedOnTargets.Num() == 0)
 		{
