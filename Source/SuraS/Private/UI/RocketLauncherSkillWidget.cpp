@@ -21,16 +21,17 @@ void URocketLauncherSkillWidget::InitUIDataTable(UDataTable* InTable)
 
 void URocketLauncherSkillWidget::RocketLauncherZoomAnimation()
 {
-	//UE_LOG(LogTemp, Warning, TEXT("RocketLauncherZoomAnimation 함수 호출됨!!!"));
+	UE_LOG(LogTemp, Warning, TEXT("--- [RocketLauncherSkillWidget] RocketLauncherZoomAnimation 함수 호출됨!!! ---"));
 	
     if (!IsInViewport())
     {
        AddToViewport();
+    	UE_LOG(LogTemp, Log, TEXT("[RocketLauncherSkillWidget] 위젯을 뷰포트에 추가합니다."));
     }
 
 	if (!SlowScreen)
 	{
-		UE_LOG(LogTemp, Error, TEXT("SlowScreen이 바인딩되지 않았습니다!"));
+		UE_LOG(LogTemp, Error, TEXT("[RocketLauncherSkillWidget] SlowScreen이 바인딩되지 않았습니다! (블루프린트에서 Is Variable 체크 확인)"));
 	}
     
     // ZoomIn 애니메이션 시작 전 상태 초기화
@@ -38,6 +39,7 @@ void URocketLauncherSkillWidget::RocketLauncherZoomAnimation()
     
     if (!DT_UI || !SlowScreen)
     {
+    	UE_LOG(LogTemp, Error, TEXT("[RocketLauncherSkillWidget] DT_UI가 null이거나 SlowScreen이 바인딩되지 않아서 애니메이션을 실행할 수 없습니다."));
        return;
     }
 
@@ -65,6 +67,7 @@ void URocketLauncherSkillWidget::SetSKillManager(UACSkillManager* IM)
 
 void URocketLauncherSkillWidget::RocketLauncherSkillFadeOut()
 {
+	UE_LOG(LogTemp, Warning, TEXT("--- [RocketLauncherSkillWidget] RocketLauncherSkillFadeOut 함수 호출됨 ---"));
 	// play anim
     PlayAnimation(FadeOutAnimation);
 }
