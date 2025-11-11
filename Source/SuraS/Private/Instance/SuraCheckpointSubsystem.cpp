@@ -10,16 +10,6 @@
 #include "SaveGame/SuraSaveGame.h"
 
 
-void USuraCheckpointSubsystem::OnLoadCompleted(const FString& SlotName, const int32 UserIndex,
-	USaveGame* LoadedGameData)
-{
-	if (USuraSaveGame* SaveData = Cast<USuraSaveGame>(LoadedGameData))
-	{
-		CurrentSave = SaveData;
-		OnCheckpointLoadedDelegate.Broadcast();
-	}
-}
-
 void USuraCheckpointSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
@@ -41,28 +31,27 @@ void USuraCheckpointSubsystem::SetCurrentSave(USuraSaveGame* SaveGame)
 
 void USuraCheckpointSubsystem::LoadCheckpoint()
 {
-	FAsyncLoadGameFromSlotDelegate LoadedDelegate;
-	LoadedDelegate.BindUObject(this, &ThisClass::OnLoadCompleted);
-	
 	if (UGameplayStatics::DoesSaveGameExist(CheckpointSlotName, 0))
 	{
-		UGameplayStatics::AsyncLoadGameFromSlot(CheckpointSlotName, 0, LoadedDelegate);
+		if (USaveGame* SaveGame = UGameplayStatics::LoadGameFromSlot(CheckpointSlotName, 0))
+		{
+			CurrentSave = Cast<USuraSaveGame>(SaveGame);
+		}
 	}
 	else
 	{
-		CurrentSave = Cast<USuraSaveGame>(UGameplayStatics::CreateSaveGameObject(USuraSaveGame::StaticClass()));
+		if (USaveGame* SaveGame = UGameplayStatics::CreateSaveGameObject(USuraSaveGame::StaticClass()))
+		{
+			CurrentSave = Cast<USuraSaveGame>(SaveGame);
+		}
 	}
-
-	
 }
 
 void USuraCheckpointSubsystem::SaveCheckpoint(FName MapName, const FTransform& SpawnTransform, int32 OrderIndex)
 {
-	if (USuraSaveGame* SaveGameInstance = Cast<USuraSaveGame>(
-		UGameplayStatics::CreateSaveGameObject(USuraSaveGame::StaticClass())))
+	if (!HasSavedCheckpoint() || !CurrentSave)
 	{
 		CurrentSave = Cast<USuraSaveGame>(UGameplayStatics::CreateSaveGameObject(USuraSaveGame::StaticClass()));
-		if (!CurrentSave) return;
 	}
 	
 	CurrentSave->MapName = MapName;
@@ -80,7 +69,7 @@ void USuraCheckpointSubsystem::SaveCheckpoint(FName MapName, const FTransform& S
 		}
 	}
 	
-	UGameplayStatics::AsyncSaveGameToSlot(CurrentSave, CheckpointSlotName, 0);
+	UGameplayStatics::SaveGameToSlot(CurrentSave, CheckpointSlotName, 0);
 
 	//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Subsystem Save!"));
 }
