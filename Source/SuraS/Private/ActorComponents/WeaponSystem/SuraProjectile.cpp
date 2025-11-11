@@ -99,6 +99,9 @@ void ASuraProjectile::DeactiveProjectile()
 {
 	StopLifeTimer();
 
+	// <StuckCount>
+	StuckCount = 0;
+
 	//----------------
 	//TODO: Deactive 시킬것들 전부 하기
 
@@ -1163,7 +1166,8 @@ void ASuraProjectile::UpdateTargetInfo()
 			//UE_LOG(LogTemp, Error, TEXT("Target is not valid!!!"));
 			SpawnExplosionEffect(GetActorLocation());
 			ApplyExplosiveDamage(bIsExplosive, GetActorLocation());
-			Destroy();
+			//Destroy();
+			DeactiveProjectile();
 		}
 		else
 		{
@@ -1280,6 +1284,33 @@ void ASuraProjectile::UpdateProjectileMovement(float DeltaTime)
 }
 #pragma endregion
 
+#pragma region CheckStuck
+void ASuraProjectile::CheckAndDeactivateIfStuck()
+{
+	if (bIsActivated)
+	{
+		if ((PrevProjectileLoc - GetActorLocation()).IsNearlyZero())
+		{
+			StuckCount++;
+		}
+		else
+		{
+			StuckCount = 0;
+		}
+
+		if (StuckCount > MaxStuckCount)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Projectile is Stuck!!!"));
+			DeactiveProjectile();
+		}
+		else
+		{
+			PrevProjectileLoc = GetActorLocation();
+		}
+	}
+}
+#pragma endregion
+
 
 //// Called when the game starts or when spawned
 //void ASuraProjectile::BeginPlay()
@@ -1312,6 +1343,9 @@ void ASuraProjectile::Tick(float DeltaTime)
 	//--------------------------------
 	// <Pool Version>
 	//TODO: Activate flag에 따라 활성화 여부 결정
+
+
+	CheckAndDeactivateIfStuck();
 }
 
 void ASuraProjectile::EndPlay(const EEndPlayReason::Type EndPlayReason)
