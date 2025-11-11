@@ -26,6 +26,9 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere)
+	TObjectPtr<USoundBase> LaunchSound;
+	
+	UPROPERTY(EditAnywhere)
 	TObjectPtr<UStaticMeshComponent> MeshComp;
 
 	UPROPERTY(EditAnywhere)

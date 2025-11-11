@@ -128,12 +128,16 @@ void AWeapon::InitWeapon(ASuraPawnPlayer* NewCharacter)
 
 	InitProjectileShells(); //TODO: 얘도 Object Pooling에 통합시킬까?
 
-	InitProjectiles(FireData_L.ProjectileClass, 10);
-	InitProjectiles(FireData_R.ProjectileClass, 10);
-
 	if (bIsSkillWeapon)
 	{
-		InitProjectiles(FireData_Skill.ProjectileClass, 15);
+		InitProjectiles(FireData_L.ProjectileClass, 2);
+		InitProjectiles(FireData_R.ProjectileClass, 2);
+		InitProjectiles(FireData_Skill.ProjectileClass, 12);
+	}
+	else
+	{
+		InitProjectiles(FireData_L.ProjectileClass, 10);
+		InitProjectiles(FireData_R.ProjectileClass, 10);
 	}
 }
 
