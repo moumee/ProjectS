@@ -25,6 +25,8 @@ class SURAS_API USuraCheckpointSubsystem : public UGameInstanceSubsystem
 
 	FString CheckpointSlotName = TEXT("Checkpoint");
 
+	void OnLoadCompleted(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData);
+
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 
@@ -33,6 +35,8 @@ class SURAS_API USuraCheckpointSubsystem : public UGameInstanceSubsystem
 	TWeakObjectPtr<ASuraPawnPlayer> CachedPlayerPawn;
 
 public:
+
+	FOnCheckpointLoaded OnCheckpointLoadedDelegate;
 
 	void LoadCheckpoint();
 	

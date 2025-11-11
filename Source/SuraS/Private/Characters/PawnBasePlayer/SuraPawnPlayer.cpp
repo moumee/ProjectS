@@ -112,7 +112,7 @@ void ASuraPawnPlayer::BeginPlay()
 
 	if (USuraCheckpointSubsystem* CheckpointSubsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>())
 	{
-		OnCheckPointLoaded();
+		CheckpointSubsystem->OnCheckpointLoadedDelegate.AddDynamic(this, &ThisClass::OnCheckPointLoaded);
 		CheckpointSubsystem->RegisterPlayerAndWorld(this, GetWorld());
 	}
 
