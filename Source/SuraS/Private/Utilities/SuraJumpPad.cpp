@@ -6,6 +6,7 @@
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/ArrowComponent.h"
 #include "Components/BoxComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ASuraJumpPad::ASuraJumpPad()
@@ -35,6 +36,7 @@ void ASuraJumpPad::OnJumpPadOverlap(UPrimitiveComponent* OverlappedComponent, AA
 {
 	if (ASuraPawnPlayer* Player = Cast<ASuraPawnPlayer>(OtherActor))
 	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), LaunchSound, GetActorLocation(), GetActorRotation());
 		Player->JumpPadLaunchPlayer(ForceAmount);
 	}
 }
