@@ -29,18 +29,14 @@ void ASuraLevelGameMode::BeginPlay()
 
 	USuraSaveGame* CurrentSave = Subsystem->GetCurrentSave();
 	
-	if (Subsystem->HasSavedCheckpoint())
-	{
-		TeleportToLastCheckpoint();
-	}
-	else
+	if (!Subsystem->HasSavedCheckpoint())
 	{
 		CurrentSave->MapName = CurrentMapName;
 		CurrentSave->SpawnTransform =
 			ChoosePlayerStart_Implementation(UGameplayStatics::GetPlayerController(this, 0))->GetActorTransform();
 		CurrentSave->CheckpointOrderIndex = -1;
 
-		Subsystem->SaveCheckpoint(CurrentSave->MapName, CurrentSave->SpawnTransform, CurrentSave->CheckpointOrderIndex);
+		UGameplayStatics::SaveGameToSlot(CurrentSave, Subsystem->GetCheckpointSlotName(), 0);
 	}
     
 }

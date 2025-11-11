@@ -141,6 +141,11 @@ void ASuraPawnPlayer::BeginPlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("ASuraPawnPlayer::BeginPlay - CachedGameInstance is invalid!!"));
 	}
+
+	if (ASuraLevelGameMode* GameMode = Cast<ASuraLevelGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		GameMode->TeleportToLastCheckpoint();
+	}
 }
 
 void ASuraPawnPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
