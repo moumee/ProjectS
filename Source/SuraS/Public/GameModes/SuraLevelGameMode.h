@@ -16,7 +16,6 @@ class SURAS_API ASuraLevelGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 protected:
-	bool bPlayFromHere = false;
 
 	UPROPERTY(EditDefaultsOnly)
 	float PlayerFellRespawnHealthReduction = 10.f;
@@ -25,8 +24,6 @@ protected:
 	float PlayerMinimumRespawnHealth = 20.f;
 	
 public:
-
-	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 	
 	virtual void BeginPlay() override;
 	

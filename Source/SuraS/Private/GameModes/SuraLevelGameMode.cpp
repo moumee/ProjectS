@@ -10,25 +10,14 @@
 #include "Kismet/GameplayStatics.h"
 #include "SaveGame/SuraSaveGame.h"
 
-AActor* ASuraLevelGameMode::ChoosePlayerStart_Implementation(AController* Player)
-{
-	AActor* FoundPlayerStart = Super::ChoosePlayerStart_Implementation(Player);
-	
-	if (IsValid(FoundPlayerStart) && FoundPlayerStart->IsA<APlayerStartPIE>())
-	{
-		bPlayFromHere = true;
-	}
 
-	return FoundPlayerStart;
-}
 
 void ASuraLevelGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
     //UE_LOG(LogTemp, Error, TEXT("ASuraLevelGameMode::BeginPlay()"));
-
-    if (bPlayFromHere) return;
+	
 
     USuraCheckpointSubsystem* Subsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
     if (!Subsystem) return;
@@ -47,7 +36,8 @@ void ASuraLevelGameMode::BeginPlay()
 	else
 	{
 		CurrentSave->MapName = CurrentMapName;
-		CurrentSave->SpawnTransform = UGameplayStatics::GetPlayerPawn(this, 0)->GetActorTransform();
+		CurrentSave->SpawnTransform =
+			ChoosePlayerStart_Implementation(UGameplayStatics::GetPlayerController(this, 0))->GetActorTransform();
 		CurrentSave->CheckpointOrderIndex = -1;
 
 		Subsystem->SaveCheckpoint(CurrentSave->MapName, CurrentSave->SpawnTransform, CurrentSave->CheckpointOrderIndex);
