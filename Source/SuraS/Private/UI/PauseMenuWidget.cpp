@@ -5,6 +5,8 @@
 
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "Components/Button.h"
+#include "Instance/SuraCheckpointSubsystem.h"
+#include "Kismet/GameplayStatics.h"
 #include "UI/OptionMenuWidget.h"
 
 void UPauseMenuWidget::NativeConstruct()
@@ -105,9 +107,23 @@ void UPauseMenuWidget::OnOptionsClicked()
 
 void UPauseMenuWidget::OnQuitClicked()
 {
-	APlayerController* PC = GetOwningPlayer();
-	if (PC)
+	USuraCheckpointSubsystem* CheckpointSubsystem = GetGameInstance()->GetSubsystem<USuraCheckpointSubsystem>();
+
+	if (CheckpointSubsystem)
 	{
-		PC->ConsoleCommand(TEXT("quit"));
+		CheckpointSubsystem->SaveOnQuit();
+		UE_LOG(LogTemp, Log, TEXT("UPauseMenuWidget: Game saved before returning to Main Menu."));
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UPauseMenuWidget: CheckpointSubsystem is NULL. Cannot save."));
+	}
+	
+	if (MainMenuLevel.IsNull())
+	{
+		UE_LOG(LogTemp, Error, TEXT("UPauseMenuWidget: MainMenuLevel이 블루프린트에서 할당되지 않았습니다!"));
+		return;
+	}
+	
+	UGameplayStatics::OpenLevelBySoftObjectPtr(GetWorld(), MainMenuLevel);
 }
