@@ -6,6 +6,7 @@
 #include "Characters/PawnBasePlayer/SuraPawnPlayer.h"
 #include "Components/ArrowComponent.h"
 #include "Components/BoxComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Slate/SGameLayerManager.h"
 
 // Sets default values
@@ -40,6 +41,7 @@ void ASuraGravityLauncher::OnGravityLauncherOverlap(UPrimitiveComponent* Overlap
 {
 	if (IPlayerInterface* PlayerInterface = Cast<IPlayerInterface>(OtherActor))
 	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), LaunchSound, GetActorLocation(), GetActorRotation());
 		PlayerInterface->GravityLaunchPlayer(ForceDirectionArrow->GetForwardVector(), ForceAmount);
 	}
 }
