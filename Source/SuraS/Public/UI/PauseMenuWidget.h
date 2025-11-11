@@ -37,6 +37,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
 	TSubclassOf<UUserWidget> OptionsWidgetClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level")
+	TSoftObjectPtr<UWorld> MainMenuLevel;
+
 	UFUNCTION()
 	void OnResumeClicked();
 	
