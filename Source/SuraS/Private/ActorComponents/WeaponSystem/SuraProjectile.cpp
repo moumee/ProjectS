@@ -86,7 +86,17 @@ void ASuraProjectile::StartLifeTimer(float Seconds)
 {
 	if (Seconds > 0.f)
 	{
-		GetWorldTimerManager().SetTimer(LifeTimer, this, &ASuraProjectile::DeactiveProjectile, Seconds, false);
+		//GetWorldTimerManager().SetTimer(LifeTimer, this, &ASuraProjectile::DeactiveProjectile, Seconds, false);
+		TWeakObjectPtr WeakThis = this;
+		GetWorld()->GetTimerManager().SetTimer(LifeTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis]()
+			{
+				if (auto* HardThis = WeakThis.Get())
+				{
+					HardThis->DeactiveProjectile();
+				}
+
+			}), Seconds, false);
+
 	}
 }
 
@@ -244,7 +254,16 @@ void ASuraProjectile::InitProjectile(AActor* OwnerOfProjectile, AWeapon* OwnerWe
 	//TODO: Set Damage Decay Timer
 	if (DamageDecayTime > 0)
 	{
-		GetWorld()->GetTimerManager().SetTimer(DamageDecayTimer, this, &ASuraProjectile::ApplyDamageDecay, DamageDecayTime, false);
+		//GetWorld()->GetTimerManager().SetTimer(DamageDecayTimer, this, &ASuraProjectile::ApplyDamageDecay, DamageDecayTime, false);
+		TWeakObjectPtr WeakThis = this;
+		GetWorld()->GetTimerManager().SetTimer(DamageDecayTimer, FTimerDelegate::CreateWeakLambda(this, [WeakThis]()
+			{
+				if (auto* HardThis = WeakThis.Get())
+				{
+					HardThis->ApplyDamageDecay();
+				}
+
+			}), DamageDecayTime, false);
 	}
 
 	StartLifeTimer(LifeSpan);
